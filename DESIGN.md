@@ -187,8 +187,8 @@ layout:
   schedule-expanded-surface-width: 1440px
   schedule-expanded-chat-track: 4fr
   schedule-expanded-side-track: 5fr
-  chat-message-assistant-collapsed-max: 320px
-  chat-message-assistant-expanded-max: 528px
+  chat-message-assistant-collapsed-max: "100%"
+  chat-message-assistant-expanded-max: 680px
   confirmation-dialog-width: 336px
   mobile-panel-width: "100vw"
   mobile-panel-height: "100dvh"
@@ -565,8 +565,8 @@ components:
     backgroundColor: "transparent"
     textColor: "{colors.text}"
     typography: "{typography.body-sm-open}"
-    collapsedMaxWidth: 320px
-    expandedMaxWidth: 528px
+    collapsedMaxWidth: "100%"
+    expandedMaxWidth: 680px
     padding: "0 8px 0 0"
   chat-message-user:
     backgroundColor: "{colors.ai-background-soft}"
@@ -758,7 +758,9 @@ High-value scheduling may add a side panel in either collapsed or expanded chat 
 ### Messages
 Assistant messages are plain text on the panel surface. User messages use the pale blue message surface. Specialist messages use the warm neutral message surface.
 
-Messages should keep readable line lengths and avoid stretching across the full panel.
+Assistant messages should use the available chat column in the collapsed panel so plain text does not look artificially narrow. In expanded mode, cap assistant text to a readable measure so the conversation still feels like chat rather than a full-width document.
+
+Messages should keep readable line lengths and avoid stretching across the full expanded panel.
 
 Prototype AI responses may be deterministic and fake, but they should still follow the conversation rhythm: a brief text-only thinking state, then a streamed assistant message. The thinking text may use `colors.ai-border` as a light-blue sweep across the label. The stream should support the user's sense that the concierge is responding, not become a theatrical typing performance or a source of delay.
 

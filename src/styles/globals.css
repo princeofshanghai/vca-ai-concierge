@@ -161,8 +161,8 @@
   --design-layout-schedule-expanded-surface-width: 1440px;
   --design-layout-schedule-expanded-chat-track: 4fr;
   --design-layout-schedule-expanded-side-track: 5fr;
-  --design-layout-chat-message-assistant-collapsed-max: 320px;
-  --design-layout-chat-message-assistant-expanded-max: 528px;
+  --design-layout-chat-message-assistant-collapsed-max: 100%;
+  --design-layout-chat-message-assistant-expanded-max: 680px;
   --design-layout-chat-message-assistant-max: var(
     --design-layout-chat-message-assistant-expanded-max
   );
