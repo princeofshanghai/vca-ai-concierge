@@ -20,13 +20,20 @@ import {
   ChatThinkingMessage,
   ChatThread,
   Prompt,
+  RecommendationCard,
   type ChatPanelVariant,
 } from "@/components/chat";
+import { Button } from "@/components/primitives/button";
 import { useReviewShellState } from "@/components/review-shell";
 import {
   STARTER_PROMPTS,
-  buildFollowUpAssistantResponse,
   buildInitialAssistantResponse,
+  flowReviews,
+  type FlowReviewAvailabilityStep,
+  type FlowReviewId,
+  type FlowReviewRecommendationStep,
+  type FlowReviewResourcesStep,
+  type FlowReviewStep,
 } from "@/lib/conversation-flows";
 
 import { OnboardingScreen, type OnboardingResult } from "./onboarding-screen";
@@ -45,18 +52,50 @@ type ViewTransitionDocument = Document & {
 };
 
 type ConciergeMessage = Readonly<{
+  kind: "message";
   id: string;
   role: "assistant" | "user";
   content: string;
   status: "thinking" | "streaming" | "complete";
 }>;
 
+type ConciergeRecommendation = Readonly<{
+  id: string;
+  kind: "recommendation";
+  step: FlowReviewRecommendationStep;
+}>;
+
+type ConciergeResources = Readonly<{
+  id: string;
+  kind: "resources";
+  step: FlowReviewResourcesStep;
+}>;
+
+type ConciergeAvailability = Readonly<{
+  id: string;
+  kind: "availability";
+  step: FlowReviewAvailabilityStep;
+}>;
+
+type ConciergeThreadItem =
+  | ConciergeMessage
+  | ConciergeRecommendation
+  | ConciergeResources
+  | ConciergeAvailability;
+
+type ConciergeSurface =
+  | ConciergeRecommendation
+  | ConciergeResources
+  | ConciergeAvailability;
+
 type PendingAssistantResponse = Readonly<{
   id: string;
   text: string;
+  surfaceAfter?: ConciergeSurface;
 }>;
 
 const THINKING_DELAY_MS = 650;
+const INITIAL_LIVE_SCRIPT_INDEX = 0;
 
 function prefersReducedMotion(): boolean {
   return (
@@ -93,6 +132,143 @@ function getStreamDelay(chunk: string): number {
   return 42;
 }
 
+function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
+  return item.kind === "message";
+}
+
+function selectLiveFlowId(userMessage: string): FlowReviewId {
+  const message = userMessage.toLowerCase();
+
+  if (message.includes("sales") || message.includes("contact")) {
+    return "medium";
+  }
+
+  if (message.includes("recruiter") || message.includes("features")) {
+    return "low";
+  }
+
+  return "high";
+}
+
+function createSurfaceItem(
+  id: string,
+  step: FlowReviewStep,
+): ConciergeSurface | null {
+  if (step.kind === "recommendation") {
+    return { id, kind: "recommendation", step };
+  }
+
+  if (step.kind === "resources") {
+    return { id, kind: "resources", step };
+  }
+
+  if (step.kind === "availability") {
+    return { id, kind: "availability", step };
+  }
+
+  return null;
+}
+
+function getNextScriptedAssistantTurn({
+  flowId,
+  currentStepIndex,
+  createSurfaceId,
+}: {
+  flowId: FlowReviewId;
+  currentStepIndex: number;
+  createSurfaceId: () => string;
+}): Readonly<{
+  content: string;
+  nextStepIndex: number;
+  surfaceAfter?: ConciergeSurface;
+}> {
+  const steps = flowReviews[flowId].steps;
+  const assistantStepIndex = steps.findIndex(
+    (step, index) =>
+      index > currentStepIndex &&
+      step.kind === "message" &&
+      step.role === "assistant",
+  );
+
+  if (assistantStepIndex < 0) {
+    return {
+      content:
+        "The best next step is above. You can use that card to keep going from here.",
+      nextStepIndex: currentStepIndex,
+    };
+  }
+
+  const assistantStep = steps[assistantStepIndex];
+  if (
+    !assistantStep ||
+    assistantStep.kind !== "message" ||
+    assistantStep.role !== "assistant"
+  ) {
+    return {
+      content:
+        "The best next step is above. You can use that card to keep going from here.",
+      nextStepIndex: currentStepIndex,
+    };
+  }
+
+  const nextStep = steps[assistantStepIndex + 1];
+  const surfaceAfter =
+    nextStep && nextStep.kind !== "message"
+      ? createSurfaceItem(createSurfaceId(), nextStep)
+      : null;
+
+  return {
+    content: assistantStep.content,
+    nextStepIndex: surfaceAfter ? assistantStepIndex + 1 : assistantStepIndex,
+    ...(surfaceAfter ? { surfaceAfter } : {}),
+  };
+}
+
+function ResourceCards({ step }: { step: FlowReviewResourcesStep }) {
+  return (
+    <div className="chat-message-enter flex w-full">
+      <div className="flex w-full max-w-[33rem] flex-col gap-md pr-sm">
+        {step.resources.map((resource) => (
+          <article
+            key={resource.title}
+            className="flex min-w-0 flex-col gap-md rounded-md border border-border-faint bg-background p-lg"
+          >
+            <div className="space-y-xs">
+              <h2 className="text-heading-md text-text">{resource.title}</h2>
+              <p className="text-body-xs text-text-meta">
+                {resource.description}
+              </p>
+            </div>
+            <Button
+              size="small"
+              variant="secondary"
+              className="mt-auto w-fit px-pill-padding-inline"
+            >
+              {resource.actionLabel}
+            </Button>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AvailabilityCard({ step }: { step: FlowReviewAvailabilityStep }) {
+  const variant = step.variants[0];
+
+  if (!variant) {
+    return null;
+  }
+
+  return (
+    <RecommendationCard
+      title={variant.title}
+      primaryAction={variant.primaryAction}
+      secondaryAction={variant.secondaryAction}
+    />
+  );
+}
+
 export function ConciergePanel({
   variant = "collapsed",
   className,
@@ -103,22 +279,29 @@ export function ConciergePanel({
 }: ConciergePanelProps) {
   const { isSignedIn } = useReviewShellState();
   const [lead, setLead] = useState<OnboardingResult | null>(null);
-  const [messages, setMessages] = useState<ReadonlyArray<ConciergeMessage>>(
+  const [messages, setMessages] = useState<ReadonlyArray<ConciergeThreadItem>>(
     [],
   );
   const [draft, setDraft] = useState("");
   const [pendingAssistantResponse, setPendingAssistantResponse] =
     useState<PendingAssistantResponse | null>(null);
+  const [liveFlowId, setLiveFlowId] = useState<FlowReviewId | null>(null);
+  const [liveStepIndex, setLiveStepIndex] = useState(
+    INITIAL_LIVE_SCRIPT_INDEX,
+  );
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(0);
 
   const phase: "onboarding" | "chat" = lead ? "chat" : "onboarding";
-  const hasUserMessages = messages.some((message) => message.role === "user");
+  const hasUserMessages = messages.some(
+    (message) => isMessageItem(message) && message.role === "user",
+  );
   const isAssistantBusy =
     pendingAssistantResponse !== null ||
     messages.some(
       (message) =>
-        message.status === "thinking" || message.status === "streaming",
+        isMessageItem(message) &&
+        (message.status === "thinking" || message.status === "streaming"),
     );
 
   const createMessageId = useCallback((prefix: string) => {
@@ -128,19 +311,20 @@ export function ConciergePanel({
   }, []);
 
   const queueAssistantResponse = useCallback(
-    (text: string) => {
+    (text: string, surfaceAfter?: ConciergeSurface) => {
       const id = createMessageId("assistant");
 
       setMessages((currentMessages) => [
         ...currentMessages,
         {
+          kind: "message",
           id,
           role: "assistant",
           content: "",
           status: "thinking",
         },
       ]);
-      setPendingAssistantResponse({ id, text });
+      setPendingAssistantResponse({ id, text, surfaceAfter });
     },
     [createMessageId],
   );
@@ -150,29 +334,37 @@ export function ConciergePanel({
       return;
     }
 
-    const { id, text } = pendingAssistantResponse;
+    const { id, text, surfaceAfter } = pendingAssistantResponse;
     const shouldReduceMotion = prefersReducedMotion();
     const chunks = splitIntoStreamChunks(text);
     let streamTimer: number | null = null;
     let visibleText = "";
     let index = 0;
 
+    function completePendingAssistantResponse() {
+      setMessages((currentMessages) => {
+        const completedMessages = currentMessages.map((message) =>
+          isMessageItem(message) && message.id === id
+            ? { ...message, content: text, status: "complete" as const }
+            : message,
+        );
+
+        return surfaceAfter
+          ? [...completedMessages, surfaceAfter]
+          : completedMessages;
+      });
+      setPendingAssistantResponse(null);
+    }
+
     const thinkingTimer = window.setTimeout(() => {
       if (shouldReduceMotion) {
-        setMessages((currentMessages) =>
-          currentMessages.map((message) =>
-            message.id === id
-              ? { ...message, content: text, status: "complete" }
-              : message,
-          ),
-        );
-        setPendingAssistantResponse(null);
+        completePendingAssistantResponse();
         return;
       }
 
       setMessages((currentMessages) =>
         currentMessages.map((message) =>
-          message.id === id
+          isMessageItem(message) && message.id === id
             ? { ...message, content: "", status: "streaming" }
             : message,
         ),
@@ -182,14 +374,7 @@ export function ConciergePanel({
         const nextChunk = chunks[index];
 
         if (!nextChunk) {
-          setMessages((currentMessages) =>
-            currentMessages.map((message) =>
-              message.id === id
-                ? { ...message, content: text, status: "complete" }
-                : message,
-            ),
-          );
-          setPendingAssistantResponse(null);
+          completePendingAssistantResponse();
           return;
         }
 
@@ -198,7 +383,7 @@ export function ConciergePanel({
 
         setMessages((currentMessages) =>
           currentMessages.map((message) =>
-            message.id === id
+            isMessageItem(message) && message.id === id
               ? { ...message, content: visibleText, status: "streaming" }
               : message,
           ),
@@ -243,8 +428,11 @@ export function ConciergePanel({
         onConversationStart?.();
         setLead(result);
         setDraft("");
+        setLiveFlowId(null);
+        setLiveStepIndex(INITIAL_LIVE_SCRIPT_INDEX);
         setMessages([
           {
+            kind: "message",
             id: assistantId,
             role: "assistant",
             content: "",
@@ -286,6 +474,7 @@ export function ConciergePanel({
       setMessages((currentMessages) => [
         ...currentMessages,
         {
+          kind: "message",
           id: createMessageId("user"),
           role: "user",
           content: text,
@@ -293,9 +482,25 @@ export function ConciergePanel({
         },
       ]);
       setDraft("");
-      queueAssistantResponse(buildFollowUpAssistantResponse(text, lead));
+      const nextFlowId = liveFlowId ?? selectLiveFlowId(text);
+      const nextTurn = getNextScriptedAssistantTurn({
+        flowId: nextFlowId,
+        currentStepIndex: liveFlowId ? liveStepIndex : INITIAL_LIVE_SCRIPT_INDEX,
+        createSurfaceId: () => createMessageId("surface"),
+      });
+
+      setLiveFlowId(nextFlowId);
+      setLiveStepIndex(nextTurn.nextStepIndex);
+      queueAssistantResponse(nextTurn.content, nextTurn.surfaceAfter);
     },
-    [createMessageId, isAssistantBusy, lead, queueAssistantResponse],
+    [
+      createMessageId,
+      isAssistantBusy,
+      lead,
+      liveFlowId,
+      liveStepIndex,
+      queueAssistantResponse,
+    ],
   );
 
   const handleSendMessage = useCallback(() => {
@@ -310,7 +515,7 @@ export function ConciergePanel({
   );
 
   function shouldShowStarterPrompts(
-    message: ConciergeMessage,
+    message: ConciergeThreadItem,
     index: number,
   ) {
     if (!lead || isAssistantBusy) {
@@ -318,6 +523,7 @@ export function ConciergePanel({
     }
 
     return (
+      isMessageItem(message) &&
       index === 0 &&
       !hasUserMessages &&
       message.role === "assistant" &&
@@ -347,33 +553,57 @@ export function ConciergePanel({
               aria-live="polite"
               aria-busy={isAssistantBusy || undefined}
             >
-              {messages.map((message, index) => (
-                <Fragment key={message.id}>
-                  {message.status === "thinking" ? (
-                    <ChatThinkingMessage />
-                  ) : (
-                    <ChatMessage
-                      role={message.role}
-                      aria-busy={message.status === "streaming" || undefined}
-                    >
-                      {message.content}
-                    </ChatMessage>
-                  )}
-                  {shouldShowStarterPrompts(message, index) ? (
-                    <div className="chat-message-enter flex w-full">
-                      <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
-                        {STARTER_PROMPTS.map((prompt) => (
-                          <Prompt
-                            key={prompt}
-                            prompt={prompt}
-                            onPromptSelect={handleStarterPromptSelect}
-                          />
-                        ))}
+              {messages.map((message, index) => {
+                if (message.kind === "recommendation") {
+                  return (
+                    <RecommendationCard
+                      key={message.id}
+                      title={message.step.title}
+                      description={message.step.description}
+                      primaryAction={message.step.primaryAction}
+                      secondaryAction={message.step.secondaryAction}
+                    />
+                  );
+                }
+
+                if (message.kind === "resources") {
+                  return <ResourceCards key={message.id} step={message.step} />;
+                }
+
+                if (message.kind === "availability") {
+                  return (
+                    <AvailabilityCard key={message.id} step={message.step} />
+                  );
+                }
+
+                return (
+                  <Fragment key={message.id}>
+                    {message.status === "thinking" ? (
+                      <ChatThinkingMessage />
+                    ) : (
+                      <ChatMessage
+                        role={message.role}
+                        aria-busy={message.status === "streaming" || undefined}
+                      >
+                        {message.content}
+                      </ChatMessage>
+                    )}
+                    {shouldShowStarterPrompts(message, index) ? (
+                      <div className="chat-message-enter flex w-full">
+                        <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+                          {STARTER_PROMPTS.map((prompt) => (
+                            <Prompt
+                              key={prompt}
+                              prompt={prompt}
+                              onPromptSelect={handleStarterPromptSelect}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                </Fragment>
-              ))}
+                    ) : null}
+                  </Fragment>
+                );
+              })}
             </ChatThread>
           </ChatBody>
           <ChatComposer

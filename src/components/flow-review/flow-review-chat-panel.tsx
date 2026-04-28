@@ -4,6 +4,7 @@ import {
   type UIEvent,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -856,6 +857,32 @@ export function FlowReviewChatPanel({
   const isSchedulePanelOpen =
     isScheduledSpecialistFlow && scheduledSpecialistState === "scheduling";
   const shellVariant = isSchedulePanelOpen ? "expanded" : variant;
+
+  useLayoutEffect(() => {
+    const chatBody = chatBodyRef.current;
+
+    if (!chatBody) {
+      return;
+    }
+
+    chatBody.scrollTop = chatBody.scrollHeight;
+  }, [flow.title, isSchedulePanelOpen]);
+
+  useEffect(() => {
+    const scrollFrame = window.requestAnimationFrame(() => {
+      const chatBody = chatBodyRef.current;
+
+      if (!chatBody) {
+        return;
+      }
+
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
+
+    return () => {
+      window.cancelAnimationFrame(scrollFrame);
+    };
+  }, [flow.title, isSchedulePanelOpen]);
 
   useEffect(() => {
     if (scheduledSpecialistState !== "matching") {

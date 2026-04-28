@@ -12,15 +12,31 @@ import Link from "next/link";
 import { Icon } from "@/components/primitives/icon";
 import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 
+const LIVE_PROTOTYPE_NAV_ITEM = {
+  id: "live",
+  href: "/",
+  label: "Live prototype",
+} as const;
+
 type ReviewShellStateMenuOption = Readonly<{
   id: string;
   label: string;
   value: boolean;
 }>;
 
+type ReviewShellModeMenuOption = Readonly<{
+  id: string;
+  href: string;
+  label: string;
+}>;
+
 const loginOptions: ReadonlyArray<ReviewShellStateMenuOption> = [
   { id: "signed-in", label: "Signed in", value: true },
   { id: "signed-out", label: "Signed out", value: false },
+];
+const modeOptions: ReadonlyArray<ReviewShellModeMenuOption> = [
+  LIVE_PROTOTYPE_NAV_ITEM,
+  ...FLOW_REVIEW_NAV_ITEMS,
 ];
 
 type ReviewShellStateMenuProps = Readonly<{
@@ -44,16 +60,16 @@ export function ReviewShellStateMenu({
 }: ReviewShellStateMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Array<HTMLElement | null>>([]);
-  const optionCount = loginOptions.length + FLOW_REVIEW_NAV_ITEMS.length;
-  const activeIntentIndex = FLOW_REVIEW_NAV_ITEMS.findIndex(
+  const optionCount = modeOptions.length + loginOptions.length;
+  const activeModeIndex = modeOptions.findIndex(
     (option) => option.href === pathname,
   );
   const activeLoginIndex = loginOptions.findIndex(
     (option) => option.value === isSignedIn,
   );
   const focusIndex =
-    activeIntentIndex >= 0
-      ? loginOptions.length + activeIntentIndex
+    activeModeIndex >= 0
+      ? loginOptions.length + activeModeIndex
       : activeLoginIndex >= 0
         ? activeLoginIndex
         : 0;
@@ -158,7 +174,7 @@ export function ReviewShellStateMenu({
           id="review-shell-login-menu-heading"
           className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
         >
-          Login
+          Visitor
         </p>
         {loginOptions.map((option, index) => {
           const isSelected = option.value === isSignedIn;
@@ -201,16 +217,16 @@ export function ReviewShellStateMenu({
 
       <div
         role="group"
-        aria-labelledby="review-shell-intent-menu-heading"
+        aria-labelledby="review-shell-mode-menu-heading"
         className="mt-2 space-y-1 border-t border-slate-200/70 pt-2"
       >
         <p
-          id="review-shell-intent-menu-heading"
+          id="review-shell-mode-menu-heading"
           className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
         >
-          Intent
+          Mode
         </p>
-        {FLOW_REVIEW_NAV_ITEMS.map((option, optionIndex) => {
+        {modeOptions.map((option, optionIndex) => {
           const index = loginOptions.length + optionIndex;
           const isSelected = option.href === pathname;
 
