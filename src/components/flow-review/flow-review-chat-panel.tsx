@@ -999,13 +999,11 @@ export function FlowReviewChatPanel({
     <ChatThread
       aria-label={`${flow.label} flow conversation`}
       className={isSchedulePanelOpen ? "chat-schedule-thread" : undefined}
-      style={
-        isSchedulePanelOpen
-          ? { paddingBottom: "var(--design-spacing-xxxl)" }
-          : undefined
-      }
     >
       {flow.steps.map(renderReviewStep)}
+      {isSchedulePanelOpen ? (
+        <div aria-hidden="true" className="h-lg shrink-0" />
+      ) : null}
     </ChatThread>
   );
 
