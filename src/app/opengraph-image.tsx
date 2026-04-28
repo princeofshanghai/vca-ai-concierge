@@ -49,7 +49,7 @@ export default function OpenGraphImage() {
             color: "rgb(71, 85, 105)",
           }}
         >
-          LinkedIn Hiring prototype
+          AI Concierge prototypes
         </div>
 
         <div
@@ -116,7 +116,7 @@ export default function OpenGraphImage() {
                   color: "rgb(3, 105, 161)",
                 }}
               >
-                Prototype
+                Hiring
               </div>
               <div
                 style={{
@@ -126,7 +126,7 @@ export default function OpenGraphImage() {
                   padding: "10px 18px",
                 }}
               >
-                Components
+                Premium
               </div>
             </div>
             <div style={{ display: "flex" }}>Internal preview</div>

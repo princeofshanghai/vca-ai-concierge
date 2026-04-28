@@ -51,10 +51,11 @@ type ChatComposerProps = HTMLAttributes<HTMLDivElement> & {
   onSend?: () => void;
   sendDisabled?: boolean;
   sendLoading?: boolean;
+  showVoiceMode?: boolean;
 };
 
 type ChatThreadProps = HTMLAttributes<HTMLDivElement> & {
-  timestamp?: string;
+  timestamp?: string | null;
 };
 
 type ChatMessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -277,7 +278,9 @@ export function ChatThread({
         className,
       )}
     >
-      <p className="text-center text-body-xs text-text-meta">{timestamp}</p>
+      {timestamp ? (
+        <p className="text-center text-body-xs text-text-meta">{timestamp}</p>
+      ) : null}
       <div className="flex flex-col gap-lg">{children}</div>
     </div>
   );
@@ -420,7 +423,7 @@ export function Prompt({
       )}
       onClick={handleClick}
     >
-      <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+      <span className="min-w-0 flex-1 whitespace-normal break-words">
         {label}
       </span>
     </button>
@@ -474,6 +477,7 @@ export function ChatComposer({
   onSend,
   sendDisabled = false,
   sendLoading = false,
+  showVoiceMode = true,
   ...props
 }: ChatComposerProps) {
   const composerRef = useRef<HTMLDivElement>(null);
@@ -490,7 +494,7 @@ export function ChatComposer({
   const hasComposerText = composerText.trim().length > 0;
   const isSendDisabled = sendDisabled || inputProps?.disabled || sendLoading;
   const canSend = hasComposerText && !isSendDisabled;
-  const shouldShowSendButton = hasComposerText || sendLoading;
+  const shouldShowSendButton = !showVoiceMode || hasComposerText || sendLoading;
 
   const getComposerContentWidth = useCallback(
     (textarea: HTMLTextAreaElement) => {
@@ -634,12 +638,14 @@ export function ChatComposer({
             isMultiline && "justify-end justify-self-end",
           )}
         >
-          <GhostIconButton
-            label="Use microphone"
-            icon="microphone-fill"
-            size="small"
-            touchTarget={false}
-          />
+          {showVoiceMode ? (
+            <GhostIconButton
+              label="Use microphone"
+              icon="microphone-fill"
+              size="small"
+              touchTarget={false}
+            />
+          ) : null}
           {shouldShowSendButton ? (
             <ButtonIcon
               label="Send message"
@@ -650,9 +656,9 @@ export function ChatComposer({
               loading={sendLoading}
               onClick={onSend}
             />
-          ) : (
+          ) : showVoiceMode ? (
             <VoiceModePlaceholderButton />
-          )}
+          ) : null}
         </div>
       </div>
     </div>

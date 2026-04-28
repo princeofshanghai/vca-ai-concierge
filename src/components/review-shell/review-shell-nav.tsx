@@ -1,37 +1,83 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+import { premiumSignalFlowNavItems } from "@/components/premium/premium-concierge-flows";
 import { Icon } from "@/components/primitives/icon";
 
 import { useReviewShellState } from "./review-shell-state";
 import { ReviewShellStateMenu } from "./review-shell-state-menu";
 
-const PROTOTYPE_HREF = "/";
+const HIRING_PROTOTYPE_HREF = "/hiring";
+const PREMIUM_PROTOTYPE_HREF = "/premium";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
+const PREMIUM_LIVE_NAV_ITEM = {
+  id: "premium-live",
+  href: PREMIUM_PROTOTYPE_HREF,
+  label: "Live prototype",
+} as const;
+const premiumModeOptions = [
+  PREMIUM_LIVE_NAV_ITEM,
+  ...premiumSignalFlowNavItems,
+] as const;
 
-const reviewDestinations = [
-  {
-    href: PROTOTYPE_HREF,
-    label: "Prototype",
-    matches: (pathname: string) =>
-      pathname === PROTOTYPE_HREF || pathname.startsWith("/internal/flows"),
-  },
-  {
-    href: "/internal/components",
-    label: "Components",
-    matches: (pathname: string) => pathname.startsWith("/internal/components"),
-  },
-];
+type ReviewDestination = Readonly<{
+  href: string;
+  label: string;
+  matches: (pathname: string) => boolean;
+  menu?: "hiring" | "premium";
+}>;
+
+function getPremiumNavLabel(pathname: string) {
+  return (
+    premiumSignalFlowNavItems.find((option) => option.href === pathname)
+      ?.label ?? "Premium"
+  );
+}
+
+function getReviewDestinations(
+  pathname: string,
+): ReadonlyArray<ReviewDestination> {
+  if (pathname.startsWith("/premium")) {
+    return [
+      {
+        href: PREMIUM_PROTOTYPE_HREF,
+        label: getPremiumNavLabel(pathname),
+        menu: "premium",
+        matches: (candidate) => candidate.startsWith("/premium"),
+      },
+    ];
+  }
+
+  return [
+    {
+      href: HIRING_PROTOTYPE_HREF,
+      label: "LTS Hiring",
+      menu: "hiring",
+      matches: (candidate) =>
+        candidate === HIRING_PROTOTYPE_HREF ||
+        candidate.startsWith("/internal/flows"),
+    },
+    {
+      href: "/internal/components",
+      label: "Components",
+      matches: (candidate) => candidate.startsWith("/internal/components"),
+    },
+  ];
+}
 
 export function ReviewShellNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { isSignedIn, setIsSignedIn } = useReviewShellState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const reviewDestinations = useMemo(
+    () => getReviewDestinations(pathname),
+    [pathname],
+  );
 
   const listRef = useRef<HTMLUListElement | null>(null);
   const itemRefs = useRef<Record<string, HTMLElement | null>>({});
@@ -77,12 +123,12 @@ export function ReviewShellNav() {
     return () => {
       window.removeEventListener("resize", updateIndicator);
     };
-  }, [pathname, isSignedIn]);
+  }, [pathname, isSignedIn, reviewDestinations]);
 
   function handleLoginSelect(next: boolean) {
     setIsSignedIn(next);
     setIsMenuOpen(false);
-    router.push(PROTOTYPE_HREF);
+    router.push(HIRING_PROTOTYPE_HREF);
   }
 
   function closeMenu() {
@@ -104,9 +150,10 @@ export function ReviewShellNav() {
           />
           {reviewDestinations.map((destination) => {
             const isActive = destination.matches(pathname);
-            const isPrototype = destination.href === PROTOTYPE_HREF;
+            const hasMenu = Boolean(destination.menu);
+            const isPremiumMenu = destination.menu === "premium";
 
-            if (isPrototype) {
+            if (hasMenu) {
               return (
                 <li key={destination.href} className="relative z-10">
                   <button
@@ -115,7 +162,9 @@ export function ReviewShellNav() {
                     aria-haspopup="menu"
                     aria-expanded={isMenuOpen}
                     aria-current={isActive ? "page" : undefined}
-                    aria-label="Open prototype review menu"
+                    aria-label={`Open ${
+                      isPremiumMenu ? "Premium" : "LTS Hiring"
+                    } review menu`}
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     ref={(element) => {
                       itemRefs.current[destination.href] = element;
@@ -142,10 +191,15 @@ export function ReviewShellNav() {
                     isOpen={isMenuOpen}
                     isSignedIn={isSignedIn}
                     pathname={pathname}
-                    onLoginSelect={handleLoginSelect}
+                    onLoginSelect={
+                      isPremiumMenu ? undefined : handleLoginSelect
+                    }
                     onClose={closeMenu}
                     triggerRef={triggerRef}
                     labelledBy={TRIGGER_ID}
+                    modeOptions={isPremiumMenu ? premiumModeOptions : undefined}
+                    modeHeading={isPremiumMenu ? "Signal" : undefined}
+                    showVisitorControls={!isPremiumMenu}
                   />
                 </li>
               );

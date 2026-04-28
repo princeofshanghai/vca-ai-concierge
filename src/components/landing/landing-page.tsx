@@ -25,6 +25,7 @@ const PANEL_TRANSITION_MS = 240;
 type ChatPanelPresence = "closed" | "entering" | "open" | "exiting";
 
 type LandingPageProps = Readonly<{
+  homeHref?: string;
   reviewFlow?: FlowReview;
 }>;
 
@@ -35,7 +36,10 @@ const communityProBold = localFont({
   display: "swap",
 });
 
-export function LandingPage({ reviewFlow }: LandingPageProps) {
+export function LandingPage({
+  homeHref = "/hiring",
+  reviewFlow,
+}: LandingPageProps) {
   const router = useRouter();
   const isReviewFlow = Boolean(reviewFlow);
   const [chatPanelPresence, setChatPanelPresence] =
@@ -126,7 +130,7 @@ export function LandingPage({ reviewFlow }: LandingPageProps) {
   const requestCloseChat = useCallback(() => {
     if (isReviewFlow) {
       setIsReviewSidePanelOpen(false);
-      router.push("/");
+      router.push(homeHref);
       return;
     }
 
@@ -143,6 +147,7 @@ export function LandingPage({ reviewFlow }: LandingPageProps) {
   }, [
     chatPanelPresence,
     closeChat,
+    homeHref,
     isChatConversationStarted,
     isReviewFlow,
     router,
@@ -191,7 +196,7 @@ export function LandingPage({ reviewFlow }: LandingPageProps) {
     <main className="-mt-28 min-h-dvh bg-white sm:-mt-32">
       <header className="relative z-10 flex h-16 items-center justify-between border-b border-border-subtle bg-white px-6 sm:px-8">
         <Link
-          href="/"
+          href={homeHref}
           aria-label="LinkedIn Hire home"
           className="inline-flex shrink-0 items-center focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
         >

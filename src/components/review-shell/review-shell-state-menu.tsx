@@ -14,7 +14,7 @@ import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 
 const LIVE_PROTOTYPE_NAV_ITEM = {
   id: "live",
-  href: "/",
+  href: "/hiring",
   label: "Live prototype",
 } as const;
 
@@ -34,7 +34,7 @@ const loginOptions: ReadonlyArray<ReviewShellStateMenuOption> = [
   { id: "signed-in", label: "Signed in", value: true },
   { id: "signed-out", label: "Signed out", value: false },
 ];
-const modeOptions: ReadonlyArray<ReviewShellModeMenuOption> = [
+const defaultModeOptions: ReadonlyArray<ReviewShellModeMenuOption> = [
   LIVE_PROTOTYPE_NAV_ITEM,
   ...FLOW_REVIEW_NAV_ITEMS,
 ];
@@ -43,10 +43,13 @@ type ReviewShellStateMenuProps = Readonly<{
   isOpen: boolean;
   isSignedIn: boolean;
   pathname: string;
-  onLoginSelect: (next: boolean) => void;
+  onLoginSelect?: (next: boolean) => void;
   onClose: () => void;
   triggerRef: RefObject<HTMLElement | null>;
   labelledBy?: string;
+  modeOptions?: ReadonlyArray<ReviewShellModeMenuOption>;
+  modeHeading?: string;
+  showVisitorControls?: boolean;
 }>;
 
 export function ReviewShellStateMenu({
@@ -57,19 +60,23 @@ export function ReviewShellStateMenu({
   onClose,
   triggerRef,
   labelledBy,
+  modeOptions = defaultModeOptions,
+  modeHeading = "Mode",
+  showVisitorControls = true,
 }: ReviewShellStateMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Array<HTMLElement | null>>([]);
-  const optionCount = modeOptions.length + loginOptions.length;
+  const visitorOptions = showVisitorControls ? loginOptions : [];
+  const optionCount = modeOptions.length + visitorOptions.length;
   const activeModeIndex = modeOptions.findIndex(
     (option) => option.href === pathname,
   );
-  const activeLoginIndex = loginOptions.findIndex(
+  const activeLoginIndex = visitorOptions.findIndex(
     (option) => option.value === isSignedIn,
   );
   const focusIndex =
     activeModeIndex >= 0
-      ? loginOptions.length + activeModeIndex
+      ? visitorOptions.length + activeModeIndex
       : activeLoginIndex >= 0
         ? activeLoginIndex
         : 0;
@@ -165,69 +172,74 @@ export function ReviewShellStateMenu({
       aria-labelledby={labelledBy}
       className="absolute left-0 top-full z-50 mt-2 min-w-[280px] rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5"
     >
-      <div
-        role="group"
-        aria-labelledby="review-shell-login-menu-heading"
-        className="space-y-1"
-      >
-        <p
-          id="review-shell-login-menu-heading"
-          className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
+      {showVisitorControls ? (
+        <div
+          role="group"
+          aria-labelledby="review-shell-login-menu-heading"
+          className="space-y-1"
         >
-          Visitor
-        </p>
-        {loginOptions.map((option, index) => {
-          const isSelected = option.value === isSignedIn;
+          <p
+            id="review-shell-login-menu-heading"
+            className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
+          >
+            Visitor
+          </p>
+          {visitorOptions.map((option, index) => {
+            const isSelected = option.value === isSignedIn;
 
-          return (
-            <button
-              key={option.id}
-              ref={(element) => {
-                itemRefs.current[index] = element;
-              }}
-              type="button"
-              role="menuitemradio"
-              aria-checked={isSelected}
-              tabIndex={index === focusIndex ? 0 : -1}
-              onClick={() => {
-                onLoginSelect(option.value);
-              }}
-              onKeyDown={(event) => handleItemKeyDown(event, index)}
-              className={[
-                "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-medium tracking-[0.01em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-                isSelected
-                  ? "bg-sky-50 text-sky-900"
-                  : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-              ].join(" ")}
-            >
-              <span
-                aria-hidden="true"
+            return (
+              <button
+                key={option.id}
+                ref={(element) => {
+                  itemRefs.current[index] = element;
+                }}
+                type="button"
+                role="menuitemradio"
+                aria-checked={isSelected}
+                tabIndex={index === focusIndex ? 0 : -1}
+                onClick={() => {
+                  onLoginSelect?.(option.value);
+                }}
+                onKeyDown={(event) => handleItemKeyDown(event, index)}
                 className={[
-                  "inline-flex size-4 shrink-0 items-center justify-center",
-                  isSelected ? "text-sky-700" : "text-transparent",
+                  "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-medium tracking-[0.01em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+                  isSelected
+                    ? "bg-sky-50 text-sky-900"
+                    : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
                 ].join(" ")}
               >
-                <Icon name="check" size="small" />
-              </span>
-              <span>{option.label}</span>
-            </button>
-          );
-        })}
-      </div>
+                <span
+                  aria-hidden="true"
+                  className={[
+                    "inline-flex size-4 shrink-0 items-center justify-center",
+                    isSelected ? "text-sky-700" : "text-transparent",
+                  ].join(" ")}
+                >
+                  <Icon name="check" size="small" />
+                </span>
+                <span>{option.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       <div
         role="group"
         aria-labelledby="review-shell-mode-menu-heading"
-        className="mt-2 space-y-1 border-t border-slate-200/70 pt-2"
+        className={[
+          "space-y-1",
+          showVisitorControls ? "mt-2 border-t border-slate-200/70 pt-2" : "",
+        ].join(" ")}
       >
         <p
           id="review-shell-mode-menu-heading"
           className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
         >
-          Mode
+          {modeHeading}
         </p>
         {modeOptions.map((option, optionIndex) => {
-          const index = loginOptions.length + optionIndex;
+          const index = visitorOptions.length + optionIndex;
           const isSelected = option.href === pathname;
 
           return (

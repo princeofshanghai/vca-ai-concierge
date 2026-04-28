@@ -1,8 +1,8 @@
 # Onboarding
 
-Design spec for the screen that lives between the marketing site's "Contact sales" CTA and the AI Concierge chat thread. It captures the four required lead fields, then transitions into the first chat turn.
+Design spec for the Hiring concierge screen that lives between the marketing site's "Contact sales" CTA and the AI Concierge chat thread. It captures the four required lead fields, then transitions into the first chat turn.
 
-This file is a UX/flow spec, not an implementation guide. Reference [PROJECT.md](../PROJECT.md) for product context and persona, and [DESIGN.md](../DESIGN.md) for the token vocabulary used throughout.
+This file is a UX/flow spec, not an implementation guide. Reference [docs/hiring-concierge.md](hiring-concierge.md) for Hiring product context and persona, [PROJECT.md](../PROJECT.md) for shared workspace rules, and [DESIGN.md](../DESIGN.md) for the token vocabulary used throughout.
 
 ## What this is
 

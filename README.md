@@ -1,6 +1,6 @@
-# Blank App Foundation
+# VCA AI Concierge
 
-Minimal app scaffold built with Next.js 16, React 19, TypeScript, Tailwind CSS 4, ESLint, and npm.
+Shared prototype workspace for LinkedIn AI concierge surfaces.
 
 ## Stack
 
@@ -33,25 +33,17 @@ npm run build
 
 Open [http://localhost:3000](http://localhost:3000) after starting the dev server.
 
-## Structure
+## Prototype Routes
 
-- `src/app` route segments, pages, and layouts
-- `src/components` shared UI components
-- `src/lib` framework-agnostic helpers
-- `src/styles` global styling
-- `PROJECT.md` product definition placeholder
-- `DESIGN.md` design definition placeholder
-- `AGENTS.md` collaboration guidance for coding agents
+- `/` - shared concierge chooser
+- `/hiring` - LinkedIn Hiring / LTS concierge prototype
+- `/premium` - LinkedIn Premium survey-style landing prototype
+- `/internal/components` - internal component review surface
+- `/internal/flows/*` - Hiring-only flow review surfaces
 
-## Current State
+## Project Docs
 
-- Neutral system-font foundation
-- Minimal global styles
-- Placeholder internal component gallery at `/internal/components`
-- No business logic, state library, UI component library, or brand-specific tokens yet
-
-## Next Steps
-
-- Write `PROJECT.md` to define product scope, users, and flows.
-- Write `DESIGN.md` to define visual direction and shared UI rules.
-- Start adding app-specific components only after those two documents are in place.
+- [PROJECT.md](PROJECT.md) defines shared workspace rules and workstream separation.
+- [DESIGN.md](DESIGN.md) defines the shared visual system and component rules.
+- [docs/hiring-concierge.md](docs/hiring-concierge.md) defines the Hiring / LTS concierge.
+- [docs/premium-concierge.md](docs/premium-concierge.md) defines the current Premium prototype.

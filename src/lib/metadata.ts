@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const siteName = "VCA AI concierge";
 export const siteDescription =
-  "Prototype conversational layer and component library for the LinkedIn Hiring solutions concierge.";
+  "Shared prototype workspace and component library for LinkedIn AI concierge surfaces.";
 export const shareImageAlt = "VCA AI concierge share preview";
 
 function resolveSiteUrl() {
