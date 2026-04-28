@@ -1,0 +1,788 @@
+---
+version: "alpha"
+name: VCA AI Concierge Chat
+description: "Design system for the built VCA AI concierge landing surface, primitives, pills, chat UI components, and responsive behavior requirements."
+colors:
+  action: "#0A66C2"
+  action-hover: "#004182"
+  action-active: "#004182"
+  action-background-transparent-hover: "rgba(55, 143, 233, 0.1)"
+  action-background-transparent-active: "rgba(55, 143, 233, 0.2)"
+  action-focus-ring: "rgba(55, 143, 233, 0.08)"
+  on-action: "#FFFFFF"
+  checked: "#01754F"
+  checked-hover: "#004C33"
+  checked-active: "#004C33"
+  on-checked: "#FFFFFF"
+  on-checked-active: "rgba(255, 255, 255, 0.6)"
+  background: "#FFFFFF"
+  background-disabled: "rgba(140, 140, 140, 0.2)"
+  background-neutral-soft: "#F4F2EE"
+  surface-tint: "#EEF3FA"
+  background-transparent-hover: "rgba(140, 140, 140, 0.1)"
+  background-transparent-active: "rgba(140, 140, 140, 0.2)"
+  overlay-dim: "rgba(0, 0, 0, 0.2)"
+  scrim: "rgba(0, 0, 0, 0.6)"
+  ai-background-soft: "#E8F3FF"
+  ai-border: "#AAD6FF"
+  ai-icon: "#0A66C2"
+  tag-default-background: "rgba(140, 140, 140, 0.2)"
+  tag-positive-background: "#01754F"
+  tag-negative-background: "#CB112D"
+  tag-caution-background: "#AD4601"
+  tag-neutral-background: "#56687A"
+  tag-supportive-1-background: "#FDE2BC"
+  tag-supportive-2-background: "#FFDFD6"
+  tag-supportive-3-background: "#DAEBD1"
+  tag-supportive-4-background: "#DDE7F1"
+  tag-supportive-4-text: "#56687A"
+  tag-supportive-5-background: "#D9E9EC"
+  on-tag-strong: "#FFFFFF"
+  entity-ghost-background: "#EAE6DF"
+  entity-ghost-medium: "#9DB3C8"
+  entity-ghost-strong: "#788FA5"
+  entity-ghost-dark: "#56687A"
+  border: "rgba(0, 0, 0, 0.75)"
+  border-hover: "rgba(0, 0, 0, 0.9)"
+  border-active: "rgba(0, 0, 0, 0.9)"
+  border-subtle: "rgba(0, 0, 0, 0.3)"
+  border-faint: "rgba(140, 140, 140, 0.2)"
+  label: "rgba(0, 0, 0, 0.75)"
+  label-disabled: "rgba(0, 0, 0, 0.3)"
+  icon: "rgba(0, 0, 0, 0.75)"
+  icon-hover: "rgba(0, 0, 0, 0.9)"
+  icon-active: "rgba(0, 0, 0, 0.9)"
+  icon-disabled: "rgba(0, 0, 0, 0.3)"
+  text: "rgba(0, 0, 0, 0.9)"
+  text-hover: "rgba(0, 0, 0, 0.9)"
+  text-active: "rgba(0, 0, 0, 0.9)"
+  text-meta: "rgba(0, 0, 0, 0.6)"
+  text-disabled: "rgba(0, 0, 0, 0.3)"
+  negative: "#CB112D"
+  negative-hover: "#8A0015"
+  negative-active: "#8A0015"
+  neutral-focus-ring: "rgba(0, 0, 0, 0.15)"
+typography:
+  display-md:
+    fontFamily: System UI
+    fontSize: 32px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: 0.38px
+  heading-xl:
+    fontFamily: System UI
+    fontSize: 24px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: 0.38px
+  heading-lg:
+    fontFamily: System UI
+    fontSize: 20px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: 0.38px
+  heading-md:
+    fontFamily: System UI
+    fontSize: 16px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: -0.32px
+  control-md:
+    fontFamily: System UI
+    fontSize: 16px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: -0.32px
+  control-sm:
+    fontFamily: System UI
+    fontSize: 14px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: -0.15px
+  body-md:
+    fontFamily: System UI
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.25
+    letterSpacing: -0.32px
+  body-md-open:
+    fontFamily: System UI
+    fontSize: 16px
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: -0.32px
+  body-sm:
+    fontFamily: System UI
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.25
+    letterSpacing: -0.15px
+  body-sm-open:
+    fontFamily: System UI
+    fontSize: 14px
+    fontWeight: 400
+    lineHeight: 1.5
+    letterSpacing: -0.15px
+  body-xs:
+    fontFamily: System UI
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.25
+    letterSpacing: 0px
+  supportive-s:
+    fontFamily: System UI
+    fontSize: 12px
+    fontWeight: 400
+    lineHeight: 1.25
+    letterSpacing: 0px
+  supportive-s-strong:
+    fontFamily: System UI
+    fontSize: 12px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: 0px
+  label-xs:
+    fontFamily: System UI
+    fontSize: 12px
+    fontWeight: 600
+    lineHeight: 1.25
+    letterSpacing: 0px
+rounded:
+  xs: 4px
+  sm: 8px
+  entity-square-md: 12px
+  md: 16px
+  lg: 24px
+  xl: 32px
+  round: 360px
+spacing:
+  xxs: 2px
+  xs: 4px
+  sm: 8px
+  md: 12px
+  lg: 16px
+  xl: 20px
+  xxl: 24px
+  xxxl: 32px
+  stack: 40px
+  card-padding: 24px
+  panel-padding: 20px
+  pill-padding-inline: 16px
+  button-padding-inline: 24px
+layout:
+  viewport-min-width: 320px
+  mobile-breakpoint-max: 767px
+  tablet-breakpoint-min: 768px
+  desktop-breakpoint-min: 1024px
+  mobile-page-padding: 16px
+  tablet-page-padding: 24px
+  desktop-page-padding: 32px
+  panel-collapsed-width: 432px
+  panel-expanded-width: 1280px
+  panel-height: 780px
+  panel-content-max: 720px
+  schedule-collapsed-surface-width: 960px
+  schedule-collapsed-chat-track: 5fr
+  schedule-collapsed-side-track: 7fr
+  schedule-expanded-surface-width: 1440px
+  schedule-expanded-chat-track: 4fr
+  schedule-expanded-side-track: 5fr
+  chat-message-assistant-collapsed-max: 320px
+  chat-message-assistant-expanded-max: 528px
+  confirmation-dialog-width: 336px
+  mobile-panel-width: "100vw"
+  mobile-panel-height: "100dvh"
+  mobile-panel-rounded: 0px
+  mobile-panel-inset: 0px
+  panel-header-height: 64px
+  composer-height: 56px
+  composer-input-max-height: 144px
+  primary-action-height: 48px
+  compact-action-height: 32px
+  input-small-height: 28px
+  input-large-height: 48px
+  tag-small-height: 20px
+  tag-medium-height: 24px
+  ghost-icon-button-touch-height: 48px
+  ghost-icon-button-small-width: 32px
+  ghost-icon-button-medium-width: 48px
+  ghost-icon-button-small-compact-width: 24px
+  ghost-icon-button-medium-compact-width: 24px
+  ghost-icon-button-small-state-size: 32px
+  ghost-icon-button-medium-state-size: 40px
+  entity-size-16: 16px
+  entity-size-24: 24px
+  entity-size-32: 32px
+  entity-size-40: 40px
+  entity-size-48: 48px
+  entity-size-64: 64px
+  entity-size-80: 80px
+  entity-size-96: 96px
+  entity-size-128: 128px
+  entity-size-160: 160px
+iconography:
+  small:
+    size: 16px
+    color: currentColor
+  medium:
+    size: 24px
+    color: currentColor
+shadows:
+  raised: "0px 0px 1px rgba(140, 140, 140, 0.2), 0px 4px 12px rgba(0, 0, 0, 0.3)"
+elevation:
+  raised: "{shadows.raised}"
+motion:
+  durations:
+    instant: 0ms
+    fast: 150ms
+    base: 180ms
+    moderate: 240ms
+    slow: 320ms
+  easing:
+    standard: "cubic-bezier(0.2, 0, 0, 1)"
+    emphasized: "cubic-bezier(0.2, 0, 0, 1)"
+    exit: "cubic-bezier(0.4, 0, 1, 1)"
+  distances:
+    subtle-y: 4px
+    message-y: 8px
+    surface-y: 12px
+  patterns:
+    controls:
+      duration: "{motion.durations.fast}"
+      easing: "{motion.easing.standard}"
+      properties:
+        - color
+        - background-color
+        - border-color
+        - box-shadow
+      intent: "Use for hover, press, focus-visible, disabled, and compact control state changes."
+    composer-shape:
+      duration: "{motion.durations.fast}"
+      easing: "{motion.easing.standard}"
+      properties:
+        - border-radius
+        - padding
+        - border-color
+      intent: "Use when the composer changes between single-line and multiline states."
+    message-enter:
+      duration: "{motion.durations.base}"
+      easing: "{motion.easing.standard}"
+      translateY: "{motion.distances.message-y}"
+      opacity:
+        from: 0
+        to: 1
+      intent: "Use when user, assistant, or specialist messages appear in the thread."
+    assistant-thinking:
+      duration: "{motion.durations.slow}"
+      easing: "{motion.easing.standard}"
+      visual: "Text-only Thinking label with colors.ai-border sweeping across the text; do not use animated dots."
+      intent: "Use for temporary AI thinking states before a simulated assistant response begins."
+    assistant-response-stream:
+      cadence: "Reveal assistant text in short word-sized chunks, with slightly longer pauses after punctuation."
+      intent: "Use for prototype-only simulated AI responses so the chat feels live without implying a real model call."
+    panel-transition:
+      duration: "{motion.durations.moderate}"
+      easing: "{motion.easing.emphasized}"
+      translateY: "{motion.distances.surface-y}"
+      intent: "Use for opening, closing, expanding, or collapsing the chat panel."
+    recommendation-enter:
+      duration: "{motion.durations.moderate}"
+      easing: "{motion.easing.standard}"
+      translateY: "{motion.distances.subtle-y}"
+      opacity:
+        from: 0
+        to: 1
+      intent: "Use when a recommendation card or next-step surface appears after the conversation has enough context."
+    route-transition:
+      duration: "{motion.durations.moderate}"
+      easing: "{motion.easing.standard}"
+      translateY: "{motion.distances.subtle-y}"
+      opacity:
+        from: 0
+        to: 1
+      intent: "Use for future transitions between major prototype states, such as onboarding, chat, handoff, booking, and resources."
+    reduced-motion:
+      duration: "{motion.durations.instant}"
+      easing: "{motion.easing.standard}"
+      intent: "When reduced motion is preferred, remove translate and scale movement; keep only instant state changes or short opacity changes when needed for orientation."
+components:
+  responsive-page:
+    minViewportWidth: "{layout.viewport-min-width}"
+    mobilePadding: "{layout.mobile-page-padding}"
+    tabletPadding: "{layout.tablet-page-padding}"
+    desktopPadding: "{layout.desktop-page-padding}"
+  responsive-chat-panel-mobile:
+    width: "{layout.mobile-panel-width}"
+    height: "{layout.mobile-panel-height}"
+    rounded: "{layout.mobile-panel-rounded}"
+    inset: "{layout.mobile-panel-inset}"
+    headerHeight: "{layout.panel-header-height}"
+    composerMinHeight: "{layout.composer-height}"
+  button-medium:
+    typography: "{typography.control-md}"
+    rounded: "{rounded.round}"
+    height: 48px
+    padding: "0 24px"
+  button-small:
+    typography: "{typography.control-sm}"
+    rounded: "{rounded.round}"
+    height: 32px
+    padding: "0 12px"
+  button-primary:
+    backgroundColor: "{colors.action}"
+    textColor: "{colors.on-action}"
+  button-primary-hover:
+    backgroundColor: "{colors.action-hover}"
+    textColor: "{colors.on-action}"
+  button-primary-active:
+    backgroundColor: "{colors.action-active}"
+    textColor: "{colors.on-action}"
+  button-secondary:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.action}"
+    borderColor: "{colors.action}"
+  button-secondary-hover:
+    backgroundColor: "{colors.action-background-transparent-hover}"
+    textColor: "{colors.action-hover}"
+    borderColor: "{colors.action-hover}"
+  button-secondary-active:
+    backgroundColor: "{colors.action-background-transparent-active}"
+    textColor: "{colors.action-active}"
+    borderColor: "{colors.action-active}"
+  button-tertiary:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text-meta}"
+    borderColor: "{colors.border-subtle}"
+  button-tertiary-hover:
+    backgroundColor: "{colors.background-transparent-hover}"
+    textColor: "{colors.text-hover}"
+    borderColor: "{colors.border-hover}"
+  button-tertiary-active:
+    backgroundColor: "{colors.background-transparent-active}"
+    textColor: "{colors.text-active}"
+    borderColor: "{colors.border-active}"
+  button-disabled:
+    backgroundColor: "{colors.background-disabled}"
+    textColor: "{colors.text-disabled}"
+    borderColor: "transparent"
+  confirmation-dialog:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    backdropColor: "{colors.scrim}"
+    width: "{layout.confirmation-dialog-width}"
+    rounded: "{rounded.sm}"
+    borderColor: "{colors.border-faint}"
+    shadow: "{shadows.raised}"
+    headerTypography: "{typography.heading-lg}"
+    bodyTypography: "{typography.body-sm-open}"
+    headerPadding: "4px 4px 4px 24px"
+    bodyPadding: "24px"
+    footerPadding: "16px 24px"
+    footerGap: "{spacing.sm}"
+  pill-choice:
+    touchHeight: 48px
+    height: 32px
+    typography: "{typography.control-sm}"
+    rounded: "{rounded.md}"
+    gap: "{spacing.xs}"
+    padding: "4px 12px"
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.label}"
+    borderColor: "{colors.border-subtle}"
+    hoverBackgroundColor: "{colors.background-transparent-hover}"
+    hoverTextColor: "{colors.text-hover}"
+    hoverBorderColor: "{colors.border}"
+    activeBackgroundColor: "{colors.background-transparent-active}"
+    activeTextColor: "{colors.text-active}"
+    activeBorderColor: "{colors.border-active}"
+    checkedBackgroundColor: "{colors.checked}"
+    checkedTextColor: "{colors.on-checked}"
+    checkedHoverBackgroundColor: "{colors.checked-hover}"
+    checkedActiveBackgroundColor: "{colors.checked-active}"
+    checkedActiveTextColor: "{colors.on-checked-active}"
+    disabledBackgroundColor: "{colors.background-disabled}"
+    disabledTextColor: "{colors.label-disabled}"
+  tag:
+    smallHeight: "{layout.tag-small-height}"
+    mediumHeight: "{layout.tag-medium-height}"
+    smallTypography: "{typography.body-sm}"
+    mediumTypography: "{typography.body-md}"
+    rounded: "{rounded.xs}"
+    padding: "0 8px"
+    textColor: "{colors.label}"
+    strongTextColor: "{colors.on-tag-strong}"
+    defaultBackgroundColor: "{colors.tag-default-background}"
+    positiveBackgroundColor: "{colors.tag-positive-background}"
+    negativeBackgroundColor: "{colors.tag-negative-background}"
+    cautionBackgroundColor: "{colors.tag-caution-background}"
+    neutralBackgroundColor: "{colors.tag-neutral-background}"
+    supportive1BackgroundColor: "{colors.tag-supportive-1-background}"
+    supportive2BackgroundColor: "{colors.tag-supportive-2-background}"
+    supportive3BackgroundColor: "{colors.tag-supportive-3-background}"
+    supportive4BackgroundColor: "{colors.tag-supportive-4-background}"
+    supportive4TextColor: "{colors.tag-supportive-4-text}"
+    supportive5BackgroundColor: "{colors.tag-supportive-5-background}"
+  icon:
+    smallSize: 16px
+    mediumSize: 24px
+    color: currentColor
+  entity:
+    ghostBackgroundColor: "{colors.entity-ghost-background}"
+    ghostMediumColor: "{colors.entity-ghost-medium}"
+    ghostStrongColor: "{colors.entity-ghost-strong}"
+    ghostDarkColor: "{colors.entity-ghost-dark}"
+    defaultSize: 40px
+    sizes:
+      - 16px
+      - 24px
+      - 32px
+      - 40px
+      - 48px
+      - 64px
+      - 80px
+      - 96px
+      - 128px
+      - 160px
+    circleRadius: "{rounded.round}"
+    squareRadii:
+      16px: "{rounded.xs}"
+      24px: "{rounded.xs}"
+      32px: "{rounded.xs}"
+      40px: "{rounded.xs}"
+      48px: "{rounded.sm}"
+      64px: "{rounded.sm}"
+      80px: "{rounded.sm}"
+      96px: "{rounded.entity-square-md}"
+      128px: "{rounded.md}"
+      160px: "{rounded.lg}"
+  button-icon-small:
+    rounded: "{rounded.round}"
+    height: 48px
+    width: 32px
+    stateSize: 32px
+    iconSize: "{iconography.small}"
+  button-icon-medium:
+    rounded: "{rounded.round}"
+    height: 48px
+    width: 48px
+    stateSize: 48px
+    iconSize: "{iconography.medium}"
+  ghost-icon-button-small:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-meta}"
+    rounded: "{rounded.round}"
+    height: 48px
+    width: 32px
+    compactWidth: 24px
+    stateSize: 32px
+    iconSize: "{iconography.small}"
+  ghost-icon-button-medium:
+    backgroundColor: "transparent"
+    textColor: "{colors.text-meta}"
+    rounded: "{rounded.round}"
+    height: 48px
+    width: 48px
+    compactWidth: 24px
+    stateSize: 40px
+    iconSize: "{iconography.small}"
+  text-input-small:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    placeholderColor: "{colors.text-disabled}"
+    labelColor: "{colors.label}"
+    iconColor: "{colors.icon}"
+    typography: "{typography.body-sm}"
+    supportingTypography: "{typography.supportive-s}"
+    rounded: "{rounded.xs}"
+    height: 28px
+    padding: "0 4px"
+    borderColor: "{colors.border}"
+    hoverBorderColor: "{colors.border-hover}"
+    activeBorderColor: "{colors.border-active}"
+    focusBorderColor: "{colors.border-active}"
+    focusRingColor: "transparent"
+  text-input-large:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    placeholderColor: "{colors.text-disabled}"
+    labelColor: "{colors.label}"
+    iconColor: "{colors.icon}"
+    typography: "{typography.body-md}"
+    supportingTypography: "{typography.supportive-s}"
+    rounded: "{rounded.xs}"
+    height: 48px
+    padding: "0 12px"
+    borderColor: "{colors.border}"
+    hoverBorderColor: "{colors.border-hover}"
+    activeBorderColor: "{colors.border-active}"
+    focusBorderColor: "{colors.border-active}"
+    focusRingColor: "transparent"
+  text-input-error:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    supportingTextColor: "{colors.negative}"
+    supportingTypography: "{typography.supportive-s-strong}"
+    rounded: "{rounded.xs}"
+    borderColor: "{colors.negative}"
+    hoverBorderColor: "{colors.negative-hover}"
+    activeBorderColor: "{colors.negative-active}"
+    focusBorderColor: "{colors.negative-active}"
+    focusRingColor: "transparent"
+  text-input-disabled:
+    backgroundColor: "{colors.background-disabled}"
+    textColor: "{colors.text-disabled}"
+    labelColor: "{colors.label-disabled}"
+    iconColor: "{colors.icon-disabled}"
+    supportingTextColor: "{colors.text-disabled}"
+    rounded: "{rounded.xs}"
+    borderColor: "transparent"
+  chat-panel-collapsed:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.lg}"
+    width: 432px
+    height: 780px
+    borderColor: "{colors.border-faint}"
+    shadow: "{shadows.raised}"
+  chat-panel-expanded:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    rounded: "{rounded.xl}"
+    width: 1280px
+    height: 780px
+    borderColor: "{colors.border-faint}"
+    backdropColor: "{colors.overlay-dim}"
+    shadow: "{shadows.raised}"
+  chat-header:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    height: 64px
+    padding: "0 12px 0 20px"
+    borderColor: "{colors.border-faint}"
+    actionWidth: 40px
+    actionGap: 0px
+  chat-message-assistant:
+    backgroundColor: "transparent"
+    textColor: "{colors.text}"
+    typography: "{typography.body-sm-open}"
+    collapsedMaxWidth: 320px
+    expandedMaxWidth: 528px
+    padding: "0 8px 0 0"
+  chat-message-user:
+    backgroundColor: "{colors.ai-background-soft}"
+    textColor: "{colors.text}"
+    typography: "{typography.body-sm-open}"
+    rounded: "{rounded.lg}"
+    maxWidth: 440px
+    padding: "20px 24px"
+  chat-message-representative:
+    backgroundColor: "{colors.background-neutral-soft}"
+    textColor: "{colors.text}"
+    typography: "{typography.body-sm-open}"
+    rounded: "{rounded.lg}"
+    maxWidth: 440px
+    padding: "20px 24px"
+  recommendation-card:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.md}"
+    borderColor: "{colors.ai-border}"
+    maxWidth: 344px
+    padding: "20px 12px 20px 20px"
+  prompt:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    typography: "{typography.body-sm}"
+    rounded: "{rounded.md}"
+    borderColor: "{colors.border-faint}"
+    hoverBackgroundColor: "{colors.background-transparent-hover}"
+    activeBackgroundColor: "{colors.background-transparent-active}"
+    focusRingColor: "{colors.neutral-focus-ring}"
+    disabledBackgroundColor: "{colors.background-disabled}"
+    disabledTextColor: "{colors.text-disabled}"
+    maxWidth: 301px
+    padding: "12px"
+  chat-composer:
+    backgroundColor: "{colors.background}"
+    textColor: "{colors.text}"
+    placeholderColor: "{colors.text-disabled}"
+    typography: "{typography.body-md-open}"
+    rounded: "{rounded.round}"
+    multilineRounded: 28px
+    minHeight: 56px
+    maxInputHeight: 144px
+    padding: "0 12px 0 16px"
+    multilinePadding: "10px 12px 10px 16px"
+    borderColor: "{colors.border-faint}"
+    hoverBorderColor: "{colors.border-hover}"
+    activeBorderColor: "{colors.border-faint}"
+    focusBorderColor: "{colors.border-hover}"
+    focusRingWidth: 0px
+    actionGap: "{spacing.sm}"
+    actionSize: 32px
+---
+
+## Overview
+This design system describes the UI that is implemented now and the responsive behavior every UI surface must satisfy: the landing context, shared primitive controls, icons, entity placeholders, text inputs, choice pills, the chat panel shell, chat messages, prompts, recommendation card, and chat composer.
+
+It should feel like quiet enterprise software with conversational edges. The interface is light, restrained, and LinkedIn-adjacent through blue, neutral text, crisp borders, compact typography, and practical spacing. It should not introduce future product surfaces, marketing treatments, premium states, booking flows, or unbuilt voice experiences until those components exist.
+
+The token frontmatter is the normative design contract. The Markdown body explains the intent behind those values so future implementation work can stay consistent without inventing new styling.
+
+## Colors
+The current palette is mostly white and neutral, with Figma's semantic action blue reserved for action and AI identity.
+
+- **Action (`#0A66C2`)** is used for primary buttons, emphasized icon controls, links in controls, and the AI mark.
+- **Action hover/active (`#004182`)** is used for hover and pressed blue-action states.
+- **Background (`#FFFFFF`)** is the primary surface for the panel, composer, cards, and controls.
+- **Overlay dim (`rgba(0, 0, 0, 0.2)`)** is used behind the expanded desktop chat panel so the conversation is foregrounded without turning into a modal takeover.
+- **Scrim (`rgba(0, 0, 0, 0.6)`)** is reserved for true modal interruption, such as confirming a destructive or conversation-ending action.
+- **AI background soft (`#E8F3FF`)** is used for the pale blue chat message surface.
+- **Background neutral soft (`#F4F2EE`)** is used for specialist chat messages.
+- **Tag colors** are reserved for non-interactive status and category labels. Positive and negative mirror existing semantic status colors; caution, neutral, and supportive accent backgrounds should not be reused for broader product surfaces without a new design-system decision.
+- **Entity ghost colors** are a warm neutral plus muted blue-grays used only for unloaded or placeholder identity imagery.
+- **Text** is black at 90% opacity.
+- **Text meta** is black at 60% opacity and is the only secondary/quiet text color.
+- **Text disabled** is black at 30% opacity.
+- **Label and icon** are black at 75% opacity for form-control chrome that should sit between primary text and meta text.
+- **Border tokens** create most of the hierarchy. `border-faint` is used for panel chrome and light dividers; `border` and `border-hover` are used for stronger input states.
+- **Negative (`#CB112D`)** is used for text input validation and error messaging.
+
+Do not add accent palettes for concepts that are not implemented yet.
+
+## Typography
+The current system uses platform-native system UI to approximate the SF Pro Display and SF Pro Text styles in Figma. The feel should be compact, clear, and product-led.
+
+- Control text is semibold and intentionally denser than body copy.
+- Body copy uses regular weight with tighter product line heights for controls and more open line heights for chat copy.
+- Helper, counter, and timestamp text should stay small and quiet.
+- Use the existing type scale before adding new sizes.
+- Use `heading-lg` for compact dialog titles that need the 20px Figma confirmation-dialog scale without jumping to a full panel heading.
+
+## Layout
+The layout includes a marketing landing context and a focused chat panel with a narrow default state and a wider expanded state.
+
+- The minimum supported viewport width is 320px.
+- The collapsed panel is 432px wide.
+- The expanded panel is 1280px wide on desktop, capped by the viewport so it keeps breathing room at narrow desktop widths.
+- The panel height is 780px.
+- The header is 64px tall.
+- The composer is at least 56px tall and grows only when the input wraps.
+- Internal spacing follows the current 4/8/12/16/20/24/32 rhythm.
+
+The component library and review surfaces may use the same tokens for demonstration, but they are not separate design-system products.
+
+## Responsive Behavior
+All UI and UX work must account for mobile and narrow screens before it is considered complete. Desktop fidelity is not enough for this prototype because the entry point is a public marketing surface and the chat is a primary conversion path.
+
+- Design and implement every new surface for mobile, tablet, and desktop states, even when the first mock or component-library example is desktop-sized.
+- At 767px wide and below, the chat experience should adapt to the viewport instead of preserving the 432px desktop panel width.
+- On mobile, the chat panel should behave like a docked or full-screen surface using the available viewport height, with the header, scrollable thread, composer, and primary actions always reachable.
+- Mobile layouts must avoid horizontal scrolling in core flows, including landing content, onboarding, chat, handoff, booking, and resource states.
+- Primary CTAs such as Contact sales must remain visible and usable on narrow screens. Secondary content may stack, reorder, or reduce density to preserve the main path.
+- Touch targets should preserve comfortable hit areas. Compact 32px icon surfaces should sit inside adequate touch targets when they are primary mobile controls.
+- Text, buttons, chips, cards, and composer actions must wrap or stack before they overflow their containers.
+- Respect mobile safe areas and dynamic viewport height so fixed or docked UI does not collide with browser chrome, home indicators, or the on-screen keyboard.
+
+## Elevation & Depth
+Depth is minimal. The chat panel is the only elevated product surface in the current implementation.
+
+Cards, messages, inputs, and controls rely on borders, surface color, and spacing rather than additional shadows. Avoid adding new shadow levels until a built component requires them.
+
+## Shapes
+The shape language separates precise form controls from softer conversational surfaces.
+
+- Buttons and icon action surfaces use Figma's round radius token.
+- Text inputs use a tight 4px radius.
+- Recommendation cards use a 16px radius.
+- Chat panels and message bubbles use 24px and 32px radii so the chat surface feels approachable.
+- The composer is pill-shaped when single-line and softens to a 28px radius when multiline.
+- Entity circles are fully round. Entity squares use progressively larger radii as they scale, including a 12px intermediate radius for the 96px size.
+
+Do not make every element equally rounded; the contrast between crisp inputs, pill controls, and soft chat surfaces is part of the current identity.
+
+## Motion
+Motion should feel quiet, useful, and consultative. It should make the prototype feel responsive and help visitors understand what changed, without making the concierge feel theatrical or salesy.
+
+- Use motion to acknowledge actions, preserve orientation, establish conversational rhythm, and clarify important next steps.
+- Keep routine control feedback fast. Hover, press, focus, border, and background changes should feel immediate.
+- Let messages enter with a short fade and slight upward movement so the thread feels alive without imitating a long typing performance.
+- Use a subtle text-only thinking state before AI responses when simulated latency helps the conversation feel live.
+- Stream simulated AI responses in short chunks, with the message surface fading in once and the text revealing progressively.
+- Give recommendation and next-step surfaces slightly more presence than routine messages because they mark a decision moment.
+- Use panel and route transitions to maintain context when the experience opens, expands, collapses, or moves between major states.
+- Avoid bounce, elastic overshoot, large scale pops, decorative sparkle loops, and long delays that slow a high-intent visitor down.
+- Respect reduced-motion preferences by removing translate and scale movement; use instant state changes or brief opacity changes only when they preserve orientation.
+
+## Components
+### Buttons
+Buttons exist in primary, secondary, and tertiary variants, with small and medium sizes. Primary buttons are filled blue. Secondary buttons are outlined blue. Tertiary buttons are neutral and subdued but still visibly interactive.
+
+Hover and active states should use the current action-transparent or background-transparent tokens. Focus-visible states use rings; disabled and loading states use the disabled background and disabled text color.
+
+### Confirmation Dialog
+Confirmation dialogs interrupt the flow only when the user is about to confirm a choice that changes or discards conversation state. They use the modal `scrim`, a 336px window, `rounded.sm`, `shadow-raised`, faint dividers, and compact `heading-lg` title typography.
+
+The dismiss X and Escape key close the confirmation only. The primary action confirms the choice, and the secondary action returns the user to the prior flow. Destructive or conversation-ending confirmation copy should be explicit about what will be cleared or ended.
+
+### Pill
+Choice pills are compact toggle controls for filtering or selecting lightweight options. They use a 48px touch target around a 32px pill surface, 12px horizontal padding, 4px inner gap, `typography.control-sm`, and `rounded.md`.
+
+Unchecked pills use the standard background, label, and border-subtle tokens, with neutral hover and active state layers. Checked pills use the green checked tokens and white knockout text. Disabled pills use the shared disabled background and label-disabled text, regardless of checked state.
+
+### Icon Buttons
+Button icon and ghost icon button are separate primitives. Button icon carries primary, secondary, and tertiary button semantics in icon-only form. Ghost icon button is the quiet utility control used in the chat header and composer.
+
+Header ghost icon buttons sit in adjacent 40px-wide action slots with no visible gap between state layers.
+
+### Entity
+Entities represent people, companies, and other identity objects. The current implementation supports ghost placeholders only: circular person placeholders and square company placeholders.
+
+Entity sizes are 16, 24, 32, 40, 48, 64, 80, 96, 128, and 160px. Deprecated Figma sizes are intentionally excluded. Real images may replace the ghost artwork while preserving the same size and shape rules.
+
+### Text Input
+Text inputs come in small and large sizes. They use strong default borders, compact helper text, and restrained error messaging.
+
+Hover darkens the border. Active, focused, and typing states use the same dark active border without adding a focus ring. Error hover, active, and focused states may darken to the negative-hover color.
+
+Placeholder text uses the disabled text color so it reads clearly as a prompt rather than entered content. The composer follows the same rule.
+
+### Chat Shell
+The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The body centers the thread within the panel content width.
+
+Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
+
+High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 960px wide with a 5:7 chat-to-scheduler split, yielding about 400px of chat context at max width. The expanded scheduling surface should be about 1440px wide with a 4:5 split, yielding about 640px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
+
+### Messages
+Assistant messages are plain text on the panel surface. User messages use the pale blue message surface. Specialist messages use the warm neutral message surface.
+
+Messages should keep readable line lengths and avoid stretching across the full panel.
+
+Prototype AI responses may be deterministic and fake, but they should still follow the conversation rhythm: a brief text-only thinking state, then a streamed assistant message. The thinking text may use `colors.ai-border` as a light-blue sweep across the label. The stream should support the user's sense that the concierge is responding, not become a theatrical typing performance or a source of delay.
+
+### Recommendation Card
+The recommendation card is a compact next-step surface with a heading, optional short supporting text, and one or two actions depending on the flow. It should feel like a practical next step inside the conversation, not a promotional card.
+
+In scheduled specialist flows, the first recommendation card uses one CTA to start booking. After click, the same card transitions through a matching state, then a matched specialist state with the specialist entity and a single scheduling CTA. These match cards use a white surface with the AI border token across initial, matching, matched, scheduling, and booked states, so they read as lightweight system cards rather than blue message bubbles. The booked-card heading uses heading-md; the date uses body-sm; the contact delivery line uses body-sm with text-meta.
+
+### Prompt
+Prompts are compact buttons that let a visitor send a suggested message into the thread. They use body text rather than semibold control text because the label reads as the user's message, not a command.
+
+The visible label may be shorter than the prompt that is sent, but the component should keep the full prompt available to assistive tech and hover affordances. Long labels truncate to preserve the compact chip-like shape.
+
+### Composer
+The composer is a rounded text area with microphone and send action controls. Its default border is intentionally lighter than the text input border.
+
+Hover, focused, and typing states darken the composer border. Active does not add a separate border treatment, and the composer should not show a focus ring. When the message no longer fits beside the actions, the actions move to a second row.
+
+## Do's and Don'ts
+- Do keep the current system mostly white, structured, and calm.
+- Do use blue for clear action and brand utility, not broad decoration.
+- Do preserve the difference between crisp text inputs and softer chat surfaces.
+- Do account for mobile and narrow-screen behavior in every UI/UX change.
+- Do remove tokens when they only describe unbuilt components or speculative future states.
+- Don't introduce premium, booking, onboarding, or voice-specific visual language until those components are implemented.
+- Don't ship desktop-only surfaces, horizontal overflow, or unreachable fixed controls in the primary landing-to-chat path.
+- Don't let review-shell or marketing styling become part of the product design contract.

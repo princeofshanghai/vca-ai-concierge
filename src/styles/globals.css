@@ -1,0 +1,625 @@
+@import "tailwindcss";
+
+:root {
+  /* DESIGN.md -> Figma semantic color tokens used by the current app */
+  --design-color-action: #0A66C2;
+  --design-color-action-hover: #004182;
+  --design-color-action-active: #004182;
+  --design-color-action-background-transparent-hover: rgba(55, 143, 233, 0.1);
+  --design-color-action-background-transparent-active: rgba(55, 143, 233, 0.2);
+  --design-color-action-focus-ring: rgba(55, 143, 233, 0.08);
+  --design-color-on-action: #FFFFFF;
+  --design-color-checked: #01754F;
+  --design-color-checked-hover: #004C33;
+  --design-color-checked-active: #004C33;
+  --design-color-on-checked: #FFFFFF;
+  --design-color-on-checked-active: rgba(255, 255, 255, 0.6);
+  --design-color-background: #FFFFFF;
+  --design-color-background-disabled: rgba(140, 140, 140, 0.2);
+  --design-color-background-neutral-soft: #F4F2EE;
+  --design-color-surface-tint: #EEF3FA;
+  --design-color-background-transparent-hover: rgba(140, 140, 140, 0.1);
+  --design-color-background-transparent-active: rgba(140, 140, 140, 0.2);
+  --design-color-overlay-dim: rgba(0, 0, 0, 0.2);
+  --design-color-scrim: rgba(0, 0, 0, 0.6);
+  --design-color-ai-background-soft: #E8F3FF;
+  --design-color-ai-border: #AAD6FF;
+  --design-color-ai-icon: #0A66C2;
+  --design-color-tag-default-background: rgba(140, 140, 140, 0.2);
+  --design-color-tag-positive-background: #01754F;
+  --design-color-tag-negative-background: #CB112D;
+  --design-color-tag-caution-background: #AD4601;
+  --design-color-tag-neutral-background: #56687A;
+  --design-color-tag-supportive-1-background: #FDE2BC;
+  --design-color-tag-supportive-2-background: #FFDFD6;
+  --design-color-tag-supportive-3-background: #DAEBD1;
+  --design-color-tag-supportive-4-background: #DDE7F1;
+  --design-color-tag-supportive-4-text: #56687A;
+  --design-color-tag-supportive-5-background: #D9E9EC;
+  --design-color-on-tag-strong: #FFFFFF;
+  --design-color-entity-ghost-background: #EAE6DF;
+  --design-color-entity-ghost-medium: #9DB3C8;
+  --design-color-entity-ghost-strong: #788FA5;
+  --design-color-entity-ghost-dark: #56687A;
+  --design-color-border: rgba(0, 0, 0, 0.75);
+  --design-color-border-hover: rgba(0, 0, 0, 0.9);
+  --design-color-border-active: rgba(0, 0, 0, 0.9);
+  --design-color-border-subtle: rgba(0, 0, 0, 0.3);
+  --design-color-border-faint: rgba(140, 140, 140, 0.2);
+  --design-color-label: rgba(0, 0, 0, 0.75);
+  --design-color-label-disabled: rgba(0, 0, 0, 0.3);
+  --design-color-icon: rgba(0, 0, 0, 0.75);
+  --design-color-icon-hover: rgba(0, 0, 0, 0.9);
+  --design-color-icon-active: rgba(0, 0, 0, 0.9);
+  --design-color-icon-disabled: rgba(0, 0, 0, 0.3);
+  --design-color-text: rgba(0, 0, 0, 0.9);
+  --design-color-text-hover: rgba(0, 0, 0, 0.9);
+  --design-color-text-active: rgba(0, 0, 0, 0.9);
+  --design-color-text-meta: rgba(0, 0, 0, 0.6);
+  --design-color-text-disabled: rgba(0, 0, 0, 0.3);
+  --design-color-negative: #CB112D;
+  --design-color-negative-hover: #8A0015;
+  --design-color-negative-active: #8A0015;
+  --design-color-neutral-focus-ring: rgba(0, 0, 0, 0.15);
+
+  /* DESIGN.md -> typography */
+  --design-font-family-system-ui:
+    -apple-system,
+    system-ui,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+  --design-typography-display-md-font-size: 32px;
+  --design-typography-display-md-font-weight: 600;
+  --design-typography-display-md-line-height: 1.25;
+  --design-typography-display-md-letter-spacing: 0.38px;
+  --design-typography-heading-xl-font-size: 24px;
+  --design-typography-heading-xl-font-weight: 600;
+  --design-typography-heading-xl-line-height: 1.25;
+  --design-typography-heading-xl-letter-spacing: 0.38px;
+  --design-typography-heading-lg-font-size: 20px;
+  --design-typography-heading-lg-font-weight: 600;
+  --design-typography-heading-lg-line-height: 1.25;
+  --design-typography-heading-lg-letter-spacing: 0.38px;
+  --design-typography-heading-md-font-size: 16px;
+  --design-typography-heading-md-font-weight: 600;
+  --design-typography-heading-md-line-height: 1.25;
+  --design-typography-heading-md-letter-spacing: -0.32px;
+  --design-typography-control-md-font-size: 16px;
+  --design-typography-control-md-font-weight: 600;
+  --design-typography-control-md-line-height: 1.25;
+  --design-typography-control-md-letter-spacing: -0.32px;
+  --design-typography-control-sm-font-size: 14px;
+  --design-typography-control-sm-font-weight: 600;
+  --design-typography-control-sm-line-height: 1.25;
+  --design-typography-control-sm-letter-spacing: -0.15px;
+  --design-typography-body-md-font-size: 16px;
+  --design-typography-body-md-font-weight: 400;
+  --design-typography-body-md-line-height: 1.25;
+  --design-typography-body-md-letter-spacing: -0.32px;
+  --design-typography-body-md-open-font-size: 16px;
+  --design-typography-body-md-open-font-weight: 400;
+  --design-typography-body-md-open-line-height: 1.5;
+  --design-typography-body-md-open-letter-spacing: -0.32px;
+  --design-typography-body-sm-font-size: 14px;
+  --design-typography-body-sm-font-weight: 400;
+  --design-typography-body-sm-line-height: 1.25;
+  --design-typography-body-sm-letter-spacing: -0.15px;
+  --design-typography-body-sm-open-font-size: 14px;
+  --design-typography-body-sm-open-font-weight: 400;
+  --design-typography-body-sm-open-line-height: 1.5;
+  --design-typography-body-sm-open-letter-spacing: -0.15px;
+  --design-typography-body-xs-font-size: 12px;
+  --design-typography-body-xs-font-weight: 400;
+  --design-typography-body-xs-line-height: 1.25;
+  --design-typography-body-xs-letter-spacing: 0px;
+  --design-typography-supportive-s-font-size: 12px;
+  --design-typography-supportive-s-font-weight: 400;
+  --design-typography-supportive-s-line-height: 1.25;
+  --design-typography-supportive-s-letter-spacing: 0px;
+  --design-typography-supportive-s-strong-font-size: 12px;
+  --design-typography-supportive-s-strong-font-weight: 600;
+  --design-typography-supportive-s-strong-line-height: 1.25;
+  --design-typography-supportive-s-strong-letter-spacing: 0px;
+  --design-typography-label-xs-font-size: 12px;
+  --design-typography-label-xs-font-weight: 600;
+  --design-typography-label-xs-line-height: 1.25;
+  --design-typography-label-xs-letter-spacing: 0px;
+
+  /* DESIGN.md -> spacing */
+  --design-spacing-xxs: 2px;
+  --design-spacing-xs: 4px;
+  --design-spacing-sm: 8px;
+  --design-spacing-md: 12px;
+  --design-spacing-lg: 16px;
+  --design-spacing-xl: 20px;
+  --design-spacing-xxl: 24px;
+  --design-spacing-xxxl: 32px;
+  --design-spacing-stack: 40px;
+  --design-spacing-card-padding: 24px;
+  --design-spacing-panel-padding: 20px;
+  --design-spacing-pill-padding-inline: 16px;
+  --design-spacing-button-padding-inline: 24px;
+
+  /* DESIGN.md -> layout */
+  --design-layout-viewport-min-width: 320px;
+  --design-layout-mobile-breakpoint-max: 767px;
+  --design-layout-tablet-breakpoint-min: 768px;
+  --design-layout-desktop-breakpoint-min: 1024px;
+  --design-layout-mobile-page-padding: 16px;
+  --design-layout-tablet-page-padding: 24px;
+  --design-layout-desktop-page-padding: 32px;
+  --design-layout-panel-collapsed-width: 432px;
+  --design-layout-panel-expanded-width: 1280px;
+  --design-layout-panel-height: 780px;
+  --design-layout-panel-content-max: 720px;
+  --design-layout-schedule-collapsed-surface-width: 960px;
+  --design-layout-schedule-collapsed-chat-track: 5fr;
+  --design-layout-schedule-collapsed-side-track: 7fr;
+  --design-layout-schedule-expanded-surface-width: 1440px;
+  --design-layout-schedule-expanded-chat-track: 4fr;
+  --design-layout-schedule-expanded-side-track: 5fr;
+  --design-layout-chat-message-assistant-collapsed-max: 320px;
+  --design-layout-chat-message-assistant-expanded-max: 528px;
+  --design-layout-chat-message-assistant-max: var(
+    --design-layout-chat-message-assistant-expanded-max
+  );
+  --design-layout-confirmation-dialog-width: 336px;
+  --design-layout-mobile-panel-width: 100vw;
+  --design-layout-mobile-panel-height: 100dvh;
+  --design-layout-mobile-panel-rounded: 0px;
+  --design-layout-mobile-panel-inset: 0px;
+  --design-layout-panel-header-height: 64px;
+  --design-layout-composer-height: 56px;
+  --design-layout-composer-input-max-height: 144px;
+  --design-layout-primary-action-height: 48px;
+  --design-layout-compact-action-height: 32px;
+  --design-layout-input-small-height: 28px;
+  --design-layout-input-large-height: 48px;
+  --design-layout-tag-small-height: 20px;
+  --design-layout-tag-medium-height: 24px;
+  --design-layout-ghost-icon-button-touch-height: 48px;
+  --design-layout-ghost-icon-button-small-width: 32px;
+  --design-layout-ghost-icon-button-medium-width: 48px;
+  --design-layout-ghost-icon-button-small-compact-width: 24px;
+  --design-layout-ghost-icon-button-medium-compact-width: 24px;
+  --design-layout-ghost-icon-button-small-state-size: 32px;
+  --design-layout-ghost-icon-button-medium-state-size: 40px;
+  --design-layout-entity-size-16: 16px;
+  --design-layout-entity-size-24: 24px;
+  --design-layout-entity-size-32: 32px;
+  --design-layout-entity-size-40: 40px;
+  --design-layout-entity-size-48: 48px;
+  --design-layout-entity-size-64: 64px;
+  --design-layout-entity-size-80: 80px;
+  --design-layout-entity-size-96: 96px;
+  --design-layout-entity-size-128: 128px;
+  --design-layout-entity-size-160: 160px;
+
+  /* DESIGN.md -> iconography */
+  --design-icon-size-small: 16px;
+  --design-icon-size-medium: 24px;
+
+  /* DESIGN.md -> rounded */
+  --design-rounded-xs: 4px;
+  --design-rounded-sm: 8px;
+  --design-rounded-entity-square-md: 12px;
+  --design-rounded-md: 16px;
+  --design-rounded-lg: 24px;
+  --design-rounded-xl: 32px;
+  --design-rounded-round: 360px;
+
+  /* DESIGN.md -> core shadows */
+  --design-shadow-raised:
+    0px 0px 1px rgba(140, 140, 140, 0.2),
+    0px 4px 12px rgba(0, 0, 0, 0.3);
+
+  /* DESIGN.md -> motion */
+  --design-motion-duration-instant: 0ms;
+  --design-motion-duration-fast: 150ms;
+  --design-motion-duration-base: 180ms;
+  --design-motion-duration-moderate: 240ms;
+  --design-motion-duration-slow: 320ms;
+  --design-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --design-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --design-motion-easing-exit: cubic-bezier(0.4, 0, 1, 1);
+  --design-motion-distance-subtle-y: 4px;
+  --design-motion-distance-message-y: 8px;
+  --design-motion-distance-surface-y: 12px;
+}
+
+@theme inline {
+  --font-sans: var(--design-font-family-system-ui);
+
+  --color-action: var(--design-color-action);
+  --color-action-hover: var(--design-color-action-hover);
+  --color-action-active: var(--design-color-action-active);
+  --color-action-background-transparent-hover: var(
+    --design-color-action-background-transparent-hover
+  );
+  --color-action-background-transparent-active: var(
+    --design-color-action-background-transparent-active
+  );
+  --color-action-focus-ring: var(--design-color-action-focus-ring);
+  --color-on-action: var(--design-color-on-action);
+  --color-checked: var(--design-color-checked);
+  --color-checked-hover: var(--design-color-checked-hover);
+  --color-checked-active: var(--design-color-checked-active);
+  --color-on-checked: var(--design-color-on-checked);
+  --color-on-checked-active: var(--design-color-on-checked-active);
+  --color-background: var(--design-color-background);
+  --color-background-disabled: var(--design-color-background-disabled);
+  --color-background-neutral-soft: var(
+    --design-color-background-neutral-soft
+  );
+  --color-surface-tint: var(--design-color-surface-tint);
+  --color-background-transparent-hover: var(
+    --design-color-background-transparent-hover
+  );
+  --color-background-transparent-active: var(
+    --design-color-background-transparent-active
+  );
+  --color-overlay-dim: var(--design-color-overlay-dim);
+  --color-scrim: var(--design-color-scrim);
+  --color-ai-background-soft: var(--design-color-ai-background-soft);
+  --color-ai-border: var(--design-color-ai-border);
+  --color-ai-icon: var(--design-color-ai-icon);
+  --color-tag-default-background: var(
+    --design-color-tag-default-background
+  );
+  --color-tag-positive-background: var(
+    --design-color-tag-positive-background
+  );
+  --color-tag-negative-background: var(
+    --design-color-tag-negative-background
+  );
+  --color-tag-caution-background: var(
+    --design-color-tag-caution-background
+  );
+  --color-tag-neutral-background: var(
+    --design-color-tag-neutral-background
+  );
+  --color-tag-supportive-1-background: var(
+    --design-color-tag-supportive-1-background
+  );
+  --color-tag-supportive-2-background: var(
+    --design-color-tag-supportive-2-background
+  );
+  --color-tag-supportive-3-background: var(
+    --design-color-tag-supportive-3-background
+  );
+  --color-tag-supportive-4-background: var(
+    --design-color-tag-supportive-4-background
+  );
+  --color-tag-supportive-4-text: var(
+    --design-color-tag-supportive-4-text
+  );
+  --color-tag-supportive-5-background: var(
+    --design-color-tag-supportive-5-background
+  );
+  --color-on-tag-strong: var(--design-color-on-tag-strong);
+  --color-entity-ghost-background: var(
+    --design-color-entity-ghost-background
+  );
+  --color-entity-ghost-medium: var(--design-color-entity-ghost-medium);
+  --color-entity-ghost-strong: var(--design-color-entity-ghost-strong);
+  --color-entity-ghost-dark: var(--design-color-entity-ghost-dark);
+  --color-border: var(--design-color-border);
+  --color-border-hover: var(--design-color-border-hover);
+  --color-border-active: var(--design-color-border-active);
+  --color-border-subtle: var(--design-color-border-subtle);
+  --color-border-faint: var(--design-color-border-faint);
+  --color-label: var(--design-color-label);
+  --color-label-disabled: var(--design-color-label-disabled);
+  --color-icon: var(--design-color-icon);
+  --color-icon-hover: var(--design-color-icon-hover);
+  --color-icon-active: var(--design-color-icon-active);
+  --color-icon-disabled: var(--design-color-icon-disabled);
+  --color-text: var(--design-color-text);
+  --color-text-hover: var(--design-color-text-hover);
+  --color-text-active: var(--design-color-text-active);
+  --color-text-meta: var(--design-color-text-meta);
+  --color-text-disabled: var(--design-color-text-disabled);
+  --color-negative: var(--design-color-negative);
+  --color-negative-hover: var(--design-color-negative-hover);
+  --color-negative-active: var(--design-color-negative-active);
+  --color-neutral-focus-ring: var(--design-color-neutral-focus-ring);
+
+  --ease-standard: var(--design-motion-easing-standard);
+  --ease-emphasized: var(--design-motion-easing-emphasized);
+  --ease-exit: var(--design-motion-easing-exit);
+
+  --text-display-md: var(--design-typography-display-md-font-size);
+  --text-display-md--font-weight: var(
+    --design-typography-display-md-font-weight
+  );
+  --text-display-md--line-height: var(
+    --design-typography-display-md-line-height
+  );
+  --text-display-md--letter-spacing: var(
+    --design-typography-display-md-letter-spacing
+  );
+  --text-heading-xl: var(--design-typography-heading-xl-font-size);
+  --text-heading-xl--font-weight: var(
+    --design-typography-heading-xl-font-weight
+  );
+  --text-heading-xl--line-height: var(
+    --design-typography-heading-xl-line-height
+  );
+  --text-heading-xl--letter-spacing: var(
+    --design-typography-heading-xl-letter-spacing
+  );
+  --text-heading-lg: var(--design-typography-heading-lg-font-size);
+  --text-heading-lg--font-weight: var(
+    --design-typography-heading-lg-font-weight
+  );
+  --text-heading-lg--line-height: var(
+    --design-typography-heading-lg-line-height
+  );
+  --text-heading-lg--letter-spacing: var(
+    --design-typography-heading-lg-letter-spacing
+  );
+  --text-heading-md: var(--design-typography-heading-md-font-size);
+  --text-heading-md--font-weight: var(
+    --design-typography-heading-md-font-weight
+  );
+  --text-heading-md--line-height: var(
+    --design-typography-heading-md-line-height
+  );
+  --text-heading-md--letter-spacing: var(
+    --design-typography-heading-md-letter-spacing
+  );
+  --text-control-md: var(--design-typography-control-md-font-size);
+  --text-control-md--font-weight: var(
+    --design-typography-control-md-font-weight
+  );
+  --text-control-md--line-height: var(
+    --design-typography-control-md-line-height
+  );
+  --text-control-md--letter-spacing: var(
+    --design-typography-control-md-letter-spacing
+  );
+  --text-control-sm: var(--design-typography-control-sm-font-size);
+  --text-control-sm--font-weight: var(
+    --design-typography-control-sm-font-weight
+  );
+  --text-control-sm--line-height: var(
+    --design-typography-control-sm-line-height
+  );
+  --text-control-sm--letter-spacing: var(
+    --design-typography-control-sm-letter-spacing
+  );
+  --text-body-md: var(--design-typography-body-md-font-size);
+  --text-body-md--font-weight: var(--design-typography-body-md-font-weight);
+  --text-body-md--line-height: var(--design-typography-body-md-line-height);
+  --text-body-md--letter-spacing: var(
+    --design-typography-body-md-letter-spacing
+  );
+  --text-body-md-open: var(--design-typography-body-md-open-font-size);
+  --text-body-md-open--font-weight: var(
+    --design-typography-body-md-open-font-weight
+  );
+  --text-body-md-open--line-height: var(
+    --design-typography-body-md-open-line-height
+  );
+  --text-body-md-open--letter-spacing: var(
+    --design-typography-body-md-open-letter-spacing
+  );
+  --text-body-sm: var(--design-typography-body-sm-font-size);
+  --text-body-sm--font-weight: var(--design-typography-body-sm-font-weight);
+  --text-body-sm--line-height: var(--design-typography-body-sm-line-height);
+  --text-body-sm--letter-spacing: var(
+    --design-typography-body-sm-letter-spacing
+  );
+  --text-body-sm-open: var(--design-typography-body-sm-open-font-size);
+  --text-body-sm-open--font-weight: var(
+    --design-typography-body-sm-open-font-weight
+  );
+  --text-body-sm-open--line-height: var(
+    --design-typography-body-sm-open-line-height
+  );
+  --text-body-sm-open--letter-spacing: var(
+    --design-typography-body-sm-open-letter-spacing
+  );
+  --text-body-xs: var(--design-typography-body-xs-font-size);
+  --text-body-xs--font-weight: var(--design-typography-body-xs-font-weight);
+  --text-body-xs--line-height: var(--design-typography-body-xs-line-height);
+  --text-body-xs--letter-spacing: var(
+    --design-typography-body-xs-letter-spacing
+  );
+  --text-supportive-s: var(--design-typography-supportive-s-font-size);
+  --text-supportive-s--font-weight: var(
+    --design-typography-supportive-s-font-weight
+  );
+  --text-supportive-s--line-height: var(
+    --design-typography-supportive-s-line-height
+  );
+  --text-supportive-s--letter-spacing: var(
+    --design-typography-supportive-s-letter-spacing
+  );
+  --text-supportive-s-strong: var(
+    --design-typography-supportive-s-strong-font-size
+  );
+  --text-supportive-s-strong--font-weight: var(
+    --design-typography-supportive-s-strong-font-weight
+  );
+  --text-supportive-s-strong--line-height: var(
+    --design-typography-supportive-s-strong-line-height
+  );
+  --text-supportive-s-strong--letter-spacing: var(
+    --design-typography-supportive-s-strong-letter-spacing
+  );
+  --text-label-xs: var(--design-typography-label-xs-font-size);
+  --text-label-xs--font-weight: var(--design-typography-label-xs-font-weight);
+  --text-label-xs--line-height: var(--design-typography-label-xs-line-height);
+  --text-label-xs--letter-spacing: var(
+    --design-typography-label-xs-letter-spacing
+  );
+  --spacing-xxs: var(--design-spacing-xxs);
+  --spacing-xs: var(--design-spacing-xs);
+  --spacing-sm: var(--design-spacing-sm);
+  --spacing-md: var(--design-spacing-md);
+  --spacing-lg: var(--design-spacing-lg);
+  --spacing-xl: var(--design-spacing-xl);
+  --spacing-xxl: var(--design-spacing-xxl);
+  --spacing-xxxl: var(--design-spacing-xxxl);
+  --spacing-stack: var(--design-spacing-stack);
+  --spacing-card-padding: var(--design-spacing-card-padding);
+  --spacing-panel-padding: var(--design-spacing-panel-padding);
+  --spacing-pill-padding-inline: var(--design-spacing-pill-padding-inline);
+  --spacing-button-padding-inline: var(
+    --design-spacing-button-padding-inline
+  );
+
+  --radius-xs: var(--design-rounded-xs);
+  --radius-sm: var(--design-rounded-sm);
+  --radius-entity-square-md: var(--design-rounded-entity-square-md);
+  --radius-md: var(--design-rounded-md);
+  --radius-lg: var(--design-rounded-lg);
+  --radius-xl: var(--design-rounded-xl);
+  --radius-round: var(--design-rounded-round);
+
+  --shadow-raised: var(--design-shadow-raised);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--text-body-md-open);
+  font-weight: var(--text-body-md-open--font-weight);
+  line-height: var(--text-body-md-open--line-height);
+  letter-spacing: var(--text-body-md-open--letter-spacing);
+}
+
+::selection {
+  background: var(--color-ai-background-soft);
+  color: var(--color-text);
+}
+
+.chat-message-enter {
+  animation: chat-message-enter var(--design-motion-duration-base)
+    var(--design-motion-easing-standard) both;
+}
+
+.chat-thinking-text {
+  color: var(--color-text-meta);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-text-meta) 0%,
+    var(--color-text-meta) 38%,
+    var(--color-ai-border) 50%,
+    var(--color-text-meta) 62%,
+    var(--color-text-meta) 100%
+  );
+  background-size: 240% 100%;
+  background-position: 120% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: chat-thinking-sweep 1.6s var(--design-motion-easing-standard)
+    infinite;
+}
+
+.chat-schedule-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 768px) {
+  .chat-schedule-layout {
+    grid-template-columns:
+      minmax(0, var(--design-layout-schedule-collapsed-chat-track))
+      minmax(0, var(--design-layout-schedule-collapsed-side-track));
+  }
+
+  .chat-schedule-layout[data-chat-variant="expanded"] {
+    grid-template-columns:
+      minmax(0, var(--design-layout-schedule-expanded-chat-track))
+      minmax(0, var(--design-layout-schedule-expanded-side-track));
+  }
+}
+
+@keyframes chat-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--design-motion-distance-message-y));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chat-thinking-sweep {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+/*
+ * Concierge AI mark shared-element transition.
+ *
+ * The same `view-transition-name` is applied to both the centered welcome AI
+ * mark and the chat header AI mark. When the panel transitions from the
+ * onboarding screen to the chat thread, the browser captures both rects and
+ * morphs position + size for us. We only customise duration/easing so the
+ * morph feels consistent with the rest of the panel motion.
+ */
+.concierge-ai-mark {
+  view-transition-name: concierge-ai-mark;
+}
+
+::view-transition-group(concierge-ai-mark),
+::view-transition-old(concierge-ai-mark),
+::view-transition-new(concierge-ai-mark) {
+  animation-duration: var(--design-motion-duration-moderate);
+  animation-timing-function: var(--design-motion-easing-emphasized);
+}
+
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--design-motion-duration-moderate);
+  animation-timing-function: var(--design-motion-easing-emphasized);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0ms;
+  }
+
+  .chat-message-enter,
+  .chat-thinking-text {
+    animation: none;
+  }
+
+  .chat-thinking-text {
+    background-image: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
