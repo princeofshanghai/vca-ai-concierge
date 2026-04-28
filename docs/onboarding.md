@@ -16,7 +16,7 @@ These are non-negotiable. They come from downstream lead-capture requirements:
 
 - First name
 - Last name
-- Work email (must be on a work domain, not a personal email provider)
+- Work email (must be a valid email address; common personal domains are allowed)
 - Company name
 
 The form must always render. There is no "skip the form and route me to sales" escape hatch.
@@ -25,10 +25,10 @@ The form must always render. There is no "skip the form and route me to sales" e
 
 The dominant demo state is signed-in. LinkedIn auth gives us reliable identity (name, avatar) but does not give us reliable lead context:
 
-- LinkedIn email is often a personal email, not a work email.
+- LinkedIn email is often a personal email, not the best business contact email.
 - LinkedIn company is often stale, missing, or mapped to an agency or parent entity.
 
-Because the prototype requires a work email on a work domain and a confirmed company, the form must always appear, even after sign-in. Sign-in can prefill identity and email fields, but it never replaces the form or removes the work-domain requirement.
+Because the prototype requires a confirmed company name, the form must always appear, even after sign-in. Sign-in can prefill identity and email fields, but it never replaces the form or guesses the company.
 
 ## Two demo states
 
@@ -38,8 +38,8 @@ The screen has two visual states. A future review-shell toggle will flip between
 
 - A slim identity strip sits between the welcome content and the form (avatar + LinkedIn email + "Not Jamie?" link).
 - First name and Last name arrive prefilled from the LinkedIn profile (editable).
-- Work email arrives prefilled from the LinkedIn profile even when it is a personal email. If it is personal, the field shows the work-domain warning and blocks submit.
-- Company name stays empty unless the prefilled email is already a valid work-domain email that can safely derive a company.
+- Work email arrives prefilled from the LinkedIn profile even when it is a personal email. Personal email domains do not block submit.
+- Company name stays empty until the user enters it and is focused on entry.
 - The "Not Jamie?" affordance lets the user dismiss the LinkedIn identity and complete the form manually if needed.
 
 ### Signed-out
@@ -70,7 +70,7 @@ Tokens used throughout:
 - Spacing: `spacing.xxl` (24px) top form padding and left/right gutters, `spacing.xxxl` (32px) bottom form padding, `spacing.sm` (8px) headline-to-subcopy gap, `spacing.md` (12px) identity-strip internal gap, `spacing.lg` (16px) field-to-field gap, `spacing.xxxl` (32px) identity-strip-to-form gap, `spacing.stack` (40px) major section gap.
 - Typography: `heading-xl` for the headline, `body-md-open` with `colors.text-meta` for the subcopy, `supportive-s` with `colors.text-meta` for the identity-strip email and the "or" divider, plus the `TextInput` and button primitives' built-in type.
 - Layout: panel 432px wide, header 64px (existing), body 716px tall. AI mark sized to 32px in the welcome state and 24px in the chat header.
-- Motion: `motion.patterns.controls` for the company auto-fill value fade-in, `motion.patterns.message-enter` for the first-chat bubble, and the View Transitions API (with `motion.duration.moderate` / `motion.easing.emphasized`) for the welcome-to-chat handoff and the AI-mark morph.
+- Motion: `motion.patterns.message-enter` for the first-chat bubble, and the View Transitions API (with `motion.duration.moderate` / `motion.easing.emphasized`) for the welcome-to-chat handoff and the AI-mark morph.
 
 ### Signed-in layout
 
@@ -100,13 +100,12 @@ Tokens used throughout:
 │                                             │
 │   Work email                                │
 │   ┌─────────────────────────────────────┐   │
-│   │ jamie.chen@gmail.com |              │   │  prefilled, focused
+│   │ jamie.chen@gmail.com                │   │  prefilled
 │   └─────────────────────────────────────┘   │
-│   Use your work email so we can tailor...   │  error text
 │                                             │
 │   Company name                              │
 │   ┌─────────────────────────────────────┐   │
-│   │                                     │   │  empty, will auto-fill
+│   │ |                                   │   │  empty, focused
 │   └─────────────────────────────────────┘   │
 │                                             │  spacing.stack (40px)
 │   ┌─────────────────────────────────────┐   │
@@ -152,7 +151,7 @@ Tokens used throughout:
 │                                             │
 │   Company name                              │
 │   ┌─────────────────────────────────────┐   │
-│   │                                     │   │  auto-fills from email
+│   │                                     │   │
 │   └─────────────────────────────────────┘   │
 │                                             │  spacing.stack (40px)
 │   ┌─────────────────────────────────────┐   │
@@ -184,7 +183,7 @@ The avatar gives recognition for the user looking at their own account, and the 
 The email line reinforces the source of the profile-backed prefill:
 
 - It acknowledges the user (recognition through their own LinkedIn email address).
-- It self-explains the warning: a user looking at `jamie.chen@gmail.com` immediately understands why "Work email" is still asking for a work domain.
+- It keeps the source of the prefilled email transparent, especially when the LinkedIn email is personal.
 - It builds trust through transparency about what LinkedIn already gave us.
 
 ### "Not Jamie?" behavior
@@ -196,7 +195,7 @@ On click:
 1. The identity strip is removed.
 2. First name and Last name fields clear (LinkedIn-sourced data is rejected).
 3. Profile-sourced Work email clears. User-typed Work email stays.
-4. Company name clears only if it was auto-filled from the profile-sourced email; user-typed Company name stays.
+4. Company name stays because it is always user-entered.
 5. Focus moves to First name.
 6. The screen now visually matches the signed-out state.
 
@@ -266,7 +265,7 @@ In the prototype, sign-in is fake. The simulated sequence is:
 1. Click triggers the button's loading state. The LinkedIn icon is replaced with the standard loading spinner. The label remains "Continue with LinkedIn." All inputs become non-interactive, but their values stay visible.
 2. After ~600ms, the screen runs the existing `motion.patterns.route-transition` (240ms, emphasized easing, 12px translateY, opacity 0 → 1). The signed-out body fades and shifts up while the signed-in body fades in from below. Header and panel chrome stay put.
 3. Total perceived delay from click to fully rendered signed-in form: ~840ms.
-4. After the transition, focus lands on Work email. In the common demo case it is already filled with a personal LinkedIn email and shows the work-domain warning.
+4. After the transition, focus lands on Company name. In the common demo case, name and Work email are already filled from the LinkedIn profile, so Company name is the next missing field.
 
 ### Merge rules between manual data and LinkedIn data
 
@@ -276,8 +275,8 @@ If the user typed any data manually before clicking the LinkedIn button, the mer
 | --- | --- |
 | First name | Replaced with LinkedIn value |
 | Last name | Replaced with LinkedIn value |
-| Work email | Keep whatever the user typed; otherwise prefill the LinkedIn email and validate it |
-| Company name | Keep whatever the user typed; otherwise auto-fill only if the resulting email is a valid work-domain email |
+| Work email | Keep whatever the user typed; otherwise prefill the LinkedIn email and validate the format |
+| Company name | Keep whatever the user typed; LinkedIn sign-in does not populate it |
 
 If the user clicks "Not Jamie?" after sign-in, the inverse logic applies: LinkedIn-sourced fields clear, user-sourced fields persist.
 
@@ -310,8 +309,9 @@ The `required` prop is **not** passed for visual purposes. With all four fields 
 - `label="Work email"`
 - `type="email"`
 - Placeholder: `name@company.com`
-- Signed-in: prefilled with the LinkedIn email even when it is a personal email. Focused after the welcome content and identity strip are rendered.
+- Signed-in: prefilled with the LinkedIn email even when it is a personal email.
 - Signed-out: empty.
+- No helper text.
 
 Validation states:
 
@@ -319,41 +319,18 @@ Validation states:
 | --- | --- | --- |
 | Empty | Neutral default | None |
 | Invalid email format | `error={true}` | `Enter a valid email address.` |
-| Valid format on a personal-email domain | `error={true}` | `Use your work email so we can tailor this to your company.` |
-| Valid format on a work domain | Neutral | None |
+| Valid email format | Neutral | None |
 
-The "Start chat" button is disabled while the email field is in any error state. This means a prefilled Gmail, Yahoo, Outlook, iCloud, or other personal email can be visible in the field, but the user still has to replace it with a work-domain email before continuing.
-
-#### Personal-email blocklist
-
-Treated as personal emails. Listed explicitly so the set is a content decision, not a code decision:
-
-- gmail.com
-- yahoo.com (and yahoo.co.uk, yahoo.fr, yahoo.de, etc.)
-- outlook.com
-- hotmail.com
-- icloud.com
-- me.com
-- mac.com
-- aol.com
-- proton.me
-- protonmail.com
-- live.com
-- msn.com
-
-A production system would defer to a published list. For the demo, the above is sufficient.
+The "Start chat" button is disabled while the email field is empty or has an invalid format. It is not disabled for common personal email domains such as Gmail, Yahoo, Outlook, or iCloud, and the field does not show a helper or warning for those domains.
 
 ### Company name
 
 - `label="Company name"`
-- Empty until a valid work email is entered.
-- Auto-fills from the work email's domain (e.g., `jamie@northstarhealth.com` produces `Northstar Health`).
-- The auto-filled value is freely editable. If the user manually edits the field, manual input takes precedence.
-- `helperText="Auto-filled from your email"` is shown only when the value was derived from the email domain. If the user manually edits the field, the helper text disappears.
-- Auto-fill animation uses `motion.patterns.controls` (180ms, standard easing) for the value fade-in.
+- Empty until the user enters it.
+- Signed-in: focused on entry, including after the user clicks "Continue with LinkedIn" from the signed-out state.
 - Validation: must be non-empty.
 
-For the prototype, the email-domain-to-company-name mapping can be a small lookup table or a simple title-cased transformation of the domain root. The exact mapping is a content decision.
+The company name is explicitly user-entered. The prototype does not infer it from the email domain because that behavior can be wrong, opaque, and confusing when the email domain is personal, shared, an agency, a parent entity, or a shorthand brand domain.
 
 ## Primary action ("Start chat")
 
@@ -364,7 +341,7 @@ Label: **Start chat**.
 Disabled until all four fields are valid:
 
 - First name and Last name are non-empty.
-- Work email is on a work domain.
+- Work email is non-empty and uses a valid email format.
 - Company name is non-empty.
 
 On click, the panel transitions from the welcome surface into the chat thread (see "Transition into chat" below for the AI-mark morph and surface handoff). The chat thread renders with the first turn ready (see "Post-onboarding first chat" below).
@@ -400,7 +377,7 @@ For the signed-in demo state, the following persona is loaded as if from LinkedI
 - Last name: `Chen`
 - LinkedIn email: `jamie.chen@gmail.com`
 
-The LinkedIn email is intentionally a personal address, to demonstrate the form's reason for existing. After form submission, the lead record reflects whatever the user actually entered (e.g., work email `jamie@northstarhealth.com`, company `Northstar Health`).
+The LinkedIn email is intentionally a personal address, reflecting the common case where a member's LinkedIn login email is not a business contact email. After form submission, the lead record reflects whatever the user actually entered (e.g., email `jamie.chen@gmail.com`, company `Northstar Health`).
 
 ## Transition into chat
 
@@ -466,4 +443,4 @@ The following are intentionally not handled in the prototype. They are listed he
 - **Malformed or partial LinkedIn payload.** The prototype assumes the demo persona is loaded cleanly. Production would treat missing fields as missing and behave like signed-out for those fields.
 - **Returning visitor recognition.** A user who completed onboarding once should not have to do it again on return. The prototype does not implement persistence; every panel open is a fresh session.
 - **Email typo correction.** Suggestions like "did you mean `northstarhealth.com`?" are out of scope.
-- **Company auto-fill at scale.** The prototype uses a small lookup or simple transformation. A production system would need a real domain-to-company mapping or a typed-input plus autocomplete pattern.
+- **Company autocomplete.** A production system could consider typed company search or autocomplete, but this prototype keeps company entry explicit.

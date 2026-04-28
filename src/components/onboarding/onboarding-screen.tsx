@@ -18,7 +18,6 @@ import { TextInput } from "@/components/primitives/text-input";
 
 import {
   JAMIE_CHEN,
-  deriveCompanyFromEmail,
   validateWorkEmail,
   type LinkedInPersona,
   type WorkEmailValidation,
@@ -54,11 +53,6 @@ type FormState = Readonly<{
   // anything the user typed manually.
   workEmailSource: "empty" | "profile" | "manual";
   company: string;
-  // "auto": company value was derived from the work email and should keep
-  // re-deriving as the email changes.
-  // "manual": user has typed in the company field directly; the email no
-  // longer touches it.
-  companyMode: "auto" | "manual";
 }>;
 
 type VisualState = "signed-in" | "signed-out";
@@ -79,10 +73,7 @@ function buildInitialFormState(
     lastName: isSignedIn ? persona.lastName : "",
     workEmail: shouldPrefillProfileEmail ? profileEmail : "",
     workEmailSource: shouldPrefillProfileEmail ? "profile" : "empty",
-    company: shouldPrefillProfileEmail
-      ? deriveCompanyFromEmail(profileEmail)
-      : "",
-    companyMode: "auto",
+    company: "",
   };
 }
 
@@ -90,8 +81,6 @@ function getEmailErrorText(validation: WorkEmailValidation): string | null {
   switch (validation.kind) {
     case "invalid-format":
       return "Enter a valid email address.";
-    case "personal-email":
-      return "Use your work email so we can tailor this to your company.";
     default:
       return null;
   }
@@ -115,7 +104,7 @@ export function OnboardingScreen({
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 
   const firstNameRef = useRef<HTMLInputElement>(null);
-  const workEmailRef = useRef<HTMLInputElement>(null);
+  const companyRef = useRef<HTMLInputElement>(null);
   const signInTimeoutRef = useRef<number | null>(null);
 
   const visualState: VisualState = hasDismissedLinkedInIdentity
@@ -132,9 +121,7 @@ export function OnboardingScreen({
   const isCompanyMissing = form.company.trim().length === 0;
   const isEmailValid = emailValidation.kind === "valid";
 
-  const showEmailError =
-    emailValidation.kind === "invalid-format" ||
-    emailValidation.kind === "personal-email";
+  const showEmailError = emailValidation.kind === "invalid-format";
   const emailErrorText = getEmailErrorText(emailValidation);
 
   const isSubmitDisabled =
@@ -145,11 +132,11 @@ export function OnboardingScreen({
     isCompanyMissing;
 
   // Focus on entry, and on visual-state flips driven by Not Jamie? or
-  // Continue with LinkedIn. Signed-in lands on Work email (LinkedIn fills
-  // the name fields). Signed-out lands on First name.
+  // Continue with LinkedIn. Signed-in lands on Company name because LinkedIn
+  // fills identity/email; signed-out lands on First name.
   useEffect(() => {
     if (visualState === "signed-in") {
-      workEmailRef.current?.focus();
+      companyRef.current?.focus();
     } else {
       firstNameRef.current?.focus();
     }
@@ -182,25 +169,11 @@ export function OnboardingScreen({
   const handleEmailChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const value = event.currentTarget.value;
-      setForm((prev) => {
-        if (prev.companyMode !== "auto") {
-          return {
-            ...prev,
-            workEmail: value,
-            workEmailSource: value.trim().length > 0 ? "manual" : "empty",
-          };
-        }
-        const derived = deriveCompanyFromEmail(value);
-        return {
-          ...prev,
-          workEmail: value,
-          workEmailSource: value.trim().length > 0 ? "manual" : "empty",
-          // Only overwrite the auto-filled company when the new email
-          // produces a derived value. While the email is being typed and
-          // is not yet valid, leave any previously auto-filled value alone.
-          company: derived || prev.company,
-        };
-      });
+      setForm((prev) => ({
+        ...prev,
+        workEmail: value,
+        workEmailSource: value.trim().length > 0 ? "manual" : "empty",
+      }));
     },
     [],
   );
@@ -211,7 +184,6 @@ export function OnboardingScreen({
       setForm((prev) => ({
         ...prev,
         company: value,
-        companyMode: "manual",
       }));
     },
     [],
@@ -226,10 +198,6 @@ export function OnboardingScreen({
       workEmail: prev.workEmailSource === "profile" ? "" : prev.workEmail,
       workEmailSource:
         prev.workEmailSource === "profile" ? "empty" : prev.workEmailSource,
-      company:
-        prev.workEmailSource === "profile" && prev.companyMode === "auto"
-          ? ""
-          : prev.company,
     }));
   }, []);
 
@@ -253,12 +221,6 @@ export function OnboardingScreen({
           prev.workEmailSource === "manual" || profileEmail.length === 0
             ? prev.workEmailSource
             : "profile",
-        company:
-          prev.companyMode === "auto" &&
-          prev.workEmailSource !== "manual" &&
-          profileEmail.length > 0
-            ? deriveCompanyFromEmail(profileEmail)
-            : prev.company,
       }));
       setHasSignedInRuntime(true);
       setIsAuthenticating(false);
@@ -281,9 +243,6 @@ export function OnboardingScreen({
     },
     [form, isSubmitDisabled, onSubmit],
   );
-
-  const showCompanyAutoFillHelper =
-    form.companyMode === "auto" && form.company.length > 0;
 
   const inputsDisabled = isAuthenticating;
 
@@ -380,7 +339,6 @@ export function OnboardingScreen({
             }
           />
           <TextInput
-            ref={workEmailRef}
             label="Work email"
             name="workEmail"
             type="email"
@@ -396,6 +354,7 @@ export function OnboardingScreen({
             errorText={emailErrorText ?? undefined}
           />
           <TextInput
+            ref={companyRef}
             label="Company name"
             name="company"
             autoComplete="organization"
@@ -404,9 +363,6 @@ export function OnboardingScreen({
             value={form.company}
             onChange={handleCompanyChange}
             disabled={inputsDisabled}
-            helperText={
-              showCompanyAutoFillHelper ? "Auto-filled from your email" : undefined
-            }
             error={hasAttemptedSubmit && isCompanyMissing}
             errorText={
               hasAttemptedSubmit && isCompanyMissing

@@ -572,7 +572,7 @@ function SchedulePanel({
       ? {
           label: "Work email",
           value: onlineMeetingEmail,
-          helperText: "We'll send the meeting link here.",
+          helperText: undefined,
           type: "email",
           inputMode: "email" as const,
           autoComplete: "email",

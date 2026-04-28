@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { premiumSignalFlowNavItems } from "@/components/premium/premium-concierge-flows";
 import { Icon } from "@/components/primitives/icon";
+import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 
 import { useReviewShellState } from "./review-shell-state";
 import { ReviewShellStateMenu } from "./review-shell-state-menu";
@@ -14,11 +15,20 @@ import { ReviewShellStateMenu } from "./review-shell-state-menu";
 const HIRING_PROTOTYPE_HREF = "/hiring";
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
+const HIRING_LIVE_NAV_ITEM = {
+  id: "hiring-live",
+  href: HIRING_PROTOTYPE_HREF,
+  label: "Live",
+} as const;
 const PREMIUM_LIVE_NAV_ITEM = {
   id: "premium-live",
   href: PREMIUM_PROTOTYPE_HREF,
-  label: "Live prototype",
+  label: "Live",
 } as const;
+const hiringModeOptions = [
+  HIRING_LIVE_NAV_ITEM,
+  ...FLOW_REVIEW_NAV_ITEMS,
+] as const;
 const premiumModeOptions = [
   PREMIUM_LIVE_NAV_ITEM,
   ...premiumSignalFlowNavItems,
@@ -28,44 +38,98 @@ type ReviewDestination = Readonly<{
   href: string;
   label: string;
   matches: (pathname: string) => boolean;
+  metaLabel?: string;
   menu?: "hiring" | "premium";
 }>;
 
-function getPremiumNavLabel(pathname: string) {
+const HOME_DESTINATION: ReviewDestination = {
+  href: "/",
+  label: "Home",
+  matches: (candidate) => candidate === "/",
+};
+const COMPONENTS_DESTINATION: ReviewDestination = {
+  href: "/internal/components",
+  label: "Components",
+  matches: (candidate) => candidate.startsWith("/internal/components"),
+};
+
+function HomeNavIcon() {
   return (
-    premiumSignalFlowNavItems.find((option) => option.href === pathname)
-      ?.label ?? "Premium"
+    <span
+      aria-hidden="true"
+      className="inline-flex size-[var(--design-icon-size-small)] shrink-0 items-center justify-center"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="size-full"
+      >
+        <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+        <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      </svg>
+    </span>
   );
+}
+
+function getPrototypeMetaLabel(pathname: string): string | undefined {
+  if (pathname.startsWith("/internal/components")) {
+    return undefined;
+  }
+
+  if (pathname.startsWith("/premium")) {
+    const activePremiumMode = premiumModeOptions.find(
+      (option) => option.href === pathname,
+    );
+
+    return activePremiumMode?.label ?? "Live";
+  }
+
+  if (
+    pathname === HIRING_PROTOTYPE_HREF ||
+    pathname.startsWith("/internal/flows")
+  ) {
+    const activeHiringMode = hiringModeOptions.find(
+      (option) => option.href === pathname,
+    );
+
+    return activeHiringMode?.label ?? "Live";
+  }
+
+  return undefined;
+}
+
+function getPrototypeDestination(pathname: string): ReviewDestination {
+  const isPremium = pathname.startsWith("/premium");
+
+  return {
+    href: isPremium ? PREMIUM_PROTOTYPE_HREF : HIRING_PROTOTYPE_HREF,
+    label: "Prototype",
+    matches: isPremium
+      ? (candidate) => candidate.startsWith("/premium")
+      : (candidate) =>
+          candidate === HIRING_PROTOTYPE_HREF ||
+          candidate.startsWith("/internal/flows"),
+    menu: isPremium ? "premium" : "hiring",
+    metaLabel: getPrototypeMetaLabel(pathname),
+  };
 }
 
 function getReviewDestinations(
   pathname: string,
 ): ReadonlyArray<ReviewDestination> {
   if (pathname.startsWith("/premium")) {
-    return [
-      {
-        href: PREMIUM_PROTOTYPE_HREF,
-        label: getPremiumNavLabel(pathname),
-        menu: "premium",
-        matches: (candidate) => candidate.startsWith("/premium"),
-      },
-    ];
+    return [HOME_DESTINATION, getPrototypeDestination(pathname)];
   }
 
   return [
-    {
-      href: HIRING_PROTOTYPE_HREF,
-      label: "LTS Hiring",
-      menu: "hiring",
-      matches: (candidate) =>
-        candidate === HIRING_PROTOTYPE_HREF ||
-        candidate.startsWith("/internal/flows"),
-    },
-    {
-      href: "/internal/components",
-      label: "Components",
-      matches: (candidate) => candidate.startsWith("/internal/components"),
-    },
+    HOME_DESTINATION,
+    getPrototypeDestination(pathname),
+    COMPONENTS_DESTINATION,
   ];
 }
 
@@ -152,6 +216,9 @@ export function ReviewShellNav() {
             const isActive = destination.matches(pathname);
             const hasMenu = Boolean(destination.menu);
             const isPremiumMenu = destination.menu === "premium";
+            const modeOptions = isPremiumMenu
+              ? premiumModeOptions
+              : hiringModeOptions;
 
             if (hasMenu) {
               return (
@@ -162,22 +229,38 @@ export function ReviewShellNav() {
                     aria-haspopup="menu"
                     aria-expanded={isMenuOpen}
                     aria-current={isActive ? "page" : undefined}
-                    aria-label={`Open ${
-                      isPremiumMenu ? "Premium" : "LTS Hiring"
-                    } review menu`}
+                    aria-label={`Open Prototype review menu${
+                      destination.metaLabel
+                        ? ` for ${destination.metaLabel}`
+                        : ""
+                    }`}
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     ref={(element) => {
                       itemRefs.current[destination.href] = element;
                       triggerRef.current = element;
                     }}
                     className={[
-                      "inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
+                      "inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
                       isActive
                         ? "text-sky-900"
                         : "text-slate-600 hover:text-slate-950",
                     ].join(" ")}
                   >
-                    <span>{destination.label}</span>
+                    <span className="flex min-w-0 flex-col items-start leading-none">
+                      <span className="leading-[1.1]">
+                        {destination.label}
+                      </span>
+                      {destination.metaLabel ? (
+                        <span
+                          className={[
+                            "mt-0.5 max-w-[96px] truncate text-[10px] font-medium leading-[1.05] tracking-normal sm:max-w-[220px]",
+                            isActive ? "text-sky-700/75" : "text-slate-500",
+                          ].join(" ")}
+                        >
+                          {destination.metaLabel}
+                        </span>
+                      ) : null}
+                    </span>
                     <Icon
                       name="chevron-down"
                       size="small"
@@ -197,8 +280,8 @@ export function ReviewShellNav() {
                     onClose={closeMenu}
                     triggerRef={triggerRef}
                     labelledBy={TRIGGER_ID}
-                    modeOptions={isPremiumMenu ? premiumModeOptions : undefined}
-                    modeHeading={isPremiumMenu ? "Signal" : undefined}
+                    modeOptions={modeOptions}
+                    modeHeading={isPremiumMenu ? "Premium" : "LTS Hiring"}
                     showVisitorControls={!isPremiumMenu}
                   />
                 </li>
@@ -214,12 +297,15 @@ export function ReviewShellNav() {
                     itemRefs.current[destination.href] = element;
                   }}
                   className={[
-                    "inline-flex items-center justify-center whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
+                    "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full px-3.5 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
                     isActive
                       ? "text-sky-900"
                       : "text-slate-600 hover:text-slate-950",
                   ].join(" ")}
                 >
+                  {destination.href === HOME_DESTINATION.href ? (
+                    <HomeNavIcon />
+                  ) : null}
                   {destination.label}
                 </Link>
               </li>
