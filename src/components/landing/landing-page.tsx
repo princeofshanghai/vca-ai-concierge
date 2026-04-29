@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import Image from "next/image";
 import localFont from "next/font/local";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { type ChatPanelVariant } from "@/components/chat";
+import { type ChatPanelVariant, useChatPanelPresence } from "@/components/chat";
 import { FlowReviewChatPanel } from "@/components/flow-review";
 import { ConciergePanel } from "@/components/onboarding";
 import { Button } from "@/components/primitives/button";
@@ -19,10 +19,6 @@ const navItems = [
   { href: "#compare-products", label: "Compare Products" },
   { href: "#resources-support", label: "Resources & Support" },
 ];
-
-const PANEL_TRANSITION_MS = 240;
-
-type ChatPanelPresence = "closed" | "entering" | "open" | "exiting";
 
 type LandingPageProps = Readonly<{
   homeHref?: string;
@@ -42,22 +38,31 @@ export function LandingPage({
 }: LandingPageProps) {
   const router = useRouter();
   const isReviewFlow = Boolean(reviewFlow);
-  const [chatPanelPresence, setChatPanelPresence] =
-    useState<ChatPanelPresence>(() => (reviewFlow ? "open" : "closed"));
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [isReviewSidePanelOpen, setIsReviewSidePanelOpen] = useState(false);
   const [isEndChatDialogOpen, setIsEndChatDialogOpen] = useState(false);
   const [isChatConversationStarted, setIsChatConversationStarted] =
     useState(false);
-  const openAnimationFrameRef = useRef<number | null>(null);
-  const closeTimeoutRef = useRef<number | null>(null);
   const chatPanelId = useId();
-  const isChatMounted = isReviewFlow || chatPanelPresence !== "closed";
-  const isChatOpen =
-    isReviewFlow ||
-    chatPanelPresence === "entering" || chatPanelPresence === "open";
-  const isChatInteractive = isReviewFlow || chatPanelPresence === "open";
+  const resetChatPanelState = useCallback(() => {
+    setIsEndChatDialogOpen(false);
+    setIsChatConversationStarted(false);
+    setIsReviewSidePanelOpen(false);
+    setChatPanelVariant("collapsed");
+  }, []);
+  const {
+    presence: chatPanelPresence,
+    isMounted: isChatMounted,
+    isOpen: isChatOpen,
+    isInteractive: isChatInteractive,
+    open: openChatPanel,
+    close: closeChatPanel,
+  } = useChatPanelPresence({
+    initialOpen: isReviewFlow,
+    onBeforeOpen: resetChatPanelState,
+    onBeforeClose: resetChatPanelState,
+  });
   const isWideChatSurface =
     chatPanelVariant === "expanded" || isReviewSidePanelOpen;
   const isCenteredChatSurface = chatPanelVariant === "expanded";
@@ -69,35 +74,13 @@ export function LandingPage({
       ? "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
       : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
 
-  const clearPanelTimers = useCallback(() => {
-    if (openAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(openAnimationFrameRef.current);
-      openAnimationFrameRef.current = null;
-    }
-
-    if (closeTimeoutRef.current !== null) {
-      window.clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-  }, []);
-
   const openChat = useCallback(() => {
-    if (chatPanelPresence === "entering" || chatPanelPresence === "open") {
+    if (isReviewFlow) {
       return;
     }
 
-    clearPanelTimers();
-    setIsEndChatDialogOpen(false);
-    setIsChatConversationStarted(false);
-    setIsReviewSidePanelOpen(false);
-    setChatPanelVariant("collapsed");
-    setChatPanelPresence("entering");
-
-    openAnimationFrameRef.current = window.requestAnimationFrame(() => {
-      openAnimationFrameRef.current = null;
-      setChatPanelPresence("open");
-    });
-  }, [chatPanelPresence, clearPanelTimers]);
+    openChatPanel();
+  }, [isReviewFlow, openChatPanel]);
 
   const toggleChatPanelVariant = useCallback(() => {
     setChatPanelVariant((variant) =>
@@ -106,26 +89,8 @@ export function LandingPage({
   }, []);
 
   const closeChat = useCallback(() => {
-    if (chatPanelPresence === "closed" || chatPanelPresence === "exiting") {
-      return;
-    }
-
-    clearPanelTimers();
-    setIsEndChatDialogOpen(false);
-    setIsChatConversationStarted(false);
-    setIsReviewSidePanelOpen(false);
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setChatPanelPresence("closed");
-      return;
-    }
-
-    setChatPanelPresence("exiting");
-    closeTimeoutRef.current = window.setTimeout(() => {
-      closeTimeoutRef.current = null;
-      setChatPanelPresence("closed");
-    }, PANEL_TRANSITION_MS);
-  }, [chatPanelPresence, clearPanelTimers]);
+    closeChatPanel();
+  }, [closeChatPanel]);
 
   const requestCloseChat = useCallback(() => {
     if (isReviewFlow) {
@@ -165,10 +130,6 @@ export function LandingPage({
   const handleConversationStart = useCallback(() => {
     setIsChatConversationStarted(true);
   }, []);
-
-  useEffect(() => {
-    return clearPanelTimers;
-  }, [clearPanelTimers]);
 
   useEffect(() => {
     if (!isChatMounted) {

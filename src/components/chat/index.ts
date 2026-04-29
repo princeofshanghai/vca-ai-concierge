@@ -15,3 +15,14 @@ export {
   type PromptProps,
   type PromptVisualState,
 } from "./chat-ui";
+export {
+  CHAT_ASSISTANT_THINKING_DELAY_MS,
+  CHAT_PANEL_TRANSITION_MS,
+  getStreamDelay,
+  prefersReducedMotion,
+  splitIntoStreamChunks,
+  supportsViewTransitions,
+  useChatPanelPresence,
+  type ChatMessageStreamStatus,
+  type ChatPanelPresence,
+} from "./chat-motion";

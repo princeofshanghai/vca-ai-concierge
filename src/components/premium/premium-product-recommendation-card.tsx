@@ -2,15 +2,27 @@ import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 
-import { premiumBusinessSuitePlan } from "./premium-plan-data";
+import {
+  premiumBusinessSuitePlan,
+  premiumPlans,
+  type PremiumPlanId,
+} from "./premium-plan-data";
 
 const PREMIUM_GOLD_BORDER = "#F9C982";
 const PREMIUM_GOLD_ACCENT = "#ce7b00";
 
-export function PremiumProductRecommendationCard() {
+export function PremiumProductRecommendationCard({
+  planId = "business-suite",
+}: Readonly<{
+  planId?: PremiumPlanId;
+}>) {
+  const plan =
+    premiumPlans.find((premiumPlan) => premiumPlan.id === planId) ??
+    premiumBusinessSuitePlan;
+
   return (
     <article
-      className="chat-message-enter flex w-full flex-col rounded-md border bg-background py-xl pl-xl pr-md"
+      className="chat-recommendation-enter flex w-full flex-col rounded-md border bg-background py-xl pl-xl pr-md"
       style={{ borderColor: PREMIUM_GOLD_BORDER }}
     >
       <div className="flex flex-col gap-xxl">
@@ -23,22 +35,20 @@ export function PremiumProductRecommendationCard() {
               className="absolute -inset-[2px] rounded-round border-[2px]"
               style={{ borderColor: PREMIUM_GOLD_ACCENT }}
             />
-            <Entity size={48} label={premiumBusinessSuitePlan.name} />
+            <Entity size={48} label={plan.name} />
           </div>
 
           <div className="flex flex-col gap-xs">
             <h2 className="text-heading-lg text-text">
-              {premiumBusinessSuitePlan.name}
+              {plan.name}
             </h2>
-            <p className="text-body-md text-text">
-              {premiumBusinessSuitePlan.subtitle}
-            </p>
+            <p className="text-body-md text-text">{plan.subtitle}</p>
           </div>
 
           <div className="flex flex-col gap-sm">
             <p className="text-control-sm text-text">Plan includes:</p>
             <ul className="flex flex-col gap-sm">
-              {premiumBusinessSuitePlan.features.map((feature) => (
+              {plan.features.map((feature) => (
                 <li
                   key={feature}
                   className="flex gap-[10px] text-body-sm text-text-meta"
@@ -58,7 +68,7 @@ export function PremiumProductRecommendationCard() {
         </div>
 
         <div className="flex flex-col gap-sm">
-          <p className="text-control-sm text-text">
+          <p className="flex items-baseline gap-xs text-control-sm text-checked">
             <span className="line-through">$76.98</span>
             <span>* 1-month free trial</span>
           </p>

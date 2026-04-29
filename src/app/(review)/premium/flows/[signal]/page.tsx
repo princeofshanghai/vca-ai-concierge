@@ -2,29 +2,29 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import {
-  isPremiumSignalFlowId,
+  isPremiumReviewFlowId,
   premiumConversationFlows,
-  premiumSignalFlowIds,
+  premiumReviewFlowIds,
   PremiumSurveyPage,
 } from "@/components/premium";
 import { createPageMetadata } from "@/lib/metadata";
 
-type PremiumSignalFlowPageProps = Readonly<{
+type PremiumReviewFlowPageProps = Readonly<{
   params: Promise<{
     signal: string;
   }>;
 }>;
 
 export function generateStaticParams() {
-  return premiumSignalFlowIds.map((signal) => ({ signal }));
+  return premiumReviewFlowIds.map((signal) => ({ signal }));
 }
 
 export async function generateMetadata({
   params,
-}: PremiumSignalFlowPageProps): Promise<Metadata> {
+}: PremiumReviewFlowPageProps): Promise<Metadata> {
   const { signal } = await params;
 
-  if (!isPremiumSignalFlowId(signal)) {
+  if (!isPremiumReviewFlowId(signal)) {
     return createPageMetadata({
       title: "Premium Concierge",
       description:
@@ -39,12 +39,12 @@ export async function generateMetadata({
   });
 }
 
-export default async function PremiumSignalFlowPage({
+export default async function PremiumReviewFlowPage({
   params,
-}: PremiumSignalFlowPageProps) {
+}: PremiumReviewFlowPageProps) {
   const { signal } = await params;
 
-  if (!isPremiumSignalFlowId(signal)) {
+  if (!isPremiumReviewFlowId(signal)) {
     notFound();
   }
 
@@ -56,7 +56,8 @@ export default async function PremiumSignalFlowPage({
       initialStep={flow.surveyStep}
       initialUseCaseOption={flow.selectedUseCaseOption}
       initialGoalOptions={flow.selectedGoalOptions}
-      initialChatOpen
+      initialChatOpen={flow.initialChatOpen ?? true}
+      conciergeNudge={flow.conciergeNudge}
       conversationFlow={flow}
     />
   );

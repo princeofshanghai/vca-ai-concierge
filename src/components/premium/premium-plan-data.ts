@@ -34,3 +34,4 @@ export const premiumPlans = [
 ] as const;
 
 export type PremiumPlan = (typeof premiumPlans)[number];
+export type PremiumPlanId = PremiumPlan["id"];

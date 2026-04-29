@@ -1,31 +1,692 @@
 "use client";
 
 import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type MouseEvent,
+} from "react";
+
+import {
+  CHAT_ASSISTANT_THINKING_DELAY_MS,
   ChatBody,
   ChatComposer,
   ChatHeader,
   ChatMessage,
   ChatPanel,
+  ChatThinkingMessage,
   ChatThread,
+  Prompt,
+  getStreamDelay,
+  prefersReducedMotion,
+  splitIntoStreamChunks,
+  type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
 
-import type { PremiumConversationFlow } from "./premium-concierge-flows";
+import {
+  premiumHighSignalPostRecommendationPromptIds,
+  premiumHighSignalWelcomeMessage,
+  premiumLowSignalWelcomeMessage,
+  premiumPostRecommendationPromptIds,
+  premiumPromptLabels,
+  premiumPromptRowsBySurveyStep,
+  type PremiumConversationFlow,
+  type PremiumConversationStep,
+  type PremiumLiveMode,
+  type PremiumPromptId,
+  type PremiumSurveyStep,
+} from "./premium-concierge-flows";
 import { PremiumProductRecommendationCard } from "./premium-product-recommendation-card";
+import type { PremiumPlanId } from "./premium-plan-data";
+
+type PremiumLiveMessage = Readonly<{
+  id: string;
+  kind: "message";
+  role: "assistant" | "user";
+  content: string;
+  status: ChatMessageStreamStatus;
+}>;
+
+type PremiumLiveRecommendation = Readonly<{
+  id: string;
+  kind: "product-recommendation";
+  planId: PremiumPlanId;
+}>;
+
+type PremiumLiveItem = PremiumLiveMessage | PremiumLiveRecommendation;
+
+type PremiumScriptedResponse = Readonly<{
+  messages: ReadonlyArray<string>;
+  recommendationPlanId?: PremiumPlanId;
+  nextPrompts?: ReadonlyArray<PremiumPromptId> | null;
+}>;
+
+type PremiumPendingAssistantResponse = Readonly<{
+  id: string;
+  text: string;
+  remainingMessages: ReadonlyArray<PremiumLiveMessage>;
+  recommendation?: PremiumLiveRecommendation;
+  nextPrompts?: ReadonlyArray<PremiumPromptId> | null;
+}>;
+
+function getLiveWelcomeMessage(liveMode: PremiumLiveMode) {
+  return liveMode === "high-signal"
+    ? premiumHighSignalWelcomeMessage
+    : premiumLowSignalWelcomeMessage;
+}
+
+function getLiveWelcomeId(
+  context: PremiumSurveyStep,
+  liveMode: PremiumLiveMode,
+) {
+  return `live-welcome-${liveMode}-${context}`;
+}
+
+function getInitialLiveMessage(
+  context: PremiumSurveyStep,
+  liveMode: PremiumLiveMode,
+): PremiumLiveMessage {
+  return {
+    id: getLiveWelcomeId(context, liveMode),
+    kind: "message",
+    role: "assistant",
+    content: "",
+    status: "thinking",
+  };
+}
+
+function getInitialPendingAssistantResponse(
+  context: PremiumSurveyStep,
+  liveMode: PremiumLiveMode,
+): PremiumPendingAssistantResponse {
+  if (liveMode === "high-signal") {
+    return {
+      id: getLiveWelcomeId(context, liveMode),
+      text: getLiveWelcomeMessage(liveMode),
+      remainingMessages: [],
+      recommendation: {
+        id: `live-recommendation-${liveMode}-${context}`,
+        kind: "product-recommendation",
+        planId: "business-suite",
+      },
+      nextPrompts: premiumHighSignalPostRecommendationPromptIds,
+    };
+  }
+
+  return {
+    id: getLiveWelcomeId(context, liveMode),
+    text: getLiveWelcomeMessage(liveMode),
+    remainingMessages: [],
+    nextPrompts: premiumPromptRowsBySurveyStep[context],
+  };
+}
+
+function getPromptLabel(promptId: PremiumPromptId) {
+  return premiumPromptLabels[promptId];
+}
+
+function renderPremiumMessageContent(content: string) {
+  const parts = content.split(/(\*\*[^*]+\*\*)/g);
+
+  if (parts.length === 1) {
+    return content;
+  }
+
+  return parts.map((part, index) => {
+    const strongMatch = part.match(/^\*\*(.*)\*\*$/);
+
+    if (strongMatch) {
+      return (
+        <strong key={`${part}-${index}`} className="font-semibold">
+          {strongMatch[1]}
+        </strong>
+      );
+    }
+
+    return <span key={`${part}-${index}`}>{part}</span>;
+  });
+}
+
+function buildPremiumPromptResponse({
+  liveMode,
+  promptId,
+}: {
+  liveMode: PremiumLiveMode;
+  promptId: PremiumPromptId;
+}): PremiumScriptedResponse {
+  if (promptId === "free-trial") {
+    return {
+      messages: [
+        "The page shows a 1-month free trial, and you can cancel anytime. I would still pick the plan around what you want Premium to help with first, so the trial tests the right thing.",
+      ],
+      nextPrompts: [
+        "help-pick-plan",
+        "premium-features",
+        "compare-career-business",
+      ],
+    };
+  }
+
+  if (promptId === "help-pick-plan") {
+    return {
+      messages: [
+        "Absolutely. Since Premium plans are built for different outcomes, what would make Premium feel worth it for you right now?",
+      ],
+      nextPrompts: null,
+    };
+  }
+
+  if (promptId === "premium-features") {
+    return {
+      messages: [
+        "Premium features depend on the plan. Career is for job search, Business is for research and networking, and Business Suite is for customer growth, visibility, and light hiring. What are you hoping Premium helps with most?",
+      ],
+      nextPrompts: null,
+    };
+  }
+
+  if (promptId === "mixed-goals") {
+    return {
+      messages: [
+        "That is common. If the main goal is getting hired, Career is the cleaner fit. If it is business growth, visibility, or customers, Business or Business Suite becomes more relevant. Which goal matters most this month?",
+      ],
+      nextPrompts: null,
+    };
+  }
+
+  if (promptId === "compare-career-business") {
+    return {
+      messages: [
+        "Career is strongest when the main goal is getting hired or advancing your own career. Business is stronger when you are researching people, growing your network, and building professional credibility.",
+      ],
+      nextPrompts: ["free-trial", "mixed-goals", "help-pick-plan"],
+    };
+  }
+
+  if (promptId === "compare-business-suite") {
+    return {
+      messages: [
+        "Business helps with research, networking, profile credibility, and company insights. Business Suite goes further for active growth: client suggestions, client insights, post boosts, 30 InMails, and job promotions.",
+      ],
+      nextPrompts: ["why-business-suite", "is-business-enough"],
+    };
+  }
+
+  if (promptId === "difference-business-suite") {
+    return {
+      messages: [
+        "Business is best when you mainly want research, networking, profile credibility, and company insights. Business Suite adds more active growth tools: client suggestions, post boosts, more InMails, and job promotions.",
+      ],
+      nextPrompts: ["why-business-suite", "recommendation-mismatch"],
+    };
+  }
+
+  if (promptId === "why-business-suite") {
+    return {
+      messages: [
+        "Business Suite includes daily prospect suggestions and client insights for finding customers, monthly post boosts and 30 InMails for visibility, and monthly job promotions for light hiring support.",
+      ],
+      nextPrompts:
+        liveMode === "high-signal"
+          ? ["difference-business-suite", "recommendation-mismatch"]
+          : ["compare-business-suite", "is-business-enough"],
+    };
+  }
+
+  if (promptId === "is-business-enough") {
+    return {
+      messages: [
+        "Business may be enough if you mainly want research, networking, profile credibility, and company insights. I would choose Business Suite if you expect to actively find customers, expand reach, and support hiring from the same plan.",
+      ],
+      nextPrompts: ["why-business-suite", "compare-business-suite"],
+    };
+  }
+
+  if (promptId === "recommendation-mismatch") {
+    return {
+      messages: [
+        "Got it. Tell me what feels off, and I can recalibrate the recommendation.",
+      ],
+      nextPrompts: null,
+    };
+  }
+
+  return {
+    messages: [
+      "I would keep the decision anchored on the outcome: Business is better for research and networking, while Business Suite is better for customer growth, visibility, and light hiring in one plan.",
+    ],
+    nextPrompts: null,
+  };
+}
+
+function buildPremiumTypedResponse({
+  hasRecommendation,
+  liveMode,
+  typedTurnCount,
+}: {
+  hasRecommendation: boolean;
+  liveMode: PremiumLiveMode;
+  typedTurnCount: number;
+}): PremiumScriptedResponse {
+  if (liveMode === "high-signal" && hasRecommendation) {
+    return {
+      messages: [
+        "Thanks, that helps. If clients and visibility are not the right priorities, I would step back from Business Suite and recalibrate around what you actually want Premium to help with.",
+      ],
+      nextPrompts: [
+        "help-pick-plan",
+        "premium-features",
+        "difference-business-suite",
+      ],
+    };
+  }
+
+  if (!hasRecommendation && typedTurnCount === 0) {
+    return {
+      messages: [
+        "Nice, that helps. Customers and visibility are exactly the kinds of goals Premium can support.",
+        "Before I pick a plan, one quick question: do you expect hiring to matter soon too?",
+      ],
+      nextPrompts: null,
+    };
+  }
+
+  if (!hasRecommendation) {
+    return {
+      messages: [
+        "Great, that gives me enough to make a call.",
+        "I'd recommend Business Suite because it fits the full mix: finding customers, growing visibility, and keeping hiring support nearby.",
+        "Good news: **you can start with the 1-month free trial**, so you can test whether it actually supports those goals before committing.",
+      ],
+      recommendationPlanId: "business-suite",
+      nextPrompts: premiumPostRecommendationPromptIds,
+    };
+  }
+
+  if (typedTurnCount === 0) {
+    return {
+      messages: [
+        "That makes sense. The cleanest next step is to use the trial to test whether Business Suite actually supports the outcomes you care about before committing.",
+      ],
+      nextPrompts: premiumPostRecommendationPromptIds,
+    };
+  }
+
+  return {
+    messages: [
+      "I would keep the decision anchored on the outcome: if you mainly need career momentum, look at Career; if you need business growth across customers and visibility, Business Suite remains the stronger fit.",
+    ],
+    nextPrompts: null,
+  };
+}
+
+function isPremiumLiveMessage(
+  item: PremiumLiveItem,
+): item is PremiumLiveMessage {
+  return item.kind === "message";
+}
+
+function PremiumPromptRow({
+  prompts,
+  readOnly = false,
+  onPromptSelect,
+}: Readonly<{
+  prompts: ReadonlyArray<PremiumPromptId>;
+  readOnly?: boolean;
+  onPromptSelect?: (promptId: PremiumPromptId) => void;
+}>) {
+  return (
+    <div className="chat-message-enter flex w-full">
+      <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+        {prompts.map((promptId) => {
+          const label = getPromptLabel(promptId);
+
+          return (
+            <Prompt
+              key={promptId}
+              prompt={label}
+              aria-disabled={readOnly || undefined}
+              tabIndex={readOnly ? -1 : undefined}
+              onClick={(event: MouseEvent<HTMLButtonElement>) => {
+                event.preventDefault();
+                if (!readOnly) {
+                  onPromptSelect?.(promptId);
+                }
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export function PremiumConciergePanel({
   variant = "collapsed",
   className,
+  context = "use-case",
   flow,
+  liveMode = "low-signal",
   onClose,
   onVariantToggle,
 }: Readonly<{
   variant?: ChatPanelVariant;
   className?: string;
+  context?: PremiumSurveyStep;
   flow?: PremiumConversationFlow;
+  liveMode?: PremiumLiveMode;
   onClose?: () => void;
   onVariantToggle?: () => void;
 }>) {
+  const chatBodyRef = useRef<HTMLDivElement | null>(null);
+  const liveItemIdRef = useRef(0);
+  const previousContextRef = useRef(context);
+  const previousLiveModeRef = useRef(liveMode);
+  const [draft, setDraft] = useState("");
+  const [liveItems, setLiveItems] = useState<ReadonlyArray<PremiumLiveItem>>(
+    () => (flow ? [] : [getInitialLiveMessage(context, liveMode)]),
+  );
+  const [activePrompts, setActivePrompts] = useState<
+    ReadonlyArray<PremiumPromptId> | null
+  >(null);
+  const [pendingAssistantResponse, setPendingAssistantResponse] =
+    useState<PremiumPendingAssistantResponse | null>(() =>
+      flow ? null : getInitialPendingAssistantResponse(context, liveMode),
+    );
+  const [hasLiveInteracted, setHasLiveInteracted] = useState(false);
+  const [hasRecommendation, setHasRecommendation] = useState(false);
+  const [typedTurnCount, setTypedTurnCount] = useState(0);
+  const isAssistantBusy =
+    pendingAssistantResponse !== null ||
+    liveItems.some(
+      (item) =>
+        isPremiumLiveMessage(item) &&
+        item.role === "assistant" &&
+        (item.status === "thinking" || item.status === "streaming"),
+    );
+  const hasActivePrompts =
+    !flow && !isAssistantBusy && Boolean(activePrompts?.length);
+  const composerPlaceholder = flow
+    ? "Send a message"
+    : hasActivePrompts
+      ? "Choose a prompt to continue"
+      : "Send a message";
+
+  const createLiveItemId = useCallback((prefix: string) => {
+    liveItemIdRef.current += 1;
+    return `${prefix}-${liveItemIdRef.current}`;
+  }, []);
+
+  const appendScriptedResponse = useCallback(
+    ({
+      response,
+      userMessage,
+    }: {
+      response: PremiumScriptedResponse;
+      userMessage: string;
+    }) => {
+      const [firstAssistantMessage = "", ...remainingAssistantMessages] =
+        response.messages;
+      const assistantId = createLiveItemId("live-assistant");
+      const remainingMessages = remainingAssistantMessages.map(
+        (content): PremiumLiveMessage => ({
+          id: createLiveItemId("live-assistant"),
+          kind: "message",
+          role: "assistant",
+          content,
+          status: "complete",
+        }),
+      );
+      const recommendation = response.recommendationPlanId
+        ? ({
+            id: createLiveItemId("live-recommendation"),
+            kind: "product-recommendation",
+            planId: response.recommendationPlanId,
+          } satisfies PremiumLiveRecommendation)
+        : undefined;
+      const nextItems: Array<PremiumLiveItem> = [
+        {
+          id: createLiveItemId("live-user"),
+          kind: "message",
+          role: "user",
+          content: userMessage,
+          status: "complete",
+        },
+        {
+          id: assistantId,
+          kind: "message",
+          role: "assistant",
+          content: "",
+          status: "thinking",
+        },
+      ];
+
+      setLiveItems((currentItems) => [...currentItems, ...nextItems]);
+      setActivePrompts(null);
+      setPendingAssistantResponse({
+        id: assistantId,
+        text: firstAssistantMessage,
+        remainingMessages,
+        recommendation,
+        nextPrompts: response.nextPrompts ?? null,
+      });
+    },
+    [createLiveItemId],
+  );
+
+  useEffect(() => {
+    if (
+      flow ||
+      hasLiveInteracted ||
+      (previousContextRef.current === context &&
+        previousLiveModeRef.current === liveMode)
+    ) {
+      return;
+    }
+
+    previousContextRef.current = context;
+    previousLiveModeRef.current = liveMode;
+    setDraft("");
+    setLiveItems([getInitialLiveMessage(context, liveMode)]);
+    setActivePrompts(null);
+    setHasRecommendation(false);
+    setTypedTurnCount(0);
+    setPendingAssistantResponse(
+      getInitialPendingAssistantResponse(context, liveMode),
+    );
+  }, [context, flow, hasLiveInteracted, liveMode]);
+
+  const handlePromptSelect = useCallback(
+    (promptId: PremiumPromptId) => {
+      const response = buildPremiumPromptResponse({ liveMode, promptId });
+
+      setDraft("");
+      setHasLiveInteracted(true);
+      setActivePrompts(null);
+      appendScriptedResponse({
+        response,
+        userMessage: getPromptLabel(promptId),
+      });
+    },
+    [appendScriptedResponse, liveMode],
+  );
+
+  const handleDraftChange = useCallback(
+    (event: ChangeEvent<HTMLTextAreaElement>) => {
+      setDraft(event.currentTarget.value);
+    },
+    [],
+  );
+
+  const handleSendMessage = useCallback(() => {
+    const userMessage = draft.trim();
+
+    if (!userMessage || hasActivePrompts || isAssistantBusy) {
+      return;
+    }
+
+    const response = buildPremiumTypedResponse({
+      hasRecommendation,
+      liveMode,
+      typedTurnCount,
+    });
+
+    setDraft("");
+    setHasLiveInteracted(true);
+    setTypedTurnCount((currentCount) => currentCount + 1);
+    appendScriptedResponse({ response, userMessage });
+  }, [
+    appendScriptedResponse,
+    draft,
+    hasActivePrompts,
+    hasRecommendation,
+    isAssistantBusy,
+    liveMode,
+    typedTurnCount,
+  ]);
+
+  useEffect(() => {
+    if (!pendingAssistantResponse) {
+      return;
+    }
+
+    const {
+      id,
+      text,
+      remainingMessages,
+      recommendation,
+      nextPrompts,
+    } = pendingAssistantResponse;
+    const shouldReduceMotion = prefersReducedMotion();
+    const chunks = splitIntoStreamChunks(text);
+    let streamTimer: number | null = null;
+    let visibleText = "";
+    let index = 0;
+
+    function completePendingAssistantResponse() {
+      setLiveItems((currentItems) => {
+        const completedItems = currentItems.map((item) =>
+          isPremiumLiveMessage(item) && item.id === id
+            ? { ...item, content: text, status: "complete" as const }
+            : item,
+        );
+
+        return [
+          ...completedItems,
+          ...remainingMessages,
+          ...(recommendation ? [recommendation] : []),
+        ];
+      });
+      if (recommendation) {
+        setHasRecommendation(true);
+      }
+      setActivePrompts(nextPrompts ?? null);
+      setPendingAssistantResponse(null);
+    }
+
+    const thinkingTimer = window.setTimeout(() => {
+      if (shouldReduceMotion) {
+        completePendingAssistantResponse();
+        return;
+      }
+
+      setLiveItems((currentItems) =>
+        currentItems.map((item) =>
+          isPremiumLiveMessage(item) && item.id === id
+            ? { ...item, content: "", status: "streaming" }
+            : item,
+        ),
+      );
+
+      function streamNextChunk() {
+        const nextChunk = chunks[index];
+
+        if (!nextChunk) {
+          completePendingAssistantResponse();
+          return;
+        }
+
+        visibleText += nextChunk;
+        index += 1;
+
+        setLiveItems((currentItems) =>
+          currentItems.map((item) =>
+            isPremiumLiveMessage(item) && item.id === id
+              ? { ...item, content: visibleText, status: "streaming" }
+              : item,
+          ),
+        );
+
+        streamTimer = window.setTimeout(
+          streamNextChunk,
+          getStreamDelay(nextChunk),
+        );
+      }
+
+      streamNextChunk();
+    }, shouldReduceMotion ? 0 : CHAT_ASSISTANT_THINKING_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(thinkingTimer);
+      if (streamTimer !== null) {
+        window.clearTimeout(streamTimer);
+      }
+    };
+  }, [pendingAssistantResponse]);
+
+  useEffect(() => {
+    const chatBody = chatBodyRef.current;
+
+    if (!chatBody) {
+      return;
+    }
+
+    chatBody.scrollTo({ top: chatBody.scrollHeight });
+  }, [activePrompts, context, flow, hasLiveInteracted, liveItems]);
+
+  function renderConversationStep(step: PremiumConversationStep) {
+    if (step.kind === "product-recommendation") {
+      return (
+        <PremiumProductRecommendationCard key={step.id} planId={step.planId} />
+      );
+    }
+
+    if (step.kind === "prompt-row") {
+      return <PremiumPromptRow key={step.id} prompts={step.prompts} readOnly />;
+    }
+
+    return (
+      <ChatMessage key={step.id} role={step.role}>
+        {renderPremiumMessageContent(step.content)}
+      </ChatMessage>
+    );
+  }
+
+  function renderLiveItem(item: PremiumLiveItem) {
+    if (item.kind === "product-recommendation") {
+      return (
+        <PremiumProductRecommendationCard key={item.id} planId={item.planId} />
+      );
+    }
+
+    if (item.status === "thinking") {
+      return <ChatThinkingMessage key={item.id} />;
+    }
+
+    return (
+      <ChatMessage
+        key={item.id}
+        role={item.role}
+        aria-busy={item.status === "streaming" || undefined}
+      >
+        {renderPremiumMessageContent(item.content)}
+      </ChatMessage>
+    );
+  }
+
   return (
     <ChatPanel variant={variant} className={className}>
       <ChatHeader
@@ -33,29 +694,43 @@ export function PremiumConciergePanel({
         onClose={onClose}
         onVariantToggle={onVariantToggle}
       />
-      <ChatBody>
+      <ChatBody ref={chatBodyRef}>
         {flow ? (
           <ChatThread timestamp={null} aria-label={`${flow.label} transcript`}>
-            {flow.steps.map((step) => {
-              if (step.kind === "product-recommendation") {
-                return <PremiumProductRecommendationCard key={step.id} />;
-              }
-
-              return (
-                <ChatMessage key={step.id} role={step.role}>
-                  {step.content}
-                </ChatMessage>
-              );
-            })}
+            {flow.steps.map(renderConversationStep)}
           </ChatThread>
-        ) : null}
+        ) : (
+          <ChatThread
+            timestamp={null}
+            aria-live="polite"
+            aria-busy={isAssistantBusy || undefined}
+            aria-label="Live Premium Concierge conversation"
+          >
+            {liveItems.map(renderLiveItem)}
+            {activePrompts?.length && !isAssistantBusy ? (
+              <PremiumPromptRow
+                prompts={activePrompts}
+                onPromptSelect={handlePromptSelect}
+              />
+            ) : null}
+          </ChatThread>
+        )}
       </ChatBody>
       <ChatComposer
         variant={variant}
         inputProps={{
-          disabled: true,
+          value: draft,
+          disabled: Boolean(flow) || hasActivePrompts || isAssistantBusy,
+          placeholder: composerPlaceholder,
+          onChange: handleDraftChange,
         }}
-        sendDisabled
+        onSend={handleSendMessage}
+        sendDisabled={
+          Boolean(flow) ||
+          hasActivePrompts ||
+          isAssistantBusy ||
+          draft.trim() === ""
+        }
         showVoiceMode={false}
       />
     </ChatPanel>

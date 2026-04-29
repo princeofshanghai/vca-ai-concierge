@@ -12,6 +12,7 @@ import {
 import { flushSync } from "react-dom";
 
 import {
+  CHAT_ASSISTANT_THINKING_DELAY_MS,
   ChatBody,
   ChatComposer,
   ChatHeader,
@@ -21,6 +22,11 @@ import {
   ChatThread,
   Prompt,
   RecommendationCard,
+  getStreamDelay,
+  prefersReducedMotion,
+  splitIntoStreamChunks,
+  supportsViewTransitions,
+  type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
 import { Button } from "@/components/primitives/button";
@@ -56,7 +62,7 @@ type ConciergeMessage = Readonly<{
   id: string;
   role: "assistant" | "user";
   content: string;
-  status: "thinking" | "streaming" | "complete";
+  status: ChatMessageStreamStatus;
 }>;
 
 type ConciergeRecommendation = Readonly<{
@@ -94,43 +100,7 @@ type PendingAssistantResponse = Readonly<{
   surfaceAfter?: ConciergeSurface;
 }>;
 
-const THINKING_DELAY_MS = 650;
 const INITIAL_LIVE_SCRIPT_INDEX = 0;
-
-function prefersReducedMotion(): boolean {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-  );
-}
-
-function supportsViewTransitions(): boolean {
-  if (typeof document === "undefined") {
-    return false;
-  }
-  if (prefersReducedMotion()) {
-    return false;
-  }
-  return "startViewTransition" in document;
-}
-
-function splitIntoStreamChunks(text: string): Array<string> {
-  return text.match(/\S+\s*/g) ?? [text];
-}
-
-function getStreamDelay(chunk: string): number {
-  const trimmed = chunk.trim();
-
-  if (/[.!?]$/.test(trimmed)) {
-    return 180;
-  }
-
-  if (/[,;:]$/.test(trimmed)) {
-    return 100;
-  }
-
-  return 42;
-}
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
@@ -226,7 +196,7 @@ function getNextScriptedAssistantTurn({
 
 function ResourceCards({ step }: { step: FlowReviewResourcesStep }) {
   return (
-    <div className="chat-message-enter flex w-full">
+    <div className="chat-recommendation-enter flex w-full">
       <div className="flex w-full max-w-[33rem] flex-col gap-md pr-sm">
         {step.resources.map((resource) => (
           <article
@@ -396,7 +366,7 @@ export function ConciergePanel({
       }
 
       streamNextChunk();
-    }, shouldReduceMotion ? 0 : THINKING_DELAY_MS);
+    }, shouldReduceMotion ? 0 : CHAT_ASSISTANT_THINKING_DELAY_MS);
 
     return () => {
       window.clearTimeout(thinkingTimer);

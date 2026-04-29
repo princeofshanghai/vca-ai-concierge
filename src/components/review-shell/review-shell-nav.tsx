@@ -5,7 +5,10 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { premiumSignalFlowNavItems } from "@/components/premium/premium-concierge-flows";
+import {
+  premiumLiveModeNavItems,
+  premiumReviewFlowNavItems,
+} from "@/components/premium/premium-concierge-flows";
 import { Icon } from "@/components/primitives/icon";
 import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 
@@ -20,18 +23,13 @@ const HIRING_LIVE_NAV_ITEM = {
   href: HIRING_PROTOTYPE_HREF,
   label: "Live",
 } as const;
-const PREMIUM_LIVE_NAV_ITEM = {
-  id: "premium-live",
-  href: PREMIUM_PROTOTYPE_HREF,
-  label: "Live",
-} as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
   ...FLOW_REVIEW_NAV_ITEMS,
 ] as const;
 const premiumModeOptions = [
-  PREMIUM_LIVE_NAV_ITEM,
-  ...premiumSignalFlowNavItems,
+  ...premiumLiveModeNavItems,
+  ...premiumReviewFlowNavItems,
 ] as const;
 
 type ReviewDestination = Readonly<{
@@ -86,7 +84,7 @@ function getPrototypeMetaLabel(pathname: string): string | undefined {
       (option) => option.href === pathname,
     );
 
-    return activePremiumMode?.label ?? "Live";
+    return activePremiumMode?.label ?? premiumLiveModeNavItems[0].label;
   }
 
   if (

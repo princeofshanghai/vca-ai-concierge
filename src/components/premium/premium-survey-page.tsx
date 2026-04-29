@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
-import { type ChatPanelVariant } from "@/components/chat";
+import { type ChatPanelVariant, useChatPanelPresence } from "@/components/chat";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
@@ -10,6 +10,7 @@ import { Icon } from "@/components/primitives/icon";
 import type {
   PremiumConversationFlow,
   PremiumGoalOptionId,
+  PremiumLiveMode,
   PremiumSurveyStep,
   PremiumUseCaseOptionId,
 } from "./premium-concierge-flows";
@@ -62,9 +63,6 @@ const goalOptions = [
 type UseCaseOptionId = PremiumUseCaseOptionId;
 type GoalOptionId = PremiumGoalOptionId;
 type SurveyStep = PremiumSurveyStep;
-type ChatPanelPresence = "closed" | "entering" | "open" | "exiting";
-
-const PANEL_TRANSITION_MS = 240;
 
 function LinkedInBug({
   className,
@@ -146,7 +144,7 @@ function PremiumProfileMark() {
       className="relative flex size-12 items-center justify-center"
     >
       <span className="absolute -inset-[2px] rounded-round border-[2px] border-[#ce7b00]" />
-      <Entity size={48} label="Sarah" />
+      <Entity size={48} label="Alex" />
       <span className="absolute bottom-0 right-0 flex size-[13px] items-center justify-center rounded-xs bg-background">
         <LinkedInBug className="size-[10px] [&_span]:!size-[10px]" />
       </span>
@@ -280,7 +278,9 @@ type PremiumSurveyPageProps = Readonly<{
   initialUseCaseOption?: UseCaseOptionId;
   initialGoalOptions?: ReadonlyArray<GoalOptionId>;
   initialChatOpen?: boolean;
+  conciergeNudge?: string;
   conversationFlow?: PremiumConversationFlow;
+  liveMode?: PremiumLiveMode;
 }>;
 
 const defaultInitialGoalOptions: ReadonlyArray<GoalOptionId> = [];
@@ -291,6 +291,7 @@ export function PremiumSurveyPage({
   initialGoalOptions = defaultInitialGoalOptions,
   initialChatOpen = false,
   conversationFlow,
+  liveMode = "low-signal",
 }: PremiumSurveyPageProps = {}) {
   const [step, setStep] = useState<SurveyStep>(initialStep);
   const [selectedUseCaseOption, setSelectedUseCaseOption] =
@@ -298,72 +299,31 @@ export function PremiumSurveyPage({
   const [selectedGoalOptions, setSelectedGoalOptions] = useState<
     ReadonlySet<GoalOptionId>
   >(() => new Set(initialGoalOptions));
-  const [chatPanelPresence, setChatPanelPresence] =
-    useState<ChatPanelPresence>(initialChatOpen ? "open" : "closed");
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
-  const openAnimationFrameRef = useRef<number | null>(null);
-  const closeTimeoutRef = useRef<number | null>(null);
   const chatPanelId = useId();
+  const resetChatPanelState = useCallback(() => {
+    setChatPanelVariant("collapsed");
+  }, []);
+  const {
+    isMounted: isChatMounted,
+    isOpen: isChatOpen,
+    isInteractive: isChatInteractive,
+    open: openChat,
+    close: closeChat,
+  } = useChatPanelPresence({
+    initialOpen: initialChatOpen,
+    onBeforeOpen: resetChatPanelState,
+    onBeforeClose: resetChatPanelState,
+  });
 
   const isGoalStep = step === "goals";
   const isPlanStep = step === "plans";
   const progress = isPlanStep ? 60 : isGoalStep ? 33 : 0;
-  const isChatMounted = chatPanelPresence !== "closed";
-  const isChatOpen =
-    chatPanelPresence === "entering" || chatPanelPresence === "open";
-  const isChatInteractive = chatPanelPresence === "open";
   const chatPanelPositionClass =
     chatPanelVariant === "expanded"
       ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
       : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
-
-  const clearPanelTimers = useCallback(() => {
-    if (openAnimationFrameRef.current !== null) {
-      window.cancelAnimationFrame(openAnimationFrameRef.current);
-      openAnimationFrameRef.current = null;
-    }
-
-    if (closeTimeoutRef.current !== null) {
-      window.clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-  }, []);
-
-  const openChat = useCallback(() => {
-    if (chatPanelPresence === "entering" || chatPanelPresence === "open") {
-      return;
-    }
-
-    clearPanelTimers();
-    setChatPanelVariant("collapsed");
-    setChatPanelPresence("entering");
-
-    openAnimationFrameRef.current = window.requestAnimationFrame(() => {
-      openAnimationFrameRef.current = null;
-      setChatPanelPresence("open");
-    });
-  }, [chatPanelPresence, clearPanelTimers]);
-
-  const closeChat = useCallback(() => {
-    if (chatPanelPresence === "closed" || chatPanelPresence === "exiting") {
-      return;
-    }
-
-    clearPanelTimers();
-    setChatPanelVariant("collapsed");
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setChatPanelPresence("closed");
-      return;
-    }
-
-    setChatPanelPresence("exiting");
-    closeTimeoutRef.current = window.setTimeout(() => {
-      closeTimeoutRef.current = null;
-      setChatPanelPresence("closed");
-    }, PANEL_TRANSITION_MS);
-  }, [chatPanelPresence, clearPanelTimers]);
 
   const toggleChatPanelVariant = useCallback(() => {
     setChatPanelVariant((variant) =>
@@ -374,10 +334,6 @@ export function PremiumSurveyPage({
   useEffect(() => {
     window.scrollTo({ left: 0, top: 0 });
   }, [step]);
-
-  useEffect(() => {
-    return clearPanelTimers;
-  }, [clearPanelTimers]);
 
   useEffect(() => {
     if (!isChatMounted) {
@@ -484,7 +440,7 @@ export function PremiumSurveyPage({
                       <PremiumProfileMark />
                       <div className="flex flex-col gap-md">
                         <h2 className="text-heading-lg text-text">
-                          Sarah, are you interested in Premium for personal or
+                          Alex, are you interested in Premium for personal or
                           professional use?
                         </h2>
                         <p className="text-body-sm text-text">
@@ -592,7 +548,9 @@ export function PremiumSurveyPage({
             >
               <PremiumConciergePanel
                 variant={chatPanelVariant}
+                context={step}
                 flow={conversationFlow}
+                liveMode={liveMode}
                 onClose={closeChat}
                 onVariantToggle={toggleChatPanelVariant}
                 className={
@@ -607,7 +565,6 @@ export function PremiumSurveyPage({
       ) : (
         <PremiumConciergeFab
           chatPanelId={chatPanelId}
-          context={step}
           isChatOpen={isChatOpen}
           onClick={openChat}
         />

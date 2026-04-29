@@ -519,6 +519,11 @@ body {
     var(--design-motion-easing-standard) both;
 }
 
+.chat-recommendation-enter {
+  animation: chat-recommendation-enter var(--design-motion-duration-moderate)
+    var(--design-motion-easing-standard) both;
+}
+
 .chat-thinking-text {
   color: var(--color-text-meta);
   background-image: linear-gradient(
@@ -561,6 +566,18 @@ body {
   from {
     opacity: 0;
     transform: translateY(var(--design-motion-distance-message-y));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes chat-recommendation-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--design-motion-distance-subtle-y));
   }
 
   to {
@@ -614,6 +631,7 @@ body {
   }
 
   .chat-message-enter,
+  .chat-recommendation-enter,
   .chat-thinking-text {
     animation: none;
   }

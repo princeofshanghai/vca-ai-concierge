@@ -14,25 +14,27 @@ The intended real-world entry point is the LinkedIn Premium survey flow that mem
 
 ## Current Status
 
-Premium has an early fake survey path, based on the current Figma direction for the Premium survey entry point.
+Premium has an early fake survey path, based on the current Figma direction for the Premium survey entry point, plus a Premium-owned AI concierge prototype.
 
 The current prototype surface is intentionally limited to:
 
 - a `/premium` survey-style prototype with two static question steps,
 - a static plan comparison step with no plan-selection behavior,
 - static survey options with lightweight local selection behavior on the question steps,
+- two live concierge review flows: **Low signal (live)** on `/premium` and **High signal (live)** on `/premium/live/high`,
+- two static concierge review flows: **Low signal (static screen)** and **High signal (static screen)**,
 - shared primitives and visual tokens from the repo design system.
 
 ## Guardrails
 
 - Do not reuse Hiring personas, routing tiers, sales handoff logic, onboarding requirements, or conversation copy.
-- Do not invent additional Premium survey questions, recommendations, plan logic, or concierge conversation behavior yet.
+- Do not add checkout, sales handoff, RAG, account routing, or commerce behavior in this prototype pass.
 - Reuse shared UI primitives and styling where useful, but keep Premium product assumptions in Premium-owned docs/routes/modules.
-- Treat the concierge entry point as future work until the Premium flow is defined.
+- Keep the concierge as a Premium advisor layer. It should help with plan confidence and decision support rather than becoming a second survey.
 
 ## Draft AI Concierge UX Plan
 
-The Premium survey remains the structured decision path. The AI concierge appears as a persistent assistive layer that helps members interpret questions, resolve uncertainty, and understand the recommended plan. Its behavior should become more proactive as the system gains more signal from the member's survey responses.
+The Premium survey remains the structured decision path. The AI concierge appears as a persistent assistive layer that helps members resolve uncertainty, compare plans, understand the free trial, and gain confidence in a recommendation. Its behavior should become more proactive as the system gains stronger signal from member intent, whether that signal comes from survey answers, prior context, or the conversation itself.
 
 ### Survey vs. AI Concierge
 
@@ -47,11 +49,13 @@ The concierge should not simply ask the same questions as the survey in chat for
 
 The confirmed UI pattern is a floating action button in the bottom-right corner.
 
-The AI concierge should appear throughout the Premium flow, but its posture should change by screen:
+The AI concierge should appear throughout the Premium flow. In **Low signal (live)**, the core concierge posture stays broadly Premium-focused while prompt chips change by screen:
 
-- Beginning survey screen: quiet and supportive. The concierge is available for help, but should not immediately recommend a plan before the member has provided meaningful input.
-- Middle survey screens: more contextual. The concierge can use prior answers to help the member choose between options or clarify what an answer means.
-- Plan comparison page: proactive and recommendation-oriented. By this point, the system has enough context to explain the recommended plan, compare alternatives, and answer purchase or trial questions.
+- Beginning survey screen: chips emphasize plan help, free trial, and Premium feature questions.
+- Middle survey screens: chips emphasize mixed goals and career-versus-business comparison.
+- Plan comparison page: chips emphasize trial terms, recommendation rationale, and Business-versus-Business Suite comparison.
+
+The **High signal** review flows can open with a recommendation and product card because they represent a state where enough signal already exists.
 
 ### Cold Start Guidance
 
@@ -63,7 +67,7 @@ The concierge should still avoid feeling blank or passive. Suggested posture by 
 - After early survey input: "I can help interpret your answers."
 - On the plan comparison page: "Based on your responses, I can help explain the recommended plan."
 
-This creates a progressive sense of intelligence: the concierge starts as a helper, becomes contextual as answers accumulate, and becomes a recommendation advisor once the member reaches the plan comparison page.
+This creates a progressive sense of intelligence: the concierge starts as a helper when signal is low, and becomes a recommendation advisor when signal is strong enough. The trigger is signal quality, not simply page location.
 
 ### Expected Concierge Jobs
 
@@ -84,13 +88,14 @@ For this prototype, the survey should remain the spine of the experience and the
 
 ## Signal-Based Conversation Flows
 
-The next Premium concierge prototype should use static, read-only conversation flows to show how the AI behaves at different points in the Premium journey. These are **signal levels**, not user value tiers and not Hiring-style lead qualification.
+The Premium concierge prototype uses static, read-only conversation flows to show how the AI behaves with different levels of confidence. These are **signal levels**, not user value tiers and not Hiring-style lead qualification.
 
 - **Low signal** - the AI opens at the start of the survey with little context.
-- **Medium signal** - the AI opens in the middle of the survey with some inferred or member-provided context.
-- **High signal** - the AI opens on the plan comparison page with enough context to recommend a plan and explain tradeoffs.
+- **High signal** - the AI opens on the plan comparison page with enough context to recommend a plan immediately.
 
-The signal level changes how much context the AI starts with. It should not limit whether the member can reach a recommendation. In all three flows, the member can keep talking and the concierge can still arrive at a relevant Premium plan recommendation if the conversation provides enough signal.
+The signal level changes how much context the AI starts with. Low signal should not block a recommendation forever; it means the concierge needs to earn the recommendation through conversation first.
+
+The prototype exposes each signal level as both a live or static review surface where useful: live surfaces show animation, streaming, cards, and clickable prompt behavior; static screens are fixed transcripts for design review.
 
 ### Conversation Principle
 
@@ -122,11 +127,9 @@ Relevant Business Suite propositions from the prototype:
 
 ### Draft Flow Direction
 
-**Low signal** starts broad. The AI knows only that Alex is considering Premium, so it should ask one high-value clarifying question, learn what Alex is trying to accomplish, and then move toward a recommendation if Alex provides enough context. The flow should not frame itself around helping Alex answer the first survey question.
+**Low signal** starts broad. The AI knows only that Alex is considering Premium, so it should ask one high-value clarifying question, learn what Alex is trying to accomplish, then ask a focused hiring follow-up before recommending **Business Suite**. The flow should not frame itself around helping Alex answer the first survey question.
 
-**Medium signal** starts with partial context. The AI can assume Alex has already indicated a work or business-oriented need, then narrow the distinction between **Business** and **Business Suite**. It should use one clarifying turn to understand whether Alex mainly needs networking/research or a broader founder toolkit for customers, visibility, and hiring.
-
-**High signal** starts on the plan comparison page. The AI can be more direct: recommend **Business Suite**, explain why Alex's founder context points beyond **Career** or **Business**, and compare the three plans using the current plan propositions.
+**High signal** starts on the plan comparison page. The AI can be more direct: use available LinkedIn context to explain why **Business Suite** looks relevant, immediately show the card, then provide escape-hatch prompts for included features, Business-versus-Business Suite comparison, and correcting the recommendation if it does not match Alex's intent. The live version should stream the rationale, animate the card, and keep the correction prompt interactive.
 
 ### Static Review Prototype Pattern
 
@@ -136,6 +139,6 @@ Implementation can follow the same general static-review pattern used by the Hir
 - The Premium page opens with the AI concierge already open.
 - The transcript is read-only.
 - The composer stays disabled.
-- The three menu labels are **Low signal**, **Medium signal**, and **High signal**.
+- The two menu labels are **Low signal (static screen)** and **High signal (static screen)**.
 
 Keep Premium transcript data, copy, and routing separate from Hiring-owned flow data.

@@ -442,7 +442,7 @@ export function RecommendationCard({
     <article
       {...props}
       className={cx(
-        "flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background py-xl pl-xl pr-md",
+        "chat-recommendation-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background py-xl pl-xl pr-md",
         className,
       )}
     >
