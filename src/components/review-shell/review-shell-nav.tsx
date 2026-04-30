@@ -21,7 +21,7 @@ const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
   href: HIRING_PROTOTYPE_HREF,
-  label: "Live",
+  label: "Live (interactive)",
 } as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
@@ -95,7 +95,7 @@ function getPrototypeMetaLabel(pathname: string): string | undefined {
       (option) => option.href === pathname,
     );
 
-    return activeHiringMode?.label ?? "Live";
+    return activeHiringMode?.label ?? "Live (interactive)";
   }
 
   return undefined;

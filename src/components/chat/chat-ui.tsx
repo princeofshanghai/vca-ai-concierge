@@ -374,7 +374,7 @@ export function ChatMessage({
             <Entity
               size={24}
               src={avatarSrc}
-              label={avatarLabel ?? authorName ?? "Hiring specialist"}
+              label={avatarLabel ?? authorName ?? "Human representative"}
             />
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-xs">
               {authorName ? <span>{authorName}</span> : null}

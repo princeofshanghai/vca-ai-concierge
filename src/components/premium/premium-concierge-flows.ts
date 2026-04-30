@@ -106,12 +106,12 @@ export const premiumLiveModeNavItems: ReadonlyArray<
   {
     id: "low-signal",
     href: "/premium",
-    label: "Low signal (live)",
+    label: "Low signal (interactive)",
   },
   {
     id: "high-signal",
     href: "/premium/live/high",
-    label: "High signal (live)",
+    label: "High signal (interactive)",
   },
 ];
 

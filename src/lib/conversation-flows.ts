@@ -78,18 +78,22 @@ export type FlowReview = Readonly<{
 export const FLOW_REVIEW_NAV_ITEMS: ReadonlyArray<
   Readonly<{ id: string; href: string; label: string }>
 > = [
-  { id: "high", href: "/internal/flows/high", label: "High intent" },
+  {
+    id: "high",
+    href: "/internal/flows/high",
+    label: "High intent (static)",
+  },
   {
     id: "medium-available",
     href: "/internal/flows/medium/available",
-    label: "Medium intent · SDR available",
+    label: "Medium intent · SDR available (static)",
   },
   {
     id: "medium-unavailable",
     href: "/internal/flows/medium/unavailable",
-    label: "Medium intent · SDR unavailable",
+    label: "Medium intent · SDR unavailable (static)",
   },
-  { id: "low", href: "/internal/flows/low", label: "Low intent" },
+  { id: "low", href: "/internal/flows/low", label: "Low intent (static)" },
 ];
 
 export function buildInitialAssistantResponse(lead: LeadContext): string {

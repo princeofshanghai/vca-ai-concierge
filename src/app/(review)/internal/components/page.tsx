@@ -6,6 +6,7 @@ import {
   ChatHeader,
   ChatMessage,
   ChatPanelPreview,
+  ChatThinkingMessage,
   Prompt,
   RecommendationCard,
 } from "@/components/chat";
@@ -827,53 +828,122 @@ export default function InternalComponentsPage() {
                 Components
               </h3>
               <div className="grid gap-lg lg:grid-cols-2">
-                <div className="overflow-hidden rounded-t-lg border border-border-faint bg-background">
-                  <ChatHeader />
-                </div>
-
-                <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
-                  <div className="space-y-lg">
-                    <ChatMessage>
-                      I can help compare hiring options quickly.
-                    </ChatMessage>
-                    <ChatMessage role="user">
-                      We need to ramp hiring fast this quarter.
-                    </ChatMessage>
-                    <ChatMessage
-                      role="representative"
-                      authorName="David S."
-                      avatarLabel="David S., Hiring specialist"
-                      timestamp="9:37 PM"
-                    >
-                      Hey Jamie, how can I help you?
-                    </ChatMessage>
+                <div className="space-y-sm">
+                  <p className="text-label-xs text-text-meta">Header</p>
+                  <div className="overflow-hidden rounded-t-lg border border-border-faint bg-background">
+                    <ChatHeader />
                   </div>
                 </div>
 
-                <div className="rounded-md border border-border-faint bg-background p-panel-padding">
-                  <RecommendationCard />
-                </div>
+                <div className="space-y-sm">
+                  <p className="text-label-xs text-text-meta">Messages</p>
+                  <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
+                    <div className="space-y-xl">
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">AI assistant</p>
+                        <ChatMessage>
+                          I can help compare hiring options quickly.
+                        </ChatMessage>
+                      </section>
 
-                <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
-                  <div className="flex flex-wrap gap-sm">
-                    <Prompt prompt="We need to ramp hiring fast this quarter." />
-                    <Prompt prompt="Help me compare Recruiter and Hiring Pro.">
-                      Compare products
-                    </Prompt>
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">User</p>
+                        <ChatMessage role="user">
+                          We need to ramp hiring fast this quarter.
+                        </ChatMessage>
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">
+                          Human representative with metadata
+                        </p>
+                        <ChatMessage
+                          role="representative"
+                          authorName="David S."
+                          avatarLabel="David S., Human representative"
+                          timestamp="9:37 PM"
+                        >
+                          Hey Jamie, how can I help you?
+                        </ChatMessage>
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">
+                          Human representative
+                        </p>
+                        <ChatMessage role="representative">
+                          I can stay with you while we narrow this down.
+                        </ChatMessage>
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">Thinking</p>
+                        <ChatThinkingMessage />
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">
+                          Long-text wrapping
+                        </p>
+                        <ChatMessage role="user">
+                          We have several hiring teams moving at different speeds,
+                          and I need a path that works for a small pilot now but
+                          can still scale if the next quarter gets busier.
+                        </ChatMessage>
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">
+                          Rich assistant content
+                        </p>
+                        <ChatMessage>
+                          <div className="space-y-sm">
+                            <p>Here are the fastest next steps:</p>
+                            <ul className="list-disc space-y-xs pl-lg">
+                              <li>Confirm hiring volume and timeline.</li>
+                              <li>Choose whether the team needs sourcing tools.</li>
+                              <li>Route complex questions to a representative.</li>
+                            </ul>
+                          </div>
+                        </ChatMessage>
+                      </section>
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
-                  <div className="space-y-md">
-                    <ChatComposer className="px-0 pb-0" />
-                    <ChatComposer
-                      className="px-0 pb-0"
-                      inputProps={{
-                        "aria-label": "Long message draft",
-                        defaultValue:
-                          "ka;sd kas;d kas;dl kas;ld kas;ld kasld; aksd; aksdl; askd a;ldk a sd;laksd ;adk asl;",
-                      }}
-                    />
+                <div className="space-y-sm">
+                  <p className="text-label-xs text-text-meta">Recommendation</p>
+                  <div className="rounded-md border border-border-faint bg-background p-panel-padding">
+                    <RecommendationCard />
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <p className="text-label-xs text-text-meta">Prompts</p>
+                  <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
+                    <div className="flex flex-wrap gap-sm">
+                      <Prompt prompt="We need to ramp hiring fast this quarter." />
+                      <Prompt prompt="Help me compare Recruiter and Hiring Pro.">
+                        Compare products
+                      </Prompt>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <p className="text-label-xs text-text-meta">Composer</p>
+                  <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
+                    <div className="space-y-md">
+                      <ChatComposer className="px-0 pb-0" />
+                      <ChatComposer
+                        className="px-0 pb-0"
+                        inputProps={{
+                          "aria-label": "Long message draft",
+                          defaultValue:
+                            "ka;sd kas;d kas;dl kas;ld kas;ld kasld; aksd; aksdl; askd a;ldk a sd;laksd ;adk asl;",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

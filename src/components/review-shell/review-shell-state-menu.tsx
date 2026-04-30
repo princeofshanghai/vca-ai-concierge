@@ -15,7 +15,7 @@ import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 const LIVE_PROTOTYPE_NAV_ITEM = {
   id: "live",
   href: "/hiring",
-  label: "Live prototype",
+  label: "Live (interactive)",
 } as const;
 
 type ReviewShellStateMenuOption = Readonly<{

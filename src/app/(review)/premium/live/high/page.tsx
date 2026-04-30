@@ -4,7 +4,7 @@ import { PremiumSurveyPage } from "@/components/premium";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Concierge: High signal (live)",
+  title: "Premium Concierge: High signal (interactive)",
   description:
     "Interactive high-signal Premium AI concierge recommendation prototype.",
 });
