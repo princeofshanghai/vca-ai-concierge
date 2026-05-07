@@ -16,7 +16,7 @@ These are non-negotiable. They come from downstream lead-capture requirements:
 
 - First name
 - Last name
-- Work email (must be a valid email address; common personal domains are allowed)
+- Email (must be a valid email address; common personal domains are allowed)
 - Company name
 
 The form must always render. There is no "skip the form and route me to sales" escape hatch.
@@ -38,7 +38,7 @@ The screen has two visual states. A future review-shell toggle will flip between
 
 - A slim identity strip sits between the welcome content and the form (avatar + LinkedIn email + "Not Jamie?" link).
 - First name and Last name arrive prefilled from the LinkedIn profile (editable).
-- Work email arrives prefilled from the LinkedIn profile even when it is a personal email. Personal email domains do not block submit.
+- Email arrives prefilled from the LinkedIn profile even when it is a personal email. Personal email domains do not block submit.
 - Company name stays empty until the user enters it and is focused on entry.
 - The "Not Jamie?" affordance lets the user dismiss the LinkedIn identity and complete the form manually if needed.
 
@@ -304,24 +304,25 @@ The `required` prop is **not** passed for visual purposes. With all four fields 
 - No helper text.
 - Validation: must be non-empty.
 
-### Work email
+### Email
 
-- `label="Work email"`
+- `label="Email"`
 - `type="email"`
 - Placeholder: `name@company.com`
 - Signed-in: prefilled with the LinkedIn email even when it is a personal email.
 - Signed-out: empty.
-- No helper text.
+- Neutral helper text for common personal domains: `Please use your work email so we can customize this for your organization`
 
 Validation states:
 
-| State | Visual | `errorText` |
+| State | Visual | `errorText` / `helperText` |
 | --- | --- | --- |
 | Empty | Neutral default | None |
 | Invalid email format | `error={true}` | `Enter a valid email address.` |
-| Valid email format | Neutral | None |
+| Valid common personal email domain | Neutral | `Please use your work email so we can customize this for your organization` |
+| Valid non-personal email domain | Neutral | None |
 
-The "Start chat" button is disabled while the email field is empty or has an invalid format. It is not disabled for common personal email domains such as Gmail, Yahoo, Outlook, or iCloud, and the field does not show a helper or warning for those domains.
+The "Start chat" button is disabled while the email field is empty or has an invalid format. It is not disabled for common personal email domains such as Gmail, Yahoo, Outlook, or iCloud. Those domains show neutral helper text only; they do not trigger an error state.
 
 ### Company name
 

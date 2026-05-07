@@ -17,6 +17,21 @@ export const JAMIE_CHEN: LinkedInPersona = {
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PERSONAL_EMAIL_DOMAINS = new Set([
+  "aol.com",
+  "gmail.com",
+  "googlemail.com",
+  "hotmail.com",
+  "icloud.com",
+  "live.com",
+  "me.com",
+  "msn.com",
+  "outlook.com",
+  "proton.me",
+  "protonmail.com",
+  "yahoo.com",
+  "ymail.com",
+]);
 
 export type WorkEmailValidation =
   | Readonly<{ kind: "empty" }>
@@ -37,4 +52,8 @@ export function validateWorkEmail(rawEmail: string): WorkEmailValidation {
   const domain = email.slice(email.indexOf("@") + 1).toLowerCase();
 
   return { kind: "valid", domain };
+}
+
+export function isLikelyPersonalEmailDomain(domain: string): boolean {
+  return PERSONAL_EMAIL_DOMAINS.has(domain.toLowerCase());
 }
