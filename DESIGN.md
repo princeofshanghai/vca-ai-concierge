@@ -23,7 +23,7 @@ colors:
   background-transparent-active: "rgba(140, 140, 140, 0.2)"
   overlay-dim: "rgba(0, 0, 0, 0.2)"
   scrim: "rgba(0, 0, 0, 0.6)"
-  ai-background-soft: "#E8F3FF"
+  ai-background-soft: "#D2E9FF"
   ai-border: "#AAD6FF"
   ai-icon: "#0A66C2"
   tag-default-background: "rgba(140, 140, 140, 0.2)"
@@ -179,16 +179,17 @@ layout:
   desktop-page-padding: 32px
   panel-collapsed-width: 432px
   panel-expanded-width: 1280px
-  panel-height: 780px
-  panel-content-max: 720px
+  panel-collapsed-height: 908px
+  panel-expanded-height: 928px
+  panel-content-max: 640px
   schedule-collapsed-surface-width: 960px
-  schedule-collapsed-chat-track: 5fr
-  schedule-collapsed-side-track: 7fr
-  schedule-expanded-surface-width: 1440px
-  schedule-expanded-chat-track: 4fr
+  schedule-collapsed-chat-track: 3fr
+  schedule-collapsed-side-track: 5fr
+  schedule-expanded-surface-width: 1280px
+  schedule-expanded-chat-track: 3fr
   schedule-expanded-side-track: 5fr
   chat-message-assistant-collapsed-max: "100%"
-  chat-message-assistant-expanded-max: 680px
+  chat-message-assistant-expanded-max: 640px
   confirmation-dialog-width: 336px
   mobile-panel-width: "100vw"
   mobile-panel-height: "100dvh"
@@ -541,15 +542,15 @@ components:
     textColor: "{colors.text}"
     rounded: "{rounded.lg}"
     width: 432px
-    height: 780px
+    height: 908px
     borderColor: "{colors.border-faint}"
     shadow: "{shadows.raised}"
   chat-panel-expanded:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
-    rounded: "{rounded.xl}"
+    rounded: "{rounded.lg}"
     width: 1280px
-    height: 780px
+    height: 928px
     borderColor: "{colors.border-faint}"
     backdropColor: "{colors.overlay-dim}"
     shadow: "{shadows.raised}"
@@ -557,31 +558,37 @@ components:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
     height: 64px
-    padding: "0 12px 0 20px"
+    padding: "0 16px 0 24px"
     borderColor: "{colors.border-faint}"
-    actionWidth: 40px
+    actionWidth: 48px
     actionGap: 0px
+  chat-thread:
+    maxWidth: 640px
+    paddingInline: 24px
+    timestampPadding: "20px 0 8px"
   chat-message-assistant:
     backgroundColor: "transparent"
     textColor: "{colors.text}"
     typography: "{typography.body-sm-open}"
     collapsedMaxWidth: "100%"
-    expandedMaxWidth: 680px
-    padding: "0 8px 0 0"
+    expandedMaxWidth: 640px
+    rowPadding: "16px 0"
   chat-message-user:
     backgroundColor: "{colors.ai-background-soft}"
     textColor: "{colors.text}"
     typography: "{typography.body-sm-open}"
-    rounded: "{rounded.lg}"
-    maxWidth: 440px
-    padding: "20px 24px"
+    rounded: "{rounded.md}"
+    maxWidth: 392px
+    padding: "20px"
+    rowPadding: "16px 0"
   chat-message-representative:
     backgroundColor: "{colors.background-neutral-soft}"
     textColor: "{colors.text}"
     typography: "{typography.body-sm-open}"
-    rounded: "{rounded.lg}"
-    maxWidth: 440px
-    padding: "20px 24px"
+    rounded: "{rounded.md}"
+    maxWidth: 392px
+    padding: "20px"
+    rowPadding: "16px 0"
   recommendation-card:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
@@ -601,19 +608,21 @@ components:
     focusRingColor: "{colors.neutral-focus-ring}"
     disabledBackgroundColor: "{colors.background-disabled}"
     disabledTextColor: "{colors.text-disabled}"
-    maxWidth: 301px
+    maxWidth: 432px
     padding: "12px"
   chat-composer:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
     placeholderColor: "{colors.text-disabled}"
-    typography: "{typography.body-md-open}"
+    typography: "{typography.body-sm-open}"
     rounded: "{rounded.round}"
     multilineRounded: 28px
     minHeight: 56px
+    maxWidth: 640px
     maxInputHeight: 144px
-    padding: "0 12px 0 16px"
-    multilinePadding: "10px 12px 10px 16px"
+    shellPadding: "8px 24px 24px"
+    padding: "4px 12px"
+    multilinePadding: "10px 12px"
     borderColor: "{colors.border-faint}"
     hoverBorderColor: "{colors.border-hover}"
     activeBorderColor: "{colors.border-faint}"
@@ -630,6 +639,18 @@ It should feel like quiet enterprise software with conversational edges. The int
 
 The token frontmatter is the normative design contract. The Markdown body explains the intent behind those values so future implementation work can stay consistent without inventing new styling.
 
+## Figma Implementation Guidance
+Figma is a visual reference, not automatically the implementation source of truth.
+
+When implementing from Figma:
+
+- Preserve the visual intent, interaction behavior, and reusable system decisions.
+- Do not copy Figma-only frame nesting, auto-layout scaffolding, or canvas helper structure when simpler code layout is equivalent.
+- Compare Figma styles against existing repo tokens before adding or renaming tokens.
+- If Figma token names differ from repo token names, map them to the repo vocabulary unless the design direction intentionally changes the system.
+- If Figma conflicts with current implementation, ask whether Figma or the built product should win before making non-obvious changes.
+- Prefer updating shared tokens and primitives before applying product-specific overrides.
+
 ## Colors
 The current palette is mostly white and neutral, with Figma's semantic action blue reserved for action and AI identity.
 
@@ -638,7 +659,7 @@ The current palette is mostly white and neutral, with Figma's semantic action bl
 - **Background (`#FFFFFF`)** is the primary surface for the panel, composer, cards, and controls.
 - **Overlay dim (`rgba(0, 0, 0, 0.2)`)** is used behind the expanded desktop chat panel so the conversation is foregrounded without turning into a modal takeover.
 - **Scrim (`rgba(0, 0, 0, 0.6)`)** is reserved for true modal interruption, such as confirming a destructive or conversation-ending action.
-- **AI background soft (`#E8F3FF`)** is used for the pale blue chat message surface.
+- **AI background soft (`#D2E9FF`)** is used for the pale blue member chat message surface.
 - **Background neutral soft (`#F4F2EE`)** is used for specialist chat messages.
 - **Tag colors** are reserved for non-interactive status and category labels. Positive and negative mirror existing semantic status colors; caution, neutral, and supportive accent backgrounds should not be reused for broader product surfaces without a new design-system decision.
 - **Entity ghost colors** are a warm neutral plus muted blue-grays used only for unloaded or placeholder identity imagery.
@@ -666,7 +687,7 @@ The layout includes a marketing landing context and a focused chat panel with a 
 - The minimum supported viewport width is 320px.
 - The collapsed panel is 432px wide.
 - The expanded panel is 1280px wide on desktop, capped by the viewport so it keeps breathing room at narrow desktop widths.
-- The panel height is 780px.
+- The collapsed panel height is capped at 908px; the expanded panel height is capped at 928px. Both must also cap to the available viewport height with page gutters.
 - The header is 64px tall.
 - The composer is at least 56px tall and grows only when the input wraps.
 - Internal spacing follows the current 4/8/12/16/20/24/32 rhythm.
@@ -734,7 +755,7 @@ Unchecked pills use the standard background, label, and border-subtle tokens, wi
 ### Icon Buttons
 Button icon and ghost icon button are separate primitives. Button icon carries primary, secondary, and tertiary button semantics in icon-only form. Ghost icon button is the quiet utility control used in the chat header and composer.
 
-Header ghost icon buttons sit in adjacent 40px-wide action slots with no visible gap between state layers.
+Header ghost icon buttons sit in adjacent 48px-wide action slots with no visible gap between state layers.
 
 ### Entity
 Entities represent people, companies, and other identity objects. The current implementation supports ghost placeholders only: circular person placeholders and square company placeholders.
@@ -751,9 +772,11 @@ Placeholder text uses the disabled text color so it reads clearly as a prompt ra
 ### Chat Shell
 The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The body centers the thread within the panel content width.
 
+The thread owns the shared horizontal content gutter. Message rows, prompt groups, cards, and other conversation items should align inside that gutter instead of adding their own panel-edge padding. Individual bubbles and cards own only their internal padding.
+
 Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
 
-High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 960px wide with a 5:7 chat-to-scheduler split, yielding about 400px of chat context at max width. The expanded scheduling surface should be about 1440px wide with a 4:5 split, yielding about 640px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
+High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 960px wide with a 3:5 chat-to-scheduler split, yielding about 360px of chat context at max width. The expanded scheduling surface should be about 1280px wide with the same 3:5 split, yielding about 480px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
 
 ### Messages
 Assistant messages are plain text on the panel surface. User messages use the pale blue message surface. Specialist messages use the warm neutral message surface.

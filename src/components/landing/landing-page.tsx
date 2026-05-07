@@ -278,17 +278,13 @@ export function LandingPage({
                   onClose={requestCloseChat}
                   onVariantToggle={toggleChatPanelVariant}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
-                  className={
-                    isWideChatSurface
-                      ? "h-[var(--design-layout-mobile-panel-height)] md:!h-[calc(100dvh-48px)]"
-                      : "h-[var(--design-layout-mobile-panel-height)] md:!h-full"
-                  }
                 />
               ) : (
                 <ConciergePanel
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
                   onVariantToggle={toggleChatPanelVariant}
+                  onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}
                   confirmationDialog={
                     <ConfirmationDialog
@@ -305,11 +301,6 @@ export function LandingPage({
                         conversation.
                       </p>
                     </ConfirmationDialog>
-                  }
-                  className={
-                    chatPanelVariant === "expanded"
-                      ? "h-[var(--design-layout-mobile-panel-height)] md:!h-[calc(100dvh-48px)]"
-                      : "h-[var(--design-layout-mobile-panel-height)] md:!h-full"
                   }
                 />
               )}

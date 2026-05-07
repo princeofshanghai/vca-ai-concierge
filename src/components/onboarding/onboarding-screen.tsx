@@ -18,6 +18,7 @@ import { TextInput } from "@/components/primitives/text-input";
 
 import {
   JAMIE_CHEN,
+  isLikelyPersonalEmailDomain,
   validateWorkEmail,
   type LinkedInPersona,
   type WorkEmailValidation,
@@ -27,9 +28,11 @@ import {
 // docs/onboarding.md "Click behavior (simulated sign-in)".
 const LINKEDIN_SIGN_IN_DELAY_MS = 600;
 
-const HEADLINE = "Hire better";
+const HEADLINE = "Hire Better";
 const SUBCOPY =
-  "Get personalized answers to your hiring questions with our AI-powered chat";
+  "Discover the hiring solution to best fit your team's needs with our AI-powered chat.";
+const PERSONAL_EMAIL_HELPER_TEXT =
+  "Please use your work email so we can customize this for your organization";
 
 export type OnboardingResult = Readonly<{
   firstName: string;
@@ -120,6 +123,9 @@ export function OnboardingScreen({
   const isLastNameMissing = form.lastName.trim().length === 0;
   const isCompanyMissing = form.company.trim().length === 0;
   const isEmailValid = emailValidation.kind === "valid";
+  const shouldShowPersonalEmailHelper =
+    emailValidation.kind === "valid" &&
+    isLikelyPersonalEmailDomain(emailValidation.domain);
 
   const showEmailError = emailValidation.kind === "invalid-format";
   const emailErrorText = getEmailErrorText(emailValidation);
@@ -339,7 +345,7 @@ export function OnboardingScreen({
             }
           />
           <TextInput
-            label="Work email"
+            label="Email"
             name="workEmail"
             type="email"
             inputMode="email"
@@ -352,6 +358,11 @@ export function OnboardingScreen({
             disabled={inputsDisabled}
             error={showEmailError}
             errorText={emailErrorText ?? undefined}
+            helperText={
+              shouldShowPersonalEmailHelper
+                ? PERSONAL_EMAIL_HELPER_TEXT
+                : undefined
+            }
           />
           <TextInput
             ref={companyRef}

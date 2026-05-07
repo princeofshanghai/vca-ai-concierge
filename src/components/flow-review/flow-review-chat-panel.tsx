@@ -61,7 +61,7 @@ const BOOKING_DELAY_MS = 550;
 
 const HIRING_SPECIALIST = {
   name: "David S.",
-  role: "Hiring specialist",
+  role: "Sales consultant",
 } as const;
 
 const LIVE_HIRING_SPECIALIST = {
@@ -396,7 +396,7 @@ function hasMediumScheduledHandoff(flow: FlowReview) {
   return flow.steps.some(isMediumScheduledStep);
 }
 
-function ScheduledSpecialistCard({
+export function ScheduledSpecialistCard({
   state,
   bookedMeeting,
   onBookTime,
@@ -417,7 +417,9 @@ function ScheduledSpecialistCard({
             <span className="block size-4 animate-spin rounded-full border-[1.5px] border-action border-r-transparent" />
           </span>
           <div className="space-y-xs">
-            <h2 className="text-heading-md">Finding the right specialist</h2>
+            <h2 className="text-heading-md">
+              Finding you the right sales consultant
+            </h2>
             <p className="text-body-sm-open text-text-meta">
               This may take up to 2 minutes.
             </p>
@@ -471,7 +473,7 @@ function ScheduledSpecialistCard({
           />
           <div className="min-w-0 space-y-xs">
             <h2 className="text-heading-md">
-              {HIRING_SPECIALIST.name} is your hiring specialist
+              Your sales consultant is {HIRING_SPECIALIST.name}
             </h2>
             <p className="text-body-sm-open text-text-meta">
               Choose a time in the scheduler.
@@ -492,7 +494,7 @@ function ScheduledSpecialistCard({
           />
           <div className="min-w-0 space-y-xs">
             <h2 className="text-heading-md">
-              {HIRING_SPECIALIST.name} is your hiring specialist
+              Your sales consultant is {HIRING_SPECIALIST.name}
             </h2>
             <p className="text-body-sm-open text-text-meta">
               Choose a time for a 15 min call.
@@ -513,7 +515,7 @@ function ScheduledSpecialistCard({
   return (
     <article className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text">
       <div className="space-y-xs">
-        <h2 className="text-heading-md">Talk with a hiring specialist</h2>
+        <h2 className="text-heading-md">Speak with a sales consultant</h2>
       </div>
       <Button
         size="small"
@@ -540,7 +542,7 @@ export function HighValueMatchCardPreview({
   );
 }
 
-function SchedulePanel({
+export function SchedulePanel({
   visualState = "default",
   initialScrollPosition = "top",
   onBack,
@@ -668,7 +670,7 @@ function SchedulePanel({
     <aside className="flex h-full min-h-0 min-w-0 flex-col bg-background-neutral-soft">
       <div
         className={[
-          "shrink-0 border-b bg-background-neutral-soft px-xl pt-xxl pb-md transition-colors duration-150 ease-out md:px-xxxl md:pt-xxxl md:pb-lg",
+          "shrink-0 border-b bg-background-neutral-soft px-[var(--design-layout-schedule-panel-padding-inline)] pb-xxl pt-lg transition-colors duration-150 ease-out",
           hasSchedulePanelScrolled
             ? "border-border-faint"
             : "border-transparent",
@@ -679,9 +681,9 @@ function SchedulePanel({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-sm rounded-xs text-control-md text-text-meta outline-none transition-colors duration-150 ease-out hover:text-text focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          className="inline-flex min-h-[48px] items-center gap-sm rounded-xs text-control-sm text-text-meta outline-none transition-colors duration-150 ease-out hover:text-text focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
         >
-          <Icon name="arrow-left" size="medium" />
+          <Icon name="arrow-left" size="small" />
           <span>Back to chat</span>
         </button>
       </div>
@@ -689,7 +691,7 @@ function SchedulePanel({
       <div
         ref={schedulePanelScrollRef}
         onScroll={handleSchedulePanelScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-xl pb-xxl pt-stack md:px-xxxl md:pb-xxxl"
+        className="min-h-0 flex-1 overflow-y-auto px-[var(--design-layout-schedule-panel-padding-inline)] pb-[48px]"
       >
       <div className="flex flex-wrap items-center gap-md">
         <h2 className="text-display-md text-text">Schedule a call</h2>
@@ -856,7 +858,7 @@ export function FlowReviewChatPanel({
   const isScheduledSpecialistFlow = isHighValueFlow || isMediumScheduledFlow;
   const isSchedulePanelOpen =
     isScheduledSpecialistFlow && scheduledSpecialistState === "scheduling";
-  const shellVariant = isSchedulePanelOpen ? "expanded" : variant;
+  const shellVariant = variant;
 
   useLayoutEffect(() => {
     const chatBody = chatBodyRef.current;

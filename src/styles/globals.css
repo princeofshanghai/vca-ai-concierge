@@ -22,7 +22,7 @@
   --design-color-background-transparent-active: rgba(140, 140, 140, 0.2);
   --design-color-overlay-dim: rgba(0, 0, 0, 0.2);
   --design-color-scrim: rgba(0, 0, 0, 0.6);
-  --design-color-ai-background-soft: #E8F3FF;
+  --design-color-ai-background-soft: #D2E9FF;
   --design-color-ai-border: #AAD6FF;
   --design-color-ai-icon: #0A66C2;
   --design-color-tag-default-background: rgba(140, 140, 140, 0.2);
@@ -153,16 +153,17 @@
   --design-layout-desktop-page-padding: 32px;
   --design-layout-panel-collapsed-width: 432px;
   --design-layout-panel-expanded-width: 1280px;
-  --design-layout-panel-height: 780px;
-  --design-layout-panel-content-max: 720px;
+  --design-layout-panel-collapsed-height: 908px;
+  --design-layout-panel-expanded-height: 928px;
+  --design-layout-panel-content-max: 640px;
   --design-layout-schedule-collapsed-surface-width: 960px;
-  --design-layout-schedule-collapsed-chat-track: 5fr;
-  --design-layout-schedule-collapsed-side-track: 7fr;
-  --design-layout-schedule-expanded-surface-width: 1440px;
-  --design-layout-schedule-expanded-chat-track: 4fr;
+  --design-layout-schedule-collapsed-chat-track: 3fr;
+  --design-layout-schedule-collapsed-side-track: 5fr;
+  --design-layout-schedule-expanded-surface-width: 1280px;
+  --design-layout-schedule-expanded-chat-track: 3fr;
   --design-layout-schedule-expanded-side-track: 5fr;
   --design-layout-chat-message-assistant-collapsed-max: 100%;
-  --design-layout-chat-message-assistant-expanded-max: 680px;
+  --design-layout-chat-message-assistant-expanded-max: 640px;
   --design-layout-chat-message-assistant-max: var(
     --design-layout-chat-message-assistant-expanded-max
   );
@@ -544,6 +545,8 @@ body {
 }
 
 .chat-schedule-layout {
+  --design-layout-schedule-panel-padding-inline: var(--design-spacing-xxxl);
+
   display: grid;
   grid-template-columns: minmax(0, 1fr);
 }
@@ -556,6 +559,8 @@ body {
   }
 
   .chat-schedule-layout[data-chat-variant="expanded"] {
+    --design-layout-schedule-panel-padding-inline: 48px;
+
     grid-template-columns:
       minmax(0, var(--design-layout-schedule-expanded-chat-track))
       minmax(0, var(--design-layout-schedule-expanded-side-track));

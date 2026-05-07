@@ -951,7 +951,7 @@ export default function InternalComponentsPage() {
 
             <section className="space-y-4 border-t border-border-faint pt-xxl">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
-                Scheduled specialist card states
+                Scheduled sales consultant card states
               </h3>
               <div className="grid gap-xl md:grid-cols-2">
                 {highValueMatchCardStates.map(
@@ -970,7 +970,7 @@ export default function InternalComponentsPage() {
 
             <section className="space-y-4 border-t border-border-faint pt-xxl">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
-                Medium-value live specialist handoff states
+                Medium-value live sales consultant handoff states
               </h3>
               <div className="grid gap-xl md:grid-cols-2 xl:grid-cols-3">
                 {mediumAvailableHandoffStates.map(({ label, state }) => (

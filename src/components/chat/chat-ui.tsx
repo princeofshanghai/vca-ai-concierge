@@ -91,9 +91,9 @@ type RecommendationCardProps = HTMLAttributes<HTMLDivElement> & {
 
 const panelWidthClasses: Record<ChatPanelVariant, string> = {
   collapsed:
-    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)] md:w-[min(100%,var(--design-layout-panel-collapsed-width))] md:rounded-lg",
+    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(100%,var(--design-layout-panel-collapsed-width))] md:rounded-lg",
   expanded:
-    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-xl",
+    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-lg",
 };
 
 const headerActionIcon: Record<ChatPanelVariant, IconName> = {
@@ -171,7 +171,7 @@ export function ChatPanel({
     <section
       {...props}
       className={cx(
-        "h-[var(--design-layout-mobile-panel-height)] w-[var(--design-layout-mobile-panel-width)] max-w-full rounded-none text-text shadow-raised transition-[width,border-radius] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:h-[var(--design-layout-panel-height)]",
+        "h-[var(--design-layout-mobile-panel-height)] w-[var(--design-layout-mobile-panel-width)] max-w-full rounded-none text-text shadow-raised transition-[width,height,border-radius] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none",
         panelWidthClasses[variant],
         className,
       )}
@@ -227,7 +227,7 @@ export function ChatHeader({
     <header
       {...props}
       className={cx(
-        "flex h-[var(--design-layout-panel-header-height)] shrink-0 items-center justify-between pl-[calc(var(--design-spacing-lg)+env(safe-area-inset-left))] pr-[calc(var(--design-spacing-md)+env(safe-area-inset-right))] transition-[background-color,border-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pl-xl md:pr-md",
+        "flex h-[var(--design-layout-panel-header-height)] shrink-0 items-center justify-between pl-[calc(var(--design-spacing-xxl)+env(safe-area-inset-left))] pr-[calc(var(--design-spacing-lg)+env(safe-area-inset-right))] transition-[background-color,border-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pl-xxl md:pr-lg",
         transparent
           ? "border-b border-transparent bg-transparent"
           : "border-b border-border-faint bg-background",
@@ -244,7 +244,7 @@ export function ChatHeader({
       ) : (
         <span aria-hidden="true" />
       )}
-      <div className="flex items-center gap-0 [--design-layout-ghost-icon-button-medium-width:40px]">
+      <div className="flex items-center gap-0">
         <span className="hidden md:inline-flex">
           <GhostIconButton
             label={headerActionLabel[variant]}
@@ -274,14 +274,16 @@ export function ChatThread({
     <div
       {...props}
       className={cx(
-        "flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col gap-xl",
+        "flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col gap-0 px-xxl",
         className,
       )}
     >
       {timestamp ? (
-        <p className="text-center text-body-xs text-text-meta">{timestamp}</p>
+        <p className="pb-sm pt-xl text-center text-body-xs text-text-meta">
+          {timestamp}
+        </p>
       ) : null}
-      <div className="flex flex-col gap-lg">{children}</div>
+      <div className="flex flex-col gap-0">{children}</div>
     </div>
   );
 }
@@ -293,7 +295,7 @@ export const ChatBody = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement
         {...props}
         ref={ref}
         className={cx(
-          "flex min-h-0 flex-1 justify-center overflow-y-auto px-lg py-panel-padding md:p-panel-padding",
+          "flex min-h-0 flex-1 justify-center overflow-y-auto",
           className,
         )}
       >
@@ -311,7 +313,7 @@ export function ChatThinkingMessage({
     <div
       {...props}
       className={cx(
-        "chat-message-enter flex w-full",
+        "chat-message-enter flex w-full py-lg",
         className,
       )}
     >
@@ -347,11 +349,13 @@ export function ChatMessage({
       className={cx(
         "chat-message-enter flex w-full",
         isUser && "justify-end",
+        "py-lg",
         className,
       )}
     >
       <div
         className={cx(
+          isUser && "flex w-full justify-end",
           hasRepresentativeMeta && "flex max-w-full flex-col gap-md",
         )}
       >
@@ -359,9 +363,9 @@ export function ChatMessage({
           className={cx(
             "break-words text-body-sm-open text-text",
             isUser &&
-              "w-fit max-w-[min(100%,27.5rem)] rounded-bl-lg rounded-tl-lg rounded-tr-lg bg-ai-background-soft px-xxl py-panel-padding",
+              "w-fit max-w-[min(100%,24.5rem)] rounded-bl-md rounded-tl-md rounded-tr-md bg-ai-background-soft p-xl",
             isRepresentative &&
-              "w-fit max-w-[min(100%,27.5rem)] rounded-br-lg rounded-tl-lg rounded-tr-lg bg-background-neutral-soft px-xxl py-panel-padding",
+              "w-fit max-w-[min(100%,24.5rem)] rounded-br-md rounded-tl-md rounded-tr-md bg-background-neutral-soft p-xl",
             !isUser &&
               !isRepresentative &&
               "max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] pr-sm",
@@ -370,7 +374,7 @@ export function ChatMessage({
           {children}
         </div>
         {hasRepresentativeMeta ? (
-          <div className="flex items-center gap-md text-body-xs text-text-meta">
+          <div className="flex items-center gap-sm text-body-xs text-text-meta">
             <Entity
               size={24}
               src={avatarSrc}
@@ -417,7 +421,7 @@ export function Prompt({
       aria-label={ariaLabel ?? `Send message: ${prompt}`}
       data-visual-state={visualState}
       className={cx(
-        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[301px]",
+        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[432px]",
         visualState !== "default" && promptStateClasses[visualState],
         className,
       )}
@@ -431,7 +435,7 @@ export function Prompt({
 }
 
 export function RecommendationCard({
-  title = "Talk to a hiring specialist",
+  title = "Speak with a sales consultant",
   description,
   primaryAction = "Chat live now",
   secondaryAction,
@@ -601,20 +605,19 @@ export function ChatComposer({
   return (
     <div
       {...props}
+      data-chat-variant={variant}
       className={cx(
-        "flex min-h-[var(--design-layout-composer-height)] shrink-0 items-end justify-center px-lg pb-[calc(var(--design-spacing-lg)+env(safe-area-inset-bottom))] md:px-panel-padding md:pb-panel-padding",
+        "flex min-h-[var(--design-layout-composer-height)] shrink-0 items-end justify-center px-xxl pb-[calc(var(--design-spacing-xxl)+env(safe-area-inset-bottom))] pt-sm md:px-xxl md:pb-xxl md:pt-sm",
         className,
       )}
     >
       <div
         ref={composerRef}
         className={cx(
-          "grid w-full border border-border-faint bg-background pl-lg pr-md transition-[border-color,border-radius,padding] duration-150 ease-out hover:border-border-hover focus-within:border-border-hover",
+          "grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background px-md transition-[border-color,border-radius,padding] duration-150 ease-out hover:border-border-hover focus-within:border-border-hover",
           isMultiline
             ? "grid grid-cols-1 gap-sm rounded-[28px] py-[10px]"
-            : "h-[var(--design-layout-composer-height)] grid-cols-[minmax(0,1fr)_auto] items-center gap-xs rounded-round py-0",
-          variant === "expanded" &&
-            "max-w-[var(--design-layout-panel-content-max)]",
+            : "h-[var(--design-layout-composer-height)] grid-cols-[minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",
         )}
       >
         <textarea
@@ -626,7 +629,7 @@ export function ChatComposer({
           onChange={handleTextareaChange}
           onKeyDown={handleTextareaKeyDown}
           className={cx(
-            "min-w-0 resize-none bg-transparent text-body-md-open text-text outline-none placeholder:text-text-disabled",
+            "min-w-0 resize-none bg-transparent text-body-sm-open text-text outline-none placeholder:text-text-disabled",
             "max-h-[var(--design-layout-composer-input-max-height)]",
             isMultiline ? "w-full overflow-y-auto" : "overflow-hidden",
           )}
@@ -693,7 +696,7 @@ export function ChatPanelPreview({
           <ChatMessage role="user">
             We need to ramp hiring fast this quarter.
           </ChatMessage>
-          <ChatMessage>A specialist can narrow the setup fast.</ChatMessage>
+          <ChatMessage>A sales consultant can narrow the setup fast.</ChatMessage>
           <ChatMessage role="user">
             We want the fastest path to launch.
           </ChatMessage>

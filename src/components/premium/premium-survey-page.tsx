@@ -553,11 +553,6 @@ export function PremiumSurveyPage({
                 liveMode={liveMode}
                 onClose={closeChat}
                 onVariantToggle={toggleChatPanelVariant}
-                className={
-                  chatPanelVariant === "expanded"
-                    ? "h-[var(--design-layout-mobile-panel-height)] md:!h-[calc(100dvh-48px)]"
-                    : "h-[var(--design-layout-mobile-panel-height)] md:!h-full"
-                }
               />
             </div>
           </div>

@@ -29,6 +29,12 @@ import {
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
+import {
+  SchedulePanel,
+  ScheduledSpecialistCard,
+  type BookedMeeting,
+  type HighValueRecommendationState,
+} from "@/components/flow-review";
 import { Button } from "@/components/primitives/button";
 import { useReviewShellState } from "@/components/review-shell";
 import {
@@ -50,6 +56,7 @@ type ConciergePanelProps = Readonly<{
   onClose?: () => void;
   onVariantToggle?: () => void;
   onConversationStart?: () => void;
+  onSidePanelOpenChange?: (open: boolean) => void;
   confirmationDialog?: ReactNode;
 }>;
 
@@ -239,12 +246,26 @@ function AvailabilityCard({ step }: { step: FlowReviewAvailabilityStep }) {
   );
 }
 
+function isScheduledSpecialistRecommendation(
+  step: FlowReviewRecommendationStep,
+) {
+  return step.id === "high-recommendation-card";
+}
+
+function isScheduledSpecialistAvailability(step: FlowReviewAvailabilityStep) {
+  return (
+    step.variants.length === 1 &&
+    step.variants[0]?.id === "medium-scheduled"
+  );
+}
+
 export function ConciergePanel({
   variant = "collapsed",
   className,
   onClose,
   onVariantToggle,
   onConversationStart,
+  onSidePanelOpenChange,
   confirmationDialog,
 }: ConciergePanelProps) {
   const { isSignedIn } = useReviewShellState();
@@ -259,10 +280,17 @@ export function ConciergePanel({
   const [liveStepIndex, setLiveStepIndex] = useState(
     INITIAL_LIVE_SCRIPT_INDEX,
   );
+  const [scheduledSpecialistState, setScheduledSpecialistState] =
+    useState<HighValueRecommendationState>("initial");
+  const [bookedMeeting, setBookedMeeting] = useState<BookedMeeting | null>(
+    null,
+  );
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(0);
 
   const phase: "onboarding" | "chat" = lead ? "chat" : "onboarding";
+  const isSchedulePanelOpen = scheduledSpecialistState === "scheduling";
+  const shellVariant = variant;
   const hasUserMessages = messages.some(
     (message) => isMessageItem(message) && message.role === "user",
   );
@@ -377,6 +405,12 @@ export function ConciergePanel({
   }, [pendingAssistantResponse]);
 
   useEffect(() => {
+    return () => {
+      onSidePanelOpenChange?.(false);
+    };
+  }, [onSidePanelOpenChange]);
+
+  useEffect(() => {
     const chatBody = chatBodyRef.current;
 
     if (!chatBody) {
@@ -384,7 +418,7 @@ export function ConciergePanel({
     }
 
     chatBody.scrollTop = chatBody.scrollHeight;
-  }, [messages]);
+  }, [messages, isSchedulePanelOpen]);
 
   // Submitting the onboarding form swaps the welcome content for the chat
   // thread. We trigger a View Transition so the AI mark morphs from the
@@ -400,6 +434,9 @@ export function ConciergePanel({
         setDraft("");
         setLiveFlowId(null);
         setLiveStepIndex(INITIAL_LIVE_SCRIPT_INDEX);
+        setScheduledSpecialistState("initial");
+        setBookedMeeting(null);
+        onSidePanelOpenChange?.(false);
         setMessages([
           {
             kind: "message",
@@ -423,7 +460,7 @@ export function ConciergePanel({
         flushSync(enterChat);
       });
     },
-    [createMessageId, onConversationStart],
+    [createMessageId, onConversationStart, onSidePanelOpenChange],
   );
 
   const handleDraftChange = useCallback(
@@ -484,6 +521,25 @@ export function ConciergePanel({
     [submitUserMessage],
   );
 
+  const handleOpenSchedulePanel = useCallback(() => {
+    setScheduledSpecialistState("scheduling");
+    onSidePanelOpenChange?.(true);
+  }, [onSidePanelOpenChange]);
+
+  const handleBackToChat = useCallback(() => {
+    setScheduledSpecialistState("matched");
+    onSidePanelOpenChange?.(false);
+  }, [onSidePanelOpenChange]);
+
+  const handleBookMeeting = useCallback(
+    (meeting: BookedMeeting) => {
+      setBookedMeeting(meeting);
+      setScheduledSpecialistState("booked");
+      onSidePanelOpenChange?.(false);
+    },
+    [onSidePanelOpenChange],
+  );
+
   function shouldShowStarterPrompts(
     message: ConciergeThreadItem,
     index: number,
@@ -501,11 +557,96 @@ export function ConciergePanel({
     );
   }
 
+  function renderThreadItem(message: ConciergeThreadItem, index: number) {
+    if (message.kind === "recommendation") {
+      if (isScheduledSpecialistRecommendation(message.step)) {
+        return (
+          <ScheduledSpecialistCard
+            key={`${message.id}-${scheduledSpecialistState}`}
+            state={scheduledSpecialistState}
+            bookedMeeting={bookedMeeting}
+            onBookTime={handleOpenSchedulePanel}
+            onScheduleCall={handleOpenSchedulePanel}
+          />
+        );
+      }
+
+      return (
+        <RecommendationCard
+          key={message.id}
+          title={message.step.title}
+          description={message.step.description}
+          primaryAction={message.step.primaryAction}
+          secondaryAction={message.step.secondaryAction}
+        />
+      );
+    }
+
+    if (message.kind === "resources") {
+      return <ResourceCards key={message.id} step={message.step} />;
+    }
+
+    if (message.kind === "availability") {
+      if (isScheduledSpecialistAvailability(message.step)) {
+        return (
+          <ScheduledSpecialistCard
+            key={`${message.id}-${scheduledSpecialistState}`}
+            state={scheduledSpecialistState}
+            bookedMeeting={bookedMeeting}
+            onBookTime={handleOpenSchedulePanel}
+            onScheduleCall={handleOpenSchedulePanel}
+          />
+        );
+      }
+
+      return <AvailabilityCard key={message.id} step={message.step} />;
+    }
+
+    return (
+      <Fragment key={message.id}>
+        {message.status === "thinking" ? (
+          <ChatThinkingMessage />
+        ) : (
+          <ChatMessage
+            role={message.role}
+            aria-busy={message.status === "streaming" || undefined}
+          >
+            {message.content}
+          </ChatMessage>
+        )}
+        {shouldShowStarterPrompts(message, index) ? (
+          <div className="chat-message-enter flex w-full">
+            <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+              {STARTER_PROMPTS.map((prompt) => (
+                <Prompt
+                  key={prompt}
+                  prompt={prompt}
+                  onPromptSelect={handleStarterPromptSelect}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </Fragment>
+    );
+  }
+
+  const thread = lead ? (
+    <ChatThread aria-live="polite" aria-busy={isAssistantBusy || undefined}>
+      {messages.map(renderThreadItem)}
+      {isSchedulePanelOpen ? (
+        <div aria-hidden="true" className="h-lg shrink-0" />
+      ) : null}
+    </ChatThread>
+  ) : null;
+
   return (
     <ChatPanel
-      variant={variant}
+      variant={shellVariant}
       surface={phase === "onboarding" ? "welcome" : "default"}
-      className={className}
+      className={[isSchedulePanelOpen && "md:!w-full", className]
+        .filter(Boolean)
+        .join(" ")}
     >
       <ChatHeader
         variant={variant}
@@ -517,76 +658,40 @@ export function ConciergePanel({
       />
 
       {lead ? (
-        <>
-          <ChatBody ref={chatBodyRef}>
-            <ChatThread
-              aria-live="polite"
-              aria-busy={isAssistantBusy || undefined}
-            >
-              {messages.map((message, index) => {
-                if (message.kind === "recommendation") {
-                  return (
-                    <RecommendationCard
-                      key={message.id}
-                      title={message.step.title}
-                      description={message.step.description}
-                      primaryAction={message.step.primaryAction}
-                      secondaryAction={message.step.secondaryAction}
-                    />
-                  );
+        isSchedulePanelOpen ? (
+          <div
+            data-chat-variant={variant}
+            className="chat-schedule-layout min-h-0 flex-1"
+          >
+            <div className="hidden min-h-0 min-w-0 border-r border-border-faint md:flex">
+              <ChatBody
+                ref={chatBodyRef}
+                className={
+                  variant === "collapsed"
+                    ? "chat-schedule-history [--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)]"
+                    : "chat-schedule-history"
                 }
-
-                if (message.kind === "resources") {
-                  return <ResourceCards key={message.id} step={message.step} />;
-                }
-
-                if (message.kind === "availability") {
-                  return (
-                    <AvailabilityCard key={message.id} step={message.step} />
-                  );
-                }
-
-                return (
-                  <Fragment key={message.id}>
-                    {message.status === "thinking" ? (
-                      <ChatThinkingMessage />
-                    ) : (
-                      <ChatMessage
-                        role={message.role}
-                        aria-busy={message.status === "streaming" || undefined}
-                      >
-                        {message.content}
-                      </ChatMessage>
-                    )}
-                    {shouldShowStarterPrompts(message, index) ? (
-                      <div className="chat-message-enter flex w-full">
-                        <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
-                          {STARTER_PROMPTS.map((prompt) => (
-                            <Prompt
-                              key={prompt}
-                              prompt={prompt}
-                              onPromptSelect={handleStarterPromptSelect}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                  </Fragment>
-                );
-              })}
-            </ChatThread>
-          </ChatBody>
-          <ChatComposer
-            variant={variant}
-            inputProps={{
-              value: draft,
-              onChange: handleDraftChange,
-              autoFocus: true,
-            }}
-            onSend={handleSendMessage}
-            sendDisabled={draft.trim().length === 0 || isAssistantBusy}
-          />
-        </>
+              >
+                {thread}
+              </ChatBody>
+            </div>
+            <SchedulePanel onBack={handleBackToChat} onBook={handleBookMeeting} />
+          </div>
+        ) : (
+          <>
+            <ChatBody ref={chatBodyRef}>{thread}</ChatBody>
+            <ChatComposer
+              variant={variant}
+              inputProps={{
+                value: draft,
+                onChange: handleDraftChange,
+                autoFocus: true,
+              }}
+              onSend={handleSendMessage}
+              sendDisabled={draft.trim().length === 0 || isAssistantBusy}
+            />
+          </>
+        )
       ) : (
         // Re-key on the demo preset so toggling between signed-in and
         // signed-out in the review shell remounts the screen with fresh

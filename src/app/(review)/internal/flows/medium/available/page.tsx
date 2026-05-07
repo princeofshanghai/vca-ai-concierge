@@ -7,7 +7,7 @@ import { createPageMetadata } from "@/lib/metadata";
 export const metadata: Metadata = createPageMetadata({
   title: "Medium Flow - Available",
   description:
-    "Internal chat panel review for the medium AI concierge flow when a specialist is available.",
+    "Internal chat panel review for the medium AI concierge flow when a sales consultant is available.",
   robots: {
     index: false,
     follow: false,

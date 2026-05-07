@@ -3,6 +3,8 @@ export {
   HighValueMatchCardPreview,
   HighValueSchedulePanelPreview,
   MediumAvailableHandoffPreview,
+  SchedulePanel,
+  ScheduledSpecialistCard,
   type BookedMeeting,
   type HighValueMatchCardPreviewProps,
   type HighValueRecommendationState,
