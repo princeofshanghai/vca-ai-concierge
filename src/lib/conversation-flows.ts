@@ -111,7 +111,7 @@ export function buildFollowUpAssistantResponse(
     message.includes("contact") ||
     message.includes("sales team")
   ) {
-    return "I can help with that. To connect you with the right hiring specialist, it helps to understand what kind of hiring you are trying to solve for. Roughly how many roles are you hiring for?";
+    return "I can help with that. To connect you with the right sales consultant, it helps to understand what kind of hiring you are trying to solve for. Roughly how many roles are you hiring for?";
   }
 
   if (message.includes("compare") || message.includes("recruiter")) {
@@ -157,7 +157,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
     label: "High",
     title: "High Flow",
     description:
-      "A large-volume, urgent hiring conversation that commits to a specialist meeting for Recruiter + Hiring Assistant.",
+      "A large-volume, urgent hiring conversation that commits to a sales consultant meeting for Recruiter + Hiring Assistant.",
     steps: [
       sharedWelcomeStep,
       {
@@ -212,7 +212,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         kind: "message",
         role: "assistant",
         content:
-          "Six weeks makes this more of a hiring plan than a product browse. A specialist can help pressure-test how Recruiter + Hiring Assistant would support the first wave. Who would need to be involved in that conversation?",
+          "Six weeks makes this more of a hiring plan than a product browse. A sales consultant can help pressure-test how Recruiter + Hiring Assistant would support the first wave. Who would need to be involved in that conversation?",
       },
       {
         id: "high-user-stakeholders",
@@ -226,12 +226,12 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         kind: "message",
         role: "assistant",
         content:
-          "That is the right context to bring into a specialist conversation. You have urgent volume, specialized roles, an existing recruiting team, and stakeholders who need confidence in the plan. I am going to match you with a hiring specialist who can help shape the first-wave Recruiter + Hiring Assistant plan.",
+          "That is the right context to bring into a sales consultant conversation. You have urgent volume, specialized roles, an existing recruiting team, and stakeholders who need confidence in the plan. I am going to match you with a sales consultant who can help shape the first-wave Recruiter + Hiring Assistant plan.",
       },
       {
         id: "high-recommendation-card",
         kind: "recommendation",
-        title: "Talk with a hiring specialist",
+        title: "Speak with a sales consultant",
         description:
           "15 min. We will match you with someone who can help plan your first hiring wave.",
         primaryAction: "Book a time",
@@ -243,7 +243,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
     label: "Medium",
     title: "Medium Flow",
     description:
-      "A smaller team hiring conversation that recommends Hiring Pro and shows specialist handoff outcomes.",
+      "A smaller team hiring conversation that recommends Hiring Pro and shows sales consultant handoff outcomes.",
     steps: [
       sharedWelcomeStep,
       {
@@ -257,7 +257,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         kind: "message",
         role: "assistant",
         content:
-          "I can help with that. To get you to the right hiring specialist, it helps to know what kind of hiring you are trying to solve for. Roughly how many roles are you hiring for?",
+          "I can help with that. To get you to the right sales consultant, it helps to know what kind of hiring you are trying to solve for. Roughly how many roles are you hiring for?",
       },
       {
         id: "medium-user-roles",
@@ -311,7 +311,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         kind: "message",
         role: "assistant",
         content:
-          "Makes sense. Since this is near-term hiring but lighter than an enterprise recruiting setup, the useful next step is a hiring specialist who can confirm whether Hiring Pro fits and help your managers start cleanly.",
+          "Makes sense. Since this is near-term hiring but lighter than an enterprise recruiting setup, the useful next step is a sales consultant who can confirm whether Hiring Pro fits and help your managers start cleanly.",
       },
       {
         id: "medium-availability",
@@ -323,15 +323,15 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
             role: "representative",
             message:
               "Hi Jamie, I saw you are looking at Hiring Pro for manager-led hiring this month. I can help you confirm the fit.",
-            title: "A hiring specialist is available now",
+            title: "A sales consultant is available now",
             primaryAction: "Chat now",
           },
           {
             id: "medium-scheduled",
-            label: "Scheduled specialist handoff",
+            label: "Scheduled sales consultant handoff",
             message:
-              "I can help you pick a time with a hiring specialist who can walk through Hiring Pro for your manager-led roles.",
-            title: "Talk with a hiring specialist",
+              "I can help you pick a time with a sales consultant who can walk through Hiring Pro for your manager-led roles.",
+            title: "Speak with a sales consultant",
             primaryAction: "Book a time",
           },
         ],
@@ -384,7 +384,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         kind: "message",
         role: "assistant",
         content:
-          "That is a good reason to learn the options without jumping into a specialist conversation too early. I would help you compare the lighter path first, then come back to Recruiter if hiring becomes more recurring.",
+          "That is a good reason to learn the options without jumping into a sales consultant conversation too early. I would help you compare the lighter path first, then come back to Recruiter if hiring becomes more recurring.",
       },
       {
         id: "low-user-direct",
@@ -454,8 +454,8 @@ export function getMediumFlowReview(
       ? "Medium Flow - Available"
       : "Medium Flow - Unavailable",
     description: isAvailable
-      ? "A smaller team hiring conversation where a specialist is available now."
-      : "A smaller team hiring conversation where the next step is a scheduled specialist call.",
+      ? "A smaller team hiring conversation where a sales consultant is available now."
+      : "A smaller team hiring conversation where the next step is a scheduled sales consultant call.",
     steps: flowReviews.medium.steps.map((step) => {
       if (step.kind !== "availability") {
         return step;
