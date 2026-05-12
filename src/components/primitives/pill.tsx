@@ -1,6 +1,7 @@
 import {
   forwardRef,
   type ButtonHTMLAttributes,
+  type ReactNode,
 } from "react";
 
 export type PillVariant = "choice";
@@ -17,6 +18,7 @@ export type PillProps = Omit<
   variant?: PillVariant;
   checked?: boolean;
   disabled?: boolean;
+  trailingIcon?: ReactNode;
   visualState?: PillVisualState;
 };
 
@@ -48,6 +50,7 @@ export const Pill = forwardRef<HTMLButtonElement, PillProps>(
       variant = "choice",
       checked = false,
       disabled = false,
+      trailingIcon,
       visualState = "default",
       type,
       "aria-pressed": ariaPressed,
@@ -85,6 +88,14 @@ export const Pill = forwardRef<HTMLButtonElement, PillProps>(
           )}
         >
           {children}
+          {trailingIcon ? (
+            <span
+              aria-hidden="true"
+              className="inline-flex size-[var(--design-icon-size-small)] shrink-0 items-center justify-center [&_svg]:size-full"
+            >
+              {trailingIcon}
+            </span>
+          ) : null}
         </span>
       </button>
     );

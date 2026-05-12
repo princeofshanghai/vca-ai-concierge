@@ -14,6 +14,7 @@ import {
   ChatComposer,
   ChatHeader,
   ChatMessage,
+  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatThread,
   Prompt,
@@ -25,6 +26,7 @@ import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
 import { Tag } from "@/components/primitives/tag";
+import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
 import {
   STARTER_PROMPTS,
@@ -99,6 +101,7 @@ type ScheduledSpecialistCardProps = Readonly<{
   state: HighValueRecommendationState;
   bookedMeeting?: BookedMeeting | null;
   onBookTime: () => void;
+  onCancelMatching: () => void;
   onScheduleCall: () => void;
 }>;
 
@@ -139,16 +142,130 @@ const MEETING_CONFIRM_LABELS: Record<MeetingFormat, string> = {
   "WhatsApp call": "Confirm WhatsApp call",
 };
 
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
 function getBookedMeetingContactCopy(meeting: BookedMeeting) {
   if (meeting.format === "Online meeting") {
-    return `Link will be sent to ${meeting.contact}.`;
+    return `Meeting link sent to ${meeting.contact}`;
   }
 
   if (meeting.format === "Phone call") {
-    return `We'll call you at ${meeting.contact}.`;
+    return `${HIRING_SPECIALIST.name.split(" ")[0]} will call ${meeting.contact}`;
   }
 
-  return `We'll call you on WhatsApp at ${meeting.contact}.`;
+  return `${HIRING_SPECIALIST.name.split(" ")[0]} will call ${meeting.contact} on WhatsApp`;
+}
+
+function getBookedMeetingTitle(meeting: BookedMeeting) {
+  return meeting.format === "Online meeting"
+    ? `Meeting with ${HIRING_SPECIALIST.name}`
+    : `Call with ${HIRING_SPECIALIST.name}`;
+}
+
+function getBookedMeetingContactIcon(meeting: BookedMeeting) {
+  if (meeting.format === "Online meeting") {
+    return "envelope" as const;
+  }
+
+  if (meeting.format === "WhatsApp call") {
+    return "whats-app" as const;
+  }
+
+  return "phone-handset" as const;
+}
+
+function SpecialistAvatar({ muted = false }: { muted?: boolean }) {
+  return (
+    <div className={cx("relative shrink-0", muted && "opacity-50")}>
+      <Entity
+        size={48}
+        label={`${HIRING_SPECIALIST.name}, ${HIRING_SPECIALIST.role}`}
+      />
+    </div>
+  );
+}
+
+function MatchedSpecialistAvatar({ muted = false }: { muted?: boolean }) {
+  return (
+    <div className={cx("relative shrink-0", muted && "opacity-50")}>
+      <Entity
+        size={48}
+        label={`${HIRING_SPECIALIST.name}, ${HIRING_SPECIALIST.role}`}
+      />
+      <span
+        aria-hidden="true"
+        className="absolute -right-xxs -bottom-xxs inline-flex size-5 items-center justify-center rounded-round bg-background text-checked [&_svg]:size-5"
+      >
+        <Icon name="signal-success" size="small" />
+      </span>
+    </div>
+  );
+}
+
+function SpecialistHeader({
+  title,
+  muted = false,
+  booked = false,
+}: {
+  title: string;
+  muted?: boolean;
+  booked?: boolean;
+}) {
+  return (
+    <div className="flex w-full items-center gap-sm">
+      {booked ? (
+        <MatchedSpecialistAvatar muted={muted} />
+      ) : (
+        <SpecialistAvatar muted={muted} />
+      )}
+      <div className="min-w-0 flex-1 space-y-xs">
+        <h2 className="text-heading-md text-text">{title}</h2>
+        <p className="text-body-xs text-text-meta">{HIRING_SPECIALIST.role}</p>
+      </div>
+    </div>
+  );
+}
+
+function MatchingEntityStack() {
+  return (
+    <span
+      aria-hidden="true"
+      className="flex shrink-0 items-center pl-xxs"
+    >
+      {[0, 1, 2].map((index) => (
+        <Entity
+          key={index}
+          size={24}
+          className={cx(index > 0 && "-ml-sm", "ring-2 ring-background")}
+        />
+      ))}
+    </span>
+  );
+}
+
+function BookedMeetingDetails({ meeting }: { meeting: BookedMeeting }) {
+  const contactIcon = getBookedMeetingContactIcon(meeting);
+
+  return (
+    <div className="flex w-full flex-col gap-xs border-t border-border-faint pt-md">
+      <div className="flex items-center gap-sm text-body-sm-open text-text">
+        <Icon name="calendar" size="small" className="shrink-0 text-icon" />
+        <p className="min-w-0 flex-1">
+          {MEETING_DATE_DETAILS[meeting.date]} at {meeting.time} PT
+        </p>
+      </div>
+      <div className="flex items-start gap-sm text-body-sm-open text-text">
+        <Icon
+          name={contactIcon}
+          size="small"
+          className="mt-xxs shrink-0 text-icon"
+        />
+        <p className="min-w-0 flex-1">{getBookedMeetingContactCopy(meeting)}</p>
+      </div>
+    </div>
+  );
 }
 
 function getSchedulePanelFooterHelp({
@@ -235,9 +352,17 @@ function AvailabilityVariant({ step }: { step: FlowReviewAvailabilityStep }) {
 
   return (
     <>
-      <ChatMessage role={variant.role ?? "assistant"}>
+      <ChatMessage
+        role={variant.role ?? "assistant"}
+        className={
+          (variant.role ?? "assistant") === "assistant" ? "!pb-xs" : undefined
+        }
+      >
         {variant.message}
       </ChatMessage>
+      {(variant.role ?? "assistant") === "assistant" ? (
+        <ChatMessageFeedbackFlow />
+      ) : null}
       <RecommendationCard
         title={variant.title}
         primaryAction={variant.primaryAction}
@@ -357,9 +482,18 @@ export function MediumAvailableHandoffPreview({
 
 function renderStep(step: FlowReviewStep) {
   if (step.kind === "message") {
+    const showFeedback =
+      step.role === "assistant" && !step.showStarterPromptsAfter;
+
     return (
       <div key={step.id} className="contents">
-        <ChatMessage role={step.role}>{step.content}</ChatMessage>
+        <ChatMessage
+          role={step.role}
+          className={showFeedback ? "!pb-xs" : undefined}
+        >
+          {step.content}
+        </ChatMessage>
+        {showFeedback ? <ChatMessageFeedbackFlow /> : null}
         {step.showStarterPromptsAfter ? <StarterPromptRow /> : null}
       </div>
     );
@@ -400,6 +534,7 @@ export function ScheduledSpecialistCard({
   state,
   bookedMeeting,
   onBookTime,
+  onCancelMatching,
   onScheduleCall,
 }: ScheduledSpecialistCardProps) {
   if (state === "matching") {
@@ -407,24 +542,25 @@ export function ScheduledSpecialistCard({
       <article
         role="status"
         aria-live="polite"
-        className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text"
+        className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-sm rounded-md border border-ai-border bg-background py-md pl-xl pr-lg text-text"
       >
-        <div className="flex items-start gap-md">
-          <span
-            aria-hidden="true"
-            className="mt-xxs inline-flex size-6 shrink-0 items-center justify-center rounded-round bg-background"
-          >
-            <span className="block size-4 animate-spin rounded-full border-[1.5px] border-action border-r-transparent" />
-          </span>
-          <div className="space-y-xs">
-            <h2 className="text-heading-md">
-              Finding you the right sales consultant
-            </h2>
-            <p className="text-body-sm-open text-text-meta">
-              This may take up to 2 minutes.
-            </p>
-          </div>
+        <div className="flex w-full items-center gap-sm">
+          <MatchingEntityStack />
+          <h2 className="min-w-0 flex-1 text-heading-md text-text">
+            Finding your consultant...
+          </h2>
         </div>
+        <p className="text-body-sm-open text-text">
+          This usually takes under a minute.
+        </p>
+        <Button
+          size="small"
+          variant="secondary"
+          className="mt-sm w-fit px-pill-padding-inline"
+          onClick={onCancelMatching}
+        >
+          Cancel
+        </Button>
       </article>
     );
   }
@@ -434,95 +570,58 @@ export function ScheduledSpecialistCard({
       <article
         role="status"
         aria-live="polite"
-        className="chat-message-enter flex w-full max-w-[21.5rem] flex-col items-center gap-lg rounded-md border border-ai-border bg-background p-xl text-center text-text"
+        className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-lg rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text"
       >
-        <div className="relative">
-          <Entity
-            size={48}
-            label={`${HIRING_SPECIALIST.name}, ${HIRING_SPECIALIST.role}`}
-          />
-          <span
-            aria-hidden="true"
-            className="absolute -right-xxs -bottom-xxs inline-flex size-6 items-center justify-center text-checked [&_svg]:size-5"
-          >
-            <Icon name="signal-success" size="small" />
-          </span>
-        </div>
-        <div className="space-y-xs">
-          <h2 className="text-heading-md">
-            Meeting booked with {HIRING_SPECIALIST.name}
-          </h2>
-          <p className="text-body-sm-open text-text">
-            {MEETING_DATE_DETAILS[bookedMeeting.date]} at {bookedMeeting.time} PT
-          </p>
-          <p className="text-body-sm-open text-text-meta">
-            {getBookedMeetingContactCopy(bookedMeeting)}
-          </p>
-        </div>
+        <SpecialistHeader title={getBookedMeetingTitle(bookedMeeting)} booked />
+        <BookedMeetingDetails meeting={bookedMeeting} />
       </article>
     );
   }
 
   if (state === "scheduling") {
     return (
-      <article className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text">
-        <div className="flex items-start gap-md">
-          <Entity
-            size={40}
-            label={`${HIRING_SPECIALIST.name}, ${HIRING_SPECIALIST.role}`}
-          />
-          <div className="min-w-0 space-y-xs">
-            <h2 className="text-heading-md">
-              Your sales consultant is {HIRING_SPECIALIST.name}
-            </h2>
-            <p className="text-body-sm-open text-text-meta">
-              Choose a time in the scheduler.
-            </p>
-          </div>
-        </div>
+      <article className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-sm rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text">
+        <SpecialistHeader title={HIRING_SPECIALIST.name} muted />
+        <Button
+          size="small"
+          disabled
+          className="mt-sm w-fit px-pill-padding-inline"
+        >
+          Choose a time
+        </Button>
       </article>
     );
   }
 
   if (state === "matched") {
     return (
-      <article className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text">
-        <div className="flex items-start gap-md">
-          <Entity
-            size={40}
-            label={`${HIRING_SPECIALIST.name}, ${HIRING_SPECIALIST.role}`}
-          />
-          <div className="min-w-0 space-y-xs">
-            <h2 className="text-heading-md">
-              Your sales consultant is {HIRING_SPECIALIST.name}
-            </h2>
-            <p className="text-body-sm-open text-text-meta">
-              Choose a time for a 15 min call.
-            </p>
-          </div>
-        </div>
+      <article className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-sm rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text">
+        <SpecialistHeader title={`${HIRING_SPECIALIST.name} is available`} />
         <Button
           size="small"
-          className="w-fit px-pill-padding-inline"
+          className="mt-sm w-fit px-pill-padding-inline"
           onClick={onScheduleCall}
         >
-          Schedule call
+          Choose a time
         </Button>
       </article>
     );
   }
 
   return (
-    <article className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text">
+    <article className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-sm rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text">
       <div className="space-y-xs">
         <h2 className="text-heading-md">Speak with a sales consultant</h2>
+        <p className="text-body-sm-open text-text">
+          Get a 15 min call with someone who can help.
+        </p>
       </div>
       <Button
         size="small"
-        className="w-fit px-pill-padding-inline"
+        className="mt-sm w-fit px-pill-padding-inline"
         onClick={onBookTime}
       >
-        Book a time
+        Find a consultant
       </Button>
     </article>
   );
@@ -537,6 +636,7 @@ export function HighValueMatchCardPreview({
       state={state}
       bookedMeeting={bookedMeeting}
       onBookTime={() => {}}
+      onCancelMatching={() => {}}
       onScheduleCall={() => {}}
     />
   );
@@ -549,6 +649,7 @@ export function SchedulePanel({
   onBook,
 }: SchedulePanelProps) {
   const noteId = useId();
+  const noteLabelId = `${noteId}-label`;
   const bookingTimerRef = useRef<number | null>(null);
   const schedulePanelScrollRef = useRef<HTMLDivElement | null>(null);
   const isConfirmingPreview = visualState === "confirming";
@@ -787,15 +888,20 @@ export function SchedulePanel({
       </section>
 
       <section className="mt-xxxl space-y-md">
-        <label htmlFor={noteId} className="block text-heading-md text-text">
+        <label
+          id={noteLabelId}
+          htmlFor={noteId}
+          className="block text-heading-md text-text"
+        >
           Anything you would like {HIRING_SPECIALIST.name} to know?
         </label>
-        <textarea
+        <TextArea
           id={noteId}
+          aria-labelledby={noteLabelId}
           value={note}
           onChange={(event) => setNote(event.currentTarget.value)}
           disabled={isBooking}
-          className="min-h-[7rem] w-full resize-none rounded-sm border border-border bg-background px-lg py-md text-body-md-open text-text outline-none transition-colors duration-150 ease-out hover:border-border-hover focus:border-border-hover disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled"
+          size="large"
         />
       </section>
 
@@ -961,6 +1067,10 @@ export function FlowReviewChatPanel({
     setScheduledSpecialistState("matching");
   }
 
+  function handleCancelMatching() {
+    setScheduledSpecialistState("initial");
+  }
+
   function handleScheduleCall() {
     setScheduledSpecialistState("scheduling");
     onSidePanelOpenChange?.(true);
@@ -989,6 +1099,7 @@ export function FlowReviewChatPanel({
           state={scheduledSpecialistState}
           bookedMeeting={bookedMeeting}
           onBookTime={handleBookTime}
+          onCancelMatching={handleCancelMatching}
           onScheduleCall={handleScheduleCall}
         />
       );
@@ -1001,6 +1112,7 @@ export function FlowReviewChatPanel({
           state={scheduledSpecialistState}
           bookedMeeting={bookedMeeting}
           onBookTime={handleBookTime}
+          onCancelMatching={handleCancelMatching}
           onScheduleCall={handleScheduleCall}
         />
       );

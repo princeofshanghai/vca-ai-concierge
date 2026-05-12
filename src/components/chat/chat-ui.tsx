@@ -3,6 +3,7 @@
 import {
   type ButtonHTMLAttributes,
   forwardRef,
+  useEffect,
   useCallback,
   useLayoutEffect,
   type KeyboardEvent,
@@ -20,6 +21,8 @@ import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
+import { Pill } from "@/components/primitives/pill";
+import { TextArea } from "@/components/primitives/text-area";
 
 export type ChatPanelVariant = "collapsed" | "expanded";
 export type ChatPanelSurface = "default" | "welcome";
@@ -88,6 +91,74 @@ type RecommendationCardProps = HTMLAttributes<HTMLDivElement> & {
   primaryAction?: ReactNode;
   secondaryAction?: ReactNode;
 };
+
+export type ChatMessageFeedbackValue = "thumbs-up" | "thumbs-down";
+
+type ChatInlineFeedbackTone = "positive";
+
+type ChatInlineFeedbackProps = HTMLAttributes<HTMLDivElement> & {
+  tone?: ChatInlineFeedbackTone;
+};
+
+export type ChatFeedbackReason =
+  | "inaccurate"
+  | "confusing"
+  | "not-what-im-looking-for"
+  | "inappropriate-or-harmful"
+  | "something-else";
+
+type ChatFeedbackReasonOption = Readonly<{
+  value: ChatFeedbackReason;
+  label: string;
+}>;
+
+type ChatMessageFeedbackProps = HTMLAttributes<HTMLDivElement> & {
+  value?: ChatMessageFeedbackValue | null;
+  disabled?: boolean;
+  onValueChange?: (value: ChatMessageFeedbackValue) => void;
+};
+
+type ChatFeedbackReasonChipsProps = HTMLAttributes<HTMLDivElement> & {
+  value?: ChatFeedbackReason | null;
+  values?: ReadonlyArray<ChatFeedbackReason>;
+  disabled?: boolean;
+  options?: ReadonlyArray<ChatFeedbackReasonOption>;
+  onValueChange?: (value: ChatFeedbackReason) => void;
+  onValuesChange?: (values: ReadonlyArray<ChatFeedbackReason>) => void;
+};
+
+type ChatFeedbackSubmission = Readonly<{
+  rating: ChatMessageFeedbackValue;
+  reasons: ReadonlyArray<ChatFeedbackReason>;
+  comment: string;
+}>;
+
+type ChatMessageFeedbackFlowProps = HTMLAttributes<HTMLDivElement> & {
+  onSubmitFeedback?: (submission: ChatFeedbackSubmission) => void;
+};
+
+type ChatFeedbackReasonPanelProps = HTMLAttributes<HTMLDivElement> & {
+  values: ReadonlyArray<ChatFeedbackReason>;
+  comment: string;
+  onValuesChange: (values: ReadonlyArray<ChatFeedbackReason>) => void;
+  onCommentChange: (comment: string) => void;
+  onClose: () => void;
+  onSubmit: () => void;
+};
+
+const defaultFeedbackReasonOptions: ReadonlyArray<ChatFeedbackReasonOption> = [
+  { value: "inaccurate", label: "Inaccurate" },
+  { value: "confusing", label: "Confusing" },
+  {
+    value: "not-what-im-looking-for",
+    label: "Not what I'm looking for",
+  },
+  {
+    value: "inappropriate-or-harmful",
+    label: "Inappropriate or harmful",
+  },
+  { value: "something-else", label: "Something else" },
+];
 
 const panelWidthClasses: Record<ChatPanelVariant, string> = {
   collapsed:
@@ -387,6 +458,285 @@ export function ChatMessage({
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+export function ChatMessageFeedback({
+  value = null,
+  disabled = false,
+  onValueChange,
+  className,
+  ...props
+}: ChatMessageFeedbackProps) {
+  const isPositive = value === "thumbs-up";
+  const isNegative = value === "thumbs-down";
+
+  return (
+    <div
+      {...props}
+      role="group"
+      aria-label="Rate this response"
+      className={cx(
+        "chat-message-enter -ml-sm flex h-[var(--design-layout-ghost-icon-button-touch-height)] w-fit items-center",
+        className,
+      )}
+    >
+      <GhostIconButton
+        label="Thumbs up"
+        icon={isPositive ? "thumbs-up-fill" : "thumbs-up-outline"}
+        size="small"
+        disabled={disabled}
+        aria-pressed={isPositive}
+        onClick={() => onValueChange?.("thumbs-up")}
+      />
+      <GhostIconButton
+        label="Thumbs down"
+        icon={isNegative ? "thumbs-down-fill" : "thumbs-down-outline"}
+        size="small"
+        disabled={disabled}
+        aria-pressed={isNegative}
+        onClick={() => onValueChange?.("thumbs-down")}
+      />
+    </div>
+  );
+}
+
+export function ChatInlineFeedback({
+  tone = "positive",
+  className,
+  children = "Thank you for the feedback.",
+  ...props
+}: ChatInlineFeedbackProps) {
+  const iconName = tone === "positive" ? "signal-success" : "signal-success";
+
+  return (
+    <div
+      {...props}
+      role="status"
+      aria-live="polite"
+      className={cx(
+        "chat-message-enter inline-flex max-w-full items-center gap-xs text-body-sm text-checked",
+        className,
+      )}
+    >
+      <Icon
+        aria-hidden="true"
+        name={iconName}
+        size="small"
+        className="shrink-0"
+      />
+      <span className="min-w-0 break-words">{children}</span>
+    </div>
+  );
+}
+
+export function ChatFeedbackReasonChips({
+  value = null,
+  values,
+  disabled = false,
+  options = defaultFeedbackReasonOptions,
+  onValueChange,
+  onValuesChange,
+  className,
+  ...props
+}: ChatFeedbackReasonChipsProps) {
+  const selectedValues = values ?? (value ? [value] : []);
+
+  function handleValueToggle(optionValue: ChatFeedbackReason) {
+    const isSelected = selectedValues.includes(optionValue);
+    const nextValues = isSelected
+      ? selectedValues.filter((selectedValue) => selectedValue !== optionValue)
+      : [...selectedValues, optionValue];
+
+    onValueChange?.(optionValue);
+    onValuesChange?.(nextValues);
+  }
+
+  return (
+    <div
+      {...props}
+      role="group"
+      aria-label="Feedback reasons"
+      className={cx(
+        "chat-message-enter flex max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] flex-wrap gap-x-xs [row-gap:4px]",
+        className,
+      )}
+    >
+      {options.map((option) => {
+        const checked = selectedValues.includes(option.value);
+
+        return (
+          <Pill
+            key={option.value}
+            checked={checked}
+            disabled={disabled}
+            trailingIcon={
+              <Icon name={checked ? "check" : "add"} size="small" />
+            }
+            onClick={() => handleValueToggle(option.value)}
+          >
+            {option.label}
+          </Pill>
+        );
+      })}
+    </div>
+  );
+}
+
+export function ChatFeedbackReasonPanel({
+  values,
+  comment,
+  onValuesChange,
+  onCommentChange,
+  onClose,
+  onSubmit,
+  className,
+  ...props
+}: ChatFeedbackReasonPanelProps) {
+  const showCommentField = values.length > 0;
+
+  return (
+    <section
+      {...props}
+      className={cx(
+        "chat-message-enter flex w-full max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] flex-col gap-xl rounded-md bg-background-neutral-soft p-xl text-text",
+        className,
+      )}
+    >
+      <div className="flex items-start justify-between gap-lg">
+        <h3 className="max-w-[18rem] text-heading-md text-text">
+          What didn&apos;t you like about this response? (Optional)
+        </h3>
+        <GhostIconButton
+          label="Close feedback"
+          icon="close"
+          size="medium"
+          className="-mr-sm -mt-sm"
+          onClick={onClose}
+        />
+      </div>
+
+      <ChatFeedbackReasonChips
+        values={values}
+        onValuesChange={onValuesChange}
+        className="max-w-none"
+      />
+
+      {showCommentField ? (
+        <TextArea
+          className="chat-message-enter"
+          aria-label="Describe your feedback"
+          placeholder="Please describe your feedback."
+          size="small"
+          value={comment}
+          onChange={(event) => onCommentChange(event.currentTarget.value)}
+        />
+      ) : null}
+
+      <Button variant="secondary" className="w-full" onClick={onSubmit}>
+        Submit feedback
+      </Button>
+    </section>
+  );
+}
+
+export function ChatMessageFeedbackFlow({
+  onSubmitFeedback,
+  className,
+  ...props
+}: ChatMessageFeedbackFlowProps) {
+  const [value, setValue] = useState<ChatMessageFeedbackValue | null>(null);
+  const [reasonValues, setReasonValues] = useState<
+    ReadonlyArray<ChatFeedbackReason>
+  >([]);
+  const [comment, setComment] = useState("");
+  const [isReasonPanelOpen, setIsReasonPanelOpen] = useState(false);
+  const [submittedValue, setSubmittedValue] =
+    useState<ChatMessageFeedbackValue | null>(null);
+  const reasonPanelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isReasonPanelOpen) {
+      return;
+    }
+
+    const scrollFrame = window.requestAnimationFrame(() => {
+      reasonPanelRef.current?.scrollIntoView({
+        block: "nearest",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(scrollFrame);
+    };
+  }, [isReasonPanelOpen]);
+
+  function handleFeedbackValueChange(nextValue: ChatMessageFeedbackValue) {
+    setValue(nextValue);
+    setSubmittedValue(null);
+
+    if (nextValue === "thumbs-up") {
+      setReasonValues([]);
+      setComment("");
+      setIsReasonPanelOpen(false);
+      setSubmittedValue("thumbs-up");
+      onSubmitFeedback?.({ rating: "thumbs-up", reasons: [], comment: "" });
+      return;
+    }
+
+    setIsReasonPanelOpen(true);
+  }
+
+  function handleReasonValuesChange(nextValues: ReadonlyArray<ChatFeedbackReason>) {
+    setReasonValues(nextValues);
+
+    if (nextValues.length === 0) {
+      setComment("");
+    }
+  }
+
+  function handleCloseReasonPanel() {
+    setValue(null);
+    setReasonValues([]);
+    setComment("");
+    setIsReasonPanelOpen(false);
+    setSubmittedValue(null);
+  }
+
+  function handleSubmitReasonPanel() {
+    setIsReasonPanelOpen(false);
+    setSubmittedValue("thumbs-down");
+    onSubmitFeedback?.({
+      rating: "thumbs-down",
+      reasons: reasonValues,
+      comment,
+    });
+  }
+
+  return (
+    <div {...props} className={cx("flex flex-col items-start gap-xs", className)}>
+      <ChatMessageFeedback
+        value={value}
+        disabled={submittedValue !== null}
+        onValueChange={handleFeedbackValueChange}
+      />
+      {submittedValue ? <ChatInlineFeedback /> : null}
+      {isReasonPanelOpen ? (
+        <div ref={reasonPanelRef} className="w-full">
+          <ChatFeedbackReasonPanel
+            values={reasonValues}
+            comment={comment}
+            onValuesChange={handleReasonValuesChange}
+            onCommentChange={setComment}
+            onClose={handleCloseReasonPanel}
+            onSubmit={handleSubmitReasonPanel}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
