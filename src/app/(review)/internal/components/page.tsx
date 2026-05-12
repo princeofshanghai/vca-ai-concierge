@@ -3,8 +3,12 @@ import Image from "next/image";
 
 import {
   ChatComposer,
+  ChatFeedbackReasonChips,
   ChatHeader,
+  ChatInlineFeedback,
   ChatMessage,
+  ChatMessageFeedback,
+  ChatMessageFeedbackFlow,
   ChatPanelPreview,
   ChatThinkingMessage,
   Prompt,
@@ -25,6 +29,7 @@ import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, iconMetadata } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
 import { Tag } from "@/components/primitives/tag";
+import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
 import { createPageMetadata } from "@/lib/metadata";
 
@@ -129,6 +134,13 @@ const bookedMeetingPreview: BookedMeeting = {
   contact: "jamie.chen@northstarhealth.com",
 };
 
+const bookedPhoneCallPreview: BookedMeeting = {
+  format: "Phone call",
+  date: "Tue, Apr 28",
+  time: "9:00 AM",
+  contact: "+1 (415) 555-0172",
+};
+
 const highValueMatchCardStates: ReadonlyArray<
   Readonly<{
     label: string;
@@ -141,9 +153,14 @@ const highValueMatchCardStates: ReadonlyArray<
   { label: "Matched", state: "matched" },
   { label: "Scheduling passive", state: "scheduling" },
   {
-    label: "Booked",
+    label: "Booked online",
     state: "booked",
     bookedMeeting: bookedMeetingPreview,
+  },
+  {
+    label: "Booked phone",
+    state: "booked",
+    bookedMeeting: bookedPhoneCallPreview,
   },
 ];
 
@@ -781,6 +798,110 @@ export default function InternalComponentsPage() {
           <div className="flex items-start justify-between gap-lg">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 08</p>
+              <h2 className="text-heading-xl text-text">
+                Text area
+              </h2>
+            </div>
+            <p className="pt-[2px] text-body-xs text-text-meta">New</p>
+          </div>
+
+          <div className="space-y-10">
+            <section className="space-y-4">
+              <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
+                Core variants
+              </h3>
+
+              <div className="grid gap-xl lg:grid-cols-2">
+                {textInputSizes.map(({ label, size }) => (
+                  <div key={`text-area-${size}`} className="space-y-lg">
+                    <h4 className="text-[14px] font-normal text-text-meta">
+                      {label}
+                    </h4>
+
+                    <div className="grid gap-lg">
+                      <TextArea
+                        className="max-w-80"
+                        counter
+                        helperText="Helper text"
+                        label="Label"
+                        placeholder="Hint text (Optional)"
+                        required
+                        size={size}
+                      />
+                      <TextArea
+                        className="max-w-80"
+                        counter
+                        defaultValue="Input text value"
+                        helperText="Helper text"
+                        label="Label"
+                        placeholder="Hint text (Optional)"
+                        required
+                        size={size}
+                      />
+                      <TextArea
+                        className="max-w-80"
+                        counter
+                        errorText="Error text"
+                        label="Label"
+                        placeholder="Hint text (Optional)"
+                        required
+                        size={size}
+                      />
+                      <TextArea
+                        className="max-w-80"
+                        counter
+                        defaultValue="Input text value"
+                        disabled
+                        helperText="Helper text"
+                        label="Label"
+                        placeholder="Hint text (Optional)"
+                        required
+                        size={size}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4 border-t border-border-faint pt-xxl">
+              <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
+                Interaction states
+              </h3>
+
+              <div className="grid gap-xl lg:grid-cols-2">
+                {textInputSizes.map(({ label, size }) => (
+                  <div key={`text-area-state-${size}`} className="space-y-lg">
+                    <h4 className="text-[14px] font-normal text-text-meta">
+                      {label}
+                    </h4>
+
+                    <div className="grid gap-lg">
+                      {textInputStates.map((state) => (
+                        <TextArea
+                          className="max-w-80"
+                          key={`${size}-${state}`}
+                          counter
+                          helperText="Helper text"
+                          label="Label"
+                          placeholder="Hint text (Optional)"
+                          required
+                          size={size}
+                          visualState={state}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section className="space-y-10 border-t border-border-faint pt-xxxl">
+          <div className="flex items-start justify-between gap-lg">
+            <div className="space-y-xs">
+              <p className="text-label-xs text-text-meta">Primitive 09</p>
               <h2 className="text-heading-xl text-text">Tag</h2>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
@@ -841,9 +962,53 @@ export default function InternalComponentsPage() {
                     <div className="space-y-xl">
                       <section className="space-y-sm">
                         <p className="text-body-xs text-text-meta">AI assistant</p>
-                        <ChatMessage>
+                        <ChatMessage className="!pb-xs">
                           I can help compare hiring options quickly.
                         </ChatMessage>
+                        <div className="flex justify-start">
+                          <ChatMessageFeedback />
+                        </div>
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">
+                          Interactive AI assistant feedback
+                        </p>
+                        <ChatMessage className="!pb-xs">
+                          I would start by comparing the lighter hiring path
+                          against Recruiter before routing you to sales.
+                        </ChatMessage>
+                        <ChatMessageFeedbackFlow />
+                      </section>
+
+                      <section className="space-y-sm">
+                        <p className="text-body-xs text-text-meta">
+                          AI assistant feedback states
+                        </p>
+                        <div className="space-y-xs">
+                          <div>
+                            <ChatMessage className="!pb-xs">
+                              I can help compare hiring options quickly.
+                            </ChatMessage>
+                            <div className="flex justify-start">
+                              <ChatMessageFeedback value="thumbs-up" />
+                            </div>
+                            <div className="flex justify-start">
+                              <ChatInlineFeedback />
+                            </div>
+                          </div>
+                          <div>
+                            <ChatMessage className="!pb-xs">
+                              A sales consultant can narrow the setup fast.
+                            </ChatMessage>
+                            <div className="flex justify-start">
+                              <ChatMessageFeedback value="thumbs-down" />
+                            </div>
+                            <div className="flex justify-start">
+                              <ChatFeedbackReasonChips value="confusing" />
+                            </div>
+                          </div>
+                        </div>
                       </section>
 
                       <section className="space-y-sm">

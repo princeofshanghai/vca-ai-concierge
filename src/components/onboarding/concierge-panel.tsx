@@ -17,6 +17,7 @@ import {
   ChatComposer,
   ChatHeader,
   ChatMessage,
+  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatThinkingMessage,
   ChatThread,
@@ -108,6 +109,7 @@ type PendingAssistantResponse = Readonly<{
 }>;
 
 const INITIAL_LIVE_SCRIPT_INDEX = 0;
+const MATCHING_DELAY_MS = 900;
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
@@ -411,6 +413,20 @@ export function ConciergePanel({
   }, [onSidePanelOpenChange]);
 
   useEffect(() => {
+    if (scheduledSpecialistState !== "matching") {
+      return;
+    }
+
+    const matchingTimer = window.setTimeout(() => {
+      setScheduledSpecialistState("matched");
+    }, MATCHING_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(matchingTimer);
+    };
+  }, [scheduledSpecialistState]);
+
+  useEffect(() => {
     const chatBody = chatBodyRef.current;
 
     if (!chatBody) {
@@ -521,6 +537,14 @@ export function ConciergePanel({
     [submitUserMessage],
   );
 
+  const handleFindConsultant = useCallback(() => {
+    setScheduledSpecialistState("matching");
+  }, []);
+
+  const handleCancelMatching = useCallback(() => {
+    setScheduledSpecialistState("initial");
+  }, []);
+
   const handleOpenSchedulePanel = useCallback(() => {
     setScheduledSpecialistState("scheduling");
     onSidePanelOpenChange?.(true);
@@ -557,7 +581,23 @@ export function ConciergePanel({
     );
   }
 
+  function shouldShowMessageFeedback(
+    message: ConciergeThreadItem,
+    index: number,
+  ) {
+    return (
+      lead !== null &&
+      hasUserMessages &&
+      isMessageItem(message) &&
+      message.role === "assistant" &&
+      message.status === "complete" &&
+      !shouldShowStarterPrompts(message, index)
+    );
+  }
+
   function renderThreadItem(message: ConciergeThreadItem, index: number) {
+    const showFeedback = shouldShowMessageFeedback(message, index);
+
     if (message.kind === "recommendation") {
       if (isScheduledSpecialistRecommendation(message.step)) {
         return (
@@ -565,7 +605,8 @@ export function ConciergePanel({
             key={`${message.id}-${scheduledSpecialistState}`}
             state={scheduledSpecialistState}
             bookedMeeting={bookedMeeting}
-            onBookTime={handleOpenSchedulePanel}
+            onBookTime={handleFindConsultant}
+            onCancelMatching={handleCancelMatching}
             onScheduleCall={handleOpenSchedulePanel}
           />
         );
@@ -593,7 +634,8 @@ export function ConciergePanel({
             key={`${message.id}-${scheduledSpecialistState}`}
             state={scheduledSpecialistState}
             bookedMeeting={bookedMeeting}
-            onBookTime={handleOpenSchedulePanel}
+            onBookTime={handleFindConsultant}
+            onCancelMatching={handleCancelMatching}
             onScheduleCall={handleOpenSchedulePanel}
           />
         );
@@ -610,10 +652,12 @@ export function ConciergePanel({
           <ChatMessage
             role={message.role}
             aria-busy={message.status === "streaming" || undefined}
+            className={showFeedback ? "!pb-xs" : undefined}
           >
             {message.content}
           </ChatMessage>
         )}
+        {showFeedback ? <ChatMessageFeedbackFlow /> : null}
         {shouldShowStarterPrompts(message, index) ? (
           <div className="chat-message-enter flex w-full">
             <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
