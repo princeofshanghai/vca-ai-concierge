@@ -15,6 +15,7 @@ import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 import { TextInput } from "@/components/primitives/text-input";
+import { HIRING_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 
 import {
   JAMIE_CHEN,
@@ -28,9 +29,9 @@ import {
 // docs/onboarding.md "Click behavior (simulated sign-in)".
 const LINKEDIN_SIGN_IN_DELAY_MS = 600;
 
-const HEADLINE = "Hire Better";
+const HEADLINE = HIRING_CONCIERGE_TITLE;
 const SUBCOPY =
-  "Discover the hiring solution to best fit your team's needs with our AI-powered chat.";
+  "Discuss your hiring needs with our AI assistant, then connect with a sales expert.";
 const PERSONAL_EMAIL_HELPER_TEXT =
   "Please use your work email so we can customize this for your organization";
 
@@ -259,14 +260,14 @@ export function OnboardingScreen({
         noValidate
         className="mx-auto flex w-full max-w-[384px] flex-col px-xxl pt-xxl pb-xxxl"
       >
-        <div className="flex flex-col items-center text-center">
+        <div className="flex flex-col text-left">
           <Icon
             name="signal-ai"
             label="AI Concierge"
             className="concierge-ai-mark text-ai-icon !size-8"
           />
-          <h2 className="mt-stack text-heading-xl text-text">{HEADLINE}</h2>
-          <p className="mt-sm max-w-[320px] text-body-md-open text-text-meta">
+          <h2 className="mt-md text-display-md text-text">{HEADLINE}</h2>
+          <p className="mt-sm text-body-md-open text-text-meta">
             {SUBCOPY}
           </p>
         </div>
@@ -297,18 +298,10 @@ export function OnboardingScreen({
           </>
         ) : null}
 
-        {visualState === "signed-in" ? (
-          <ProfileChip
-            persona={persona}
-            onDismiss={handleDismissLinkedIn}
-            className="mt-stack"
-          />
-        ) : null}
-
         <div
           className={cx(
             "flex flex-col gap-lg",
-            visualState === "signed-in" && "mt-xxxl",
+            visualState === "signed-in" && "mt-stack-lg",
           )}
         >
           <TextInput
@@ -392,6 +385,14 @@ export function OnboardingScreen({
         >
           Start chat
         </Button>
+
+        {visualState === "signed-in" ? (
+          <ProfileChip
+            persona={persona}
+            onDismiss={handleDismissLinkedIn}
+            className="mt-lg"
+          />
+        ) : null}
       </form>
     </div>
   );
@@ -404,10 +405,6 @@ type ProfileChipProps = Readonly<{
 }>;
 
 function ProfileChip({ persona, onDismiss, className }: ProfileChipProps) {
-  // The "Not Jamie?" affordance uses the LinkedIn-known first name so the
-  // dismiss action stays tied to the LinkedIn identity even though the
-  // visible chip no longer shows the name.
-  const dismissLabel = `Not ${persona.firstName}?`;
   const fullName = `${persona.firstName} ${persona.lastName}`.trim();
 
   return (
@@ -419,14 +416,14 @@ function ProfileChip({ persona, onDismiss, className }: ProfileChipProps) {
         label={fullName}
       />
       <span className="min-w-0 flex-1 truncate text-supportive-s text-text-meta">
-        {persona.email}
+        Signed in as {persona.email}
       </span>
       <button
         type="button"
         onClick={onDismiss}
         className="shrink-0 rounded-xs text-supportive-s text-action transition-colors duration-150 ease-out hover:text-action-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring active:text-action-active"
       >
-        {dismissLabel}
+        Switch
       </button>
     </div>
   );

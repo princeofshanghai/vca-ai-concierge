@@ -16,6 +16,7 @@ import {
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatSidePanel,
   ChatThread,
   Prompt,
   RecommendationCard,
@@ -28,6 +29,7 @@ import { Pill } from "@/components/primitives/pill";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
+import { HIRING_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import {
   STARTER_PROMPTS,
   type FlowReview,
@@ -36,12 +38,14 @@ import {
   type FlowReviewStep,
   getMediumFlowReview,
 } from "@/lib/conversation-flows";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
 type FlowReviewChatPanelProps = Readonly<{
   flow: FlowReview;
   variant?: ChatPanelVariant;
   className?: string;
   onClose?: () => void;
+  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
 }>;
@@ -232,13 +236,18 @@ function MatchingEntityStack() {
   return (
     <span
       aria-hidden="true"
-      className="flex shrink-0 items-center pl-xxs"
+      className="matching-entity-stack flex shrink-0 items-center pl-xxs"
     >
       {[0, 1, 2].map((index) => (
         <Entity
           key={index}
           size={24}
-          className={cx(index > 0 && "-ml-sm", "ring-2 ring-background")}
+          className={cx(
+            "matching-entity",
+            `matching-entity-${index}`,
+            index > 0 && "-ml-sm",
+            "relative ring-2 ring-background",
+          )}
         />
       ))}
     </span>
@@ -343,7 +352,13 @@ function ResourceCards({ step }: { step: FlowReviewResourcesStep }) {
   );
 }
 
-function AvailabilityVariant({ step }: { step: FlowReviewAvailabilityStep }) {
+function AvailabilityVariant({
+  step,
+  timestamp,
+}: {
+  step: FlowReviewAvailabilityStep;
+  timestamp: string;
+}) {
   const variant = step.variants[0];
 
   if (!variant) {
@@ -357,11 +372,14 @@ function AvailabilityVariant({ step }: { step: FlowReviewAvailabilityStep }) {
         className={
           (variant.role ?? "assistant") === "assistant" ? "!pb-xs" : undefined
         }
+        timestamp={
+          (variant.role ?? "assistant") === "assistant" ? undefined : timestamp
+        }
       >
         {variant.message}
       </ChatMessage>
       {(variant.role ?? "assistant") === "assistant" ? (
-        <ChatMessageFeedbackFlow />
+        <ChatMessageFeedbackFlow timestamp={timestamp} />
       ) : null}
       <RecommendationCard
         title={variant.title}
@@ -395,16 +413,14 @@ function MediumAvailableHandoff({
         className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text"
       >
         {state === "connecting" ? (
-          <div className="flex items-start gap-md">
+          <div className="flex items-center gap-md">
             <span
               aria-hidden="true"
-              className="mt-xxs inline-flex size-6 shrink-0 items-center justify-center rounded-round bg-background"
+              className="inline-flex size-6 shrink-0 items-center justify-center rounded-round bg-background"
             >
               <span className="block size-4 animate-spin rounded-full border-[1.5px] border-action border-r-transparent" />
             </span>
-            <div className="space-y-xs">
-              <h2 className="text-heading-md">Connecting you now</h2>
-            </div>
+            <h2 className="text-heading-md">Connecting you now</h2>
           </div>
         ) : null}
         {state === "connected" ? (
@@ -443,8 +459,9 @@ function MediumAvailableHandoff({
       </article>
       {state === "connected" ? (
         <>
-          <p className="chat-message-enter text-center text-body-xs text-text-meta">
-            {LIVE_HIRING_SPECIALIST.name} joined the chat
+          <p className="chat-message-enter mb-md mt-md text-center text-body-xs text-text-meta">
+            {LIVE_HIRING_SPECIALIST.name} joined the chat -{" "}
+            {LIVE_HIRING_SPECIALIST.timestamp}
           </p>
           <ChatMessage
             role="representative"
@@ -480,20 +497,22 @@ export function MediumAvailableHandoffPreview({
   );
 }
 
-function renderStep(step: FlowReviewStep) {
+function renderStep(step: FlowReviewStep, index = 0) {
   if (step.kind === "message") {
     const showFeedback =
       step.role === "assistant" && !step.showStarterPromptsAfter;
+    const timestamp = getPrototypeMessageTimestamp(index);
 
     return (
       <div key={step.id} className="contents">
         <ChatMessage
           role={step.role}
           className={showFeedback ? "!pb-xs" : undefined}
+          timestamp={showFeedback ? undefined : timestamp}
         >
           {step.content}
         </ChatMessage>
-        {showFeedback ? <ChatMessageFeedbackFlow /> : null}
+        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
         {step.showStarterPromptsAfter ? <StarterPromptRow /> : null}
       </div>
     );
@@ -515,7 +534,13 @@ function renderStep(step: FlowReviewStep) {
     return <ResourceCards key={step.id} step={step} />;
   }
 
-  return <AvailabilityVariant key={step.id} step={step} />;
+  return (
+    <AvailabilityVariant
+      key={step.id}
+      step={step}
+      timestamp={getPrototypeMessageTimestamp(index)}
+    />
+  );
 }
 
 function isMediumScheduledStep(step: FlowReviewStep) {
@@ -542,7 +567,7 @@ export function ScheduledSpecialistCard({
       <article
         role="status"
         aria-live="polite"
-        className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-sm rounded-md border border-ai-border bg-background py-md pl-xl pr-lg text-text"
+        className="chat-message-enter flex w-full max-w-[24rem] min-w-[15rem] flex-col gap-sm rounded-md border border-ai-border bg-background pb-xl pl-xl pr-lg pt-xl text-text"
       >
         <div className="flex w-full items-center gap-sm">
           <MatchingEntityStack />
@@ -651,7 +676,6 @@ export function SchedulePanel({
   const noteId = useId();
   const noteLabelId = `${noteId}-label`;
   const bookingTimerRef = useRef<number | null>(null);
-  const schedulePanelScrollRef = useRef<HTMLDivElement | null>(null);
   const isConfirmingPreview = visualState === "confirming";
   const [selectedFormat, setSelectedFormat] =
     useState<MeetingFormat>("Online meeting");
@@ -668,8 +692,6 @@ export function SchedulePanel({
   const [whatsAppNumber, setWhatsAppNumber] = useState("");
   const [note, setNote] = useState("");
   const [isBooking, setIsBooking] = useState(isConfirmingPreview);
-  const [hasSchedulePanelScrolled, setHasSchedulePanelScrolled] =
-    useState(false);
   const contactField =
     selectedFormat === "Online meeting"
       ? {
@@ -719,27 +741,6 @@ export function SchedulePanel({
     };
   }, []);
 
-  useEffect(() => {
-    if (initialScrollPosition !== "footer") {
-      return;
-    }
-
-    const scrollFrame = window.requestAnimationFrame(() => {
-      const schedulePanel = schedulePanelScrollRef.current;
-
-      if (!schedulePanel) {
-        return;
-      }
-
-      schedulePanel.scrollTop = schedulePanel.scrollHeight;
-      setHasSchedulePanelScrolled(schedulePanel.scrollTop > 0);
-    });
-
-    return () => {
-      window.cancelAnimationFrame(scrollFrame);
-    };
-  }, [initialScrollPosition]);
-
   function handleBookCall() {
     if (!selectedDate || !selectedTime || !canBookCall || isBooking) {
       return;
@@ -757,52 +758,40 @@ export function SchedulePanel({
     }, BOOKING_DELAY_MS);
   }
 
-  function handleSchedulePanelScroll(event: UIEvent<HTMLDivElement>) {
-    const nextHasScrolled = event.currentTarget.scrollTop > 0;
-
-    setHasSchedulePanelScrolled((currentHasScrolled) =>
-      currentHasScrolled === nextHasScrolled
-        ? currentHasScrolled
-        : nextHasScrolled,
-    );
-  }
-
   return (
-    <aside className="flex h-full min-h-0 min-w-0 flex-col bg-background-neutral-soft">
-      <div
-        className={[
-          "shrink-0 border-b bg-background-neutral-soft px-[var(--design-layout-schedule-panel-padding-inline)] pb-xxl pt-lg transition-colors duration-150 ease-out",
-          hasSchedulePanelScrolled
-            ? "border-border-faint"
-            : "border-transparent",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex min-h-[48px] items-center gap-sm rounded-xs text-control-sm text-text-meta outline-none transition-colors duration-150 ease-out hover:text-text focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
-        >
-          <Icon name="arrow-left" size="small" />
-          <span>Back to chat</span>
-        </button>
-      </div>
-
-      <div
-        ref={schedulePanelScrollRef}
-        onScroll={handleSchedulePanelScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-[var(--design-layout-schedule-panel-padding-inline)] pb-[48px]"
-      >
+    <ChatSidePanel
+      onBack={onBack}
+      initialScrollPosition={initialScrollPosition}
+      footerClassName="mt-stack-lg flex flex-col gap-md border-t border-border-faint pt-xl sm:flex-row sm:items-center sm:justify-between"
+      footer={
+        <>
+          <p
+            aria-live="polite"
+            className="min-h-[1.25rem] text-body-sm-open text-text-meta"
+          >
+            {footerHelp}
+          </p>
+          <Button
+            disabled={!canBookCall}
+            loading={isBooking}
+            loadingLabel="Confirming"
+            className="w-full sm:w-fit"
+            onClick={handleBookCall}
+          >
+            {MEETING_CONFIRM_LABELS[selectedFormat]}
+          </Button>
+        </>
+      }
+    >
       <div className="flex flex-wrap items-center gap-md">
-        <h2 className="text-display-md text-text">Schedule a call</h2>
+        <h2 className="text-heading-xl text-text">Schedule a call</h2>
         <Tag size="medium" className="gap-xs">
           <Icon name="clock" size="small" />
           <span>15 min</span>
         </Tag>
       </div>
 
-      <article className="mt-xxxl flex w-full max-w-[21.5rem] items-center gap-lg rounded-sm border border-border-faint bg-background p-lg">
+      <article className="mt-xxl flex w-full max-w-[21.5rem] items-center gap-sm rounded-md border border-border-faint bg-background pb-xl pl-xl pr-lg pt-xl">
         <Entity
           size={48}
           label={`${HIRING_SPECIALIST.name}, ${HIRING_SPECIALIST.role}`}
@@ -811,15 +800,15 @@ export function SchedulePanel({
           <p className="text-heading-md text-text">
             {HIRING_SPECIALIST.name}
           </p>
-          <p className="text-body-sm-open text-text-meta">
+          <p className="text-body-xs text-text-meta">
             {HIRING_SPECIALIST.role}
           </p>
         </div>
       </article>
 
-      <section className="mt-stack space-y-md">
-        <h3 className="text-heading-md text-text">Meeting format</h3>
-        <div className="flex flex-wrap gap-sm">
+      <section className="mt-stack-lg space-y-lg">
+        <h3 className="text-heading-lg text-text">Meeting format</h3>
+        <div className="flex flex-wrap gap-x-sm gap-y-xs">
           {MEETING_FORMATS.map((format) => (
             <Pill
               key={format}
@@ -846,9 +835,9 @@ export function SchedulePanel({
         />
       </section>
 
-      <section className="mt-xxxl space-y-md">
-        <h3 className="text-heading-md text-text">Date</h3>
-        <div className="flex flex-wrap gap-sm">
+      <section className="mt-stack-lg space-y-lg">
+        <h3 className="text-heading-lg text-text">Date</h3>
+        <div className="flex flex-wrap gap-x-sm gap-y-xs">
           {MEETING_DATES.map((date) => (
             <Pill
               key={date}
@@ -865,10 +854,10 @@ export function SchedulePanel({
         </div>
       </section>
 
-      <section className="mt-xxxl space-y-md">
-        <h3 className="text-heading-md text-text">Time</h3>
+      <section className="mt-stack-lg space-y-lg">
+        <h3 className="text-heading-lg text-text">Time</h3>
         {selectedDate ? (
-          <div className="flex flex-wrap gap-sm">
+          <div className="flex flex-wrap gap-x-sm gap-y-xs">
             {MEETING_TIMES.map((time) => (
               <Pill
                 key={time}
@@ -887,11 +876,11 @@ export function SchedulePanel({
         )}
       </section>
 
-      <section className="mt-xxxl space-y-md">
+      <section className="mt-stack-lg space-y-lg">
         <label
           id={noteLabelId}
           htmlFor={noteId}
-          className="block text-heading-md text-text"
+          className="block text-heading-lg text-text"
         >
           Anything you would like {HIRING_SPECIALIST.name} to know?
         </label>
@@ -904,26 +893,7 @@ export function SchedulePanel({
           size="large"
         />
       </section>
-
-      <div className="mt-xxxl flex flex-col gap-md border-t border-border-faint pt-xl sm:flex-row sm:items-center sm:justify-between">
-        <p
-          aria-live="polite"
-          className="min-h-[1.25rem] text-body-sm-open text-text-meta"
-        >
-          {footerHelp}
-        </p>
-        <Button
-          disabled={!canBookCall}
-          loading={isBooking}
-          loadingLabel="Confirming"
-          className="w-full sm:w-fit"
-          onClick={handleBookCall}
-        >
-          {MEETING_CONFIRM_LABELS[selectedFormat]}
-        </Button>
-      </div>
-      </div>
-    </aside>
+    </ChatSidePanel>
   );
 }
 
@@ -948,6 +918,7 @@ export function FlowReviewChatPanel({
   variant = "collapsed",
   className,
   onClose,
+  onMinimizeToTray,
   onVariantToggle,
   onSidePanelOpenChange,
 }: FlowReviewChatPanelProps) {
@@ -959,6 +930,7 @@ export function FlowReviewChatPanel({
   const [bookedMeeting, setBookedMeeting] = useState<BookedMeeting | null>(
     null,
   );
+  const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
   const isHighValueFlow = flow.id === "high";
   const isMediumScheduledFlow = hasMediumScheduledHandoff(flow);
   const isScheduledSpecialistFlow = isHighValueFlow || isMediumScheduledFlow;
@@ -974,6 +946,7 @@ export function FlowReviewChatPanel({
     }
 
     chatBody.scrollTop = chatBody.scrollHeight;
+    setHasChatBodyScrolled(chatBody.scrollTop > 0);
   }, [flow.title, isSchedulePanelOpen]);
 
   useEffect(() => {
@@ -985,6 +958,7 @@ export function FlowReviewChatPanel({
       }
 
       chatBody.scrollTop = chatBody.scrollHeight;
+      setHasChatBodyScrolled(chatBody.scrollTop > 0);
     });
 
     return () => {
@@ -1051,6 +1025,7 @@ export function FlowReviewChatPanel({
             ? "auto"
             : "smooth",
       });
+      setHasChatBodyScrolled(chatBody.scrollTop > 0);
     });
 
     return () => {
@@ -1087,11 +1062,21 @@ export function FlowReviewChatPanel({
     onSidePanelOpenChange?.(false);
   }
 
+  function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
+    const nextHasScrolled = event.currentTarget.scrollTop > 0;
+
+    setHasChatBodyScrolled((currentHasScrolled) =>
+      currentHasScrolled === nextHasScrolled
+        ? currentHasScrolled
+        : nextHasScrolled,
+    );
+  }
+
   function handleStartMediumLiveChat() {
     setMediumAvailableHandoffState("connecting");
   }
 
-  function renderReviewStep(step: FlowReviewStep) {
+  function renderReviewStep(step: FlowReviewStep, index: number) {
     if (isHighValueFlow && step.id === "high-recommendation-card") {
       return (
         <ScheduledSpecialistCard
@@ -1133,7 +1118,7 @@ export function FlowReviewChatPanel({
       );
     }
 
-    return renderStep(step);
+    return renderStep(step, index);
   }
 
   const thread = (
@@ -1157,7 +1142,9 @@ export function FlowReviewChatPanel({
     >
       <ChatHeader
         variant={variant}
+        title={HIRING_CONCIERGE_TITLE}
         onClose={onClose}
+        onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
       />
       {isSchedulePanelOpen ? (
@@ -1168,6 +1155,7 @@ export function FlowReviewChatPanel({
           <div className="hidden min-h-0 min-w-0 border-r border-border-faint md:flex">
             <ChatBody
               ref={chatBodyRef}
+              onScroll={handleChatBodyScroll}
               className={
                 variant === "collapsed"
                   ? "chat-schedule-history [--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)]"
@@ -1181,9 +1169,12 @@ export function FlowReviewChatPanel({
         </div>
       ) : (
         <>
-          <ChatBody ref={chatBodyRef}>{thread}</ChatBody>
+          <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
+            {thread}
+          </ChatBody>
           <ChatComposer
             variant={variant}
+            showTopDivider={hasChatBodyScrolled}
             className="pointer-events-none"
             inputProps={{
               disabled: true,

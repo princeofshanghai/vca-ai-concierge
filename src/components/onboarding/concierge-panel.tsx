@@ -8,6 +8,7 @@ import {
   useState,
   type ChangeEvent,
   type ReactNode,
+  type UIEvent,
 } from "react";
 import { flushSync } from "react-dom";
 
@@ -38,6 +39,7 @@ import {
 } from "@/components/flow-review";
 import { Button } from "@/components/primitives/button";
 import { useReviewShellState } from "@/components/review-shell";
+import { HIRING_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import {
   STARTER_PROMPTS,
   buildInitialAssistantResponse,
@@ -48,6 +50,7 @@ import {
   type FlowReviewResourcesStep,
   type FlowReviewStep,
 } from "@/lib/conversation-flows";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
 import { OnboardingScreen, type OnboardingResult } from "./onboarding-screen";
 
@@ -55,6 +58,7 @@ type ConciergePanelProps = Readonly<{
   variant?: ChatPanelVariant;
   className?: string;
   onClose?: () => void;
+  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
   onConversationStart?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
@@ -265,6 +269,7 @@ export function ConciergePanel({
   variant = "collapsed",
   className,
   onClose,
+  onMinimizeToTray,
   onVariantToggle,
   onConversationStart,
   onSidePanelOpenChange,
@@ -287,6 +292,7 @@ export function ConciergePanel({
   const [bookedMeeting, setBookedMeeting] = useState<BookedMeeting | null>(
     null,
   );
+  const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(0);
 
@@ -434,6 +440,7 @@ export function ConciergePanel({
     }
 
     chatBody.scrollTop = chatBody.scrollHeight;
+    setHasChatBodyScrolled(chatBody.scrollTop > 0);
   }, [messages, isSchedulePanelOpen]);
 
   // Submitting the onboarding form swaps the welcome content for the chat
@@ -564,6 +571,16 @@ export function ConciergePanel({
     [onSidePanelOpenChange],
   );
 
+  function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
+    const nextHasScrolled = event.currentTarget.scrollTop > 0;
+
+    setHasChatBodyScrolled((currentHasScrolled) =>
+      currentHasScrolled === nextHasScrolled
+        ? currentHasScrolled
+        : nextHasScrolled,
+    );
+  }
+
   function shouldShowStarterPrompts(
     message: ConciergeThreadItem,
     index: number,
@@ -597,6 +614,7 @@ export function ConciergePanel({
 
   function renderThreadItem(message: ConciergeThreadItem, index: number) {
     const showFeedback = shouldShowMessageFeedback(message, index);
+    const timestamp = getPrototypeMessageTimestamp(index);
 
     if (message.kind === "recommendation") {
       if (isScheduledSpecialistRecommendation(message.step)) {
@@ -653,11 +671,12 @@ export function ConciergePanel({
             role={message.role}
             aria-busy={message.status === "streaming" || undefined}
             className={showFeedback ? "!pb-xs" : undefined}
+            timestamp={showFeedback ? undefined : timestamp}
           >
             {message.content}
           </ChatMessage>
         )}
-        {showFeedback ? <ChatMessageFeedbackFlow /> : null}
+        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
         {shouldShowStarterPrompts(message, index) ? (
           <div className="chat-message-enter flex w-full">
             <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
@@ -694,7 +713,9 @@ export function ConciergePanel({
     >
       <ChatHeader
         variant={variant}
+        title={phase === "chat" ? HIRING_CONCIERGE_TITLE : undefined}
         onClose={onClose}
+        onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
         transparent={phase === "onboarding"}
         showAiMark={phase === "chat"}
@@ -710,6 +731,7 @@ export function ConciergePanel({
             <div className="hidden min-h-0 min-w-0 border-r border-border-faint md:flex">
               <ChatBody
                 ref={chatBodyRef}
+                onScroll={handleChatBodyScroll}
                 className={
                   variant === "collapsed"
                     ? "chat-schedule-history [--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)]"
@@ -723,9 +745,12 @@ export function ConciergePanel({
           </div>
         ) : (
           <>
-            <ChatBody ref={chatBodyRef}>{thread}</ChatBody>
+            <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
+              {thread}
+            </ChatBody>
             <ChatComposer
               variant={variant}
+              showTopDivider={hasChatBodyScrolled}
               inputProps={{
                 value: draft,
                 onChange: handleDraftChange,

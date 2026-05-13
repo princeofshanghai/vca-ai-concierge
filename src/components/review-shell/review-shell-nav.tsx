@@ -3,7 +3,7 @@
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
   premiumLiveModeNavItems,
@@ -23,6 +23,18 @@ const HIRING_LIVE_NAV_ITEM = {
   href: HIRING_PROTOTYPE_HREF,
   label: "Live (interactive)",
 } as const;
+const HIRING_SHELL_OPTIONS = [
+  {
+    id: "hiring-shell-default",
+    href: HIRING_PROTOTYPE_HREF,
+    label: "Default",
+  },
+  {
+    id: "hiring-shell-tray",
+    href: `${HIRING_PROTOTYPE_HREF}?shell=tray`,
+    label: "Tray",
+  },
+] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
   ...FLOW_REVIEW_NAV_ITEMS,
@@ -74,7 +86,10 @@ function HomeNavIcon() {
   );
 }
 
-function getPrototypeMetaLabel(pathname: string): string | undefined {
+function getPrototypeMetaLabel(
+  pathname: string,
+  shellLabel?: string,
+): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
   }
@@ -94,14 +109,20 @@ function getPrototypeMetaLabel(pathname: string): string | undefined {
     const activeHiringMode = hiringModeOptions.find(
       (option) => option.href === pathname,
     );
+    const modeLabel = activeHiringMode?.label ?? "Live (interactive)";
 
-    return activeHiringMode?.label ?? "Live (interactive)";
+    return pathname === HIRING_PROTOTYPE_HREF && shellLabel === "Tray"
+      ? `${modeLabel} · Tray`
+      : modeLabel;
   }
 
   return undefined;
 }
 
-function getPrototypeDestination(pathname: string): ReviewDestination {
+function getPrototypeDestination(
+  pathname: string,
+  shellLabel?: string,
+): ReviewDestination {
   const isPremium = pathname.startsWith("/premium");
 
   return {
@@ -113,20 +134,21 @@ function getPrototypeDestination(pathname: string): ReviewDestination {
           candidate === HIRING_PROTOTYPE_HREF ||
           candidate.startsWith("/internal/flows"),
     menu: isPremium ? "premium" : "hiring",
-    metaLabel: getPrototypeMetaLabel(pathname),
+    metaLabel: getPrototypeMetaLabel(pathname, shellLabel),
   };
 }
 
 function getReviewDestinations(
   pathname: string,
+  shellLabel?: string,
 ): ReadonlyArray<ReviewDestination> {
   if (pathname.startsWith("/premium")) {
-    return [HOME_DESTINATION, getPrototypeDestination(pathname)];
+    return [HOME_DESTINATION, getPrototypeDestination(pathname, shellLabel)];
   }
 
   return [
     HOME_DESTINATION,
-    getPrototypeDestination(pathname),
+    getPrototypeDestination(pathname, shellLabel),
     COMPONENTS_DESTINATION,
   ];
 }
@@ -134,11 +156,17 @@ function getReviewDestinations(
 export function ReviewShellNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isSignedIn, setIsSignedIn } = useReviewShellState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const currentSearch = searchParams.toString();
+  const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+  const activeHiringShellLabel = HIRING_SHELL_OPTIONS.find(
+    (option) => option.href === currentHref,
+  )?.label;
   const reviewDestinations = useMemo(
-    () => getReviewDestinations(pathname),
-    [pathname],
+    () => getReviewDestinations(pathname, activeHiringShellLabel),
+    [activeHiringShellLabel, pathname],
   );
 
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -272,6 +300,7 @@ export function ReviewShellNav() {
                     isOpen={isMenuOpen}
                     isSignedIn={isSignedIn}
                     pathname={pathname}
+                    currentHref={currentHref}
                     onLoginSelect={
                       isPremiumMenu ? undefined : handleLoginSelect
                     }
@@ -280,6 +309,9 @@ export function ReviewShellNav() {
                     labelledBy={TRIGGER_ID}
                     modeOptions={modeOptions}
                     modeHeading={isPremiumMenu ? "Premium" : "LTS Hiring"}
+                    shellOptions={
+                      isPremiumMenu ? undefined : HIRING_SHELL_OPTIONS
+                    }
                     showVisitorControls={!isPremiumMenu}
                   />
                 </li>

@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type MouseEvent,
+  type UIEvent,
 } from "react";
 
 import {
@@ -15,6 +16,7 @@ import {
   ChatComposer,
   ChatHeader,
   ChatMessage,
+  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatThinkingMessage,
   ChatThread,
@@ -25,6 +27,8 @@ import {
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
+import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
 import {
   premiumHighSignalPostRecommendationPromptIds,
@@ -339,7 +343,7 @@ function PremiumPromptRow({
   onPromptSelect?: (promptId: PremiumPromptId) => void;
 }>) {
   return (
-    <div className="chat-message-enter flex w-full">
+    <div className="chat-message-enter flex w-full pt-sm">
       <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
         {prompts.map((promptId) => {
           const label = getPromptLabel(promptId);
@@ -399,6 +403,7 @@ export function PremiumConciergePanel({
   const [hasLiveInteracted, setHasLiveInteracted] = useState(false);
   const [hasRecommendation, setHasRecommendation] = useState(false);
   const [typedTurnCount, setTypedTurnCount] = useState(0);
+  const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
   const isAssistantBusy =
     pendingAssistantResponse !== null ||
     liveItems.some(
@@ -645,9 +650,20 @@ export function PremiumConciergePanel({
     }
 
     chatBody.scrollTo({ top: chatBody.scrollHeight });
+    setHasChatBodyScrolled(chatBody.scrollTop > 0);
   }, [activePrompts, context, flow, hasLiveInteracted, liveItems]);
 
-  function renderConversationStep(step: PremiumConversationStep) {
+  function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
+    const nextHasScrolled = event.currentTarget.scrollTop > 0;
+
+    setHasChatBodyScrolled((currentHasScrolled) =>
+      currentHasScrolled === nextHasScrolled
+        ? currentHasScrolled
+        : nextHasScrolled,
+    );
+  }
+
+  function renderConversationStep(step: PremiumConversationStep, index: number) {
     if (step.kind === "product-recommendation") {
       return (
         <PremiumProductRecommendationCard key={step.id} planId={step.planId} />
@@ -658,14 +674,24 @@ export function PremiumConciergePanel({
       return <PremiumPromptRow key={step.id} prompts={step.prompts} readOnly />;
     }
 
+    const showFeedback = step.role === "assistant";
+    const timestamp = getPrototypeMessageTimestamp(index);
+
     return (
-      <ChatMessage key={step.id} role={step.role}>
-        {renderPremiumMessageContent(step.content)}
-      </ChatMessage>
+      <div key={step.id} className="contents">
+        <ChatMessage
+          role={step.role}
+          className={showFeedback ? "!pb-xs" : undefined}
+          timestamp={showFeedback ? undefined : timestamp}
+        >
+          {renderPremiumMessageContent(step.content)}
+        </ChatMessage>
+        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
+      </div>
     );
   }
 
-  function renderLiveItem(item: PremiumLiveItem) {
+  function renderLiveItem(item: PremiumLiveItem, index: number) {
     if (item.kind === "product-recommendation") {
       return (
         <PremiumProductRecommendationCard key={item.id} planId={item.planId} />
@@ -676,14 +702,22 @@ export function PremiumConciergePanel({
       return <ChatThinkingMessage key={item.id} />;
     }
 
+    const showFeedback =
+      item.role === "assistant" && item.status === "complete";
+    const timestamp = getPrototypeMessageTimestamp(index);
+
     return (
-      <ChatMessage
-        key={item.id}
-        role={item.role}
-        aria-busy={item.status === "streaming" || undefined}
-      >
-        {renderPremiumMessageContent(item.content)}
-      </ChatMessage>
+      <div key={item.id} className="contents">
+        <ChatMessage
+          role={item.role}
+          aria-busy={item.status === "streaming" || undefined}
+          className={showFeedback ? "!pb-xs" : undefined}
+          timestamp={showFeedback ? undefined : timestamp}
+        >
+          {renderPremiumMessageContent(item.content)}
+        </ChatMessage>
+        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
+      </div>
     );
   }
 
@@ -691,10 +725,11 @@ export function PremiumConciergePanel({
     <ChatPanel variant={variant} className={className}>
       <ChatHeader
         variant={variant}
+        title={PREMIUM_CONCIERGE_TITLE}
         onClose={onClose}
         onVariantToggle={onVariantToggle}
       />
-      <ChatBody ref={chatBodyRef}>
+      <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
         {flow ? (
           <ChatThread timestamp={null} aria-label={`${flow.label} transcript`}>
             {flow.steps.map(renderConversationStep)}
@@ -718,6 +753,7 @@ export function PremiumConciergePanel({
       </ChatBody>
       <ChatComposer
         variant={variant}
+        showTopDivider={hasChatBodyScrolled}
         inputProps={{
           value: draft,
           disabled: Boolean(flow) || hasActivePrompts || isAssistantBusy,

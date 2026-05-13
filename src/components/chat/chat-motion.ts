@@ -84,8 +84,10 @@ export function useChatPanelPresence({
     setPresence("entering");
 
     openAnimationFrameRef.current = window.requestAnimationFrame(() => {
-      openAnimationFrameRef.current = null;
-      setPresence("open");
+      openAnimationFrameRef.current = window.requestAnimationFrame(() => {
+        openAnimationFrameRef.current = null;
+        setPresence("open");
+      });
     });
   }, [clearTimers, onBeforeOpen, presence]);
 

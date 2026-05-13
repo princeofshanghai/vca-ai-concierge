@@ -54,7 +54,7 @@ The two states share one welcome treatment (centered AI mark + headline + subcop
 
 ## Layout
 
-Inside the existing collapsed chat panel (`chat-panel-collapsed`, 432px wide, 780px tall).
+Inside the existing collapsed chat panel (`chat-panel-collapsed`, 400px wide, 780px tall).
 
 While the onboarding screen is showing, the panel surface and chrome shift to a "welcome" treatment so the moment reads as a quiet introduction rather than an in-progress chat:
 
@@ -62,14 +62,14 @@ While the onboarding screen is showing, the panel surface and chrome shift to a 
 - The header keeps the close and expand controls, but its background and bottom divider become transparent. The AI mark is removed from the header and re-renders as a 32px centered mark above the welcome content.
 - On submit, the panel's gradient fades to the default white surface, the header's divider re-appears, and the AI mark morphs into its header position. See "Transition into chat" for details.
 
-Internal gutters use `spacing.xxl` (24px) on the left and right inside the panel body. Form area is therefore 384px wide.
+Internal gutters use `spacing.xxl` (24px) on the left and right inside the panel body. Form area is therefore 352px wide.
 
 Tokens used throughout:
 
 - Colors: `colors.background` and the new `colors.surface-tint` for the welcome gradient, `colors.ai-icon` for the AI mark, plus the standard `colors.text` / `colors.text-meta` for type and `colors.border-faint` for the (chat phase) header divider.
 - Spacing: `spacing.xxl` (24px) top form padding and left/right gutters, `spacing.xxxl` (32px) bottom form padding, `spacing.sm` (8px) headline-to-subcopy gap, `spacing.md` (12px) identity-strip internal gap, `spacing.lg` (16px) field-to-field gap, `spacing.xxxl` (32px) identity-strip-to-form gap, `spacing.stack` (40px) major section gap.
 - Typography: `heading-xl` for the headline, `body-md-open` with `colors.text-meta` for the subcopy, `supportive-s` with `colors.text-meta` for the identity-strip email and the "or" divider, plus the `TextInput` and button primitives' built-in type.
-- Layout: panel 432px wide, header 64px (existing), body 716px tall. AI mark sized to 32px in the welcome state and 24px in the chat header.
+- Layout: panel 400px wide, header 64px (existing), body 716px tall. AI mark sized to 32px in the welcome state and 24px in the chat header.
 - Motion: `motion.patterns.message-enter` for the first-chat bubble, and the View Transitions API (with `motion.duration.moderate` / `motion.easing.emphasized`) for the welcome-to-chat handoff and the AI-mark morph.
 
 ### Signed-in layout

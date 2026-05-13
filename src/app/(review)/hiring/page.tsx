@@ -9,6 +9,17 @@ export const metadata: Metadata = createPageMetadata({
     "Prototype landing surface for the LinkedIn Hiring AI concierge experience.",
 });
 
-export default function HiringPrototypePage() {
-  return <LandingPage />;
+type HiringPrototypePageProps = Readonly<{
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+export default async function HiringPrototypePage({
+  searchParams,
+}: HiringPrototypePageProps) {
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "default";
+
+  return <LandingPage shellMode={shellMode} />;
 }

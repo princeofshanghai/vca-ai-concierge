@@ -165,6 +165,7 @@ spacing:
   xxl: 24px
   xxxl: 32px
   stack: 40px
+  stack-lg: 48px
   card-padding: 24px
   panel-padding: 20px
   pill-padding-inline: 16px
@@ -177,12 +178,12 @@ layout:
   mobile-page-padding: 16px
   tablet-page-padding: 24px
   desktop-page-padding: 32px
-  panel-collapsed-width: 432px
+  panel-collapsed-width: 400px
   panel-expanded-width: 1280px
   panel-collapsed-height: 908px
   panel-expanded-height: 928px
   panel-content-max: 640px
-  schedule-collapsed-surface-width: 960px
+  schedule-collapsed-surface-width: 896px
   schedule-collapsed-chat-track: 3fr
   schedule-collapsed-side-track: 5fr
   schedule-expanded-surface-width: 1280px
@@ -540,15 +541,15 @@ components:
   chat-panel-collapsed:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
-    rounded: "{rounded.lg}"
-    width: 432px
+    rounded: "{rounded.md}"
+    width: 400px
     height: 908px
     borderColor: "{colors.border-faint}"
     shadow: "{shadows.raised}"
   chat-panel-expanded:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
-    rounded: "{rounded.lg}"
+    rounded: "{rounded.md}"
     width: 1280px
     height: 928px
     borderColor: "{colors.border-faint}"
@@ -608,7 +609,7 @@ components:
     focusRingColor: "{colors.neutral-focus-ring}"
     disabledBackgroundColor: "{colors.background-disabled}"
     disabledTextColor: "{colors.text-disabled}"
-    maxWidth: 432px
+    maxWidth: 400px
     padding: "12px"
   chat-composer:
     backgroundColor: "{colors.background}"
@@ -685,7 +686,7 @@ The current system uses platform-native system UI to approximate the SF Pro Disp
 The layout includes a marketing landing context and a focused chat panel with a narrow default state and a wider expanded state.
 
 - The minimum supported viewport width is 320px.
-- The collapsed panel is 432px wide.
+- The collapsed panel is 400px wide.
 - The expanded panel is 1280px wide on desktop, capped by the viewport so it keeps breathing room at narrow desktop widths.
 - The collapsed panel height is capped at 908px; the expanded panel height is capped at 928px. Both must also cap to the available viewport height with page gutters.
 - The header is 64px tall.
@@ -698,7 +699,7 @@ The component library and review surfaces may use the same tokens for demonstrat
 All UI and UX work must account for mobile and narrow screens before it is considered complete. Desktop fidelity is not enough for this prototype because the entry point is a public marketing surface and the chat is a primary conversion path.
 
 - Design and implement every new surface for mobile, tablet, and desktop states, even when the first mock or component-library example is desktop-sized.
-- At 767px wide and below, the chat experience should adapt to the viewport instead of preserving the 432px desktop panel width.
+- At 767px wide and below, the chat experience should adapt to the viewport instead of preserving the 400px desktop panel width.
 - On mobile, the chat panel should behave like a docked or full-screen surface using the available viewport height, with the header, scrollable thread, composer, and primary actions always reachable.
 - Mobile layouts must avoid horizontal scrolling in core flows, including landing content, onboarding, chat, handoff, booking, and resource states.
 - Primary CTAs such as Contact sales must remain visible and usable on narrow screens. Secondary content may stack, reorder, or reduce density to preserve the main path.
@@ -717,7 +718,7 @@ The shape language separates precise form controls from softer conversational su
 - Buttons and icon action surfaces use Figma's round radius token.
 - Text inputs use a tight 4px radius.
 - Recommendation cards use a 16px radius.
-- Chat panels and message bubbles use 24px and 32px radii so the chat surface feels approachable.
+- Chat panels use a 16px radius; message bubbles use 16px and 32px radii so the chat surface feels approachable.
 - The composer is pill-shaped when single-line and softens to a 28px radius when multiline.
 - Entity circles are fully round. Entity squares use progressively larger radii as they scale, including a 12px intermediate radius for the 96px size.
 
@@ -776,7 +777,7 @@ The thread owns the shared horizontal content gutter. Message rows, prompt group
 
 Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
 
-High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 960px wide with a 3:5 chat-to-scheduler split, yielding about 360px of chat context at max width. The expanded scheduling surface should be about 1280px wide with the same 3:5 split, yielding about 480px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
+High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 896px wide with a 3:5 chat-to-scheduler split, yielding about 336px of chat context at max width. The expanded scheduling surface should be about 1280px wide with the same 3:5 split, yielding about 480px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
 
 ### Messages
 Assistant messages are plain text on the panel surface. User messages use the pale blue message surface. Specialist messages use the warm neutral message surface.

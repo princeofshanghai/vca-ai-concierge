@@ -33,9 +33,17 @@ type ChatPanelProps = HTMLAttributes<HTMLDivElement> & {
   surface?: ChatPanelSurface;
 };
 
+type ChatTrayProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+  title?: ReactNode;
+  badge?: boolean;
+  badgeLabel?: string;
+};
+
 type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   variant?: ChatPanelVariant;
+  title?: ReactNode;
   onClose?: () => void;
+  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
   transparent?: boolean;
   showAiMark?: boolean;
@@ -54,6 +62,7 @@ type ChatComposerProps = HTMLAttributes<HTMLDivElement> & {
   onSend?: () => void;
   sendDisabled?: boolean;
   sendLoading?: boolean;
+  showTopDivider?: boolean;
   showVoiceMode?: boolean;
 };
 
@@ -115,6 +124,7 @@ type ChatFeedbackReasonOption = Readonly<{
 type ChatMessageFeedbackProps = HTMLAttributes<HTMLDivElement> & {
   value?: ChatMessageFeedbackValue | null;
   disabled?: boolean;
+  timestamp?: string;
   onValueChange?: (value: ChatMessageFeedbackValue) => void;
 };
 
@@ -134,6 +144,7 @@ type ChatFeedbackSubmission = Readonly<{
 }>;
 
 type ChatMessageFeedbackFlowProps = HTMLAttributes<HTMLDivElement> & {
+  timestamp?: string;
   onSubmitFeedback?: (submission: ChatFeedbackSubmission) => void;
 };
 
@@ -162,9 +173,9 @@ const defaultFeedbackReasonOptions: ReadonlyArray<ChatFeedbackReasonOption> = [
 
 const panelWidthClasses: Record<ChatPanelVariant, string> = {
   collapsed:
-    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(100%,var(--design-layout-panel-collapsed-width))] md:rounded-lg",
+    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(100%,var(--design-layout-panel-collapsed-width))] md:rounded-md",
   expanded:
-    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-lg",
+    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-md",
 };
 
 const headerActionIcon: Record<ChatPanelVariant, IconName> = {
@@ -186,7 +197,7 @@ const promptStateClasses: Partial<
 };
 
 const COMPOSER_SINGLE_LINE_HEIGHT = 28;
-const COMPOSER_TEXTAREA_EMPTY_HEIGHT = 24;
+const COMPOSER_TEXTAREA_EMPTY_HEIGHT = 21;
 const VOICE_MODE_TOOLTIP = "Voice mode is WIP in this prototype.";
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -261,6 +272,46 @@ export function ChatPanel({
   );
 }
 
+export function ChatTray({
+  title = "Contact sales",
+  badge = false,
+  badgeLabel = "New activity",
+  className,
+  type,
+  ...props
+}: ChatTrayProps) {
+  return (
+    <button
+      {...props}
+      type={type ?? "button"}
+      className={cx(
+        "group inline-flex min-h-16 w-[min(100%,var(--design-layout-panel-collapsed-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-xl py-md text-left text-text shadow-[0_-4px_16px_rgba(0,0,0,0.18),0_0_1px_rgba(140,140,140,0.2)] outline-none transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard hover:border-border-hover hover:bg-background focus-visible:ring-4 focus-visible:ring-action-focus-ring motion-reduce:transition-none",
+        className,
+      )}
+    >
+      <span className="relative inline-flex size-6 shrink-0 items-center justify-center text-ai-icon">
+        <Icon name="signal-ai" size="medium" />
+        {badge ? (
+          <span
+            role="status"
+            aria-label={badgeLabel}
+            className="absolute -right-xxs -top-xxs size-[10px] rounded-round border-2 border-background bg-action"
+          />
+        ) : null}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-heading-lg text-text">
+        {title}
+      </span>
+      <span
+        aria-hidden="true"
+        className="inline-flex size-8 shrink-0 items-center justify-center rounded-round text-icon transition-colors duration-150 ease-out group-hover:bg-background-transparent-hover"
+      >
+        <Icon name="chevron-up" size="small" />
+      </span>
+    </button>
+  );
+}
+
 function VoiceModePlaceholderButton() {
   return (
     <span className="group relative inline-flex shrink-0">
@@ -286,8 +337,10 @@ function VoiceModePlaceholderButton() {
 
 export function ChatHeader({
   variant = "collapsed",
+  title,
   className,
   onClose,
+  onMinimizeToTray,
   onVariantToggle,
   transparent = false,
   showAiMark = true,
@@ -306,12 +359,19 @@ export function ChatHeader({
       )}
     >
       {showAiMark ? (
-        <Icon
-          name="signal-ai"
-          size="medium"
-          label="AI Concierge"
-          className={cx("text-ai-icon", aiMarkClassName)}
-        />
+        <div className="flex min-w-0 items-center gap-sm">
+          <Icon
+            name="signal-ai"
+            size="medium"
+            label="AI Concierge"
+            className={cx("shrink-0 text-ai-icon", aiMarkClassName)}
+          />
+          {title ? (
+            <span className="min-w-0 truncate text-heading-lg text-text">
+              {title}
+            </span>
+          ) : null}
+        </div>
       ) : (
         <span aria-hidden="true" />
       )}
@@ -324,12 +384,21 @@ export function ChatHeader({
             onClick={onVariantToggle}
           />
         </span>
-        <GhostIconButton
-          label="Close chat"
-          icon="close"
-          size="medium"
-          onClick={onClose}
-        />
+        {onMinimizeToTray ? (
+          <GhostIconButton
+            label="Minimize chat to tray"
+            icon="chevron-down"
+            size="medium"
+            onClick={onMinimizeToTray}
+          />
+        ) : (
+          <GhostIconButton
+            label="Close chat"
+            icon="close"
+            size="medium"
+            onClick={onClose}
+          />
+        )}
       </div>
     </header>
   );
@@ -413,6 +482,7 @@ export function ChatMessage({
   const isRepresentative = role === "representative";
   const hasRepresentativeMeta =
     isRepresentative && Boolean(authorName || timestamp);
+  const hasStandaloneTimestamp = Boolean(timestamp) && !hasRepresentativeMeta;
 
   return (
     <div
@@ -426,7 +496,8 @@ export function ChatMessage({
     >
       <div
         className={cx(
-          isUser && "flex w-full justify-end",
+          isUser && "flex w-full flex-col items-end",
+          hasStandaloneTimestamp && !isUser && "flex flex-col items-start",
           hasRepresentativeMeta && "flex max-w-full flex-col gap-md",
         )}
       >
@@ -457,6 +528,9 @@ export function ChatMessage({
             </div>
           </div>
         ) : null}
+        {hasStandaloneTimestamp ? (
+          <span className="pt-xs text-body-xs text-text-meta">{timestamp}</span>
+        ) : null}
       </div>
     </div>
   );
@@ -465,6 +539,7 @@ export function ChatMessage({
 export function ChatMessageFeedback({
   value = null,
   disabled = false,
+  timestamp,
   onValueChange,
   className,
   ...props
@@ -478,26 +553,33 @@ export function ChatMessageFeedback({
       role="group"
       aria-label="Rate this response"
       className={cx(
-        "chat-message-enter -ml-sm flex h-[var(--design-layout-ghost-icon-button-touch-height)] w-fit items-center",
+        "chat-message-enter -ml-sm flex h-[var(--design-layout-ghost-icon-button-touch-height)] w-fit items-center gap-sm",
         className,
       )}
     >
-      <GhostIconButton
-        label="Thumbs up"
-        icon={isPositive ? "thumbs-up-fill" : "thumbs-up-outline"}
-        size="small"
-        disabled={disabled}
-        aria-pressed={isPositive}
-        onClick={() => onValueChange?.("thumbs-up")}
-      />
-      <GhostIconButton
-        label="Thumbs down"
-        icon={isNegative ? "thumbs-down-fill" : "thumbs-down-outline"}
-        size="small"
-        disabled={disabled}
-        aria-pressed={isNegative}
-        onClick={() => onValueChange?.("thumbs-down")}
-      />
+      <span className="flex items-center">
+        <GhostIconButton
+          label="Thumbs up"
+          icon={isPositive ? "thumbs-up-fill" : "thumbs-up-outline"}
+          size="small"
+          disabled={disabled}
+          aria-pressed={isPositive}
+          onClick={() => onValueChange?.("thumbs-up")}
+        />
+        <GhostIconButton
+          label="Thumbs down"
+          icon={isNegative ? "thumbs-down-fill" : "thumbs-down-outline"}
+          size="small"
+          disabled={disabled}
+          aria-pressed={isNegative}
+          onClick={() => onValueChange?.("thumbs-down")}
+        />
+      </span>
+      {timestamp ? (
+        <span className="whitespace-nowrap text-body-xs text-text-meta">
+          {timestamp}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -559,7 +641,7 @@ export function ChatFeedbackReasonChips({
       role="group"
       aria-label="Feedback reasons"
       className={cx(
-        "chat-message-enter flex max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] flex-wrap gap-x-xs [row-gap:4px]",
+        "chat-feedback-reason-chips chat-message-enter flex max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] flex-wrap gap-x-sm gap-y-xs",
         className,
       )}
     >
@@ -571,6 +653,7 @@ export function ChatFeedbackReasonChips({
             key={option.value}
             checked={checked}
             disabled={disabled}
+            className="chat-feedback-reason-chip"
             trailingIcon={
               <Icon name={checked ? "check" : "add"} size="small" />
             }
@@ -642,6 +725,7 @@ export function ChatFeedbackReasonPanel({
 }
 
 export function ChatMessageFeedbackFlow({
+  timestamp,
   onSubmitFeedback,
   className,
   ...props
@@ -722,6 +806,7 @@ export function ChatMessageFeedbackFlow({
       <ChatMessageFeedback
         value={value}
         disabled={submittedValue !== null}
+        timestamp={timestamp}
         onValueChange={handleFeedbackValueChange}
       />
       {submittedValue ? <ChatInlineFeedback /> : null}
@@ -771,7 +856,7 @@ export function Prompt({
       aria-label={ariaLabel ?? `Send message: ${prompt}`}
       data-visual-state={visualState}
       className={cx(
-        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[432px]",
+        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
         visualState !== "default" && promptStateClasses[visualState],
         className,
       )}
@@ -831,6 +916,7 @@ export function ChatComposer({
   onSend,
   sendDisabled = false,
   sendLoading = false,
+  showTopDivider = false,
   showVoiceMode = true,
   ...props
 }: ChatComposerProps) {
@@ -957,16 +1043,17 @@ export function ChatComposer({
       {...props}
       data-chat-variant={variant}
       className={cx(
-        "flex min-h-[var(--design-layout-composer-height)] shrink-0 items-end justify-center px-xxl pb-[calc(var(--design-spacing-xxl)+env(safe-area-inset-bottom))] pt-sm md:px-xxl md:pb-xxl md:pt-sm",
+        "flex min-h-[var(--design-layout-composer-height)] shrink-0 items-end justify-center border-t px-xxl pb-[calc(var(--design-spacing-xxl)+env(safe-area-inset-bottom))] pt-lg transition-colors duration-150 ease-out md:px-xxl md:pb-xxl md:pt-lg",
+        showTopDivider ? "border-border-faint" : "border-transparent",
         className,
       )}
     >
       <div
         ref={composerRef}
         className={cx(
-          "grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background px-md transition-[border-color,border-radius,padding] duration-150 ease-out hover:border-border-hover focus-within:border-border-hover",
+          "grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background pl-lg pr-md transition-[border-color,border-radius,padding] duration-150 ease-out hover:border-border-hover focus-within:border-border-hover",
           isMultiline
-            ? "grid grid-cols-1 gap-sm rounded-[28px] py-[10px]"
+            ? "grid grid-cols-1 gap-sm rounded-md py-[10px]"
             : "h-[var(--design-layout-composer-height)] grid-cols-[minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",
         )}
       >
@@ -1022,18 +1109,29 @@ export function ChatPanelPreview({
   variant = "collapsed",
   className,
   onClose,
+  onMinimizeToTray,
   onVariantToggle,
+  showMinimizeToTrayAction = false,
 }: {
   variant?: ChatPanelVariant;
   className?: string;
   onClose?: () => void;
+  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  showMinimizeToTrayAction?: boolean;
 }) {
+  const minimizeToTrayHandler = onMinimizeToTray
+    ? onMinimizeToTray
+    : showMinimizeToTrayAction
+      ? () => {}
+      : undefined;
+
   return (
     <ChatPanel variant={variant} className={className}>
       <ChatHeader
         variant={variant}
         onClose={onClose}
+        onMinimizeToTray={minimizeToTrayHandler}
         onVariantToggle={onVariantToggle}
       />
       <ChatBody>

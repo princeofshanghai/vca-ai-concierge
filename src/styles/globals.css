@@ -138,6 +138,7 @@
   --design-spacing-xxl: 24px;
   --design-spacing-xxxl: 32px;
   --design-spacing-stack: 40px;
+  --design-spacing-stack-lg: 48px;
   --design-spacing-card-padding: 24px;
   --design-spacing-panel-padding: 20px;
   --design-spacing-pill-padding-inline: 16px;
@@ -151,17 +152,21 @@
   --design-layout-mobile-page-padding: 16px;
   --design-layout-tablet-page-padding: 24px;
   --design-layout-desktop-page-padding: 32px;
-  --design-layout-panel-collapsed-width: 432px;
+  --design-layout-panel-collapsed-width: 400px;
   --design-layout-panel-expanded-width: 1280px;
   --design-layout-panel-collapsed-height: 908px;
   --design-layout-panel-expanded-height: 928px;
   --design-layout-panel-content-max: 640px;
-  --design-layout-schedule-collapsed-surface-width: 960px;
+  --design-layout-schedule-collapsed-surface-width: 896px;
   --design-layout-schedule-collapsed-chat-track: 3fr;
   --design-layout-schedule-collapsed-side-track: 5fr;
   --design-layout-schedule-expanded-surface-width: 1280px;
   --design-layout-schedule-expanded-chat-track: 3fr;
   --design-layout-schedule-expanded-side-track: 5fr;
+  --design-layout-side-panel-padding-inline: var(--design-spacing-xxxl);
+  --design-layout-schedule-panel-padding-inline: var(
+    --design-layout-side-panel-padding-inline
+  );
   --design-layout-chat-message-assistant-collapsed-max: 100%;
   --design-layout-chat-message-assistant-expanded-max: 640px;
   --design-layout-chat-message-assistant-max: var(
@@ -467,6 +472,7 @@
   --spacing-xxl: var(--design-spacing-xxl);
   --spacing-xxxl: var(--design-spacing-xxxl);
   --spacing-stack: var(--design-spacing-stack);
+  --spacing-stack-lg: var(--design-spacing-stack-lg);
   --spacing-card-padding: var(--design-spacing-card-padding);
   --spacing-panel-padding: var(--design-spacing-panel-padding);
   --spacing-pill-padding-inline: var(--design-spacing-pill-padding-inline);
@@ -545,7 +551,10 @@ body {
 }
 
 .chat-schedule-layout {
-  --design-layout-schedule-panel-padding-inline: var(--design-spacing-xxxl);
+  --design-layout-side-panel-padding-inline: var(--design-spacing-xxxl);
+  --design-layout-schedule-panel-padding-inline: var(
+    --design-layout-side-panel-padding-inline
+  );
 
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -559,12 +568,26 @@ body {
   }
 
   .chat-schedule-layout[data-chat-variant="expanded"] {
-    --design-layout-schedule-panel-padding-inline: 48px;
+    --design-layout-side-panel-padding-inline: 48px;
+    --design-layout-schedule-panel-padding-inline: var(
+      --design-layout-side-panel-padding-inline
+    );
 
     grid-template-columns:
       minmax(0, var(--design-layout-schedule-expanded-chat-track))
       minmax(0, var(--design-layout-schedule-expanded-side-track));
   }
+}
+
+.chat-side-panel-x {
+  padding-inline: var(
+    --design-layout-side-panel-padding-inline,
+    var(--design-spacing-xxxl)
+  );
+}
+
+.chat-feedback-reason-chip {
+  height: 32px;
 }
 
 @keyframes chat-message-enter {
@@ -598,6 +621,87 @@ body {
 
   to {
     background-position: -120% 0;
+  }
+}
+
+.matching-entity {
+  animation-duration: 2400ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.42, 0, 0.2, 1);
+  transform-origin: center;
+  will-change: transform;
+}
+
+.matching-entity-0 {
+  animation-name: matching-entity-left;
+}
+
+.matching-entity-1 {
+  animation-name: matching-entity-middle;
+}
+
+.matching-entity-2 {
+  animation-name: matching-entity-right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matching-entity {
+    animation: none;
+    will-change: auto;
+  }
+}
+
+@keyframes matching-entity-left {
+  0%,
+  100% {
+    transform: translateX(0);
+    z-index: 1;
+  }
+
+  33% {
+    transform: translateX(16px);
+    z-index: 3;
+  }
+
+  66% {
+    transform: translateX(32px);
+    z-index: 2;
+  }
+}
+
+@keyframes matching-entity-middle {
+  0%,
+  100% {
+    transform: translateX(0);
+    z-index: 2;
+  }
+
+  33% {
+    transform: translateX(16px);
+    z-index: 1;
+  }
+
+  66% {
+    transform: translateX(-16px);
+    z-index: 3;
+  }
+}
+
+@keyframes matching-entity-right {
+  0%,
+  100% {
+    transform: translateX(0);
+    z-index: 3;
+  }
+
+  33% {
+    transform: translateX(-32px);
+    z-index: 2;
+  }
+
+  66% {
+    transform: translateX(-16px);
+    z-index: 1;
   }
 }
 

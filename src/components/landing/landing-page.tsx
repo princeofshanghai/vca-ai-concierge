@@ -7,7 +7,11 @@ import localFont from "next/font/local";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { type ChatPanelVariant, useChatPanelPresence } from "@/components/chat";
+import {
+  ChatTray,
+  type ChatPanelVariant,
+  useChatPanelPresence,
+} from "@/components/chat";
 import { FlowReviewChatPanel } from "@/components/flow-review";
 import { ConciergePanel } from "@/components/onboarding";
 import { Button } from "@/components/primitives/button";
@@ -23,6 +27,7 @@ const navItems = [
 type LandingPageProps = Readonly<{
   homeHref?: string;
   reviewFlow?: FlowReview;
+  shellMode?: "default" | "tray";
 }>;
 
 const communityProBold = localFont({
@@ -35,9 +40,11 @@ const communityProBold = localFont({
 export function LandingPage({
   homeHref = "/hiring",
   reviewFlow,
+  shellMode = "default",
 }: LandingPageProps) {
   const router = useRouter();
   const isReviewFlow = Boolean(reviewFlow);
+  const isTrayShell = !isReviewFlow && shellMode === "tray";
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [isReviewSidePanelOpen, setIsReviewSidePanelOpen] = useState(false);
@@ -60,19 +67,31 @@ export function LandingPage({
     close: closeChatPanel,
   } = useChatPanelPresence({
     initialOpen: isReviewFlow,
-    onBeforeOpen: resetChatPanelState,
-    onBeforeClose: resetChatPanelState,
+    onBeforeOpen: isTrayShell ? undefined : resetChatPanelState,
+    onBeforeClose: isTrayShell ? undefined : resetChatPanelState,
   });
+  const isChatPanelMounted = isTrayShell || isChatMounted;
   const isWideChatSurface =
     chatPanelVariant === "expanded" || isReviewSidePanelOpen;
   const isCenteredChatSurface = chatPanelVariant === "expanded";
-  const chatPanelPositionClass = isCenteredChatSurface
-    ? isReviewSidePanelOpen
-      ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-expanded-surface-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-      : "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-    : isWideChatSurface
-      ? "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
-      : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+  const chatPanelPositionClass = isTrayShell
+    ? isCenteredChatSurface
+      ? isReviewSidePanelOpen
+        ? "md:left-1/2 md:bottom-0 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-expanded-surface-width))] md:-translate-x-1/2"
+        : "md:left-1/2 md:bottom-0 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2"
+      : isWideChatSurface
+        ? "md:right-6 md:bottom-0 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
+        : "md:right-6 md:bottom-0 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
+    : isCenteredChatSurface
+      ? isReviewSidePanelOpen
+        ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-expanded-surface-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+        : "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+      : isWideChatSurface
+        ? "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
+        : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+  const trayDockedPanelClass = isTrayShell
+    ? "md:!rounded-t-md md:!rounded-b-none"
+    : undefined;
 
   const openChat = useCallback(() => {
     if (isReviewFlow) {
@@ -89,8 +108,21 @@ export function LandingPage({
   }, []);
 
   const closeChat = useCallback(() => {
+    if (isTrayShell) {
+      resetChatPanelState();
+    }
+
     closeChatPanel();
-  }, [closeChatPanel]);
+  }, [closeChatPanel, isTrayShell, resetChatPanelState]);
+
+  const minimizeChatToTray = useCallback(() => {
+    if (isReviewFlow) {
+      return;
+    }
+
+    setIsEndChatDialogOpen(false);
+    closeChatPanel();
+  }, [closeChatPanel, isReviewFlow]);
 
   const requestCloseChat = useCallback(() => {
     if (isReviewFlow) {
@@ -132,7 +164,7 @@ export function LandingPage({
   }, []);
 
   useEffect(() => {
-    if (!isChatMounted) {
+    if (!isChatPanelMounted) {
       return;
     }
 
@@ -151,7 +183,7 @@ export function LandingPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isChatMounted, isEndChatDialogOpen, requestCloseChat]);
+  }, [isChatPanelMounted, isEndChatDialogOpen, requestCloseChat]);
 
   return (
     <main className="-mt-28 min-h-dvh bg-white sm:-mt-32">
@@ -237,7 +269,19 @@ export function LandingPage({
         </div>
       </section>
 
-      {isChatMounted ? (
+      {isTrayShell && !isChatInteractive ? (
+        <ChatTray
+          aria-controls={chatPanelId}
+          aria-expanded={false}
+          aria-haspopup="dialog"
+          aria-label="Open AI Concierge chat"
+          className="fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-panel-collapsed-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
+          badge={isChatConversationStarted}
+          onClick={openChat}
+        />
+      ) : null}
+
+      {isChatPanelMounted ? (
         <>
           {chatPanelVariant === "expanded" ? (
             <button
@@ -258,31 +302,43 @@ export function LandingPage({
             id={chatPanelId}
             role="dialog"
             aria-label="AI Concierge chat"
+            aria-hidden={!isChatOpen}
+            inert={!isChatOpen}
             className={[
               "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)] md:inset-auto",
               chatPanelPositionClass,
+              isChatOpen ? "pointer-events-auto" : "pointer-events-none",
             ].join(" ")}
           >
             <div
               className={[
-                "h-full w-full transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
+                "h-full w-full ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
+                isTrayShell
+                  ? "transition-transform duration-[var(--design-motion-duration-slow)]"
+                  : "transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)]",
                 isChatInteractive
                   ? "translate-y-0 opacity-100"
-                  : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
+                  : isTrayShell
+                    ? "pointer-events-none translate-y-full opacity-100"
+                    : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
               ].join(" ")}
             >
               {reviewFlow ? (
                 <FlowReviewChatPanel
+                  className={trayDockedPanelClass}
                   flow={reviewFlow}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
+                  onMinimizeToTray={isTrayShell ? minimizeChatToTray : undefined}
                   onVariantToggle={toggleChatPanelVariant}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                 />
               ) : (
                 <ConciergePanel
+                  className={trayDockedPanelClass}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
+                  onMinimizeToTray={isTrayShell ? minimizeChatToTray : undefined}
                   onVariantToggle={toggleChatPanelVariant}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}

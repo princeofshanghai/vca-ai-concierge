@@ -10,6 +10,7 @@ import {
   ChatMessageFeedback,
   ChatMessageFeedbackFlow,
   ChatPanelPreview,
+  ChatTray,
   ChatThinkingMessage,
   Prompt,
   RecommendationCard,
@@ -353,21 +354,34 @@ export default function InternalComponentsPage() {
               Component library
             </h1>
             <p className="text-body-sm-open text-text-meta">
-              Minimal internal review surface for shared primitives.
+              A focused review surface for the chat experience, with foundations kept available but quieter.
             </p>
           </div>
         </header>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <section className="order-2 space-y-lg border-t border-border-faint pt-xxxl">
+          <div className="max-w-2xl space-y-xs">
+            <p className="text-label-xs text-text-meta">Foundations</p>
+            <h2 className="text-heading-xl text-text">Atomic components</h2>
+            <p className="text-body-sm-open text-text-meta">
+              Shared building blocks that support the chat system. Open only when you need to inspect primitive states.
+            </p>
+          </div>
+        </section>
+
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 01</p>
               <h2 className="text-heading-xl text-text">Button</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Core actions used across the review surfaces, including icon and brand CTA variants.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">Ready</p>
-          </div>
+          </summary>
 
-          <div className="space-y-12">
+          <div className="mt-xl space-y-12">
             <section className="space-y-4">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 States
@@ -461,18 +475,21 @@ export default function InternalComponentsPage() {
               </div>
             </section>
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 02</p>
               <h2 className="text-heading-xl text-text">Pill</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Choice chips for lightweight selection patterns inside chat prompts and feedback flows.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
-          </div>
+          </summary>
 
-          <div className="space-y-8">
+          <div className="mt-xl space-y-8">
             {[
               { label: "Unchecked", checked: false },
               { label: "Checked", checked: true },
@@ -492,20 +509,23 @@ export default function InternalComponentsPage() {
               </section>
             ))}
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 03</p>
               <h2 className="text-heading-xl text-text">Icon</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Small symbolic marks for actions, statuses, and AI affordances used throughout the prototype.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">
               {iconMetadata.length} icons
             </p>
-          </div>
+          </summary>
 
-          <div className="space-y-8">
+          <div className="mt-xl space-y-8">
             <section className="space-y-4">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 Common
@@ -536,18 +556,21 @@ export default function InternalComponentsPage() {
               </div>
             </section>
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 04</p>
               <h2 className="text-heading-xl text-text">Entity</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Avatar and placeholder shapes for people, companies, and other named entities.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
-          </div>
+          </summary>
 
-          <div className="space-y-8">
+          <div className="mt-xl space-y-8">
             {([
               { label: "Circle", shape: "circle" },
               { label: "Square", shape: "square" },
@@ -577,20 +600,23 @@ export default function InternalComponentsPage() {
               </section>
             ))}
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 05</p>
               <h2 className="text-heading-xl text-text">
                 Button icon
               </h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Icon-only action controls for compact toolbars and chat header commands.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
-          </div>
+          </summary>
 
-          <div className="space-y-8">
+          <div className="mt-xl space-y-8">
             {buttonSizes.map(({ label, size }) => (
               <section key={`button-icon-${size}`} className="space-y-4">
                 <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
@@ -622,20 +648,23 @@ export default function InternalComponentsPage() {
               </section>
             ))}
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 06</p>
               <h2 className="text-heading-xl text-text">
                 Ghost icon button
               </h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Low-emphasis icon actions for chrome, dismissal, and secondary chat controls.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">Updated</p>
-          </div>
+          </summary>
 
-          <div className="space-y-8">
+          <div className="mt-xl space-y-8">
             {(["small", "medium"] as const).map((size) => (
               <section key={size} className="space-y-4">
                 <h3 className="text-[1.05rem] font-semibold capitalize tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
@@ -687,20 +716,23 @@ export default function InternalComponentsPage() {
               </section>
             ))}
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 07</p>
               <h2 className="text-heading-xl text-text">
                 Text input
               </h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Single-line form input for supporting flows outside the main chat composer.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
-          </div>
+          </summary>
 
-          <div className="space-y-10">
+          <div className="mt-xl space-y-10">
             <section className="space-y-4">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 Core variants
@@ -792,20 +824,23 @@ export default function InternalComponentsPage() {
             </section>
 
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 08</p>
               <h2 className="text-heading-xl text-text">
                 Text area
               </h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Multi-line form input for longer supporting notes and feedback capture.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
-          </div>
+          </summary>
 
-          <div className="space-y-10">
+          <div className="mt-xl space-y-10">
             <section className="space-y-4">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 Core variants
@@ -896,18 +931,21 @@ export default function InternalComponentsPage() {
               </div>
             </section>
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
-          <div className="flex items-start justify-between gap-lg">
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
             <div className="space-y-xs">
               <p className="text-label-xs text-text-meta">Primitive 09</p>
               <h2 className="text-heading-xl text-text">Tag</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Short metadata labels for status, category, and contextual emphasis.
+              </p>
             </div>
             <p className="pt-[2px] text-body-xs text-text-meta">New</p>
-          </div>
+          </summary>
 
-          <div className="space-y-8">
+          <div className="mt-xl space-y-8">
             {tagSizes.map(({ label, size }) => (
               <section key={`tag-${size}`} className="space-y-4">
                 <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
@@ -932,15 +970,18 @@ export default function InternalComponentsPage() {
               </section>
             ))}
           </div>
-        </section>
+        </details>
 
-        <section className="space-y-10 border-t border-border-faint pt-xxxl">
+        <section className="order-1 space-y-10 border-t border-border-faint pt-xxxl">
           <div className="flex items-start justify-between gap-lg">
             <div className="space-y-xs">
-              <p className="text-label-xs text-text-meta">Composable 01</p>
+              <p className="text-label-xs text-text-meta">Chat components</p>
               <h2 className="text-heading-xl text-text">Chat UI</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Product-facing pieces that define the concierge conversation, from shell behavior to message states and sales handoffs.
+              </p>
             </div>
-            <p className="pt-[2px] text-body-xs text-text-meta">First batch</p>
+            <p className="pt-[2px] text-body-xs text-text-meta">Primary</p>
           </div>
 
           <div className="space-y-10">
@@ -951,6 +992,9 @@ export default function InternalComponentsPage() {
               <div className="grid gap-lg lg:grid-cols-2">
                 <div className="space-y-sm">
                   <p className="text-label-xs text-text-meta">Header</p>
+                  <p className="text-body-xs text-text-meta">
+                    Top chrome for the chat panel, including AI identity and shell controls.
+                  </p>
                   <div className="overflow-hidden rounded-t-lg border border-border-faint bg-background">
                     <ChatHeader />
                   </div>
@@ -958,6 +1002,9 @@ export default function InternalComponentsPage() {
 
                 <div className="space-y-sm">
                   <p className="text-label-xs text-text-meta">Messages</p>
+                  <p className="text-body-xs text-text-meta">
+                    Conversation bubbles for assistant, visitor, and representative turns, including feedback and rich content states.
+                  </p>
                   <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
                     <div className="space-y-xl">
                       <section className="space-y-sm">
@@ -966,7 +1013,7 @@ export default function InternalComponentsPage() {
                           I can help compare hiring options quickly.
                         </ChatMessage>
                         <div className="flex justify-start">
-                          <ChatMessageFeedback />
+                          <ChatMessageFeedback timestamp="1:00 PM" />
                         </div>
                       </section>
 
@@ -978,7 +1025,7 @@ export default function InternalComponentsPage() {
                           I would start by comparing the lighter hiring path
                           against Recruiter before routing you to sales.
                         </ChatMessage>
-                        <ChatMessageFeedbackFlow />
+                        <ChatMessageFeedbackFlow timestamp="1:01 PM" />
                       </section>
 
                       <section className="space-y-sm">
@@ -991,7 +1038,10 @@ export default function InternalComponentsPage() {
                               I can help compare hiring options quickly.
                             </ChatMessage>
                             <div className="flex justify-start">
-                              <ChatMessageFeedback value="thumbs-up" />
+                              <ChatMessageFeedback
+                                value="thumbs-up"
+                                timestamp="1:02 PM"
+                              />
                             </div>
                             <div className="flex justify-start">
                               <ChatInlineFeedback />
@@ -1002,7 +1052,10 @@ export default function InternalComponentsPage() {
                               A sales consultant can narrow the setup fast.
                             </ChatMessage>
                             <div className="flex justify-start">
-                              <ChatMessageFeedback value="thumbs-down" />
+                              <ChatMessageFeedback
+                                value="thumbs-down"
+                                timestamp="1:03 PM"
+                              />
                             </div>
                             <div className="flex justify-start">
                               <ChatFeedbackReasonChips value="confusing" />
@@ -1013,7 +1066,7 @@ export default function InternalComponentsPage() {
 
                       <section className="space-y-sm">
                         <p className="text-body-xs text-text-meta">User</p>
-                        <ChatMessage role="user">
+                        <ChatMessage role="user" timestamp="1:04 PM">
                           We need to ramp hiring fast this quarter.
                         </ChatMessage>
                       </section>
@@ -1078,6 +1131,9 @@ export default function InternalComponentsPage() {
 
                 <div className="space-y-sm">
                   <p className="text-label-xs text-text-meta">Recommendation</p>
+                  <p className="text-body-xs text-text-meta">
+                    A compact in-chat decision card for suggested products or next-best actions.
+                  </p>
                   <div className="rounded-md border border-border-faint bg-background p-panel-padding">
                     <RecommendationCard />
                   </div>
@@ -1085,6 +1141,9 @@ export default function InternalComponentsPage() {
 
                 <div className="space-y-sm">
                   <p className="text-label-xs text-text-meta">Prompts</p>
+                  <p className="text-body-xs text-text-meta">
+                    Suggested user intents that help people start or steer the conversation.
+                  </p>
                   <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
                     <div className="flex flex-wrap gap-sm">
                       <Prompt prompt="We need to ramp hiring fast this quarter." />
@@ -1097,6 +1156,9 @@ export default function InternalComponentsPage() {
 
                 <div className="space-y-sm">
                   <p className="text-label-xs text-text-meta">Composer</p>
+                  <p className="text-body-xs text-text-meta">
+                    Message input and send controls, including longer draft behavior.
+                  </p>
                   <div className="rounded-lg border border-border-faint bg-background p-panel-padding">
                     <div className="space-y-md">
                       <ChatComposer className="px-0 pb-0" />
@@ -1118,10 +1180,13 @@ export default function InternalComponentsPage() {
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 Scheduled sales consultant card states
               </h3>
+              <p className="max-w-2xl text-body-xs text-text-meta">
+                In-chat appointment recommendation flow, from matching through confirmed meeting details.
+              </p>
               <div className="grid gap-xl md:grid-cols-2">
                 {highValueMatchCardStates.map(
                   ({ label, state, bookedMeeting }) => (
-                    <div key={state} className="space-y-sm">
+                    <div key={`${state}-${label}`} className="space-y-sm">
                       <p className="text-body-xs text-text-meta">{label}</p>
                       <HighValueMatchCardPreview
                         state={state}
@@ -1137,6 +1202,9 @@ export default function InternalComponentsPage() {
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 Medium-value live sales consultant handoff states
               </h3>
+              <p className="max-w-2xl text-body-xs text-text-meta">
+                Live handoff card states for connecting a visitor to a human representative.
+              </p>
               <div className="grid gap-xl md:grid-cols-2 xl:grid-cols-3">
                 {mediumAvailableHandoffStates.map(({ label, state }) => (
                   <div key={state} className="space-y-sm">
@@ -1153,6 +1221,9 @@ export default function InternalComponentsPage() {
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 High-value booking side panel
               </h3>
+              <p className="max-w-2xl text-body-xs text-text-meta">
+                Scheduling surface used alongside the chat when a visitor is ready to book.
+              </p>
               <div className="space-y-xl">
                 {highValueBookingPanelStates.map(({ label, state }) => (
                   <div key={state} className="space-y-sm">
@@ -1169,6 +1240,9 @@ export default function InternalComponentsPage() {
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
                 Prompt states
               </h3>
+              <p className="max-w-2xl text-body-xs text-text-meta">
+                Interaction states for suggested prompts before they are shown inside a full chat panel.
+              </p>
               <div className="flex flex-wrap items-start gap-lg">
                 {promptStates.map((state) => (
                   <div key={state} className="space-y-sm">
@@ -1181,14 +1255,59 @@ export default function InternalComponentsPage() {
 
             <section className="space-y-4">
               <h3 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.125rem]">
-                Panel states
+                Shell versions
               </h3>
-              <div className="space-y-lg">
-                <div className="overflow-x-auto px-xl pb-xxxl pt-md">
-                  <ChatPanelPreview variant="collapsed" />
+              <p className="max-w-2xl text-body-xs text-text-meta">
+                Panel and tray containers that define how the concierge opens, minimizes, and expands.
+              </p>
+              <div className="space-y-xl">
+                <div className="space-y-sm">
+                  <p className="text-body-xs text-text-meta">
+                    Default shell
+                  </p>
+                  <div className="overflow-x-auto px-xl pb-xxxl pt-md">
+                    <ChatPanelPreview variant="collapsed" />
+                  </div>
                 </div>
-                <div className="overflow-x-auto px-xl pb-xxxl pt-md">
-                  <ChatPanelPreview variant="expanded" />
+
+                <div className="space-y-sm">
+                  <p className="text-body-xs text-text-meta">
+                    Tray shell · minimized
+                  </p>
+                  <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
+                    <ChatTray />
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <p className="text-body-xs text-text-meta">
+                    Tray shell · badge
+                  </p>
+                  <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
+                    <ChatTray badge />
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <p className="text-body-xs text-text-meta">
+                    Tray shell · expanded
+                  </p>
+                  <div className="flex h-[48rem] max-h-[calc(100dvh-8rem)] items-end justify-end overflow-x-auto rounded-lg border border-border-faint bg-background-neutral-soft px-xl pt-md">
+                    <ChatPanelPreview
+                      className="md:!rounded-t-md md:!rounded-b-none"
+                      variant="collapsed"
+                      showMinimizeToTrayAction
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <p className="text-body-xs text-text-meta">
+                    Default shell · wide
+                  </p>
+                  <div className="overflow-x-auto px-xl pb-xxxl pt-md">
+                    <ChatPanelPreview variant="expanded" />
+                  </div>
                 </div>
               </div>
             </section>

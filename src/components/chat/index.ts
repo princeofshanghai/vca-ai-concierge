@@ -10,6 +10,7 @@ export {
   ChatMessageFeedbackFlow,
   ChatPanel,
   ChatPanelPreview,
+  ChatTray,
   ChatThinkingMessage,
   ChatThread,
   Prompt,
@@ -33,3 +34,8 @@ export {
   type ChatMessageStreamStatus,
   type ChatPanelPresence,
 } from "./chat-motion";
+export {
+  ChatSidePanel,
+  type ChatSidePanelInitialScrollPosition,
+  type ChatSidePanelProps,
+} from "./chat-side-panel";

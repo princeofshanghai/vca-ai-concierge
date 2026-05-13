@@ -30,6 +30,12 @@ type ReviewShellModeMenuOption = Readonly<{
   label: string;
 }>;
 
+type ReviewShellShellMenuOption = Readonly<{
+  id: string;
+  href: string;
+  label: string;
+}>;
+
 const loginOptions: ReadonlyArray<ReviewShellStateMenuOption> = [
   { id: "signed-in", label: "Signed in", value: true },
   { id: "signed-out", label: "Signed out", value: false },
@@ -43,12 +49,15 @@ type ReviewShellStateMenuProps = Readonly<{
   isOpen: boolean;
   isSignedIn: boolean;
   pathname: string;
+  currentHref?: string;
   onLoginSelect?: (next: boolean) => void;
   onClose: () => void;
   triggerRef: RefObject<HTMLElement | null>;
   labelledBy?: string;
   modeOptions?: ReadonlyArray<ReviewShellModeMenuOption>;
   modeHeading?: string;
+  shellOptions?: ReadonlyArray<ReviewShellShellMenuOption>;
+  shellHeading?: string;
   showVisitorControls?: boolean;
 }>;
 
@@ -56,20 +65,27 @@ export function ReviewShellStateMenu({
   isOpen,
   isSignedIn,
   pathname,
+  currentHref = pathname,
   onLoginSelect,
   onClose,
   triggerRef,
   labelledBy,
   modeOptions = defaultModeOptions,
   modeHeading = "Mode",
+  shellOptions = [],
+  shellHeading = "Shell",
   showVisitorControls = true,
 }: ReviewShellStateMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Array<HTMLElement | null>>([]);
   const visitorOptions = showVisitorControls ? loginOptions : [];
-  const optionCount = modeOptions.length + visitorOptions.length;
+  const optionCount =
+    modeOptions.length + shellOptions.length + visitorOptions.length;
   const activeModeIndex = modeOptions.findIndex(
     (option) => option.href === pathname,
+  );
+  const activeShellIndex = shellOptions.findIndex(
+    (option) => option.href === currentHref,
   );
   const activeLoginIndex = visitorOptions.findIndex(
     (option) => option.value === isSignedIn,
@@ -77,6 +93,8 @@ export function ReviewShellStateMenu({
   const focusIndex =
     activeModeIndex >= 0
       ? visitorOptions.length + activeModeIndex
+      : activeShellIndex >= 0
+        ? visitorOptions.length + modeOptions.length + activeShellIndex
       : activeLoginIndex >= 0
         ? activeLoginIndex
         : 0;
@@ -275,6 +293,58 @@ export function ReviewShellStateMenu({
           );
         })}
       </div>
+
+      {shellOptions.length > 0 ? (
+        <div
+          role="group"
+          aria-labelledby="review-shell-shell-menu-heading"
+          className="mt-2 space-y-1 border-t border-slate-200/70 pt-2"
+        >
+          <p
+            id="review-shell-shell-menu-heading"
+            className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
+          >
+            {shellHeading}
+          </p>
+          {shellOptions.map((option, optionIndex) => {
+            const index =
+              visitorOptions.length + modeOptions.length + optionIndex;
+            const isSelected = option.href === currentHref;
+
+            return (
+              <Link
+                key={option.id}
+                ref={(element) => {
+                  itemRefs.current[index] = element;
+                }}
+                href={option.href}
+                role="menuitemradio"
+                aria-checked={isSelected}
+                tabIndex={index === focusIndex ? 0 : -1}
+                onClick={onClose}
+                onKeyDown={(event) => handleItemKeyDown(event, index)}
+                className={[
+                  "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-medium tracking-[0.01em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+                  isSelected
+                    ? "bg-sky-50 text-sky-900"
+                    : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
+                ].join(" ")}
+              >
+                <span
+                  aria-hidden="true"
+                  className={[
+                    "inline-flex size-4 shrink-0 items-center justify-center",
+                    isSelected ? "text-sky-700" : "text-transparent",
+                  ].join(" ")}
+                >
+                  <Icon name="check" size="small" />
+                </span>
+                <span>{option.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
