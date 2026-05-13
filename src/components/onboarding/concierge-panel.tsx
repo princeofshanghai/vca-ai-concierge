@@ -44,6 +44,7 @@ import {
   STARTER_PROMPTS,
   buildInitialAssistantResponse,
   flowReviews,
+  shouldShowFlowReviewMessageFeedback,
   type FlowReviewAvailabilityStep,
   type FlowReviewId,
   type FlowReviewRecommendationStep,
@@ -75,6 +76,7 @@ type ConciergeMessage = Readonly<{
   role: "assistant" | "user";
   content: string;
   status: ChatMessageStreamStatus;
+  feedbackEligible?: boolean;
 }>;
 
 type ConciergeRecommendation = Readonly<{
@@ -164,6 +166,7 @@ function getNextScriptedAssistantTurn({
   content: string;
   nextStepIndex: number;
   surfaceAfter?: ConciergeSurface;
+  feedbackEligible?: boolean;
 }> {
   const steps = flowReviews[flowId].steps;
   const assistantStepIndex = steps.findIndex(
@@ -203,6 +206,7 @@ function getNextScriptedAssistantTurn({
   return {
     content: assistantStep.content,
     nextStepIndex: surfaceAfter ? assistantStepIndex + 1 : assistantStepIndex,
+    feedbackEligible: shouldShowFlowReviewMessageFeedback(assistantStep),
     ...(surfaceAfter ? { surfaceAfter } : {}),
   };
 }
@@ -317,7 +321,14 @@ export function ConciergePanel({
   }, []);
 
   const queueAssistantResponse = useCallback(
-    (text: string, surfaceAfter?: ConciergeSurface) => {
+    (
+      text: string,
+      options: Readonly<{
+        surfaceAfter?: ConciergeSurface;
+        feedbackEligible?: boolean;
+      }> = {},
+    ) => {
+      const { surfaceAfter, feedbackEligible } = options;
       const id = createMessageId("assistant");
 
       setMessages((currentMessages) => [
@@ -328,6 +339,7 @@ export function ConciergePanel({
           role: "assistant",
           content: "",
           status: "thinking",
+          feedbackEligible,
         },
       ]);
       setPendingAssistantResponse({ id, text, surfaceAfter });
@@ -521,7 +533,10 @@ export function ConciergePanel({
 
       setLiveFlowId(nextFlowId);
       setLiveStepIndex(nextTurn.nextStepIndex);
-      queueAssistantResponse(nextTurn.content, nextTurn.surfaceAfter);
+      queueAssistantResponse(nextTurn.content, {
+        surfaceAfter: nextTurn.surfaceAfter,
+        feedbackEligible: nextTurn.feedbackEligible,
+      });
     },
     [
       createMessageId,
@@ -608,6 +623,7 @@ export function ConciergePanel({
       isMessageItem(message) &&
       message.role === "assistant" &&
       message.status === "complete" &&
+      message.feedbackEligible === true &&
       !shouldShowStarterPrompts(message, index)
     );
   }

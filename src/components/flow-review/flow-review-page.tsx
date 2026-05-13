@@ -1,5 +1,6 @@
 import {
   ChatMessage,
+  ChatMessageFeedbackFlow,
   ChatThread,
   Prompt,
   RecommendationCard,
@@ -11,7 +12,9 @@ import {
   type FlowReviewAvailabilityStep,
   type FlowReviewResourcesStep,
   type FlowReviewStep,
+  shouldShowFlowReviewMessageFeedback,
 } from "@/lib/conversation-flows";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
 type FlowReviewPageProps = Readonly<{
   flow: FlowReview;
@@ -62,29 +65,51 @@ function AvailabilityVariants({ step }: { step: FlowReviewAvailabilityStep }) {
   return (
     <div className="chat-message-enter flex w-full">
       <div className="flex w-full max-w-[33rem] flex-col gap-xl pr-sm">
-        {step.variants.map((variant) => (
-          <section key={variant.id} className="flex flex-col gap-md">
-            <p className="text-body-xs text-text-meta">{variant.label}</p>
-            <ChatMessage role={variant.role ?? "assistant"}>
-              {variant.message}
-            </ChatMessage>
-            <RecommendationCard
-              title={variant.title}
-              primaryAction={variant.primaryAction}
-              secondaryAction={variant.secondaryAction}
-            />
-          </section>
-        ))}
+        {step.variants.map((variant, index) => {
+          const role = variant.role ?? "assistant";
+          const showFeedback =
+            role === "assistant" && variant.feedbackEligible === true;
+          const timestamp = getPrototypeMessageTimestamp(index);
+
+          return (
+            <section key={variant.id} className="flex flex-col gap-md">
+              <p className="text-body-xs text-text-meta">{variant.label}</p>
+              <ChatMessage
+                role={role}
+                className={showFeedback ? "!pb-xs" : undefined}
+              >
+                {variant.message}
+              </ChatMessage>
+              {showFeedback ? (
+                <ChatMessageFeedbackFlow timestamp={timestamp} />
+              ) : null}
+              <RecommendationCard
+                title={variant.title}
+                primaryAction={variant.primaryAction}
+                secondaryAction={variant.secondaryAction}
+              />
+            </section>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function renderStep(step: FlowReviewStep) {
+function renderStep(step: FlowReviewStep, index: number) {
   if (step.kind === "message") {
+    const showFeedback = shouldShowFlowReviewMessageFeedback(step);
+    const timestamp = getPrototypeMessageTimestamp(index);
+
     return (
       <div key={step.id} className="contents">
-        <ChatMessage role={step.role}>{step.content}</ChatMessage>
+        <ChatMessage
+          role={step.role}
+          className={showFeedback ? "!pb-xs" : undefined}
+        >
+          {step.content}
+        </ChatMessage>
+        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
         {step.showStarterPromptsAfter ? <StarterPromptRow /> : null}
       </div>
     );

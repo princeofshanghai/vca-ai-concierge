@@ -22,6 +22,7 @@ export type FlowReviewMessageStep = Readonly<{
   role: FlowReviewMessageRole;
   content: string;
   showStarterPromptsAfter?: boolean;
+  feedbackEligible?: boolean;
 }>;
 
 export type FlowReviewRecommendationStep = Readonly<{
@@ -53,6 +54,7 @@ export type FlowReviewAvailabilityVariant = Readonly<{
   title: string;
   primaryAction: string;
   secondaryAction?: string;
+  feedbackEligible?: boolean;
 }>;
 
 export type FlowReviewAvailabilityStep = Readonly<{
@@ -140,6 +142,12 @@ export function buildFollowUpAssistantResponse(
   return `That helps. To narrow the right fit for ${lead.company}, I would start with the roles you need most. What kinds of roles are you hiring for right now?`;
 }
 
+export function shouldShowFlowReviewMessageFeedback(
+  step: FlowReviewMessageStep,
+) {
+  return step.role === "assistant" && step.feedbackEligible === true;
+}
+
 const sharedWelcomeStep: FlowReviewMessageStep = {
   id: "welcome",
   kind: "message",
@@ -172,6 +180,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "LinkedIn can help in a few different ways, from lighter tools for direct hiring to Recruiter + Hiring Assistant for teams hiring at scale. The right fit depends on what you are hiring for and how urgent it is. What has changed that is making hiring harder right now?",
+        feedbackEligible: true,
       },
       {
         id: "high-user-volume",
@@ -200,6 +209,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "That points toward Recruiter + Hiring Assistant, especially since you already have a recruiting team and specialized roles. It can help teams work through sourcing and recruiting workflows more efficiently. When do the first hires need to be in seat?",
+        feedbackEligible: true,
       },
       {
         id: "high-user-timeline",
@@ -227,6 +237,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "That is the right context to bring into a sales consultant conversation. You have urgent volume, specialized roles, an existing recruiting team, and stakeholders who need confidence in the plan. I am going to match you with a sales consultant who can help shape the first-wave Recruiter + Hiring Assistant plan.",
+        feedbackEligible: true,
       },
       {
         id: "high-recommendation-card",
@@ -285,6 +296,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "Then Hiring Pro may be the better place to start. It is built for people who need qualified candidates without standing up a full recruiting process. Are those managers doing most of the sourcing themselves?",
+        feedbackEligible: true,
       },
       {
         id: "medium-user-ownership",
@@ -298,6 +310,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "That helps. In that case, I would not start by pushing you into a heavy enterprise setup. I would focus on whether Hiring Pro can help those managers get to a qualified shortlist faster.",
+        feedbackEligible: true,
       },
       {
         id: "medium-user-sales",
@@ -312,6 +325,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "Makes sense. Since this is near-term hiring but lighter than an enterprise recruiting setup, the useful next step is a sales consultant who can confirm whether Hiring Pro fits and help your managers start cleanly.",
+        feedbackEligible: true,
       },
       {
         id: "medium-availability",
@@ -358,6 +372,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "Recruiter is built for teams that need deeper sourcing, recruiting workflows, and support for ongoing hiring. It is usually strongest when hiring is consistent or specialized. Are you looking at it for ongoing hiring or one immediate role?",
+        feedbackEligible: true,
       },
       {
         id: "low-user-context",
@@ -372,6 +387,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "For one role, Recruiter may be more than you need. Hiring Pro or job posting resources may be a lighter way to start. Is this a one-off need, or the start of a bigger hiring plan?",
+        feedbackEligible: true,
       },
       {
         id: "low-user-future",
@@ -398,6 +414,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "Yes. For where you are now, self-serve resources are the better fit. They will help you understand Hiring Pro, posting a job, and when Recruiter becomes worth a closer look.",
+        feedbackEligible: true,
       },
       {
         id: "low-user-too-early",
@@ -411,6 +428,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         role: "assistant",
         content:
           "You are not too early to explore; you are just early for a sales handoff. For one role, the best next step is to review the lighter hiring resources now and come back when Northstar's hiring plan gets more complex.",
+        feedbackEligible: true,
       },
       {
         id: "low-resources",

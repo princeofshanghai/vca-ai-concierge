@@ -39,6 +39,7 @@ import {
   type FlowReviewResourcesStep,
   type FlowReviewStep,
   getMediumFlowReview,
+  shouldShowFlowReviewMessageFeedback,
 } from "@/lib/conversation-flows";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
@@ -368,22 +369,19 @@ function AvailabilityVariant({
     return null;
   }
 
+  const role = variant.role ?? "assistant";
+  const showFeedback = role === "assistant" && variant.feedbackEligible === true;
+
   return (
     <>
       <ChatMessage
-        role={variant.role ?? "assistant"}
-        className={
-          (variant.role ?? "assistant") === "assistant" ? "!pb-xs" : undefined
-        }
-        timestamp={
-          (variant.role ?? "assistant") === "assistant" ? undefined : timestamp
-        }
+        role={role}
+        className={showFeedback ? "!pb-xs" : undefined}
+        timestamp={showFeedback ? undefined : timestamp}
       >
         {variant.message}
       </ChatMessage>
-      {(variant.role ?? "assistant") === "assistant" ? (
-        <ChatMessageFeedbackFlow timestamp={timestamp} />
-      ) : null}
+      {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
       <RecommendationCard
         title={variant.title}
         primaryAction={variant.primaryAction}
@@ -502,8 +500,7 @@ export function MediumAvailableHandoffPreview({
 
 function renderStep(step: FlowReviewStep, index = 0) {
   if (step.kind === "message") {
-    const showFeedback =
-      step.role === "assistant" && !step.showStarterPromptsAfter;
+    const showFeedback = shouldShowFlowReviewMessageFeedback(step);
     const timestamp = getPrototypeMessageTimestamp(index);
 
     return (
