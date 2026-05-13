@@ -125,7 +125,7 @@ export function FlowReviewPage({ flow }: FlowReviewPageProps) {
           aria-label={`${flow.label} conversation transcript`}
           className="border-t border-border-faint pt-xxxl"
         >
-          <ChatThread className="mx-auto" timestamp="Today 1:00 PM">
+          <ChatThread className="mx-auto" timestamp="Today">
             {flow.steps.map(renderStep)}
           </ChatThread>
         </section>

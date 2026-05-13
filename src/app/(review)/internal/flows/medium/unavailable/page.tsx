@@ -14,6 +14,22 @@ export const metadata: Metadata = createPageMetadata({
   },
 });
 
-export default function MediumUnavailableFlowPage() {
-  return <LandingPage reviewFlow={getMediumFlowReview("unavailable")} />;
+type MediumUnavailableFlowPageProps = Readonly<{
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+export default async function MediumUnavailableFlowPage({
+  searchParams,
+}: MediumUnavailableFlowPageProps) {
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "default";
+
+  return (
+    <LandingPage
+      reviewFlow={getMediumFlowReview("unavailable")}
+      shellMode={shellMode}
+    />
+  );
 }

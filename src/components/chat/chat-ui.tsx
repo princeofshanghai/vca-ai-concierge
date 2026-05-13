@@ -27,6 +27,18 @@ import { TextArea } from "@/components/primitives/text-area";
 export type ChatPanelVariant = "collapsed" | "expanded";
 export type ChatPanelSurface = "default" | "welcome";
 export type ChatMessageRole = "assistant" | "user" | "representative";
+export type ChatHeaderIdentity =
+  | {
+      type: "ai";
+      title?: ReactNode;
+    }
+  | {
+      type: "representative";
+      name: string;
+      role: string;
+      avatarSrc?: string;
+      avatarLabel?: string;
+    };
 
 type ChatPanelProps = HTMLAttributes<HTMLDivElement> & {
   variant?: ChatPanelVariant;
@@ -34,6 +46,7 @@ type ChatPanelProps = HTMLAttributes<HTMLDivElement> & {
 };
 
 type ChatTrayProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+  identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
   badge?: boolean;
   badgeLabel?: string;
@@ -41,6 +54,7 @@ type ChatTrayProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> &
 
 type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   variant?: ChatPanelVariant;
+  identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
   onClose?: () => void;
   onMinimizeToTray?: () => void;
@@ -273,6 +287,7 @@ export function ChatPanel({
 }
 
 export function ChatTray({
+  identity,
   title = "Contact sales",
   badge = false,
   badgeLabel = "New activity",
@@ -289,19 +304,41 @@ export function ChatTray({
         className,
       )}
     >
-      <span className="relative inline-flex size-6 shrink-0 items-center justify-center text-ai-icon">
-        <Icon name="signal-ai" size="medium" />
-        {badge ? (
-          <span
-            role="status"
-            aria-label={badgeLabel}
-            className="absolute -right-xxs -top-xxs size-[10px] rounded-round border-2 border-background bg-action"
+      {identity?.type === "representative" ? (
+        <span className="flex min-w-0 flex-1 items-center gap-sm">
+          <Entity
+            size={32}
+            src={identity.avatarSrc}
+            label={
+              identity.avatarLabel ?? `${identity.name}, ${identity.role}`
+            }
           />
-        ) : null}
-      </span>
-      <span className="min-w-0 flex-1 truncate text-heading-lg text-text">
-        {title}
-      </span>
+          <span className="flex min-w-0 flex-col gap-0">
+            <span className="min-w-0 truncate text-body-md font-semibold text-text">
+              {identity.name}
+            </span>
+            <span className="min-w-0 truncate text-body-xs text-text-meta">
+              {identity.role}
+            </span>
+          </span>
+        </span>
+      ) : (
+        <>
+          <span className="relative inline-flex size-6 shrink-0 items-center justify-center text-ai-icon">
+            <Icon name="signal-ai" size="medium" />
+            {badge ? (
+              <span
+                role="status"
+                aria-label={badgeLabel}
+                className="absolute -right-xxs -top-xxs size-[10px] rounded-round border-2 border-background bg-action"
+              />
+            ) : null}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-heading-lg text-text">
+            {identity?.type === "ai" ? (identity.title ?? title) : title}
+          </span>
+        </>
+      )}
       <span
         aria-hidden="true"
         className="inline-flex size-8 shrink-0 items-center justify-center rounded-round text-icon transition-colors duration-150 ease-out group-hover:bg-background-transparent-hover"
@@ -337,6 +374,7 @@ function VoiceModePlaceholderButton() {
 
 export function ChatHeader({
   variant = "collapsed",
+  identity,
   title,
   className,
   onClose,
@@ -347,6 +385,9 @@ export function ChatHeader({
   aiMarkClassName,
   ...props
 }: ChatHeaderProps) {
+  const headerIdentity =
+    identity ?? (showAiMark ? ({ type: "ai", title } as const) : null);
+
   return (
     <header
       {...props}
@@ -358,7 +399,7 @@ export function ChatHeader({
         className,
       )}
     >
-      {showAiMark ? (
+      {headerIdentity?.type === "ai" ? (
         <div className="flex min-w-0 items-center gap-sm">
           <Icon
             name="signal-ai"
@@ -366,11 +407,30 @@ export function ChatHeader({
             label="AI Concierge"
             className={cx("shrink-0 text-ai-icon", aiMarkClassName)}
           />
-          {title ? (
+          {headerIdentity.title ? (
             <span className="min-w-0 truncate text-heading-lg text-text">
-              {title}
+              {headerIdentity.title}
             </span>
           ) : null}
+        </div>
+      ) : headerIdentity?.type === "representative" ? (
+        <div className="flex min-w-0 items-center gap-sm">
+          <Entity
+            size={32}
+            src={headerIdentity.avatarSrc}
+            label={
+              headerIdentity.avatarLabel ??
+              `${headerIdentity.name}, ${headerIdentity.role}`
+            }
+          />
+          <div className="flex min-w-0 flex-col gap-0">
+            <span className="min-w-0 truncate text-body-md font-semibold text-text">
+              {headerIdentity.name}
+            </span>
+            <span className="min-w-0 truncate text-body-xs text-text-meta">
+              {headerIdentity.role}
+            </span>
+          </div>
         </div>
       ) : (
         <span aria-hidden="true" />
@@ -405,7 +465,7 @@ export function ChatHeader({
 }
 
 export function ChatThread({
-  timestamp = "Today 1:00 PM",
+  timestamp = "Today",
   className,
   children,
   ...props

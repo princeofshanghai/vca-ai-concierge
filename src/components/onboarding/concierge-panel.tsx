@@ -671,7 +671,7 @@ export function ConciergePanel({
             role={message.role}
             aria-busy={message.status === "streaming" || undefined}
             className={showFeedback ? "!pb-xs" : undefined}
-            timestamp={showFeedback ? undefined : timestamp}
+            timestamp={message.role === "user" ? timestamp : undefined}
           >
             {message.content}
           </ChatMessage>

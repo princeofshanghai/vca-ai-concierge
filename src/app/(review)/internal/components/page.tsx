@@ -23,6 +23,7 @@ import {
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
 } from "@/components/flow-review";
+import { Badge } from "@/components/primitives/badge";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
@@ -110,6 +111,13 @@ const tagTones = [
   { label: "Supportive 4", tone: "supportive-4" },
   { label: "Neutral", tone: "neutral" },
   { label: "Supportive 5", tone: "supportive-5" },
+] as const;
+
+const badgeExamples = [
+  { label: "Alert dot", tone: "alert", size: "large", count: undefined },
+  { label: "Alert counter", tone: "alert", size: "small", count: 99 },
+  { label: "New dot", tone: "new", size: "small", count: undefined },
+  { label: "New counter", tone: "new", size: "large", count: 99 },
 ] as const;
 
 const promptStates = [
@@ -972,6 +980,38 @@ export default function InternalComponentsPage() {
           </div>
         </details>
 
+        <details className="group order-3 border-t border-border-faint pt-xl">
+          <summary className="flex cursor-pointer list-none items-start justify-between gap-lg [&::-webkit-details-marker]:hidden">
+            <div className="space-y-xs">
+              <p className="text-label-xs text-text-meta">Primitive 10</p>
+              <h2 className="text-heading-xl text-text">Badge</h2>
+              <p className="max-w-2xl text-body-sm-open text-text-meta">
+                Overlay indicators for new activity, alerts, and capped notification counts.
+              </p>
+            </div>
+            <p className="pt-[2px] text-body-xs text-text-meta">New</p>
+          </summary>
+
+          <div className="mt-xl grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
+            {badgeExamples.map(({ label, tone, size, count }) => (
+              <div
+                key={label}
+                className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm"
+              >
+                <p className="whitespace-nowrap text-body-xs text-text-meta">
+                  {label}
+                </p>
+                <Badge
+                  tone={tone}
+                  size={size}
+                  count={count}
+                  label={label}
+                />
+              </div>
+            ))}
+          </div>
+        </details>
+
         <section className="order-1 space-y-10 border-t border-border-faint pt-xxxl">
           <div className="flex items-start justify-between gap-lg">
             <div className="space-y-xs">
@@ -995,8 +1035,19 @@ export default function InternalComponentsPage() {
                   <p className="text-body-xs text-text-meta">
                     Top chrome for the chat panel, including AI identity and shell controls.
                   </p>
-                  <div className="overflow-hidden rounded-t-lg border border-border-faint bg-background">
-                    <ChatHeader />
+                  <div className="space-y-sm">
+                    <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
+                      <ChatHeader title="Contact sales" />
+                    </div>
+                    <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
+                      <ChatHeader
+                        identity={{
+                          type: "representative",
+                          name: "David S.",
+                          role: "Sales consultant",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -1290,11 +1341,26 @@ export default function InternalComponentsPage() {
 
                 <div className="space-y-sm">
                   <p className="text-body-xs text-text-meta">
+                    Tray shell · representative
+                  </p>
+                  <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
+                    <ChatTray
+                      identity={{
+                        type: "representative",
+                        name: "David S.",
+                        role: "Sales consultant",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-sm">
+                  <p className="text-body-xs text-text-meta">
                     Tray shell · expanded
                   </p>
                   <div className="flex h-[48rem] max-h-[calc(100dvh-8rem)] items-end justify-end overflow-x-auto rounded-lg border border-border-faint bg-background-neutral-soft px-xl pt-md">
                     <ChatPanelPreview
-                      className="md:!rounded-t-md md:!rounded-b-none"
+                      className="md:!h-full md:!rounded-t-md md:!rounded-b-none"
                       variant="collapsed"
                       showMinimizeToTrayAction
                     />

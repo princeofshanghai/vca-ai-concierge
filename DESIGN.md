@@ -424,6 +424,16 @@ components:
     supportive4BackgroundColor: "{colors.tag-supportive-4-background}"
     supportive4TextColor: "{colors.tag-supportive-4-text}"
     supportive5BackgroundColor: "{colors.tag-supportive-5-background}"
+  badge:
+    dotSmallSize: 8px
+    dotLargeSize: 16px
+    counterHeight: 16px
+    counterMinWidth: 16px
+    counterTypography: "{typography.supportive-s-strong}"
+    rounded: "{rounded.round}"
+    alertBackgroundColor: "{colors.negative}"
+    newBackgroundColor: "{colors.action}"
+    textColor: "{colors.on-action}"
   icon:
     smallSize: 16px
     mediumSize: 24px
@@ -763,6 +773,9 @@ Entities represent people, companies, and other identity objects. The current im
 
 Entity sizes are 16, 24, 32, 40, 48, 64, 80, 96, 128, and 160px. Deprecated Figma sizes are intentionally excluded. Real images may replace the ghost artwork while preserving the same size and shape rules.
 
+### Badge
+Badges are tiny overlay indicators for new activity, alerts, and capped notification counts. They are not inline labels; use `Tag` for inline status copy. Alert badges use the negative token, new badges use the action token, and counters cap at `99+`.
+
 ### Text Input
 Text inputs come in small and large sizes. They use strong default borders, compact helper text, and restrained error messaging.
 
@@ -773,9 +786,13 @@ Placeholder text uses the disabled text color so it reads clearly as a prompt ra
 ### Chat Shell
 The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The body centers the thread within the panel content width.
 
+When a live sales consultant has joined the conversation, the header identity changes from the AI mark and `Contact sales` title to the representative identity. The same representative identity should appear in the minimized tray when the tray shell is docked. Use a 32px circular entity, an 8px gap to the text stack, `body-md` semibold for the name, and `body-xs` meta text for `Sales consultant` with no vertical gap between the two text lines. The shell controls on the right stay unchanged across default, tray, docked, and expanded modes.
+
 The thread owns the shared horizontal content gutter. Message rows, prompt groups, cards, and other conversation items should align inside that gutter instead of adding their own panel-edge padding. Individual bubbles and cards own only their internal padding.
 
 Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
+
+The tray-first shell is bottom-docked on desktop. Its maximum height should preserve the 64px landing header plus an 8px gap, so the shell never covers the page header on shorter viewports. The chat panel itself should inherit the docked frame height in tray mode so the composer keeps its bottom padding inside the visible shell.
 
 High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 896px wide with a 3:5 chat-to-scheduler split, yielding about 336px of chat context at max width. The expanded scheduling surface should be about 1280px wide with the same 3:5 split, yielding about 480px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
 

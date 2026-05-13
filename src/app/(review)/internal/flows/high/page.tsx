@@ -13,6 +13,17 @@ export const metadata: Metadata = createPageMetadata({
   },
 });
 
-export default function HighFlowPage() {
-  return <LandingPage reviewFlow={flowReviews.high} />;
+type HighFlowPageProps = Readonly<{
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+export default async function HighFlowPage({
+  searchParams,
+}: HighFlowPageProps) {
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "default";
+
+  return <LandingPage reviewFlow={flowReviews.high} shellMode={shellMode} />;
 }

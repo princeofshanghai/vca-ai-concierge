@@ -5,6 +5,7 @@ import {
   useEffect,
   useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -20,6 +21,7 @@ import {
   ChatThread,
   Prompt,
   RecommendationCard,
+  type ChatHeaderIdentity,
   type ChatPanelVariant,
 } from "@/components/chat";
 import { Button } from "@/components/primitives/button";
@@ -47,6 +49,7 @@ type FlowReviewChatPanelProps = Readonly<{
   onClose?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  onHeaderIdentityChange?: (identity: ChatHeaderIdentity | null) => void;
   onSidePanelOpenChange?: (open: boolean) => void;
 }>;
 
@@ -920,6 +923,7 @@ export function FlowReviewChatPanel({
   onClose,
   onMinimizeToTray,
   onVariantToggle,
+  onHeaderIdentityChange,
   onSidePanelOpenChange,
 }: FlowReviewChatPanelProps) {
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
@@ -937,6 +941,27 @@ export function FlowReviewChatPanel({
   const isSchedulePanelOpen =
     isScheduledSpecialistFlow && scheduledSpecialistState === "scheduling";
   const shellVariant = variant;
+  const chatHeaderIdentity = useMemo<ChatHeaderIdentity | null>(
+    () =>
+      mediumAvailableHandoffState === "connected"
+        ? {
+            type: "representative",
+            name: LIVE_HIRING_SPECIALIST.name,
+            role: LIVE_HIRING_SPECIALIST.role,
+          }
+        : null,
+    [mediumAvailableHandoffState],
+  );
+
+  useEffect(() => {
+    onHeaderIdentityChange?.(chatHeaderIdentity);
+  }, [chatHeaderIdentity, onHeaderIdentityChange]);
+
+  useEffect(() => {
+    return () => {
+      onHeaderIdentityChange?.(null);
+    };
+  }, [onHeaderIdentityChange]);
 
   useLayoutEffect(() => {
     const chatBody = chatBodyRef.current;
@@ -1142,6 +1167,7 @@ export function FlowReviewChatPanel({
     >
       <ChatHeader
         variant={variant}
+        identity={chatHeaderIdentity}
         title={HIRING_CONCIERGE_TITLE}
         onClose={onClose}
         onMinimizeToTray={onMinimizeToTray}

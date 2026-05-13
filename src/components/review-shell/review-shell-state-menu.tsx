@@ -82,7 +82,7 @@ export function ReviewShellStateMenu({
   const optionCount =
     modeOptions.length + shellOptions.length + visitorOptions.length;
   const activeModeIndex = modeOptions.findIndex(
-    (option) => option.href === pathname,
+    (option) => option.href.split("?")[0] === pathname,
   );
   const activeShellIndex = shellOptions.findIndex(
     (option) => option.href === currentHref,
@@ -258,7 +258,7 @@ export function ReviewShellStateMenu({
         </p>
         {modeOptions.map((option, optionIndex) => {
           const index = visitorOptions.length + optionIndex;
-          const isSelected = option.href === pathname;
+          const isSelected = option.href.split("?")[0] === pathname;
 
           return (
             <Link

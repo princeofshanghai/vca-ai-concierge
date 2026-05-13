@@ -13,6 +13,17 @@ export const metadata: Metadata = createPageMetadata({
   },
 });
 
-export default function LowFlowPage() {
-  return <LandingPage reviewFlow={flowReviews.low} />;
+type LowFlowPageProps = Readonly<{
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+export default async function LowFlowPage({
+  searchParams,
+}: LowFlowPageProps) {
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "default";
+
+  return <LandingPage reviewFlow={flowReviews.low} shellMode={shellMode} />;
 }

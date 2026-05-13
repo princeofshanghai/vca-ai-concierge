@@ -712,7 +712,7 @@ export function PremiumConciergePanel({
           role={item.role}
           aria-busy={item.status === "streaming" || undefined}
           className={showFeedback ? "!pb-xs" : undefined}
-          timestamp={showFeedback ? undefined : timestamp}
+          timestamp={item.role === "user" ? timestamp : undefined}
         >
           {renderPremiumMessageContent(item.content)}
         </ChatMessage>

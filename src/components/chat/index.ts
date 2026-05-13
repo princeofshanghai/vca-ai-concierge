@@ -16,6 +16,7 @@ export {
   Prompt,
   RecommendationCard,
   type ChatFeedbackReason,
+  type ChatHeaderIdentity,
   type ChatMessageFeedbackValue,
   type ChatMessageRole,
   type ChatPanelSurface,
