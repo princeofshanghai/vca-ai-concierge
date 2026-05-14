@@ -33,6 +33,10 @@ import { Pill } from "@/components/primitives/pill";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
+import {
+  HIRING_CONCIERGE_TITLE,
+  PREMIUM_CONCIERGE_TITLE,
+} from "@/lib/concierge-copy";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
@@ -1037,7 +1041,10 @@ export default function InternalComponentsPage() {
                   </p>
                   <div className="space-y-sm">
                     <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
-                      <ChatHeader title="Contact sales" />
+                      <ChatHeader title={HIRING_CONCIERGE_TITLE} />
+                    </div>
+                    <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
+                      <ChatHeader title={PREMIUM_CONCIERGE_TITLE} />
                     </div>
                     <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
                       <ChatHeader

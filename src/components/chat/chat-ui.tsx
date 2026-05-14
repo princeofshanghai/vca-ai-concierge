@@ -400,15 +400,15 @@ export function ChatHeader({
       )}
     >
       {headerIdentity?.type === "ai" ? (
-        <div className="flex min-w-0 items-center gap-sm">
+        <div className="flex min-w-0 items-center gap-xs">
           <Icon
             name="signal-ai"
-            size="medium"
+            size="small"
             label="AI Concierge"
             className={cx("shrink-0 text-ai-icon", aiMarkClassName)}
           />
           {headerIdentity.title ? (
-            <span className="min-w-0 truncate text-heading-lg text-text">
+            <span className="min-w-0 truncate text-heading-md text-text">
               {headerIdentity.title}
             </span>
           ) : null}
