@@ -8,6 +8,15 @@ type ButtonVariant = "primary" | "secondary" | "tertiary";
 type ButtonSize = "small" | "medium";
 type ButtonVisualState = "default" | "hover" | "active" | "focus-visible";
 
+type ButtonClassNameOptions = {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  loading?: boolean;
+  disabled?: boolean;
+  visualState?: ButtonVisualState;
+  className?: string;
+};
+
 export type ButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
   "disabled"
@@ -69,6 +78,30 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+export function getButtonClassName({
+  variant = "primary",
+  size = "medium",
+  loading = false,
+  disabled = false,
+  visualState = "default",
+  className,
+}: ButtonClassNameOptions = {}) {
+  const isDisabled = disabled || loading;
+
+  return cx(
+    "inline-flex shrink-0 select-none items-center justify-center gap-xs rounded-round border font-sans whitespace-nowrap text-center shadow-none outline-none transition-[background-color,border-color,color,box-shadow] duration-150 ease-out",
+    "disabled:pointer-events-none disabled:cursor-not-allowed",
+    sizeClasses[size],
+    isDisabled
+      ? "border-transparent bg-background-disabled text-text-disabled"
+      : variantClasses[variant],
+    !isDisabled &&
+      visualState !== "default" &&
+      staticStateClasses[variant][visualState],
+    className,
+  );
+}
+
 function ButtonSpinner() {
   return (
     <span
@@ -121,18 +154,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         data-variant={variant}
         data-size={size}
         data-loading={loading || undefined}
-        className={cx(
-          "inline-flex shrink-0 select-none items-center justify-center gap-xs rounded-round border font-sans whitespace-nowrap text-center shadow-none outline-none transition-[background-color,border-color,color,box-shadow] duration-150 ease-out",
-          "disabled:pointer-events-none disabled:cursor-not-allowed",
-          sizeClasses[size],
-          isDisabled
-            ? "border-transparent bg-background-disabled text-text-disabled"
-            : variantClasses[variant],
-          !isDisabled &&
-            visualState !== "default" &&
-            staticStateClasses[variant][visualState],
+        className={getButtonClassName({
+          variant,
+          size,
+          loading,
+          disabled,
+          visualState,
           className,
-        )}
+        })}
       >
         {startAdornment ? (
           <span

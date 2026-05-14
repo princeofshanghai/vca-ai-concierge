@@ -483,7 +483,7 @@ export function ChatThread({
           {timestamp}
         </p>
       ) : null}
-      <div className="flex flex-col gap-0">{children}</div>
+      <div className="flex flex-col gap-0 pb-sm">{children}</div>
     </div>
   );
 }
