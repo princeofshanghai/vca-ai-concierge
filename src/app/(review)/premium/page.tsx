@@ -9,6 +9,15 @@ export const metadata: Metadata = createPageMetadata({
     "Prototype survey landing surface for the LinkedIn Premium AI concierge experience.",
 });
 
-export default function PremiumPage() {
-  return <PremiumSurveyPage />;
+type PremiumPageProps = Readonly<{
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+export default async function PremiumPage({ searchParams }: PremiumPageProps) {
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "fab";
+
+  return <PremiumSurveyPage shellMode={shellMode} />;
 }

@@ -2,10 +2,15 @@
 
 import { useCallback, useEffect, useId, useState } from "react";
 
-import { type ChatPanelVariant, useChatPanelPresence } from "@/components/chat";
+import {
+  ChatTray,
+  type ChatPanelVariant,
+  useChatPanelPresence,
+} from "@/components/chat";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
+import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 
 import type {
   PremiumConversationFlow,
@@ -104,7 +109,7 @@ function ProgressIndicator({
       >
         <span className="absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-xs bg-text-meta" />
         <span
-          className="absolute left-0 top-0 h-[6px] rounded-xs bg-[#c37d16]"
+          className="absolute left-0 top-0 h-[6px] rounded-xs bg-premium-indicator"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -143,7 +148,7 @@ function PremiumProfileMark() {
       aria-hidden="true"
       className="relative flex size-12 items-center justify-center"
     >
-      <span className="absolute -inset-[2px] rounded-round border-[2px] border-[#ce7b00]" />
+      <span className="absolute -inset-[2px] rounded-round border-[2px] border-premium-inbug" />
       <Entity size={48} label="Alex" />
       <span className="absolute bottom-0 right-0 flex size-[13px] items-center justify-center rounded-xs bg-background">
         <LinkedInBug className="size-[10px] [&_span]:!size-[10px]" />
@@ -225,7 +230,7 @@ function PremiumPlanCard({ plan }: Readonly<{ plan: PremiumPlan }>) {
             >
               <span
                 aria-hidden="true"
-                className="mt-[2px] inline-flex size-5 shrink-0 items-center justify-center text-[#8f5a00]"
+                className="mt-[2px] inline-flex size-5 shrink-0 items-center justify-center text-premium-text-brand"
               >
                 <Icon name="check" size="small" />
               </span>
@@ -281,6 +286,7 @@ type PremiumSurveyPageProps = Readonly<{
   conciergeNudge?: string;
   conversationFlow?: PremiumConversationFlow;
   liveMode?: PremiumLiveMode;
+  shellMode?: "fab" | "tray";
 }>;
 
 const defaultInitialGoalOptions: ReadonlyArray<GoalOptionId> = [];
@@ -292,7 +298,9 @@ export function PremiumSurveyPage({
   initialChatOpen = false,
   conversationFlow,
   liveMode = "low-signal",
+  shellMode = "fab",
 }: PremiumSurveyPageProps = {}) {
+  const isTrayShell = shellMode === "tray";
   const [step, setStep] = useState<SurveyStep>(initialStep);
   const [selectedUseCaseOption, setSelectedUseCaseOption] =
     useState<UseCaseOptionId>(initialUseCaseOption);
@@ -312,24 +320,37 @@ export function PremiumSurveyPage({
     open: openChat,
     close: closeChat,
   } = useChatPanelPresence({
-    initialOpen: initialChatOpen,
-    onBeforeOpen: resetChatPanelState,
-    onBeforeClose: resetChatPanelState,
+    initialOpen: isTrayShell ? false : initialChatOpen,
+    onBeforeOpen: isTrayShell ? undefined : resetChatPanelState,
+    onBeforeClose: isTrayShell ? undefined : resetChatPanelState,
   });
 
   const isGoalStep = step === "goals";
   const isPlanStep = step === "plans";
+  const isChatPanelMounted = isTrayShell || isChatMounted;
   const progress = isPlanStep ? 60 : isGoalStep ? 33 : 0;
+  const isBottomAttachedChatSurface =
+    isTrayShell && chatPanelVariant !== "expanded";
   const chatPanelPositionClass =
-    chatPanelVariant === "expanded"
-      ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+    isBottomAttachedChatSurface
+      ? "md:right-6 md:bottom-0 md:h-[min(calc(100dvh_-_60px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
+      : chatPanelVariant === "expanded"
+        ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
       : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+  const trayDockedPanelClass = isBottomAttachedChatSurface
+    ? "md:!h-full md:!rounded-t-md md:!rounded-b-none"
+    : undefined;
 
   const toggleChatPanelVariant = useCallback(() => {
     setChatPanelVariant((variant) =>
       variant === "collapsed" ? "expanded" : "collapsed",
     );
   }, []);
+
+  const dockChatToTray = useCallback(() => {
+    setChatPanelVariant("collapsed");
+    closeChat();
+  }, [closeChat]);
 
   useEffect(() => {
     window.scrollTo({ left: 0, top: 0 });
@@ -342,6 +363,11 @@ export function PremiumSurveyPage({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        if (isTrayShell) {
+          dockChatToTray();
+          return;
+        }
+
         closeChat();
       }
     }
@@ -351,7 +377,7 @@ export function PremiumSurveyPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [closeChat, isChatMounted]);
+  }, [closeChat, dockChatToTray, isChatMounted, isTrayShell]);
 
   function advanceSurvey() {
     if (step === "use-case") {
@@ -512,7 +538,25 @@ export function PremiumSurveyPage({
         </>
       )}
 
-      {isChatMounted ? (
+      {isTrayShell && !isChatInteractive ? (
+        <ChatTray
+          variant={chatPanelVariant}
+          aria-controls={chatPanelId}
+          aria-expanded={false}
+          aria-haspopup="dialog"
+          aria-label="Open Premium help assistant"
+          className="fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-panel-collapsed-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
+          title={PREMIUM_CONCIERGE_TITLE}
+          onOpen={openChat}
+          onVariantToggle={() => {
+            setChatPanelVariant("expanded");
+            openChat();
+          }}
+          showCloseAction={false}
+        />
+      ) : null}
+
+      {isChatPanelMounted ? (
         <>
           {chatPanelVariant === "expanded" ? (
             <button
@@ -533,37 +577,48 @@ export function PremiumSurveyPage({
             id={chatPanelId}
             role="dialog"
             aria-label="AI Concierge chat"
+            aria-hidden={!isChatOpen}
+            inert={!isChatOpen}
             className={[
               "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)] md:inset-auto",
               chatPanelPositionClass,
+              isChatOpen ? "pointer-events-auto" : "pointer-events-none",
             ].join(" ")}
           >
             <div
               className={[
-                "h-full w-full transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
+                "h-full w-full ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
+                isTrayShell
+                  ? "transition-transform duration-[var(--design-motion-duration-slow)]"
+                  : "transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)]",
                 isChatInteractive
                   ? "translate-y-0 opacity-100"
-                  : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
+                  : isTrayShell
+                    ? "pointer-events-none translate-y-full opacity-100"
+                    : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
               ].join(" ")}
             >
               <PremiumConciergePanel
+                className={trayDockedPanelClass}
                 variant={chatPanelVariant}
                 context={step}
                 flow={conversationFlow}
                 liveMode={liveMode}
-                onClose={closeChat}
+                onClose={isTrayShell ? undefined : closeChat}
+                onMinimizeToTray={isTrayShell ? dockChatToTray : undefined}
                 onVariantToggle={toggleChatPanelVariant}
+                showCloseAction={!isTrayShell}
               />
             </div>
           </div>
         </>
-      ) : (
+      ) : !isTrayShell ? (
         <PremiumConciergeFab
           chatPanelId={chatPanelId}
           isChatOpen={isChatOpen}
           onClick={openChat}
         />
-      )}
+      ) : null}
     </main>
   );
 }

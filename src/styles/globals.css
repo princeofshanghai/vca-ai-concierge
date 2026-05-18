@@ -1,66 +1,171 @@
 @import "tailwindcss";
+@import "./figma-colors.css";
+@import "./figma-dimensions.css";
+@import "./figma-elevation.css";
+@import "./figma-typography.css";
 
 :root {
-  /* DESIGN.md -> Figma semantic color tokens used by the current app */
-  --design-color-action: #0A66C2;
-  --design-color-action-hover: #004182;
-  --design-color-action-active: #004182;
-  --design-color-action-background-transparent-hover: rgba(55, 143, 233, 0.1);
-  --design-color-action-background-transparent-active: rgba(55, 143, 233, 0.2);
+  /* App semantic aliases mapped to the Figma source-token layer. */
+  --design-color-action: var(--figma-color-action-color-action);
+  --design-color-action-hover: var(--figma-color-action-color-action-hover);
+  --design-color-action-active: var(--figma-color-action-color-action-active);
+  --design-color-action-background-transparent-hover: var(
+    --figma-color-action-color-background-action-transparent-hover
+  );
+  --design-color-action-background-transparent-active: var(
+    --figma-color-action-color-background-action-transparent-active
+  );
   --design-color-action-focus-ring: rgba(55, 143, 233, 0.08);
-  --design-color-on-action: #FFFFFF;
-  --design-color-checked: #01754F;
-  --design-color-checked-hover: #004C33;
-  --design-color-checked-active: #004C33;
-  --design-color-on-checked: #FFFFFF;
-  --design-color-on-checked-active: rgba(255, 255, 255, 0.6);
-  --design-color-background: #FFFFFF;
-  --design-color-background-disabled: rgba(140, 140, 140, 0.2);
-  --design-color-background-neutral-soft: #F4F2EE;
+  --design-color-on-action: var(--figma-color-label-color-label-knockout);
+  --design-color-checked: var(--figma-color-checked-color-checked);
+  --design-color-checked-hover: var(--figma-color-checked-color-checked-hover);
+  --design-color-checked-active: var(
+    --figma-color-checked-color-checked-active
+  );
+  --design-color-on-checked: var(--figma-color-label-color-label-knockout);
+  --design-color-on-checked-active: var(
+    --figma-color-label-color-label-knockout-active
+  );
+  --design-color-background: var(--figma-color-background-color-background);
+  --design-color-background-disabled: var(
+    --figma-color-background-color-background-disabled
+  );
+  --design-color-background-neutral-soft: var(
+    --figma-color-background-color-background-neutral-soft
+  );
   --design-color-surface-tint: #EEF3FA;
-  --design-color-background-transparent-hover: rgba(140, 140, 140, 0.1);
-  --design-color-background-transparent-active: rgba(140, 140, 140, 0.2);
-  --design-color-overlay-dim: rgba(0, 0, 0, 0.2);
-  --design-color-scrim: rgba(0, 0, 0, 0.6);
-  --design-color-ai-background-soft: #D2E9FF;
-  --design-color-ai-border: #AAD6FF;
-  --design-color-ai-icon: #0A66C2;
-  --design-color-tag-default-background: rgba(140, 140, 140, 0.2);
-  --design-color-tag-positive-background: #01754F;
-  --design-color-tag-negative-background: #CB112D;
-  --design-color-tag-caution-background: #AD4601;
-  --design-color-tag-neutral-background: #56687A;
-  --design-color-tag-supportive-1-background: #FDE2BC;
-  --design-color-tag-supportive-2-background: #FFDFD6;
-  --design-color-tag-supportive-3-background: #DAEBD1;
-  --design-color-tag-supportive-4-background: #DDE7F1;
-  --design-color-tag-supportive-4-text: #56687A;
-  --design-color-tag-supportive-5-background: #D9E9EC;
-  --design-color-on-tag-strong: #FFFFFF;
-  --design-color-entity-ghost-background: #EAE6DF;
+  --design-color-background-transparent-hover: var(
+    --figma-color-background-color-background-transparent-hover
+  );
+  --design-color-background-transparent-active: var(
+    --figma-color-background-color-background-transparent-active
+  );
+  --design-color-overlay-dim: var(
+    --figma-color-background-color-background-overlay-a20
+  );
+  --design-color-scrim: var(--figma-color-scrim-color-scrim);
+  --design-color-ai-background-soft: var(
+    --figma-color-ai-color-ai-background-soft
+  );
+  --design-color-ai-background-strong: var(
+    --figma-color-ai-color-ai-background-strong
+  );
+  --design-color-ai-border: var(--figma-color-ai-color-ai-border);
+  --design-color-ai-icon: var(--figma-color-ai-color-ai-icon);
+  --design-color-tag-default-background: var(
+    --figma-color-background-color-background-faint
+  );
+  --design-color-positive: var(--figma-color-positive-color-positive);
+  --design-color-positive-hover: var(
+    --figma-color-positive-color-positive-hover
+  );
+  --design-color-positive-active: var(
+    --figma-color-positive-color-positive-active
+  );
+  --design-color-caution: var(--figma-color-caution-color-caution);
+  --design-color-caution-hover: var(--figma-color-caution-color-caution-hover);
+  --design-color-caution-active: var(
+    --figma-color-caution-color-caution-active
+  );
+  --design-color-new: var(--figma-color-new-color-new);
+  --design-color-tag-positive-background: var(--design-color-positive);
+  --design-color-tag-negative-background: var(--design-color-negative);
+  --design-color-tag-caution-background: var(--design-color-caution);
+  --design-color-tag-neutral-background: var(
+    --figma-color-accent-4-color-accent-4
+  );
+  --design-color-tag-supportive-1-background: var(
+    --figma-color-accent-1-color-background-accent-strong-1
+  );
+  --design-color-tag-supportive-2-background: var(
+    --figma-color-accent-2-color-background-accent-strong-2
+  );
+  --design-color-tag-supportive-3-background: var(
+    --figma-color-accent-3-color-background-accent-strong-3
+  );
+  --design-color-tag-supportive-4-background: var(
+    --figma-color-accent-4-color-background-accent-strong-4
+  );
+  --design-color-tag-supportive-4-text: var(
+    --figma-color-accent-4-color-accent-4
+  );
+  --design-color-tag-supportive-5-background: var(
+    --figma-color-accent-5-color-background-accent-strong-5
+  );
+  --design-color-on-tag-strong: var(--figma-color-label-color-label-knockout);
+  --design-color-entity-ghost-background: var(
+    --figma-color-background-color-background-neutral-strong
+  );
   --design-color-entity-ghost-medium: #9DB3C8;
   --design-color-entity-ghost-strong: #788FA5;
-  --design-color-entity-ghost-dark: #56687A;
-  --design-color-border: rgba(0, 0, 0, 0.75);
-  --design-color-border-hover: rgba(0, 0, 0, 0.9);
-  --design-color-border-active: rgba(0, 0, 0, 0.9);
-  --design-color-border-subtle: rgba(0, 0, 0, 0.3);
-  --design-color-border-faint: rgba(140, 140, 140, 0.2);
-  --design-color-label: rgba(0, 0, 0, 0.75);
-  --design-color-label-disabled: rgba(0, 0, 0, 0.3);
-  --design-color-icon: rgba(0, 0, 0, 0.75);
-  --design-color-icon-hover: rgba(0, 0, 0, 0.9);
-  --design-color-icon-active: rgba(0, 0, 0, 0.9);
-  --design-color-icon-disabled: rgba(0, 0, 0, 0.3);
-  --design-color-text: rgba(0, 0, 0, 0.9);
-  --design-color-text-hover: rgba(0, 0, 0, 0.9);
-  --design-color-text-active: rgba(0, 0, 0, 0.9);
-  --design-color-text-meta: rgba(0, 0, 0, 0.6);
-  --design-color-text-disabled: rgba(0, 0, 0, 0.3);
-  --design-color-negative: #CB112D;
-  --design-color-negative-hover: #8A0015;
-  --design-color-negative-active: #8A0015;
+  --design-color-entity-ghost-dark: var(--figma-color-accent-4-color-accent-4);
+  --design-color-border: var(--figma-color-border-color-border);
+  --design-color-border-hover: var(--figma-color-border-color-border-hover);
+  --design-color-border-active: var(--figma-color-border-color-border-active);
+  --design-color-border-subtle: var(--figma-color-border-color-border-subtle);
+  --design-color-border-faint: var(--figma-color-border-color-border-faint);
+  --design-color-border-faint-hover: var(
+    --figma-color-border-color-border-faint-hover
+  );
+  --design-color-border-faint-active: var(
+    --figma-color-border-color-border-faint-active
+  );
+  --design-color-label: var(--figma-color-label-color-label);
+  --design-color-label-disabled: var(--figma-color-label-color-label-disabled);
+  --design-color-icon: var(--figma-color-icon-color-icon);
+  --design-color-icon-hover: var(--figma-color-icon-color-icon-hover);
+  --design-color-icon-active: var(--figma-color-icon-color-icon-active);
+  --design-color-icon-disabled: var(--figma-color-icon-color-icon-disabled);
+  --design-color-text: var(--figma-color-text-color-text);
+  --design-color-text-primary: var(--design-color-text);
+  --design-color-text-hover: var(--figma-color-text-color-text-hover);
+  --design-color-text-active: var(--figma-color-text-color-text-active);
+  --design-color-text-meta: var(--figma-color-text-color-text-meta);
+  --design-color-text-disabled: var(--figma-color-text-color-text-disabled);
+  --design-color-negative: var(--figma-color-negative-color-negative);
+  --design-color-negative-hover: var(
+    --figma-color-negative-color-negative-hover
+  );
+  --design-color-negative-active: var(
+    --figma-color-negative-color-negative-active
+  );
   --design-color-neutral-focus-ring: rgba(0, 0, 0, 0.15);
+  --design-color-premium-gradient-base-a: var(
+    --figma-color-premium-premium-gradient-base-a
+  );
+  --design-color-premium-gradient-base-b: var(
+    --figma-color-premium-premium-gradient-base-b
+  );
+  --design-color-premium-gradient-base-c: var(
+    --figma-color-premium-premium-gradient-base-c
+  );
+  --design-color-premium-brand: var(
+    --figma-color-premium-color-premium-brand
+  );
+  --design-color-premium-button-background: var(
+    --figma-color-premium-color-premium-button-background
+  );
+  --design-color-premium-button-background-hover: var(
+    --figma-color-premium-color-premium-button-background-hover
+  );
+  --design-color-premium-button-background-active: var(
+    --figma-color-premium-color-premium-button-background-active
+  );
+  --design-color-premium-button-label: var(
+    --figma-color-premium-color-premium-button-label
+  );
+  --design-color-premium-icon: var(
+    --figma-color-premium-color-premium-icon
+  );
+  --design-color-premium-inbug: var(
+    --figma-color-premium-color-premium-inbug
+  );
+  --design-color-premium-indicator: var(
+    --figma-color-premium-color-premium-indicator
+  );
+  --design-color-premium-text-brand: var(
+    --figma-color-premium-color-premium-text-brand
+  );
 
   /* DESIGN.md -> typography */
   --design-font-family-system-ui:
@@ -71,78 +176,200 @@
     "Helvetica Neue",
     Arial,
     sans-serif;
-  --design-typography-display-md-font-size: 32px;
-  --design-typography-display-md-font-weight: 600;
-  --design-typography-display-md-line-height: 1.25;
-  --design-typography-display-md-letter-spacing: 0.38px;
-  --design-typography-heading-xl-font-size: 24px;
-  --design-typography-heading-xl-font-weight: 600;
-  --design-typography-heading-xl-line-height: 1.25;
-  --design-typography-heading-xl-letter-spacing: 0.38px;
-  --design-typography-heading-lg-font-size: 20px;
-  --design-typography-heading-lg-font-weight: 600;
-  --design-typography-heading-lg-line-height: 1.25;
-  --design-typography-heading-lg-letter-spacing: 0.38px;
-  --design-typography-heading-md-font-size: 16px;
-  --design-typography-heading-md-font-weight: 600;
-  --design-typography-heading-md-line-height: 1.25;
-  --design-typography-heading-md-letter-spacing: -0.32px;
-  --design-typography-control-md-font-size: 16px;
-  --design-typography-control-md-font-weight: 600;
-  --design-typography-control-md-line-height: 1.25;
-  --design-typography-control-md-letter-spacing: -0.32px;
-  --design-typography-control-sm-font-size: 14px;
-  --design-typography-control-sm-font-weight: 600;
-  --design-typography-control-sm-line-height: 1.25;
-  --design-typography-control-sm-letter-spacing: -0.15px;
-  --design-typography-body-md-font-size: 16px;
-  --design-typography-body-md-font-weight: 400;
-  --design-typography-body-md-line-height: 1.25;
-  --design-typography-body-md-letter-spacing: -0.32px;
-  --design-typography-body-md-open-font-size: 16px;
-  --design-typography-body-md-open-font-weight: 400;
-  --design-typography-body-md-open-line-height: 1.5;
-  --design-typography-body-md-open-letter-spacing: -0.32px;
-  --design-typography-body-sm-font-size: 14px;
-  --design-typography-body-sm-font-weight: 400;
-  --design-typography-body-sm-line-height: 1.25;
-  --design-typography-body-sm-letter-spacing: -0.15px;
-  --design-typography-body-sm-open-font-size: 14px;
-  --design-typography-body-sm-open-font-weight: 400;
-  --design-typography-body-sm-open-line-height: 1.5;
-  --design-typography-body-sm-open-letter-spacing: -0.15px;
-  --design-typography-body-xs-font-size: 12px;
-  --design-typography-body-xs-font-weight: 400;
-  --design-typography-body-xs-line-height: 1.25;
-  --design-typography-body-xs-letter-spacing: 0px;
-  --design-typography-supportive-s-font-size: 12px;
-  --design-typography-supportive-s-font-weight: 400;
-  --design-typography-supportive-s-line-height: 1.25;
-  --design-typography-supportive-s-letter-spacing: 0px;
-  --design-typography-supportive-s-strong-font-size: 12px;
-  --design-typography-supportive-s-strong-font-weight: 600;
-  --design-typography-supportive-s-strong-line-height: 1.25;
-  --design-typography-supportive-s-strong-letter-spacing: 0px;
-  --design-typography-label-xs-font-size: 12px;
-  --design-typography-label-xs-font-weight: 600;
-  --design-typography-label-xs-line-height: 1.25;
-  --design-typography-label-xs-letter-spacing: 0px;
+  --design-typography-display-md-font-size: var(
+    --figma-type-display-m-bold-font-size
+  );
+  --design-typography-display-md-font-weight: var(
+    --figma-type-display-m-bold-font-weight
+  );
+  --design-typography-display-md-line-height: var(
+    --figma-type-display-m-bold-line-height
+  );
+  --design-typography-display-md-letter-spacing: var(
+    --figma-type-display-m-bold-letter-spacing
+  );
+  --design-typography-heading-xl-font-size: var(
+    --figma-type-heading-l-font-size
+  );
+  --design-typography-heading-xl-font-weight: var(
+    --figma-type-heading-l-font-weight
+  );
+  --design-typography-heading-xl-line-height: var(
+    --figma-type-heading-l-line-height
+  );
+  --design-typography-heading-xl-letter-spacing: var(
+    --figma-type-heading-l-letter-spacing
+  );
+  --design-typography-heading-lg-font-size: var(
+    --figma-type-heading-m-font-size
+  );
+  --design-typography-heading-lg-font-weight: var(
+    --figma-type-heading-m-font-weight
+  );
+  --design-typography-heading-lg-line-height: var(
+    --figma-type-heading-m-line-height
+  );
+  --design-typography-heading-lg-letter-spacing: var(
+    --figma-type-heading-m-letter-spacing
+  );
+  --design-typography-heading-md-font-size: var(
+    --figma-type-title-l-font-size
+  );
+  --design-typography-heading-md-font-weight: var(
+    --figma-type-title-l-font-weight
+  );
+  --design-typography-heading-md-line-height: var(
+    --figma-type-title-l-line-height
+  );
+  --design-typography-heading-md-letter-spacing: var(
+    --figma-type-title-l-letter-spacing
+  );
+  --design-typography-heading-sm-font-size: var(
+    --figma-type-heading-s-font-size
+  );
+  --design-typography-heading-sm-font-weight: var(
+    --figma-type-heading-s-font-weight
+  );
+  --design-typography-heading-sm-line-height: var(
+    --figma-type-heading-s-line-height
+  );
+  --design-typography-heading-sm-letter-spacing: var(
+    --figma-type-heading-s-letter-spacing
+  );
+  --design-typography-control-md-font-size: var(--figma-type-title-l-font-size);
+  --design-typography-control-md-font-weight: var(
+    --figma-type-title-l-font-weight
+  );
+  --design-typography-control-md-line-height: var(
+    --figma-type-title-l-line-height
+  );
+  --design-typography-control-md-letter-spacing: var(
+    --figma-type-title-l-letter-spacing
+  );
+  --design-typography-control-sm-font-size: var(--figma-type-title-s-font-size);
+  --design-typography-control-sm-font-weight: var(
+    --figma-type-title-s-font-weight
+  );
+  --design-typography-control-sm-line-height: var(
+    --figma-type-title-s-line-height
+  );
+  --design-typography-control-sm-letter-spacing: var(
+    --figma-type-title-s-letter-spacing
+  );
+  --design-typography-body-md-font-size: var(
+    --figma-type-supportive-l-font-size
+  );
+  --design-typography-body-md-font-weight: var(
+    --figma-type-supportive-l-font-weight
+  );
+  --design-typography-body-md-line-height: var(
+    --figma-type-supportive-l-line-height
+  );
+  --design-typography-body-md-letter-spacing: var(
+    --figma-type-supportive-l-letter-spacing
+  );
+  --design-typography-body-md-open-font-size: var(--figma-type-prose-font-size);
+  --design-typography-body-md-open-font-weight: var(
+    --figma-type-prose-font-weight
+  );
+  --design-typography-body-md-open-line-height: var(
+    --figma-type-prose-line-height
+  );
+  --design-typography-body-md-open-letter-spacing: var(
+    --figma-type-prose-letter-spacing
+  );
+  --design-typography-body-sm-font-size: var(
+    --figma-type-supportive-m-font-size
+  );
+  --design-typography-body-sm-font-weight: var(
+    --figma-type-supportive-m-font-weight
+  );
+  --design-typography-body-sm-line-height: var(
+    --figma-type-supportive-m-line-height
+  );
+  --design-typography-body-sm-letter-spacing: var(
+    --figma-type-supportive-m-letter-spacing
+  );
+  --design-typography-body-sm-open-font-size: var(--figma-type-body-font-size);
+  --design-typography-body-sm-open-font-weight: var(
+    --figma-type-body-font-weight
+  );
+  --design-typography-body-sm-open-line-height: var(
+    --figma-type-body-line-height
+  );
+  --design-typography-body-sm-open-letter-spacing: var(
+    --figma-type-body-letter-spacing
+  );
+  --design-typography-body-xs-font-size: var(
+    --figma-type-supportive-s-font-size
+  );
+  --design-typography-body-xs-font-weight: var(
+    --figma-type-supportive-s-font-weight
+  );
+  --design-typography-body-xs-line-height: var(
+    --figma-type-supportive-s-line-height
+  );
+  --design-typography-body-xs-letter-spacing: var(
+    --figma-type-supportive-s-letter-spacing
+  );
+  --design-typography-supportive-s-font-size: var(
+    --figma-type-supportive-s-font-size
+  );
+  --design-typography-supportive-s-font-weight: var(
+    --figma-type-supportive-s-font-weight
+  );
+  --design-typography-supportive-s-line-height: var(
+    --figma-type-supportive-s-line-height
+  );
+  --design-typography-supportive-s-letter-spacing: var(
+    --figma-type-supportive-s-letter-spacing
+  );
+  --design-typography-supportive-s-strong-font-size: var(
+    --figma-type-supportive-s-bold-font-size
+  );
+  --design-typography-supportive-s-strong-font-weight: var(
+    --figma-type-supportive-s-bold-font-weight
+  );
+  --design-typography-supportive-s-strong-line-height: var(
+    --figma-type-supportive-s-bold-line-height
+  );
+  --design-typography-supportive-s-strong-letter-spacing: var(
+    --figma-type-supportive-s-bold-letter-spacing
+  );
+  --design-typography-label-xs-font-size: var(
+    --figma-type-supportive-s-bold-font-size
+  );
+  --design-typography-label-xs-font-weight: var(
+    --figma-type-supportive-s-bold-font-weight
+  );
+  --design-typography-label-xs-line-height: var(
+    --figma-type-supportive-s-bold-line-height
+  );
+  --design-typography-label-xs-letter-spacing: var(
+    --figma-type-supportive-s-bold-letter-spacing
+  );
 
   /* DESIGN.md -> spacing */
-  --design-spacing-xxs: 2px;
-  --design-spacing-xs: 4px;
-  --design-spacing-sm: 8px;
-  --design-spacing-md: 12px;
-  --design-spacing-lg: 16px;
-  --design-spacing-xl: 20px;
-  --design-spacing-xxl: 24px;
-  --design-spacing-xxxl: 32px;
-  --design-spacing-stack: 40px;
-  --design-spacing-stack-lg: 48px;
-  --design-spacing-card-padding: 24px;
-  --design-spacing-panel-padding: 20px;
-  --design-spacing-pill-padding-inline: 16px;
-  --design-spacing-button-padding-inline: 24px;
+  --design-spacing-xxs: var(--figma-dimension-space-0-25x);
+  --design-spacing-xs: var(--figma-dimension-space-0-5x);
+  --design-spacing-sm: var(--figma-dimension-gap-gap-small);
+  --design-spacing-md: var(--figma-dimension-padding-padding-small);
+  --design-spacing-lg: var(--figma-dimension-gap-gap-medium);
+  --design-spacing-xl: var(--figma-dimension-padding-padding-large);
+  --design-spacing-xxl: var(--figma-dimension-padding-padding-xlarge);
+  --design-spacing-xxxl: var(--figma-dimension-space-4x);
+  --design-spacing-stack: var(--figma-dimension-space-5x);
+  --design-spacing-stack-lg: var(--figma-dimension-space-6x);
+  --design-spacing-card-padding: var(
+    --figma-dimension-padding-padding-xlarge
+  );
+  --design-spacing-panel-padding: var(--figma-dimension-padding-padding-large);
+  --design-spacing-pill-padding-inline: var(
+    --figma-dimension-padding-padding-medium
+  );
+  --design-spacing-button-padding-inline: var(
+    --figma-dimension-padding-padding-xlarge
+  );
 
   /* DESIGN.md -> layout */
   --design-layout-viewport-min-width: 320px;
@@ -156,7 +383,7 @@
   --design-layout-panel-expanded-width: 1280px;
   --design-layout-panel-collapsed-height: 908px;
   --design-layout-panel-expanded-height: 928px;
-  --design-layout-panel-content-max: 640px;
+  --design-layout-panel-content-max: 600px;
   --design-layout-schedule-collapsed-surface-width: 896px;
   --design-layout-schedule-collapsed-chat-track: 3fr;
   --design-layout-schedule-collapsed-side-track: 5fr;
@@ -168,7 +395,7 @@
     --design-layout-side-panel-padding-inline
   );
   --design-layout-chat-message-assistant-collapsed-max: 100%;
-  --design-layout-chat-message-assistant-expanded-max: 640px;
+  --design-layout-chat-message-assistant-expanded-max: 600px;
   --design-layout-chat-message-assistant-max: var(
     --design-layout-chat-message-assistant-expanded-max
   );
@@ -180,6 +407,7 @@
   --design-layout-panel-header-height: 64px;
   --design-layout-composer-height: 56px;
   --design-layout-composer-input-max-height: 144px;
+  --design-layout-composer-stop-action-height: 42px;
   --design-layout-primary-action-height: 48px;
   --design-layout-compact-action-height: 32px;
   --design-layout-input-small-height: 28px;
@@ -209,18 +437,37 @@
   --design-icon-size-medium: 24px;
 
   /* DESIGN.md -> rounded */
-  --design-rounded-xs: 4px;
-  --design-rounded-sm: 8px;
-  --design-rounded-entity-square-md: 12px;
-  --design-rounded-md: 16px;
-  --design-rounded-lg: 24px;
+  --design-rounded-xs: var(
+    --figma-dimension-corner-radius-corner-radius-0-5x
+  );
+  --design-rounded-sm: var(--figma-dimension-corner-radius-corner-radius-1x);
+  --design-rounded-entity-square-md: var(
+    --figma-dimension-corner-radius-corner-radius-1-5x
+  );
+  --design-rounded-panel: var(
+    --figma-dimension-corner-radius-corner-radius-1-5x
+  );
+  --design-rounded-md: var(--figma-dimension-corner-radius-corner-radius-2x);
+  --design-rounded-lg: var(--figma-dimension-corner-radius-corner-radius-3x);
   --design-rounded-xl: 32px;
-  --design-rounded-round: 360px;
+  --design-rounded-round: var(
+    --figma-dimension-corner-radius-corner-radius-full
+  );
 
   /* DESIGN.md -> core shadows */
-  --design-shadow-raised:
-    0px 0px 1px rgba(140, 140, 140, 0.2),
-    0px 4px 12px rgba(0, 0, 0, 0.3);
+  --design-shadow-raised: var(--figma-elevation-raised);
+  --design-shadow-raised-active: var(--figma-elevation-raised-active);
+  --design-shadow-raised-faint: var(--figma-elevation-raised-faint);
+  --design-shadow-raised-faint-active: var(
+    --figma-elevation-raised-faint-active
+  );
+  --design-shadow-raised-faint-upward:
+    0px 0px 1px var(--figma-elevation-color-shadow-supplemental),
+    0px -4px 12px var(--figma-elevation-color-shadow-faint);
+  --design-shadow-raised-soft: var(--figma-elevation-raised-soft);
+  --design-shadow-raised-soft-active: var(
+    --figma-elevation-raised-soft-active
+  );
 
   /* DESIGN.md -> motion */
   --design-motion-duration-instant: 0ms;
@@ -270,8 +517,16 @@
   --color-overlay-dim: var(--design-color-overlay-dim);
   --color-scrim: var(--design-color-scrim);
   --color-ai-background-soft: var(--design-color-ai-background-soft);
+  --color-ai-background-strong: var(--design-color-ai-background-strong);
   --color-ai-border: var(--design-color-ai-border);
   --color-ai-icon: var(--design-color-ai-icon);
+  --color-positive: var(--design-color-positive);
+  --color-positive-hover: var(--design-color-positive-hover);
+  --color-positive-active: var(--design-color-positive-active);
+  --color-caution: var(--design-color-caution);
+  --color-caution-hover: var(--design-color-caution-hover);
+  --color-caution-active: var(--design-color-caution-active);
+  --color-new: var(--design-color-new);
   --color-tag-default-background: var(
     --design-color-tag-default-background
   );
@@ -317,6 +572,8 @@
   --color-border-active: var(--design-color-border-active);
   --color-border-subtle: var(--design-color-border-subtle);
   --color-border-faint: var(--design-color-border-faint);
+  --color-border-faint-hover: var(--design-color-border-faint-hover);
+  --color-border-faint-active: var(--design-color-border-faint-active);
   --color-label: var(--design-color-label);
   --color-label-disabled: var(--design-color-label-disabled);
   --color-icon: var(--design-color-icon);
@@ -324,6 +581,7 @@
   --color-icon-active: var(--design-color-icon-active);
   --color-icon-disabled: var(--design-color-icon-disabled);
   --color-text: var(--design-color-text);
+  --color-text-primary: var(--design-color-text-primary);
   --color-text-hover: var(--design-color-text-hover);
   --color-text-active: var(--design-color-text-active);
   --color-text-meta: var(--design-color-text-meta);
@@ -332,6 +590,145 @@
   --color-negative-hover: var(--design-color-negative-hover);
   --color-negative-active: var(--design-color-negative-active);
   --color-neutral-focus-ring: var(--design-color-neutral-focus-ring);
+  --color-premium-gradient-base-a: var(
+    --design-color-premium-gradient-base-a
+  );
+  --color-premium-gradient-base-b: var(
+    --design-color-premium-gradient-base-b
+  );
+  --color-premium-gradient-base-c: var(
+    --design-color-premium-gradient-base-c
+  );
+  --color-premium-brand: var(--design-color-premium-brand);
+  --color-premium-button-background: var(
+    --design-color-premium-button-background
+  );
+  --color-premium-button-background-hover: var(
+    --design-color-premium-button-background-hover
+  );
+  --color-premium-button-background-active: var(
+    --design-color-premium-button-background-active
+  );
+  --color-premium-button-label: var(
+    --design-color-premium-button-label
+  );
+  --color-premium-icon: var(--design-color-premium-icon);
+  --color-premium-inbug: var(--design-color-premium-inbug);
+  --color-premium-indicator: var(--design-color-premium-indicator);
+  --color-premium-text-brand: var(--design-color-premium-text-brand);
+
+  --color-data-a-1: var(--figma-color-data-a-color-data-a-1);
+  --color-data-a-2: var(--figma-color-data-a-color-data-a-2);
+  --color-data-a-3: var(--figma-color-data-a-color-data-a-3);
+  --color-data-a-4: var(--figma-color-data-a-color-data-a-4);
+  --color-data-a-5: var(--figma-color-data-a-color-data-a-5);
+  --color-data-a-6: var(--figma-color-data-a-color-data-a-6);
+  --color-data-a-7: var(--figma-color-data-a-color-data-a-7);
+  --color-data-a-8: var(--figma-color-data-a-color-data-a-8);
+  --color-data-b-1: var(--figma-color-data-b-color-data-b-1);
+  --color-data-b-2: var(--figma-color-data-b-color-data-b-2);
+  --color-data-b-3: var(--figma-color-data-b-color-data-b-3);
+  --color-data-b-4: var(--figma-color-data-b-color-data-b-4);
+  --color-data-b-5: var(--figma-color-data-b-color-data-b-5);
+  --color-data-b-6: var(--figma-color-data-b-color-data-b-6);
+  --color-data-b-7: var(--figma-color-data-b-color-data-b-7);
+  --color-data-b-8: var(--figma-color-data-b-color-data-b-8);
+  --color-data-c-1: var(--figma-color-data-c-color-data-c-1);
+  --color-data-c-2: var(--figma-color-data-c-color-data-c-2);
+  --color-data-c-3: var(--figma-color-data-c-color-data-c-3);
+  --color-data-c-4: var(--figma-color-data-c-color-data-c-4);
+  --color-data-c-5: var(--figma-color-data-c-color-data-c-5);
+  --color-data-c-6: var(--figma-color-data-c-color-data-c-6);
+  --color-data-c-7: var(--figma-color-data-c-color-data-c-7);
+  --color-data-c-8: var(--figma-color-data-c-color-data-c-8);
+  --color-data-d-1: var(--figma-color-data-d-color-data-d-1);
+  --color-data-d-2: var(--figma-color-data-d-color-data-d-2);
+  --color-data-d-3: var(--figma-color-data-d-color-data-d-3);
+  --color-data-d-4: var(--figma-color-data-d-color-data-d-4);
+  --color-data-d-5: var(--figma-color-data-d-color-data-d-5);
+  --color-data-d-6: var(--figma-color-data-d-color-data-d-6);
+  --color-data-d-7: var(--figma-color-data-d-color-data-d-7);
+  --color-data-d-8: var(--figma-color-data-d-color-data-d-8);
+  --color-data-e-1: var(--figma-color-data-e-color-data-e-1);
+  --color-data-e-2: var(--figma-color-data-e-color-data-e-2);
+  --color-data-e-3: var(--figma-color-data-e-color-data-e-3);
+  --color-data-e-4: var(--figma-color-data-e-color-data-e-4);
+  --color-data-e-5: var(--figma-color-data-e-color-data-e-5);
+  --color-data-e-6: var(--figma-color-data-e-color-data-e-6);
+  --color-data-e-7: var(--figma-color-data-e-color-data-e-7);
+  --color-data-e-8: var(--figma-color-data-e-color-data-e-8);
+  --color-data-f-1: var(--figma-color-data-f-color-data-f-1);
+  --color-data-f-2: var(--figma-color-data-f-color-data-f-2);
+  --color-data-f-3: var(--figma-color-data-f-color-data-f-3);
+  --color-data-f-4: var(--figma-color-data-f-color-data-f-4);
+  --color-data-f-5: var(--figma-color-data-f-color-data-f-5);
+  --color-data-f-6: var(--figma-color-data-f-color-data-f-6);
+  --color-data-f-7: var(--figma-color-data-f-color-data-f-7);
+  --color-data-f-8: var(--figma-color-data-f-color-data-f-8);
+  --color-data-g-1: var(--figma-color-data-g-color-data-g-1);
+  --color-data-g-2: var(--figma-color-data-g-color-data-g-2);
+  --color-data-g-3: var(--figma-color-data-g-color-data-g-3);
+  --color-data-g-4: var(--figma-color-data-g-color-data-g-4);
+  --color-data-g-5: var(--figma-color-data-g-color-data-g-5);
+  --color-data-g-6: var(--figma-color-data-g-color-data-g-6);
+  --color-data-g-7: var(--figma-color-data-g-color-data-g-7);
+  --color-data-g-8: var(--figma-color-data-g-color-data-g-8);
+  --color-data-h-1: var(--figma-color-data-h-color-data-h-1);
+  --color-data-h-2: var(--figma-color-data-h-color-data-h-2);
+  --color-data-h-3: var(--figma-color-data-h-color-data-h-3);
+  --color-data-h-4: var(--figma-color-data-h-color-data-h-4);
+  --color-data-h-5: var(--figma-color-data-h-color-data-h-5);
+  --color-data-h-6: var(--figma-color-data-h-color-data-h-6);
+  --color-data-h-7: var(--figma-color-data-h-color-data-h-7);
+  --color-data-h-8: var(--figma-color-data-h-color-data-h-8);
+  --color-data-categorical-a: var(
+    --figma-color-data-categorical-color-data-categorical-a
+  );
+  --color-data-categorical-a-hover: var(
+    --figma-color-data-categorical-color-data-categorical-a-hover
+  );
+  --color-data-categorical-b: var(
+    --figma-color-data-categorical-color-data-categorical-b
+  );
+  --color-data-categorical-b-hover: var(
+    --figma-color-data-categorical-color-data-categorical-b-hover
+  );
+  --color-data-categorical-c: var(
+    --figma-color-data-categorical-color-data-categorical-c
+  );
+  --color-data-categorical-c-hover: var(
+    --figma-color-data-categorical-color-data-categorical-c-hover
+  );
+  --color-data-categorical-d: var(
+    --figma-color-data-categorical-color-data-categorical-d
+  );
+  --color-data-categorical-d-hover: var(
+    --figma-color-data-categorical-color-data-categorical-d-hover
+  );
+  --color-data-categorical-e: var(
+    --figma-color-data-categorical-color-data-categorical-e
+  );
+  --color-data-categorical-e-hover: var(
+    --figma-color-data-categorical-color-data-categorical-e-hover
+  );
+  --color-data-categorical-f: var(
+    --figma-color-data-categorical-color-data-categorical-f
+  );
+  --color-data-categorical-f-hover: var(
+    --figma-color-data-categorical-color-data-categorical-f-hover
+  );
+  --color-data-categorical-g: var(
+    --figma-color-data-categorical-color-data-categorical-g
+  );
+  --color-data-categorical-g-hover: var(
+    --figma-color-data-categorical-color-data-categorical-g-hover
+  );
+  --color-data-categorical-h: var(
+    --figma-color-data-categorical-color-data-categorical-h
+  );
+  --color-data-categorical-h-hover: var(
+    --figma-color-data-categorical-color-data-categorical-h-hover
+  );
 
   --ease-standard: var(--design-motion-easing-standard);
   --ease-emphasized: var(--design-motion-easing-emphasized);
@@ -376,6 +773,16 @@
   );
   --text-heading-md--letter-spacing: var(
     --design-typography-heading-md-letter-spacing
+  );
+  --text-heading-sm: var(--design-typography-heading-sm-font-size);
+  --text-heading-sm--font-weight: var(
+    --design-typography-heading-sm-font-weight
+  );
+  --text-heading-sm--line-height: var(
+    --design-typography-heading-sm-line-height
+  );
+  --text-heading-sm--letter-spacing: var(
+    --design-typography-heading-sm-letter-spacing
   );
   --text-control-md: var(--design-typography-control-md-font-size);
   --text-control-md--font-weight: var(
@@ -483,12 +890,49 @@
   --radius-xs: var(--design-rounded-xs);
   --radius-sm: var(--design-rounded-sm);
   --radius-entity-square-md: var(--design-rounded-entity-square-md);
+  --radius-panel: var(--design-rounded-panel);
   --radius-md: var(--design-rounded-md);
   --radius-lg: var(--design-rounded-lg);
   --radius-xl: var(--design-rounded-xl);
   --radius-round: var(--design-rounded-round);
 
   --shadow-raised: var(--design-shadow-raised);
+  --shadow-raised-active: var(--design-shadow-raised-active);
+  --shadow-raised-faint: var(--design-shadow-raised-faint);
+  --shadow-raised-faint-active: var(--design-shadow-raised-faint-active);
+  --shadow-raised-faint-upward: var(--design-shadow-raised-faint-upward);
+  --shadow-raised-soft: var(--design-shadow-raised-soft);
+  --shadow-raised-soft-active: var(--design-shadow-raised-soft-active);
+}
+
+.shadow-raised-faint {
+  --tw-shadow: var(--design-shadow-raised-faint);
+  box-shadow:
+    var(--tw-inset-shadow),
+    var(--tw-inset-ring-shadow),
+    var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow),
+    var(--tw-shadow);
+}
+
+.shadow-raised-faint-upward {
+  --tw-shadow: var(--design-shadow-raised-faint-upward);
+  box-shadow:
+    var(--tw-inset-shadow),
+    var(--tw-inset-ring-shadow),
+    var(--tw-ring-offset-shadow),
+    var(--tw-ring-shadow),
+    var(--tw-shadow);
+}
+
+.rounded-panel {
+  border-radius: var(--design-rounded-panel);
+}
+
+@media (min-width: 768px) {
+  .md\:rounded-panel {
+    border-radius: var(--design-rounded-panel);
+  }
 }
 
 *,
@@ -510,10 +954,10 @@ body {
   min-height: 100vh;
   background: var(--color-background);
   color: var(--color-text);
-  font-size: var(--text-body-md-open);
-  font-weight: var(--text-body-md-open--font-weight);
-  line-height: var(--text-body-md-open--line-height);
-  letter-spacing: var(--text-body-md-open--letter-spacing);
+  font-size: var(--text-body-md);
+  font-weight: var(--text-body-md--font-weight);
+  line-height: var(--text-body-md--line-height);
+  letter-spacing: var(--text-body-md--letter-spacing);
 }
 
 ::selection {
@@ -548,6 +992,21 @@ body {
   -webkit-text-fill-color: transparent;
   animation: chat-thinking-sweep 1.6s var(--design-motion-easing-standard)
     infinite;
+}
+
+.composer-stop-ring {
+  animation: composer-stop-ring-rotate 2400ms
+    cubic-bezier(0.42, 0, 0.2, 1) infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+.composer-stop-ring-arc {
+  fill: none;
+  stroke-dasharray: 24 80;
+  animation: composer-stop-ring-dash 2400ms
+    cubic-bezier(0.42, 0, 0.2, 1) infinite;
+  will-change: stroke-dasharray, stroke-dashoffset;
 }
 
 .chat-schedule-layout {
@@ -621,6 +1080,46 @@ body {
 
   to {
     background-position: -120% 0;
+  }
+}
+
+@keyframes composer-stop-ring-rotate {
+  0% {
+    transform: rotate(-90deg);
+  }
+
+  45% {
+    transform: rotate(130deg);
+  }
+
+  70% {
+    transform: rotate(245deg);
+  }
+
+  100% {
+    transform: rotate(630deg);
+  }
+}
+
+@keyframes composer-stop-ring-dash {
+  0% {
+    stroke-dasharray: 14 90;
+    stroke-dashoffset: 0;
+  }
+
+  40% {
+    stroke-dasharray: 66 90;
+    stroke-dashoffset: -12;
+  }
+
+  68% {
+    stroke-dasharray: 44 90;
+    stroke-dashoffset: -46;
+  }
+
+  100% {
+    stroke-dasharray: 14 90;
+    stroke-dashoffset: -104;
   }
 }
 
@@ -739,11 +1238,13 @@ body {
     animation-duration: 0ms;
   }
 
-  .chat-message-enter,
-  .chat-recommendation-enter,
-  .chat-thinking-text {
-    animation: none;
-  }
+	  .chat-message-enter,
+	  .chat-recommendation-enter,
+	  .chat-thinking-text,
+	  .composer-stop-ring,
+	  .composer-stop-ring-arc {
+	    animation: none;
+	  }
 
   .chat-thinking-text {
     background-image: none;

@@ -9,7 +9,18 @@ export const metadata: Metadata = createPageMetadata({
     "Interactive high-signal Premium AI concierge recommendation prototype.",
 });
 
-export default function PremiumHighSignalLivePage() {
+type PremiumHighSignalLivePageProps = Readonly<{
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+export default async function PremiumHighSignalLivePage({
+  searchParams,
+}: PremiumHighSignalLivePageProps) {
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "fab";
+
   return (
     <PremiumSurveyPage
       initialStep="plans"
@@ -17,6 +28,7 @@ export default function PremiumHighSignalLivePage() {
       initialGoalOptions={["expand-network", "new-leads", "hire"]}
       initialChatOpen
       liveMode="high-signal"
+      shellMode={shellMode}
     />
   );
 }

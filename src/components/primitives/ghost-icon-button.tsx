@@ -6,7 +6,11 @@ import {
 import { Icon, type IconName } from "@/components/primitives/icon";
 
 export type GhostIconButtonSize = "small" | "medium";
-export type GhostIconButtonVisualState = "default" | "hover" | "active";
+export type GhostIconButtonVisualState =
+  | "default"
+  | "hover"
+  | "active"
+  | "focus-visible";
 
 export type GhostIconButtonProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
@@ -52,11 +56,11 @@ const visualStateClasses: Record<
   Partial<Record<Exclude<GhostIconButtonVisualState, "default">, string>>
 > = {
   neutral: {
-    hover: "bg-background-transparent-active",
+    hover: "bg-background-transparent-hover",
     active: "bg-background-transparent-active",
   },
   emphasis: {
-    hover: "bg-action-background-transparent-active",
+    hover: "bg-action-background-transparent-hover",
     active: "bg-action-background-transparent-active",
   },
 };
@@ -68,10 +72,12 @@ const staticToneClasses: Record<
   neutral: {
     hover: "text-text-hover",
     active: "text-text-active",
+    "focus-visible": "ring-4 ring-neutral-focus-ring",
   },
   emphasis: {
     hover: "text-action-hover",
     active: "text-action-active",
+    "focus-visible": "ring-4 ring-action-focus-ring",
   },
 };
 
@@ -110,7 +116,7 @@ export const GhostIconButton = forwardRef<
 ) {
   const isInteractionDisabled = disabled || loading;
   const tone = emphasis ? "emphasis" : "neutral";
-  const shouldShowStateLayer = horizontalPadding && !disabled && !loading;
+  const shouldShowStateLayer = horizontalPadding && !isInteractionDisabled;
 
   return (
     <button
@@ -135,13 +141,12 @@ export const GhostIconButton = forwardRef<
             ? paddedWidthClasses[size]
             : compactWidthClasses[size]
           : compactTouchClasses[size],
-        disabled
+        isInteractionDisabled
           ? "text-text-disabled"
           : emphasis
             ? "text-action hover:text-action-hover active:text-action-active focus-visible:ring-action-focus-ring"
             : "text-text-meta hover:text-text-hover active:text-text-active focus-visible:ring-neutral-focus-ring",
-        !disabled &&
-          !loading &&
+        !isInteractionDisabled &&
           visualState !== "default" &&
           staticToneClasses[tone][visualState],
         className,
@@ -153,8 +158,8 @@ export const GhostIconButton = forwardRef<
           horizontalPadding ? stateLayerClasses[size] : "size-6",
           shouldShowStateLayer &&
             (emphasis
-              ? "group-hover:bg-action-background-transparent-active group-active:bg-action-background-transparent-active"
-              : "group-hover:bg-background-transparent-active group-active:bg-background-transparent-active"),
+              ? "group-hover:bg-action-background-transparent-hover group-active:bg-action-background-transparent-active"
+              : "group-hover:bg-background-transparent-hover group-active:bg-background-transparent-active"),
           shouldShowStateLayer &&
             visualState !== "default" &&
             visualStateClasses[tone][visualState],

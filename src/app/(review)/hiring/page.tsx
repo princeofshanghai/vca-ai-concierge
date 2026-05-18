@@ -19,7 +19,8 @@ export default async function HiringPrototypePage({
   searchParams,
 }: HiringPrototypePageProps) {
   const { shell } = await searchParams;
-  const shellMode = shell === "tray" ? "tray" : "default";
+  const shellMode =
+    shell === "tray" || shell === "hybrid" ? shell : "default";
 
   return <LandingPage shellMode={shellMode} />;
 }

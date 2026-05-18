@@ -23,7 +23,8 @@ export default async function LowFlowPage({
   searchParams,
 }: LowFlowPageProps) {
   const { shell } = await searchParams;
-  const shellMode = shell === "tray" ? "tray" : "default";
+  const shellMode =
+    shell === "tray" || shell === "hybrid" ? shell : "default";
 
   return <LandingPage reviewFlow={flowReviews.low} shellMode={shellMode} />;
 }

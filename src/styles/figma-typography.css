@@ -1,0 +1,163 @@
+/* Generated from Figma DS Typography 2.0 Library: local text styles. */
+:root {
+  /* Supportive S */
+  --figma-type-supportive-s-font-family: "SF Pro Text";
+  --figma-type-supportive-s-font-size: 12px;
+  --figma-type-supportive-s-font-weight: 400;
+  --figma-type-supportive-s-line-height: 15px;
+  --figma-type-supportive-s-letter-spacing: 0px;
+
+  /* Supportive S Bold */
+  --figma-type-supportive-s-bold-font-family: "SF Pro Text";
+  --figma-type-supportive-s-bold-font-size: 12px;
+  --figma-type-supportive-s-bold-font-weight: 600;
+  --figma-type-supportive-s-bold-line-height: 15px;
+  --figma-type-supportive-s-bold-letter-spacing: 0px;
+
+  /* Supportive M */
+  --figma-type-supportive-m-font-family: "SF Pro Text";
+  --figma-type-supportive-m-font-size: 14px;
+  --figma-type-supportive-m-font-weight: 400;
+  --figma-type-supportive-m-line-height: 17.5px;
+  --figma-type-supportive-m-letter-spacing: -0.15px;
+
+  /* Supportive M Bold */
+  --figma-type-supportive-m-bold-font-family: "SF Pro Text";
+  --figma-type-supportive-m-bold-font-size: 14px;
+  --figma-type-supportive-m-bold-font-weight: 600;
+  --figma-type-supportive-m-bold-line-height: 17.5px;
+  --figma-type-supportive-m-bold-letter-spacing: -0.15px;
+
+  /* Supportive L */
+  --figma-type-supportive-l-font-family: "SF Pro Text";
+  --figma-type-supportive-l-font-size: 16px;
+  --figma-type-supportive-l-font-weight: 400;
+  --figma-type-supportive-l-line-height: 20px;
+  --figma-type-supportive-l-letter-spacing: -0.32px;
+
+  /* Supportive L Bold */
+  --figma-type-supportive-l-bold-font-family: "SF Pro Text";
+  --figma-type-supportive-l-bold-font-size: 16px;
+  --figma-type-supportive-l-bold-font-weight: 600;
+  --figma-type-supportive-l-bold-line-height: 20px;
+  --figma-type-supportive-l-bold-letter-spacing: -0.32px;
+
+  /* Title S */
+  --figma-type-title-s-font-family: "SF Pro Text";
+  --figma-type-title-s-font-size: 14px;
+  --figma-type-title-s-font-weight: 600;
+  --figma-type-title-s-line-height: 17.5px;
+  --figma-type-title-s-letter-spacing: -0.15px;
+
+  /* Title L */
+  --figma-type-title-l-font-family: "SF Pro Text";
+  --figma-type-title-l-font-size: 16px;
+  --figma-type-title-l-font-weight: 600;
+  --figma-type-title-l-line-height: 20px;
+  --figma-type-title-l-letter-spacing: -0.32px;
+
+  /* Heading S */
+  --figma-type-heading-s-font-family: "SF Pro Text";
+  --figma-type-heading-s-font-size: 18px;
+  --figma-type-heading-s-font-weight: 600;
+  --figma-type-heading-s-line-height: 22.5px;
+  --figma-type-heading-s-letter-spacing: -0.45px;
+
+  /* Heading M */
+  --figma-type-heading-m-font-family: "SF Pro Display";
+  --figma-type-heading-m-font-size: 20px;
+  --figma-type-heading-m-font-weight: 600;
+  --figma-type-heading-m-line-height: 25px;
+  --figma-type-heading-m-letter-spacing: 0.38px;
+
+  /* Heading L */
+  --figma-type-heading-l-font-family: "SF Pro Display";
+  --figma-type-heading-l-font-size: 24px;
+  --figma-type-heading-l-font-weight: 600;
+  --figma-type-heading-l-line-height: 30px;
+  --figma-type-heading-l-letter-spacing: 0.36px;
+
+  /* Body */
+  --figma-type-body-font-family: "SF Pro Text";
+  --figma-type-body-font-size: 14px;
+  --figma-type-body-font-weight: 400;
+  --figma-type-body-line-height: 21px;
+  --figma-type-body-letter-spacing: -0.15px;
+
+  /* Body Bold */
+  --figma-type-body-bold-font-family: "SF Pro Text";
+  --figma-type-body-bold-font-size: 14px;
+  --figma-type-body-bold-font-weight: 600;
+  --figma-type-body-bold-line-height: 21px;
+  --figma-type-body-bold-letter-spacing: -0.15px;
+
+  /* Prose */
+  --figma-type-prose-font-family: "SF Pro Text";
+  --figma-type-prose-font-size: 18px;
+  --figma-type-prose-font-weight: 400;
+  --figma-type-prose-line-height: 27px;
+  --figma-type-prose-letter-spacing: -0.45px;
+
+  /* Prose Bold */
+  --figma-type-prose-bold-font-family: "SF Pro Text";
+  --figma-type-prose-bold-font-size: 18px;
+  --figma-type-prose-bold-font-weight: 600;
+  --figma-type-prose-bold-line-height: 27px;
+  --figma-type-prose-bold-letter-spacing: -0.45px;
+
+  /* Display S */
+  --figma-type-display-s-font-family: "SF Pro Display";
+  --figma-type-display-s-font-size: 24px;
+  --figma-type-display-s-font-weight: 400;
+  --figma-type-display-s-line-height: 27px;
+  --figma-type-display-s-letter-spacing: 0.36px;
+
+  /* Display S Bold */
+  --figma-type-display-s-bold-font-family: "SF Pro Display";
+  --figma-type-display-s-bold-font-size: 24px;
+  --figma-type-display-s-bold-font-weight: 600;
+  --figma-type-display-s-bold-line-height: 27px;
+  --figma-type-display-s-bold-letter-spacing: 0.36px;
+
+  /* Display M */
+  --figma-type-display-m-font-family: "SF Pro Display";
+  --figma-type-display-m-font-size: 30px;
+  --figma-type-display-m-font-weight: 400;
+  --figma-type-display-m-line-height: 33.75px;
+  --figma-type-display-m-letter-spacing: 0.36px;
+
+  /* Display M Bold */
+  --figma-type-display-m-bold-font-family: "SF Pro Display";
+  --figma-type-display-m-bold-font-size: 30px;
+  --figma-type-display-m-bold-font-weight: 600;
+  --figma-type-display-m-bold-line-height: 33.75px;
+  --figma-type-display-m-bold-letter-spacing: 0.36px;
+
+  /* Display L */
+  --figma-type-display-l-font-family: "SF Pro Display";
+  --figma-type-display-l-font-size: 36px;
+  --figma-type-display-l-font-weight: 400;
+  --figma-type-display-l-line-height: 40.5px;
+  --figma-type-display-l-letter-spacing: 0.36px;
+
+  /* Display L Bold */
+  --figma-type-display-l-bold-font-family: "SF Pro Display";
+  --figma-type-display-l-bold-font-size: 36px;
+  --figma-type-display-l-bold-font-weight: 600;
+  --figma-type-display-l-bold-line-height: 40.5px;
+  --figma-type-display-l-bold-letter-spacing: 0.36px;
+
+  /* Display XL */
+  --figma-type-display-xl-font-family: "SF Pro Display";
+  --figma-type-display-xl-font-size: 48px;
+  --figma-type-display-xl-font-weight: 400;
+  --figma-type-display-xl-line-height: 54px;
+  --figma-type-display-xl-letter-spacing: 0.36px;
+
+  /* Display XL Bold */
+  --figma-type-display-xl-bold-font-family: "SF Pro Display";
+  --figma-type-display-xl-bold-font-size: 48px;
+  --figma-type-display-xl-bold-font-weight: 600;
+  --figma-type-display-xl-bold-line-height: 54px;
+  --figma-type-display-xl-bold-letter-spacing: 0.36px;
+}

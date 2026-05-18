@@ -28,7 +28,7 @@ const navItems = [
 type LandingPageProps = Readonly<{
   homeHref?: string;
   reviewFlow?: FlowReview;
-  shellMode?: "default" | "tray";
+  shellMode?: "default" | "tray" | "hybrid";
 }>;
 
 const communityProBold = localFont({
@@ -46,12 +46,15 @@ export function LandingPage({
   const router = useRouter();
   const isReviewFlow = Boolean(reviewFlow);
   const isTrayShell = shellMode === "tray";
+  const isHybridShell = shellMode === "hybrid";
+  const isTrayStyleShell = isTrayShell || isHybridShell;
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [isReviewSidePanelOpen, setIsReviewSidePanelOpen] = useState(false);
   const [isEndChatDialogOpen, setIsEndChatDialogOpen] = useState(false);
   const [isChatConversationStarted, setIsChatConversationStarted] =
     useState(false);
+  const [isHybridTrayVisible, setIsHybridTrayVisible] = useState(false);
   const [trayIdentity, setTrayIdentity] =
     useState<ChatHeaderIdentity | null>(null);
   const chatPanelId = useId();
@@ -59,6 +62,7 @@ export function LandingPage({
     setIsEndChatDialogOpen(false);
     setIsChatConversationStarted(false);
     setIsReviewSidePanelOpen(false);
+    setIsHybridTrayVisible(false);
     setTrayIdentity(null);
     setChatPanelVariant("collapsed");
   }, []);
@@ -70,16 +74,18 @@ export function LandingPage({
     open: openChatPanel,
     close: closeChatPanel,
   } = useChatPanelPresence({
-    initialOpen: isReviewFlow,
-    onBeforeOpen: isTrayShell ? undefined : resetChatPanelState,
-    onBeforeClose: isTrayShell ? undefined : resetChatPanelState,
+    initialOpen: isReviewFlow && !isHybridShell,
+    onBeforeOpen: isTrayStyleShell ? undefined : resetChatPanelState,
+    onBeforeClose: isTrayStyleShell ? undefined : resetChatPanelState,
   });
   const isChatPanelMounted = isTrayShell || isChatMounted;
   const isWideChatSurface =
     chatPanelVariant === "expanded" || isReviewSidePanelOpen;
   const isCenteredChatSurface = chatPanelVariant === "expanded";
+  const isBottomAttachedChatSurface =
+    isTrayShell || (isHybridShell && !isCenteredChatSurface);
   // Tray shells are bottom-docked; 72px preserves the 64px landing header plus an 8px gap.
-  const chatPanelPositionClass = isTrayShell
+  const chatPanelPositionClass = isBottomAttachedChatSurface
     ? isCenteredChatSurface
       ? isReviewSidePanelOpen
         ? "md:left-1/2 md:bottom-0 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-expanded-surface-width))] md:-translate-x-1/2"
@@ -94,17 +100,52 @@ export function LandingPage({
       : isWideChatSurface
         ? "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
         : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
-  const trayDockedPanelClass = isTrayShell
+  const trayDockedPanelClass = isBottomAttachedChatSurface
     ? "md:!h-full md:!rounded-t-md md:!rounded-b-none"
     : undefined;
 
   const openChat = useCallback(() => {
-    if (isReviewFlow && !isTrayShell) {
+    if (isReviewFlow && !isTrayStyleShell) {
       return;
     }
 
+    if (isHybridShell && !isHybridTrayVisible && !isChatOpen) {
+      resetChatPanelState();
+    }
+
+    setIsHybridTrayVisible(false);
     openChatPanel();
-  }, [isReviewFlow, isTrayShell, openChatPanel]);
+  }, [
+    isChatOpen,
+    isHybridShell,
+    isHybridTrayVisible,
+    isReviewFlow,
+    isTrayStyleShell,
+    openChatPanel,
+    resetChatPanelState,
+  ]);
+
+  const openChatExpanded = useCallback(() => {
+    if (isReviewFlow && !isTrayStyleShell) {
+      return;
+    }
+
+    if (isHybridShell && !isHybridTrayVisible && !isChatOpen) {
+      resetChatPanelState();
+    }
+
+    setIsHybridTrayVisible(false);
+    setChatPanelVariant("expanded");
+    openChatPanel();
+  }, [
+    isChatOpen,
+    isHybridShell,
+    isHybridTrayVisible,
+    isReviewFlow,
+    isTrayStyleShell,
+    openChatPanel,
+    resetChatPanelState,
+  ]);
 
   const toggleChatPanelVariant = useCallback(() => {
     setChatPanelVariant((variant) =>
@@ -113,24 +154,25 @@ export function LandingPage({
   }, []);
 
   const closeChat = useCallback(() => {
-    if (isTrayShell) {
+    if (isTrayStyleShell) {
       resetChatPanelState();
     }
 
     closeChatPanel();
-  }, [closeChatPanel, isTrayShell, resetChatPanelState]);
+  }, [closeChatPanel, isTrayStyleShell, resetChatPanelState]);
 
   const minimizeChatToTray = useCallback(() => {
-    if (isReviewFlow && !isTrayShell) {
+    if (isReviewFlow && !isTrayStyleShell) {
       return;
     }
 
     setIsEndChatDialogOpen(false);
+    setIsHybridTrayVisible(isHybridShell);
     closeChatPanel();
-  }, [closeChatPanel, isReviewFlow, isTrayShell]);
+  }, [closeChatPanel, isHybridShell, isReviewFlow, isTrayStyleShell]);
 
   const requestCloseChat = useCallback(() => {
-    if (isReviewFlow && !isTrayShell) {
+    if (isReviewFlow && !isTrayStyleShell) {
       setIsReviewSidePanelOpen(false);
       router.push(homeHref);
       return;
@@ -152,7 +194,7 @@ export function LandingPage({
     homeHref,
     isChatConversationStarted,
     isReviewFlow,
-    isTrayShell,
+    isTrayStyleShell,
     router,
   ]);
 
@@ -275,15 +317,20 @@ export function LandingPage({
         </div>
       </section>
 
-      {isTrayShell && !isChatInteractive ? (
+      {(isTrayShell || (isHybridShell && isHybridTrayVisible)) &&
+      !isChatInteractive ? (
         <ChatTray
+          variant={chatPanelVariant}
           aria-controls={chatPanelId}
           aria-expanded={false}
           aria-haspopup="dialog"
           aria-label="Open AI Concierge chat"
+          badge
           className="fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-panel-collapsed-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
           identity={trayIdentity}
-          onClick={openChat}
+          onOpen={openChat}
+          onVariantToggle={openChatExpanded}
+          onClose={closeChat}
         />
       ) : null}
 
@@ -319,12 +366,12 @@ export function LandingPage({
             <div
               className={[
                 "h-full w-full ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
-                isTrayShell
+                isTrayStyleShell
                   ? "transition-transform duration-[var(--design-motion-duration-slow)]"
                   : "transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)]",
                 isChatInteractive
                   ? "translate-y-0 opacity-100"
-                  : isTrayShell
+                  : isTrayStyleShell
                     ? "pointer-events-none translate-y-full opacity-100"
                     : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
               ].join(" ")}
@@ -335,7 +382,9 @@ export function LandingPage({
                   flow={reviewFlow}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
-                  onMinimizeToTray={isTrayShell ? minimizeChatToTray : undefined}
+                  onMinimizeToTray={
+                    isTrayStyleShell ? minimizeChatToTray : undefined
+                  }
                   onVariantToggle={toggleChatPanelVariant}
                   onHeaderIdentityChange={setTrayIdentity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
@@ -345,7 +394,9 @@ export function LandingPage({
                   className={trayDockedPanelClass}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
-                  onMinimizeToTray={isTrayShell ? minimizeChatToTray : undefined}
+                  onMinimizeToTray={
+                    isTrayStyleShell ? minimizeChatToTray : undefined
+                  }
                   onVariantToggle={toggleChatPanelVariant}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}

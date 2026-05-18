@@ -134,7 +134,7 @@ export function ConfirmationDialog({
         "flex items-center justify-center p-lg motion-reduce:transition-none md:p-xxl",
         scope === "container" ? "absolute inset-0 z-10" : "fixed inset-0 z-50",
       )}
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
+      style={{ backgroundColor: "var(--design-color-scrim)" }}
       onKeyDown={handleKeyDown}
     >
       <div

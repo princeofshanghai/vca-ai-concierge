@@ -1,0 +1,648 @@
+/* Generated from Figma DS Color Library: Color Modes (Light/Dark). */
+:root {
+  /* Accent 1 */
+  --figma-color-accent-1-color-accent-1: #915907;
+  --figma-color-dark-accent-1-color-accent-1: #E9A53F;
+  --figma-color-accent-1-color-accent-1-active: #5C3B09;
+  --figma-color-dark-accent-1-color-accent-1-active: #F9C982;
+  --figma-color-accent-1-color-accent-1-hover: #5C3B09;
+  --figma-color-dark-accent-1-color-accent-1-hover: #F9C982;
+  --figma-color-accent-1-color-background-accent-soft-1: #FDF0DE;
+  --figma-color-dark-accent-1-color-background-accent-soft-1: #322F29;
+  --figma-color-accent-1-color-background-accent-strong-1: #FDE2BC;
+  --figma-color-dark-accent-1-color-background-accent-strong-1: #474139;
+  --figma-color-accent-1-color-background-accent-transparent-1-active: rgba(195, 125, 22, 0.2);
+  --figma-color-dark-accent-1-color-background-accent-transparent-1-active: rgba(195, 125, 22, 0.25);
+  --figma-color-accent-1-color-background-accent-transparent-1-hover: rgba(195, 125, 22, 0.1);
+  --figma-color-dark-accent-1-color-background-accent-transparent-1-hover: rgba(195, 125, 22, 0.15);
+
+  /* Accent 2 */
+  --figma-color-accent-2-color-accent-2: #B24020;
+  --figma-color-dark-accent-2-color-accent-2: #F69B81;
+  --figma-color-accent-2-color-accent-2-active: #762812;
+  --figma-color-dark-accent-2-color-accent-2-active: #FDC2B1;
+  --figma-color-accent-2-color-accent-2-hover: #762812;
+  --figma-color-dark-accent-2-color-accent-2-hover: #FDC2B1;
+  --figma-color-accent-2-color-background-accent-soft-2: #FFEFEA;
+  --figma-color-dark-accent-2-color-background-accent-soft-2: #412922;
+  --figma-color-accent-2-color-background-accent-strong-2: #FFDFD6;
+  --figma-color-dark-accent-2-color-background-accent-strong-2: #5D392F;
+  --figma-color-accent-2-color-background-accent-transparent-2-active: rgba(224, 104, 71, 0.2);
+  --figma-color-dark-accent-2-color-background-accent-transparent-2-active: rgba(224, 104, 71, 0.25);
+  --figma-color-accent-2-color-background-accent-transparent-2-hover: rgba(224, 104, 71, 0.1);
+  --figma-color-dark-accent-2-color-background-accent-transparent-2-hover: rgba(224, 104, 71, 0.15);
+
+  /* Accent 3 */
+  --figma-color-accent-3-color-accent-3: #616C20;
+  --figma-color-dark-accent-3-color-accent-3: #ACBA5F;
+  --figma-color-accent-3-color-accent-3-active: #3F4618;
+  --figma-color-dark-accent-3-color-accent-3-active: #CBD978;
+  --figma-color-accent-3-color-accent-3-hover: #3F4618;
+  --figma-color-dark-accent-3-color-accent-3-hover: #CBD978;
+  --figma-color-accent-3-color-background-accent-soft-3: #EDF4EA;
+  --figma-color-dark-accent-3-color-background-accent-soft-3: #2A3127;
+  --figma-color-accent-3-color-background-accent-strong-3: #DAEBD1;
+  --figma-color-dark-accent-3-color-background-accent-strong-3: #3A4535;
+  --figma-color-accent-3-color-background-accent-transparent-3-active: rgba(133, 148, 47, 0.2);
+  --figma-color-dark-accent-3-color-background-accent-transparent-3-active: rgba(133, 148, 47, 0.25);
+  --figma-color-accent-3-color-background-accent-transparent-3-hover: rgba(133, 148, 47, 0.1);
+  --figma-color-dark-accent-3-color-background-accent-transparent-3-hover: rgba(133, 148, 47, 0.15);
+
+  /* Accent 4 */
+  --figma-color-accent-4-color-accent-4: #56687A;
+  --figma-color-dark-accent-4-color-accent-4: #9EB5CA;
+  --figma-color-accent-4-color-accent-4-active: #38434F;
+  --figma-color-dark-accent-4-color-accent-4-active: #C2D3E4;
+  --figma-color-accent-4-color-accent-4-hover: #38434F;
+  --figma-color-dark-accent-4-color-accent-4-hover: #C2D3E4;
+  --figma-color-accent-4-color-background-accent-soft-4: #EDF3F8;
+  --figma-color-dark-accent-4-color-background-accent-soft-4: #293037;
+  --figma-color-accent-4-color-background-accent-strong-4: #DDE7F1;
+  --figma-color-dark-accent-4-color-background-accent-strong-4: #38434F;
+  --figma-color-accent-4-color-background-accent-transparent-4-active: rgba(120, 143, 165, 0.2);
+  --figma-color-dark-accent-4-color-background-accent-transparent-4-active: rgba(120, 143, 165, 0.25);
+  --figma-color-accent-4-color-background-accent-transparent-4-hover: rgba(120, 143, 165, 0.1);
+  --figma-color-dark-accent-4-color-background-accent-transparent-4-hover: rgba(120, 143, 165, 0.15);
+
+  /* Accent 5 */
+  --figma-color-accent-5-color-accent-5: #1A707E;
+  --figma-color-dark-accent-5-color-accent-5: #5EC0CF;
+  --figma-color-accent-5-color-accent-5-active: #114951;
+  --figma-color-dark-accent-5-color-accent-5-active: #94DDE8;
+  --figma-color-accent-5-color-accent-5-hover: #114951;
+  --figma-color-dark-accent-5-color-accent-5-hover: #94DDE8;
+  --figma-color-accent-5-color-background-accent-soft-5: #E9F4F6;
+  --figma-color-dark-accent-5-color-background-accent-soft-5: #283132;
+  --figma-color-accent-5-color-background-accent-strong-5: #D9E9EC;
+  --figma-color-dark-accent-5-color-background-accent-strong-5: #364547;
+  --figma-color-accent-5-color-background-accent-transparent-5-active: rgba(51, 153, 168, 0.2);
+  --figma-color-dark-accent-5-color-background-accent-transparent-5-active: rgba(51, 153, 168, 0.25);
+  --figma-color-accent-5-color-background-accent-transparent-5-hover: rgba(51, 153, 168, 0.1);
+  --figma-color-dark-accent-5-color-background-accent-transparent-5-hover: rgba(51, 153, 168, 0.15);
+
+  /* Accent 6 */
+  --figma-color-accent-6-color-accent-6: #8443CE;
+  --figma-color-dark-accent-6-color-accent-6: #C8A1F6;
+  --figma-color-accent-6-color-accent-6-active: #592099;
+  --figma-color-dark-accent-6-color-accent-6-active: #E0C7FC;
+  --figma-color-accent-6-color-accent-6-hover: #592099;
+  --figma-color-dark-accent-6-color-accent-6-hover: #E0C7FC;
+  --figma-color-accent-6-color-background-accent-soft-6: #F4F1F8;
+  --figma-color-dark-accent-6-color-background-accent-soft-6: #332C3C;
+  --figma-color-accent-6-color-background-accent-strong-6: #EBE3F3;
+  --figma-color-dark-accent-6-color-background-accent-strong-6: #493D57;
+  --figma-color-accent-6-color-background-accent-transparent-6-active: rgba(168, 113, 234, 0.2);
+  --figma-color-dark-accent-6-color-background-accent-transparent-6-active: rgba(168, 113, 234, 0.25);
+  --figma-color-accent-6-color-background-accent-transparent-6-hover: rgba(168, 113, 234, 0.1);
+  --figma-color-dark-accent-6-color-background-accent-transparent-6-hover: rgba(168, 113, 234, 0.15);
+
+  /* Accent 7 */
+  --figma-color-accent-7-color-accent-7: #A734A1;
+  --figma-color-dark-accent-7-color-accent-7: #EA95E5;
+  --figma-color-accent-7-color-accent-7-active: #711C6D;
+  --figma-color-dark-accent-7-color-accent-7-active: #F6C0F3;
+  --figma-color-accent-7-color-accent-7-hover: #711C6D;
+  --figma-color-dark-accent-7-color-accent-7-hover: #F6C0F3;
+  --figma-color-accent-7-color-background-accent-soft-7: #F8EFF8;
+  --figma-color-dark-accent-7-color-background-accent-soft-7: #3A2A39;
+  --figma-color-accent-7-color-background-accent-strong-7: #F3E1F2;
+  --figma-color-dark-accent-7-color-background-accent-strong-7: #523A51;
+  --figma-color-accent-7-color-background-accent-transparent-7-active: rgba(209, 96, 203, 0.2);
+  --figma-color-dark-accent-7-color-background-accent-transparent-7-active: rgba(209, 96, 203, 0.25);
+  --figma-color-accent-7-color-background-accent-transparent-7-hover: rgba(209, 96, 203, 0.1);
+  --figma-color-dark-accent-7-color-background-accent-transparent-7-hover: rgba(209, 96, 203, 0.15);
+
+  /* Action */
+  --figma-color-action-color-action: #0A66C2;
+  --figma-color-dark-action-color-action: #71B7FB;
+  --figma-color-action-color-action-active: #004182;
+  --figma-color-dark-action-color-action-active: #AAD6FF;
+  --figma-color-action-color-action-hover: #004182;
+  --figma-color-dark-action-color-action-hover: #AAD6FF;
+  --figma-color-action-color-background-action-transparent-active: rgba(55, 143, 233, 0.2);
+  --figma-color-dark-action-color-background-action-transparent-active: rgba(55, 143, 233, 0.25);
+  --figma-color-action-color-background-action-transparent-hover: rgba(55, 143, 233, 0.1);
+  --figma-color-dark-action-color-background-action-transparent-hover: rgba(55, 143, 233, 0.15);
+
+  /* AI */
+  --figma-color-ai-color-ai-background-soft: #E8F3FF;
+  --figma-color-dark-ai-color-ai-background-soft: #222E4E;
+  --figma-color-ai-color-ai-background-strong: #D2E9FF;
+  --figma-color-dark-ai-color-ai-background-strong: #32416C;
+  --figma-color-ai-color-ai-border: #AAD6FF;
+  --figma-color-dark-ai-color-ai-border: #4A65B0;
+  --figma-color-ai-color-ai-icon: #0A66C2;
+  --figma-color-dark-ai-color-ai-icon: #71B7FB;
+
+  /* Background */
+  --figma-color-background-color-background: #FFFFFF;
+  --figma-color-dark-background-color-background: #1B1F23;
+  --figma-color-background-color-background-a0: rgba(255, 255, 255, 0);
+  --figma-color-dark-background-color-background-a0: rgba(27, 31, 35, 0);
+  --figma-color-background-color-background-a25: rgba(255, 255, 255, 0.25);
+  --figma-color-dark-background-color-background-a25: rgba(27, 31, 35, 0.25);
+  --figma-color-background-color-background-disabled: rgba(140, 140, 140, 0.2);
+  --figma-color-dark-background-color-background-disabled: rgba(140, 140, 140, 0.25);
+  --figma-color-background-color-background-faint: rgba(140, 140, 140, 0.2);
+  --figma-color-dark-background-color-background-faint: rgba(140, 140, 140, 0.25);
+  --figma-color-background-color-background-faint-active: rgba(140, 140, 140, 0.4);
+  --figma-color-dark-background-color-background-faint-active: rgba(140, 140, 140, 0.45);
+  --figma-color-background-color-background-faint-hover: rgba(140, 140, 140, 0.3);
+  --figma-color-dark-background-color-background-faint-hover: rgba(140, 140, 140, 0.35);
+  --figma-color-background-color-background-knockout: #FFFFFF;
+  --figma-color-dark-background-color-background-knockout: rgba(0, 0, 0, 0.9);
+  --figma-color-background-color-background-knockout-active: rgba(255, 255, 255, 0.6);
+  --figma-color-dark-background-color-background-knockout-active: rgba(0, 0, 0, 0.6);
+  --figma-color-background-color-background-knockout-hover: #FFFFFF;
+  --figma-color-dark-background-color-background-knockout-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-background-color-background-neutral-soft: #F4F2EE;
+  --figma-color-dark-background-color-background-neutral-soft: #293037;
+  --figma-color-background-color-background-neutral-strong: #EAE6DF;
+  --figma-color-dark-background-color-background-neutral-strong: #38434F;
+  --figma-color-background-color-background-offset: #F4F2EE;
+  --figma-color-dark-background-color-background-offset: #000000;
+  --figma-color-background-color-background-overlay: rgba(0, 0, 0, 0.75);
+  --figma-color-dark-background-color-background-overlay: rgba(0, 0, 0, 0.75);
+  --figma-color-background-color-background-overlay-a0: rgba(0, 0, 0, 0);
+  --figma-color-dark-background-color-background-overlay-a0: rgba(0, 0, 0, 0);
+  --figma-color-background-color-background-overlay-a16: rgba(0, 0, 0, 0.12);
+  --figma-color-dark-background-color-background-overlay-a16: rgba(0, 0, 0, 0.12);
+  --figma-color-background-color-background-overlay-a20: rgba(0, 0, 0, 0.15);
+  --figma-color-dark-background-color-background-overlay-a20: rgba(0, 0, 0, 0.15);
+  --figma-color-background-color-background-overlay-a40: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-background-color-background-overlay-a40: rgba(0, 0, 0, 0.3);
+  --figma-color-background-color-background-overlay-a60: rgba(0, 0, 0, 0.45);
+  --figma-color-dark-background-color-background-overlay-a60: rgba(0, 0, 0, 0.45);
+  --figma-color-background-color-background-overlay-a80: rgba(0, 0, 0, 0.6);
+  --figma-color-dark-background-color-background-overlay-a80: rgba(0, 0, 0, 0.6);
+  --figma-color-background-color-background-overlay-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-background-color-background-overlay-active: rgba(0, 0, 0, 0.9);
+  --figma-color-background-color-background-overlay-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-background-color-background-overlay-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-background-color-background-solid-disabled: #E4E4E4;
+  --figma-color-dark-background-color-background-solid-disabled: #424242;
+  --figma-color-background-color-background-transparent: rgba(255, 255, 255, 0);
+  --figma-color-dark-background-color-background-transparent: rgba(0, 0, 0, 0);
+  --figma-color-background-color-background-transparent-active: rgba(140, 140, 140, 0.2);
+  --figma-color-dark-background-color-background-transparent-active: rgba(140, 140, 140, 0.25);
+  --figma-color-background-color-background-transparent-hover: rgba(140, 140, 140, 0.1);
+  --figma-color-dark-background-color-background-transparent-hover: rgba(140, 140, 140, 0.15);
+  --figma-color-background-color-background-transparent-overlay: rgba(0, 0, 0, 0);
+  --figma-color-dark-background-color-background-transparent-overlay: rgba(0, 0, 0, 0);
+  --figma-color-background-color-background-transparent-overlay-active: rgba(140, 140, 140, 0.3);
+  --figma-color-dark-background-color-background-transparent-overlay-active: rgba(140, 140, 140, 0.3);
+  --figma-color-background-color-background-transparent-overlay-hover: rgba(140, 140, 140, 0.3);
+  --figma-color-dark-background-color-background-transparent-overlay-hover: rgba(140, 140, 140, 0.35);
+  --figma-color-background-color-mobile-background-offset: #EAE6DF;
+  --figma-color-dark-background-color-mobile-background-offset: #000000;
+
+  /* Border */
+  --figma-color-border-color-border: rgba(0, 0, 0, 0.75);
+  --figma-color-dark-border-color-border: rgba(255, 255, 255, 0.75);
+  --figma-color-border-color-border-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-border-color-border-active: rgba(255, 255, 255, 0.9);
+  --figma-color-border-color-border-disabled: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-border-color-border-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-border-color-border-faint: rgba(140, 140, 140, 0.2);
+  --figma-color-dark-border-color-border-faint: rgba(140, 140, 140, 0.25);
+  --figma-color-border-color-border-faint-active: rgba(140, 140, 140, 0.4);
+  --figma-color-dark-border-color-border-faint-active: rgba(140, 140, 140, 0.45);
+  --figma-color-border-color-border-faint-hover: rgba(140, 140, 140, 0.3);
+  --figma-color-dark-border-color-border-faint-hover: rgba(140, 140, 140, 0.35);
+  --figma-color-border-color-border-gap: #FFFFFF;
+  --figma-color-dark-border-color-border-gap: #1B1F23;
+  --figma-color-border-color-border-grid: #E4E4E4;
+  --figma-color-dark-border-color-border-grid: #38434F;
+  --figma-color-border-color-border-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-border-color-border-hover: rgba(255, 255, 255, 0.9);
+  --figma-color-border-color-border-knockout: #FFFFFF;
+  --figma-color-dark-border-color-border-knockout: #1B1F23;
+  --figma-color-border-color-border-knockout-active: rgba(255, 255, 255, 0.6);
+  --figma-color-dark-border-color-border-knockout-active: rgba(0, 0, 0, 0.6);
+  --figma-color-border-color-border-knockout-hover: #FFFFFF;
+  --figma-color-dark-border-color-border-knockout-hover: #1B1F23;
+  --figma-color-border-color-border-subtle: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-border-color-border-subtle: rgba(255, 255, 255, 0.3);
+  --figma-color-border-color-border-subtle-active: rgba(0, 0, 0, 0.45);
+  --figma-color-dark-border-color-border-subtle-active: rgba(255, 255, 255, 0.45);
+  --figma-color-border-color-border-subtle-hover: rgba(0, 0, 0, 0.45);
+  --figma-color-dark-border-color-border-subtle-hover: rgba(255, 255, 255, 0.45);
+  --figma-color-border-color-border-transparent: rgba(255, 255, 255, 0);
+  --figma-color-dark-border-color-border-transparent: rgba(0, 0, 0, 0);
+
+  /* Brand */
+  --figma-color-brand-color-logo-brand: #0A66C2;
+  --figma-color-dark-brand-color-logo-brand: #FFFFFF;
+  --figma-color-brand-color-logo-brand-lockup: #0A66C2;
+  --figma-color-dark-brand-color-logo-brand-lockup: #FFFFFF;
+  --figma-color-brand-color-logo-mono: #000000;
+  --figma-color-dark-brand-color-logo-mono: #FFFFFF;
+  --figma-color-brand-color-logo-mono-lockup: #000000;
+  --figma-color-dark-brand-color-logo-mono-lockup: #FFFFFF;
+
+  /* Caution */
+  --figma-color-caution-color-background-caution-soft: #FFEFE5;
+  --figma-color-dark-caution-color-background-caution-soft: #4C240A;
+  --figma-color-caution-color-background-caution-strong: #FFE0CC;
+  --figma-color-dark-caution-color-background-caution-strong: #702F03;
+  --figma-color-caution-color-background-caution-transparent-active: rgba(224, 106, 26, 0.2);
+  --figma-color-dark-caution-color-background-caution-transparent-active: rgba(224, 106, 26, 0.25);
+  --figma-color-caution-color-background-caution-transparent-hover: rgba(224, 106, 26, 0.1);
+  --figma-color-dark-caution-color-background-caution-transparent-hover: rgba(224, 106, 26, 0.15);
+  --figma-color-caution-color-caution: #AD4601;
+  --figma-color-dark-caution-color-caution: #FE9958;
+  --figma-color-caution-color-caution-active: #702F03;
+  --figma-color-dark-caution-color-caution-active: #FFC5A0;
+  --figma-color-caution-color-caution-hover: #702F03;
+  --figma-color-dark-caution-color-caution-hover: #FFC5A0;
+
+  /* Checked */
+  --figma-color-checked-color-background-checked-active: rgba(15, 159, 111, 0.2);
+  --figma-color-dark-checked-color-background-checked-active: rgba(15, 159, 111, 0.25);
+  --figma-color-checked-color-background-checked-range: #AFF4DD;
+  --figma-color-dark-checked-color-background-checked-range: #004C33;
+  --figma-color-checked-color-background-checked-transparent-hover: rgba(15, 159, 111, 0.1);
+  --figma-color-dark-checked-color-background-checked-transparent-hover: rgba(15, 159, 111, 0.15);
+  --figma-color-checked-color-checked: #01754F;
+  --figma-color-dark-checked-color-checked: #37C898;
+  --figma-color-checked-color-checked-active: #004C33;
+  --figma-color-dark-checked-color-checked-active: #74E5C0;
+  --figma-color-checked-color-checked-hover: #004C33;
+  --figma-color-dark-checked-color-checked-hover: #74E5C0;
+
+  /* Data A */
+  --figma-color-data-a-color-data-a-1: #EEFDFF;
+  --figma-color-dark-data-a-color-data-a-1: #283132;
+  --figma-color-data-a-color-data-a-2: #DDF7FB;
+  --figma-color-dark-data-a-color-data-a-2: #364547;
+  --figma-color-data-a-color-data-a-3: #C1EDF4;
+  --figma-color-dark-data-a-color-data-a-3: #526A6E;
+  --figma-color-data-a-color-data-a-4: #94DDE8;
+  --figma-color-dark-data-a-color-data-a-4: #719196;
+  --figma-color-data-a-color-data-a-5: #5EC0CF;
+  --figma-color-dark-data-a-color-data-a-5: #98B8BD;
+  --figma-color-data-a-color-data-a-6: #3399A8;
+  --figma-color-dark-data-a-color-data-a-6: #BCD6DA;
+  --figma-color-data-a-color-data-a-7: #1A707E;
+  --figma-color-dark-data-a-color-data-a-7: #D9E9EC;
+  --figma-color-data-a-color-data-a-8: #114951;
+  --figma-color-dark-data-a-color-data-a-8: #E9F4F6;
+
+  /* Data B */
+  --figma-color-data-b-color-data-b-1: #FFF9F7;
+  --figma-color-dark-data-b-color-data-b-1: #412922;
+  --figma-color-data-b-color-data-b-2: #FFEFEA;
+  --figma-color-dark-data-b-color-data-b-2: #5D392F;
+  --figma-color-data-b-color-data-b-3: #FFDFD6;
+  --figma-color-dark-data-b-color-data-b-3: #8F5849;
+  --figma-color-data-b-color-data-b-4: #FDC2B1;
+  --figma-color-dark-data-b-color-data-b-4: #BE7B6A;
+  --figma-color-data-b-color-data-b-5: #F69B81;
+  --figma-color-dark-data-b-color-data-b-5: #E0A494;
+  --figma-color-data-b-color-data-b-6: #E06847;
+  --figma-color-dark-data-b-color-data-b-6: #F4C7BB;
+  --figma-color-data-b-color-data-b-7: #B24020;
+  --figma-color-dark-data-b-color-data-b-7: #FBE1D9;
+  --figma-color-data-b-color-data-b-8: #762812;
+  --figma-color-dark-data-b-color-data-b-8: #FDEFEC;
+
+  /* Data C */
+  --figma-color-data-c-color-data-c-1: #F6FBFF;
+  --figma-color-dark-data-c-color-data-c-1: #293037;
+  --figma-color-data-c-color-data-c-2: #E8F3FF;
+  --figma-color-dark-data-c-color-data-c-2: #38434F;
+  --figma-color-data-c-color-data-c-3: #D2E9FF;
+  --figma-color-dark-data-c-color-data-c-3: #56687A;
+  --figma-color-data-c-color-data-c-4: #AAD6FF;
+  --figma-color-dark-data-c-color-data-c-4: #788FA5;
+  --figma-color-data-c-color-data-c-5: #71B7FB;
+  --figma-color-dark-data-c-color-data-c-5: #9EB5CA;
+  --figma-color-data-c-color-data-c-6: #378FE9;
+  --figma-color-dark-data-c-color-data-c-6: #C2D3E4;
+  --figma-color-data-c-color-data-c-7: #0A66C2;
+  --figma-color-dark-data-c-color-data-c-7: #DDE7F1;
+  --figma-color-data-c-color-data-c-8: #004182;
+  --figma-color-dark-data-c-color-data-c-8: #EDF3F8;
+
+  /* Data D */
+  --figma-color-data-d-color-data-d-1: #FCFAFF;
+  --figma-color-dark-data-d-color-data-d-1: #332C3C;
+  --figma-color-data-d-color-data-d-2: #F7EFFF;
+  --figma-color-dark-data-d-color-data-d-2: #493D57;
+  --figma-color-data-d-color-data-d-3: #EFE0FF;
+  --figma-color-dark-data-d-color-data-d-3: #715E86;
+  --figma-color-data-d-color-data-d-4: #E0C7FC;
+  --figma-color-dark-data-d-color-data-d-4: #9983B1;
+  --figma-color-data-d-color-data-d-5: #C8A1F6;
+  --figma-color-dark-data-d-color-data-d-5: #BDABD2;
+  --figma-color-data-d-color-data-d-6: #A871EA;
+  --figma-color-dark-data-d-color-data-d-6: #D9CCE7;
+  --figma-color-data-d-color-data-d-7: #8443CE;
+  --figma-color-dark-data-d-color-data-d-7: #EBE3F3;
+  --figma-color-data-d-color-data-d-8: #592099;
+  --figma-color-dark-data-d-color-data-d-8: #F4F1F8;
+
+  /* Data E */
+  --figma-color-data-e-color-data-e-1: #F9FCE4;
+  --figma-color-dark-data-e-color-data-e-1: #2F3027;
+  --figma-color-data-e-color-data-e-2: #F0F6CB;
+  --figma-color-dark-data-e-color-data-e-2: #414335;
+  --figma-color-data-e-color-data-e-3: #E2ECA8;
+  --figma-color-dark-data-e-color-data-e-3: #65684E;
+  --figma-color-data-e-color-data-e-4: #CBD978;
+  --figma-color-dark-data-e-color-data-e-4: #8A8F6C;
+  --figma-color-data-e-color-data-e-5: #ACBA5F;
+  --figma-color-dark-data-e-color-data-e-5: #B0B68C;
+  --figma-color-data-e-color-data-e-6: #85942F;
+  --figma-color-dark-data-e-color-data-e-6: #CFD5AF;
+  --figma-color-data-e-color-data-e-7: #616C20;
+  --figma-color-dark-data-e-color-data-e-7: #E5E9CD;
+  --figma-color-data-e-color-data-e-8: #3F4618;
+  --figma-color-dark-data-e-color-data-e-8: #F1F3E5;
+
+  /* Data F */
+  --figma-color-data-f-color-data-f-1: #FFF8FF;
+  --figma-color-dark-data-f-color-data-f-1: #3A2A39;
+  --figma-color-data-f-color-data-f-2: #FFEDFE;
+  --figma-color-dark-data-f-color-data-f-2: #523A51;
+  --figma-color-data-f-color-data-f-3: #FCDDFB;
+  --figma-color-dark-data-f-color-data-f-3: #80597E;
+  --figma-color-data-f-color-data-f-4: #F6C0F3;
+  --figma-color-dark-data-f-color-data-f-4: #AC7DA9;
+  --figma-color-data-f-color-data-f-5: #EA95E5;
+  --figma-color-dark-data-f-color-data-f-5: #CEA5CC;
+  --figma-color-data-f-color-data-f-6: #D160CB;
+  --figma-color-dark-data-f-color-data-f-6: #E5C8E4;
+  --figma-color-data-f-color-data-f-7: #A734A1;
+  --figma-color-dark-data-f-color-data-f-7: #F3E1F2;
+  --figma-color-data-f-color-data-f-8: #711C6D;
+  --figma-color-dark-data-f-color-data-f-8: #F8EFF8;
+
+  /* Data G */
+  --figma-color-data-g-color-data-g-1: #FDFAF5;
+  --figma-color-dark-data-g-color-data-g-1: #322F29;
+  --figma-color-data-g-color-data-g-2: #FDF0DE;
+  --figma-color-dark-data-g-color-data-g-2: #474139;
+  --figma-color-data-g-color-data-g-3: #FDE2BC;
+  --figma-color-dark-data-g-color-data-g-3: #6E6558;
+  --figma-color-data-g-color-data-g-4: #F9C982;
+  --figma-color-dark-data-g-color-data-g-4: #958B7B;
+  --figma-color-data-g-color-data-g-5: #E9A53F;
+  --figma-color-dark-data-g-color-data-g-5: #BBB1A1;
+  --figma-color-data-g-color-data-g-6: #C37D16;
+  --figma-color-dark-data-g-color-data-g-6: #D6CEC2;
+  --figma-color-data-g-color-data-g-7: #915907;
+  --figma-color-dark-data-g-color-data-g-7: #EAE6DF;
+  --figma-color-data-g-color-data-g-8: #5C3B09;
+  --figma-color-dark-data-g-color-data-g-8: #F4F2EE;
+
+  /* Data H */
+  --figma-color-data-h-color-data-h-1: #FAFAFA;
+  --figma-color-dark-data-h-color-data-h-1: #2F2F2F;
+  --figma-color-data-h-color-data-h-2: #F2F2F2;
+  --figma-color-dark-data-h-color-data-h-2: #424242;
+  --figma-color-data-h-color-data-h-3: #E4E4E4;
+  --figma-color-dark-data-h-color-data-h-3: #666666;
+  --figma-color-data-h-color-data-h-4: #D1D1D1;
+  --figma-color-dark-data-h-color-data-h-4: #8C8C8C;
+  --figma-color-data-h-color-data-h-5: #B2B2B2;
+  --figma-color-dark-data-h-color-data-h-5: #B2B2B2;
+  --figma-color-data-h-color-data-h-6: #8C8C8C;
+  --figma-color-dark-data-h-color-data-h-6: #D1D1D1;
+  --figma-color-data-h-color-data-h-7: #666666;
+  --figma-color-dark-data-h-color-data-h-7: #E4E4E4;
+  --figma-color-data-h-color-data-h-8: #424242;
+  --figma-color-dark-data-h-color-data-h-8: #F2F2F2;
+
+  /* Data Categorical */
+  --figma-color-data-categorical-color-data-categorical-a: #1A707E;
+  --figma-color-dark-data-categorical-color-data-categorical-a: #3399A8;
+  --figma-color-data-categorical-color-data-categorical-a-hover: rgba(26, 112, 126, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-a-hover: rgba(51, 153, 168, 0.3);
+  --figma-color-data-categorical-color-data-categorical-b: #E06847;
+  --figma-color-dark-data-categorical-color-data-categorical-b: #F69B81;
+  --figma-color-data-categorical-color-data-categorical-b-hover: rgba(224, 104, 71, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-b-hover: rgba(246, 155, 129, 0.3);
+  --figma-color-data-categorical-color-data-categorical-c: #004182;
+  --figma-color-dark-data-categorical-color-data-categorical-c: #AAD6FF;
+  --figma-color-data-categorical-color-data-categorical-c-hover: rgba(0, 65, 130, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-c-hover: rgba(170, 214, 255, 0.3);
+  --figma-color-data-categorical-color-data-categorical-d: #A871EA;
+  --figma-color-dark-data-categorical-color-data-categorical-d: #C8A1F6;
+  --figma-color-data-categorical-color-data-categorical-d-hover: rgba(168, 113, 234, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-d-hover: rgba(200, 161, 246, 0.3);
+  --figma-color-data-categorical-color-data-categorical-e: #616C20;
+  --figma-color-dark-data-categorical-color-data-categorical-e: #85942F;
+  --figma-color-data-categorical-color-data-categorical-e-hover: rgba(97, 108, 32, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-e-hover: rgba(133, 148, 47, 0.3);
+  --figma-color-data-categorical-color-data-categorical-f: #D160CB;
+  --figma-color-dark-data-categorical-color-data-categorical-f: #EA95E5;
+  --figma-color-data-categorical-color-data-categorical-f-hover: rgba(209, 96, 203, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-f-hover: rgba(234, 149, 229, 0.3);
+  --figma-color-data-categorical-color-data-categorical-g: #5C3B09;
+  --figma-color-dark-data-categorical-color-data-categorical-g: #F9C982;
+  --figma-color-data-categorical-color-data-categorical-g-hover: rgba(92, 59, 9, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-g-hover: rgba(249, 201, 130, 0.3);
+  --figma-color-data-categorical-color-data-categorical-h: #8C8C8C;
+  --figma-color-dark-data-categorical-color-data-categorical-h: #B2B2B2;
+  --figma-color-data-categorical-color-data-categorical-h-hover: rgba(140, 140, 140, 0.3);
+  --figma-color-dark-data-categorical-color-data-categorical-h-hover: rgba(178, 178, 178, 0.3);
+
+  /* Icon */
+  --figma-color-icon-color-icon: rgba(0, 0, 0, 0.75);
+  --figma-color-dark-icon-color-icon: rgba(255, 255, 255, 0.75);
+  --figma-color-icon-color-icon-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-icon-color-icon-active: rgba(255, 255, 255, 0.9);
+  --figma-color-icon-color-icon-disabled: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-icon-color-icon-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-icon-color-icon-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-icon-color-icon-hover: rgba(255, 255, 255, 0.9);
+  --figma-color-icon-color-icon-knockout: #FFFFFF;
+  --figma-color-dark-icon-color-icon-knockout: rgba(0, 0, 0, 0.9);
+  --figma-color-icon-color-icon-knockout-active: rgba(255, 255, 255, 0.6);
+  --figma-color-dark-icon-color-icon-knockout-active: rgba(0, 0, 0, 0.6);
+  --figma-color-icon-color-icon-knockout-hover: #FFFFFF;
+  --figma-color-dark-icon-color-icon-knockout-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-icon-color-icon-overlay: #FFFFFF;
+  --figma-color-dark-icon-color-icon-overlay: #FFFFFF;
+  --figma-color-icon-color-icon-overlay-active: #FFFFFF;
+  --figma-color-dark-icon-color-icon-overlay-active: #FFFFFF;
+  --figma-color-icon-color-icon-overlay-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-dark-icon-color-icon-overlay-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-icon-color-icon-overlay-hover: #FFFFFF;
+  --figma-color-dark-icon-color-icon-overlay-hover: #FFFFFF;
+
+  /* Input */
+  --figma-color-input-color-input-android-indicator: #424242;
+  --figma-color-dark-input-color-input-android-indicator: #D1D1D1;
+  --figma-color-input-color-input-android-track-checked: #0F9F6F;
+  --figma-color-dark-input-color-input-android-track-checked: #74E5C0;
+
+  /* Label */
+  --figma-color-label-color-label: rgba(0, 0, 0, 0.75);
+  --figma-color-dark-label-color-label: rgba(255, 255, 255, 0.75);
+  --figma-color-label-color-label-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-label-color-label-active: rgba(255, 255, 255, 0.9);
+  --figma-color-label-color-label-disabled: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-label-color-label-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-label-color-label-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-label-color-label-hover: rgba(255, 255, 255, 0.9);
+  --figma-color-label-color-label-knockout: #FFFFFF;
+  --figma-color-dark-label-color-label-knockout: rgba(0, 0, 0, 0.9);
+  --figma-color-label-color-label-knockout-active: rgba(255, 255, 255, 0.6);
+  --figma-color-dark-label-color-label-knockout-active: rgba(0, 0, 0, 0.6);
+  --figma-color-label-color-label-knockout-hover: #FFFFFF;
+  --figma-color-dark-label-color-label-knockout-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-label-color-label-overlay: #FFFFFF;
+  --figma-color-dark-label-color-label-overlay: #FFFFFF;
+  --figma-color-label-color-label-overlay-active: #FFFFFF;
+  --figma-color-dark-label-color-label-overlay-active: #FFFFFF;
+  --figma-color-label-color-label-overlay-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-dark-label-color-label-overlay-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-label-color-label-overlay-hover: #FFFFFF;
+  --figma-color-dark-label-color-label-overlay-hover: #FFFFFF;
+
+  /* Link */
+  --figma-color-link-color-link: #0A66C2;
+  --figma-color-dark-link-color-link: #71B7FB;
+  --figma-color-link-color-link-active: #004182;
+  --figma-color-dark-link-color-link-active: #AAD6FF;
+  --figma-color-link-color-link-hover: #004182;
+  --figma-color-dark-link-color-link-hover: #AAD6FF;
+  --figma-color-link-color-link-visited: #8443CE;
+  --figma-color-dark-link-color-link-visited: #C8A1F6;
+  --figma-color-link-color-link-visited-active: #592099;
+  --figma-color-dark-link-color-link-visited-active: #E0C7FC;
+  --figma-color-link-color-link-visited-hover: #592099;
+  --figma-color-dark-link-color-link-visited-hover: #E0C7FC;
+
+  /* Negative */
+  --figma-color-negative-color-background-negative-soft: #FFEEF1;
+  --figma-color-dark-negative-color-background-negative-soft: #640312;
+  --figma-color-negative-color-background-negative-strong: #FFDEE3;
+  --figma-color-dark-negative-color-background-negative-strong: #8A0015;
+  --figma-color-negative-color-background-negative-transparent-active: rgba(243, 83, 107, 0.2);
+  --figma-color-dark-negative-color-background-negative-transparent-active: rgba(243, 83, 107, 0.25);
+  --figma-color-negative-color-background-negative-transparent-hover: rgba(243, 83, 107, 0.1);
+  --figma-color-dark-negative-color-background-negative-transparent-hover: rgba(243, 83, 107, 0.15);
+  --figma-color-negative-color-negative: #CB112D;
+  --figma-color-dark-negative-color-negative: #FD93A3;
+  --figma-color-negative-color-negative-active: #8A0015;
+  --figma-color-dark-negative-color-negative-active: #FFC1CA;
+  --figma-color-negative-color-negative-hover: #8A0015;
+  --figma-color-dark-negative-color-negative-hover: #FFC1CA;
+
+  /* New */
+  --figma-color-new-color-background-new: rgba(55, 143, 233, 0.2);
+  --figma-color-dark-new-color-background-new: rgba(55, 143, 233, 0.25);
+  --figma-color-new-color-background-new-active: rgba(55, 143, 233, 0.4);
+  --figma-color-dark-new-color-background-new-active: rgba(55, 143, 233, 0.45);
+  --figma-color-new-color-background-new-hover: rgba(55, 143, 233, 0.3);
+  --figma-color-dark-new-color-background-new-hover: rgba(55, 143, 233, 0.35);
+  --figma-color-new-color-new: #0A66C2;
+  --figma-color-dark-new-color-new: #71B7FB;
+
+  /* Positive */
+  --figma-color-positive-color-background-positive-soft: #D6FAEE;
+  --figma-color-dark-positive-color-background-positive-soft: #013726;
+  --figma-color-positive-color-background-positive-strong: #AFF4DD;
+  --figma-color-dark-positive-color-background-positive-strong: #004C33;
+  --figma-color-positive-color-background-positive-transparent-active: rgba(15, 159, 111, 0.2);
+  --figma-color-dark-positive-color-background-positive-transparent-active: rgba(15, 159, 111, 0.25);
+  --figma-color-positive-color-background-positive-transparent-hover: rgba(15, 159, 111, 0.1);
+  --figma-color-dark-positive-color-background-positive-transparent-hover: rgba(15, 159, 111, 0.15);
+  --figma-color-positive-color-positive: #01754F;
+  --figma-color-dark-positive-color-positive: #37C898;
+  --figma-color-positive-color-positive-active: #004C33;
+  --figma-color-dark-positive-color-positive-active: #74E5C0;
+  --figma-color-positive-color-positive-hover: #004C33;
+  --figma-color-dark-positive-color-positive-hover: #74E5C0;
+
+  /* Premium */
+  --figma-color-premium-premium-gradient-base-a: #FDF0DE;
+  --figma-color-dark-premium-premium-gradient-base-a: #523A51;
+  --figma-color-premium-premium-gradient-base-b: #FDE2BC;
+  --figma-color-dark-premium-premium-gradient-base-b: #51164E;
+  --figma-color-premium-premium-gradient-base-c: #F9C982;
+  --figma-color-dark-premium-premium-gradient-base-c: #711C6D;
+  --figma-color-premium-color-premium-accent-1: #44712E;
+  --figma-color-dark-premium-color-premium-accent-1: #A7E18B;
+  --figma-color-premium-color-premium-accent-2: #56687A;
+  --figma-color-dark-premium-color-premium-accent-2: #C2D3E4;
+  --figma-color-premium-color-premium-accent-3: #715E86;
+  --figma-color-dark-premium-color-premium-accent-3: #D9CCE7;
+  --figma-color-premium-color-premium-accent-4: #523A51;
+  --figma-color-dark-premium-color-premium-accent-4: #E5C8E4;
+  --figma-color-premium-color-premium-accent-5: #8F5849;
+  --figma-color-dark-premium-color-premium-accent-5: #F4C7BB;
+  --figma-color-premium-color-premium-accent-6: #1A707E;
+  --figma-color-dark-premium-color-premium-accent-6: #94DDE8;
+  --figma-color-premium-color-premium-brand: #F9C982;
+  --figma-color-dark-premium-color-premium-brand: #F9C982;
+  --figma-color-premium-color-premium-button-background: #F9C982;
+  --figma-color-dark-premium-color-premium-button-background: #F9C982;
+  --figma-color-premium-color-premium-button-background-active: #C37D16;
+  --figma-color-dark-premium-color-premium-button-background-active: #C37D16;
+  --figma-color-premium-color-premium-button-background-hover: #E9A53F;
+  --figma-color-dark-premium-color-premium-button-background-hover: #E9A53F;
+  --figma-color-premium-color-premium-button-label: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-premium-color-premium-button-label: rgba(0, 0, 0, 0.9);
+  --figma-color-premium-color-premium-button-label-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-premium-color-premium-button-label-active: rgba(0, 0, 0, 0.9);
+  --figma-color-premium-color-premium-button-label-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-premium-color-premium-button-label-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-premium-color-premium-icon: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-premium-color-premium-icon: rgba(0, 0, 0, 0.9);
+  --figma-color-premium-color-premium-icon-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-premium-color-premium-icon-active: rgba(0, 0, 0, 0.9);
+  --figma-color-premium-color-premium-icon-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-premium-color-premium-icon-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-premium-color-premium-inbug: #C37D16;
+  --figma-color-dark-premium-color-premium-inbug: #F9C982;
+  --figma-color-premium-color-premium-indicator: #C37D16;
+  --figma-color-dark-premium-color-premium-indicator: #F9C982;
+  --figma-color-premium-color-premium-indicator-active: #C37D16;
+  --figma-color-dark-premium-color-premium-indicator-active: #F9C982;
+  --figma-color-premium-color-premium-indicator-hover: #C37D16;
+  --figma-color-dark-premium-color-premium-indicator-hover: #F9C982;
+  --figma-color-premium-color-premium-text-brand: #C37D16;
+  --figma-color-dark-premium-color-premium-text-brand: #F9C982;
+
+  /* Scrim */
+  --figma-color-scrim-color-scrim: rgba(0, 0, 0, 0.6);
+  --figma-color-dark-scrim-color-scrim: rgba(0, 0, 0, 0.6);
+  --figma-color-scrim-color-scrim-conceal: rgba(66, 66, 66, 0.85);
+  --figma-color-dark-scrim-color-scrim-conceal: rgba(66, 66, 66, 0.85);
+
+  /* Text */
+  --figma-color-text-color-text: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-text-color-text: rgba(255, 255, 255, 0.9);
+  --figma-color-text-color-text-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-text-color-text-active: rgba(255, 255, 255, 0.9);
+  --figma-color-text-color-text-disabled: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-text-color-text-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-text-color-text-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-text-color-text-hover: rgba(255, 255, 255, 0.9);
+  --figma-color-text-color-text-meta: rgba(0, 0, 0, 0.6);
+  --figma-color-dark-text-color-text-meta: rgba(255, 255, 255, 0.6);
+  --figma-color-text-color-text-meta-active: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-text-color-text-meta-active: rgba(255, 255, 255, 0.9);
+  --figma-color-text-color-text-meta-hover: rgba(0, 0, 0, 0.9);
+  --figma-color-dark-text-color-text-meta-hover: rgba(255, 255, 255, 0.9);
+  --figma-color-text-color-text-overlay: #FFFFFF;
+  --figma-color-dark-text-color-text-overlay: #FFFFFF;
+  --figma-color-text-color-text-overlay-active: #FFFFFF;
+  --figma-color-dark-text-color-text-overlay-active: #FFFFFF;
+  --figma-color-text-color-text-overlay-hover: #FFFFFF;
+  --figma-color-dark-text-color-text-overlay-hover: #FFFFFF;
+
+  /* Track */
+  --figma-color-track-color-track: rgba(0, 0, 0, 0.6);
+  --figma-color-dark-track-color-track: rgba(255, 255, 255, 0.6);
+  --figma-color-track-color-track-disabled: rgba(0, 0, 0, 0.3);
+  --figma-color-dark-track-color-track-disabled: rgba(255, 255, 255, 0.3);
+  --figma-color-track-color-track-faint: rgba(140, 140, 140, 0.2);
+  --figma-color-dark-track-color-track-faint: rgba(140, 140, 140, 0.25);
+  --figma-color-track-color-track-solid: #666666;
+  --figma-color-dark-track-color-track-solid: #B2B2B2;
+}

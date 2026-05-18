@@ -78,7 +78,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
       error = false,
       counter = false,
       size = "small",
-      trailingIcon = "placeholder",
+      trailingIcon = null,
       trailingActionLabel = "Text input action",
       onTrailingAction,
       visualState = "default",

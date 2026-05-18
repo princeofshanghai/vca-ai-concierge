@@ -14,6 +14,7 @@
 - Do not add business logic, product-specific flows, or branded design tokens until `PROJECT.md` and `DESIGN.md` are defined.
 - Use a default web system font stack unless `DESIGN.md` says otherwise.
 - Preserve the `src/app` App Router structure and `@/*` path alias to `src/*`.
+- For UI/UX changes, consult `DESIGN.md` before implementation, use existing design tokens and primitives first, and call out anything that appears to conflict with the design system or Figma source tokens before changing it.
 
 ## Framework Note
 

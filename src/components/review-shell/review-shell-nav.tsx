@@ -32,6 +32,20 @@ const HIRING_SHELL_OPTIONS = [
     id: "hiring-shell-tray",
     label: "Tray",
   },
+  {
+    id: "hiring-shell-hybrid",
+    label: "Hybrid",
+  },
+] as const;
+const PREMIUM_SHELL_OPTIONS = [
+  {
+    id: "premium-shell-fab",
+    label: "FAB",
+  },
+  {
+    id: "premium-shell-tray",
+    label: "Tray",
+  },
 ] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
@@ -51,6 +65,7 @@ type ReviewDestination = Readonly<{
 }>;
 
 type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
+type PremiumShellLabel = (typeof PREMIUM_SHELL_OPTIONS)[number]["label"];
 
 const HOME_DESTINATION: ReviewDestination = {
   href: "/",
@@ -88,7 +103,8 @@ function HomeNavIcon() {
 
 function getPrototypeMetaLabel(
   pathname: string,
-  shellLabel?: HiringShellLabel,
+  hiringShellLabel?: HiringShellLabel,
+  premiumShellLabel?: PremiumShellLabel,
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
@@ -98,8 +114,12 @@ function getPrototypeMetaLabel(
     const activePremiumMode = premiumModeOptions.find(
       (option) => option.href === pathname,
     );
+    const modeLabel =
+      activePremiumMode?.label ?? premiumLiveModeNavItems[0].label;
 
-    return activePremiumMode?.label ?? premiumLiveModeNavItems[0].label;
+    return premiumShellLabel === "Tray"
+      ? `${modeLabel} · ${premiumShellLabel}`
+      : modeLabel;
   }
 
   if (
@@ -111,9 +131,9 @@ function getPrototypeMetaLabel(
     );
     const modeLabel = activeHiringMode?.label ?? "Live (interactive)";
 
-    return shellLabel === "Tray"
-      ? `${modeLabel} · Tray`
-      : modeLabel;
+    return hiringShellLabel === "Default"
+      ? modeLabel
+      : `${modeLabel} · ${hiringShellLabel}`;
   }
 
   return undefined;
@@ -121,7 +141,8 @@ function getPrototypeMetaLabel(
 
 function getPrototypeDestination(
   pathname: string,
-  shellLabel?: HiringShellLabel,
+  hiringShellLabel?: HiringShellLabel,
+  premiumShellLabel?: PremiumShellLabel,
 ): ReviewDestination {
   const isPremium = pathname.startsWith("/premium");
 
@@ -134,27 +155,51 @@ function getPrototypeDestination(
           candidate === HIRING_PROTOTYPE_HREF ||
           candidate.startsWith("/internal/flows"),
     menu: isPremium ? "premium" : "hiring",
-    metaLabel: getPrototypeMetaLabel(pathname, shellLabel),
+    metaLabel: getPrototypeMetaLabel(
+      pathname,
+      hiringShellLabel,
+      premiumShellLabel,
+    ),
   };
 }
 
 function getReviewDestinations(
   pathname: string,
-  shellLabel?: HiringShellLabel,
+  hiringShellLabel?: HiringShellLabel,
+  premiumShellLabel?: PremiumShellLabel,
 ): ReadonlyArray<ReviewDestination> {
   if (pathname.startsWith("/premium")) {
-    return [HOME_DESTINATION, getPrototypeDestination(pathname, shellLabel)];
+    return [
+      HOME_DESTINATION,
+      getPrototypeDestination(pathname, hiringShellLabel, premiumShellLabel),
+    ];
   }
 
   return [
     HOME_DESTINATION,
-    getPrototypeDestination(pathname, shellLabel),
+    getPrototypeDestination(pathname, hiringShellLabel, premiumShellLabel),
     COMPONENTS_DESTINATION,
   ];
 }
 
 function withHiringShell(href: string, shellLabel: HiringShellLabel) {
-  return shellLabel === "Tray" ? `${href}?shell=tray` : href;
+  if (shellLabel === "Tray") {
+    return `${href}?shell=tray`;
+  }
+
+  if (shellLabel === "Hybrid") {
+    return `${href}?shell=hybrid`;
+  }
+
+  return href;
+}
+
+function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
+  if (shellLabel === "Tray") {
+    return `${href}?shell=tray`;
+  }
+
+  return href;
 }
 
 function getHiringShellOptions(pathname: string) {
@@ -169,6 +214,17 @@ function getHiringShellOptions(pathname: string) {
   }));
 }
 
+function getPremiumShellOptions(pathname: string) {
+  const baseHref = pathname.startsWith("/premium")
+    ? pathname
+    : PREMIUM_PROTOTYPE_HREF;
+
+  return PREMIUM_SHELL_OPTIONS.map((option) => ({
+    ...option,
+    href: withPremiumShell(baseHref, option.label),
+  }));
+}
+
 export function ReviewShellNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -178,7 +234,13 @@ export function ReviewShellNav() {
   const currentSearch = searchParams.toString();
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const activeHiringShellLabel: HiringShellLabel =
-    searchParams.get("shell") === "tray" ? "Tray" : "Default";
+    searchParams.get("shell") === "tray"
+      ? "Tray"
+      : searchParams.get("shell") === "hybrid"
+        ? "Hybrid"
+        : "Default";
+  const activePremiumShellLabel: PremiumShellLabel =
+    searchParams.get("shell") === "tray" ? "Tray" : "FAB";
   const shellAwareHiringModeOptions = useMemo(
     () =>
       hiringModeOptions.map((option) => ({
@@ -187,13 +249,30 @@ export function ReviewShellNav() {
       })),
     [activeHiringShellLabel],
   );
+  const shellAwarePremiumModeOptions = useMemo(
+    () =>
+      premiumModeOptions.map((option) => ({
+        ...option,
+        href: withPremiumShell(option.href, activePremiumShellLabel),
+      })),
+    [activePremiumShellLabel],
+  );
   const hiringShellOptions = useMemo(
     () => getHiringShellOptions(pathname),
     [pathname],
   );
+  const premiumShellOptions = useMemo(
+    () => getPremiumShellOptions(pathname),
+    [pathname],
+  );
   const reviewDestinations = useMemo(
-    () => getReviewDestinations(pathname, activeHiringShellLabel),
-    [activeHiringShellLabel, pathname],
+    () =>
+      getReviewDestinations(
+        pathname,
+        activeHiringShellLabel,
+        activePremiumShellLabel,
+      ),
+    [activeHiringShellLabel, activePremiumShellLabel, pathname],
   );
 
   const listRef = useRef<HTMLUListElement | null>(null);
@@ -270,8 +349,11 @@ export function ReviewShellNav() {
             const hasMenu = Boolean(destination.menu);
             const isPremiumMenu = destination.menu === "premium";
             const modeOptions = isPremiumMenu
-              ? premiumModeOptions
+              ? shellAwarePremiumModeOptions
               : shellAwareHiringModeOptions;
+            const shellOptions = isPremiumMenu
+              ? premiumShellOptions
+              : hiringShellOptions;
 
             if (hasMenu) {
               return (
@@ -336,9 +418,7 @@ export function ReviewShellNav() {
                     labelledBy={TRIGGER_ID}
                     modeOptions={modeOptions}
                     modeHeading={isPremiumMenu ? "Premium" : "LTS Hiring"}
-                    shellOptions={
-                      isPremiumMenu ? undefined : hiringShellOptions
-                    }
+                    shellOptions={shellOptions}
                     showVisitorControls={!isPremiumMenu}
                   />
                 </li>

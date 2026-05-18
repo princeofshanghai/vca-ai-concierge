@@ -33,7 +33,7 @@ const HEADLINE = HIRING_CONCIERGE_TITLE;
 const SUBCOPY =
   "Discuss your hiring needs with our AI assistant, then connect with a sales expert.";
 const PERSONAL_EMAIL_HELPER_TEXT =
-  "Please use your work email so we can customize this for your organization";
+  "Use work email to help tailor the chat.";
 
 export type OnboardingResult = Readonly<{
   firstName: string;
@@ -298,10 +298,18 @@ export function OnboardingScreen({
           </>
         ) : null}
 
+        {visualState === "signed-in" ? (
+          <ProfileChip
+            persona={persona}
+            onDismiss={handleDismissLinkedIn}
+            className="mt-stack"
+          />
+        ) : null}
+
         <div
           className={cx(
             "flex flex-col gap-lg",
-            visualState === "signed-in" && "mt-stack-lg",
+            visualState === "signed-in" && "mt-xl",
           )}
         >
           <TextInput
@@ -385,14 +393,6 @@ export function OnboardingScreen({
         >
           Start chat
         </Button>
-
-        {visualState === "signed-in" ? (
-          <ProfileChip
-            persona={persona}
-            onDismiss={handleDismissLinkedIn}
-            className="mt-lg"
-          />
-        ) : null}
       </form>
     </div>
   );

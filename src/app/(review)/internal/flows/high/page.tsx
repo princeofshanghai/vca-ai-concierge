@@ -23,7 +23,8 @@ export default async function HighFlowPage({
   searchParams,
 }: HighFlowPageProps) {
   const { shell } = await searchParams;
-  const shellMode = shell === "tray" ? "tray" : "default";
+  const shellMode =
+    shell === "tray" || shell === "hybrid" ? shell : "default";
 
   return <LandingPage reviewFlow={flowReviews.high} shellMode={shellMode} />;
 }

@@ -21,15 +21,23 @@ colors:
   surface-tint: "#EEF3FA"
   background-transparent-hover: "rgba(140, 140, 140, 0.1)"
   background-transparent-active: "rgba(140, 140, 140, 0.2)"
-  overlay-dim: "rgba(0, 0, 0, 0.2)"
+  overlay-dim: "rgba(0, 0, 0, 0.15)"
   scrim: "rgba(0, 0, 0, 0.6)"
-  ai-background-soft: "#D2E9FF"
+  ai-background-soft: "#E8F3FF"
+  ai-background-strong: "#D2E9FF"
   ai-border: "#AAD6FF"
   ai-icon: "#0A66C2"
+  positive: "#01754F"
+  positive-hover: "#004C33"
+  positive-active: "#004C33"
+  caution: "#AD4601"
+  caution-hover: "#702F03"
+  caution-active: "#702F03"
+  new: "#0A66C2"
   tag-default-background: "rgba(140, 140, 140, 0.2)"
-  tag-positive-background: "#01754F"
+  tag-positive-background: "{colors.positive}"
   tag-negative-background: "#CB112D"
-  tag-caution-background: "#AD4601"
+  tag-caution-background: "{colors.caution}"
   tag-neutral-background: "#56687A"
   tag-supportive-1-background: "#FDE2BC"
   tag-supportive-2-background: "#FFDFD6"
@@ -47,6 +55,8 @@ colors:
   border-active: "rgba(0, 0, 0, 0.9)"
   border-subtle: "rgba(0, 0, 0, 0.3)"
   border-faint: "rgba(140, 140, 140, 0.2)"
+  border-faint-hover: "rgba(140, 140, 140, 0.3)"
+  border-faint-active: "rgba(140, 140, 140, 0.4)"
   label: "rgba(0, 0, 0, 0.75)"
   label-disabled: "rgba(0, 0, 0, 0.3)"
   icon: "rgba(0, 0, 0, 0.75)"
@@ -54,6 +64,7 @@ colors:
   icon-active: "rgba(0, 0, 0, 0.9)"
   icon-disabled: "rgba(0, 0, 0, 0.3)"
   text: "rgba(0, 0, 0, 0.9)"
+  text-primary: "{colors.text}"
   text-hover: "rgba(0, 0, 0, 0.9)"
   text-active: "rgba(0, 0, 0, 0.9)"
   text-meta: "rgba(0, 0, 0, 0.6)"
@@ -62,99 +73,118 @@ colors:
   negative-hover: "#8A0015"
   negative-active: "#8A0015"
   neutral-focus-ring: "rgba(0, 0, 0, 0.15)"
+  premium-gradient-base-a: "#FDF0DE"
+  premium-gradient-base-b: "#FDE2BC"
+  premium-gradient-base-c: "#F9C982"
+  premium-brand: "#F9C982"
+  premium-button-background: "#F9C982"
+  premium-button-background-hover: "#E9A53F"
+  premium-button-background-active: "#C37D16"
+  premium-button-label: "rgba(0, 0, 0, 0.9)"
+  premium-icon: "rgba(0, 0, 0, 0.9)"
+  premium-inbug: "#C37D16"
+  premium-indicator: "#C37D16"
+  premium-text-brand: "#C37D16"
 typography:
   display-md:
     fontFamily: System UI
-    fontSize: 32px
+    fontSize: 30px
     fontWeight: 600
-    lineHeight: 1.25
-    letterSpacing: 0.38px
+    lineHeight: 33.75px
+    letterSpacing: 0.36px
   heading-xl:
     fontFamily: System UI
     fontSize: 24px
     fontWeight: 600
-    lineHeight: 1.25
-    letterSpacing: 0.38px
+    lineHeight: 30px
+    letterSpacing: 0.36px
   heading-lg:
     fontFamily: System UI
     fontSize: 20px
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 25px
     letterSpacing: 0.38px
   heading-md:
     fontFamily: System UI
     fontSize: 16px
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 20px
     letterSpacing: -0.32px
+  heading-sm:
+    fontFamily: System UI
+    fontSize: 18px
+    fontWeight: 600
+    lineHeight: 22.5px
+    letterSpacing: -0.45px
   control-md:
     fontFamily: System UI
     fontSize: 16px
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 20px
     letterSpacing: -0.32px
   control-sm:
     fontFamily: System UI
     fontSize: 14px
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 17.5px
     letterSpacing: -0.15px
   body-md:
     fontFamily: System UI
     fontSize: 16px
     fontWeight: 400
-    lineHeight: 1.25
+    lineHeight: 20px
     letterSpacing: -0.32px
   body-md-open:
     fontFamily: System UI
-    fontSize: 16px
+    fontSize: 18px
     fontWeight: 400
-    lineHeight: 1.5
-    letterSpacing: -0.32px
+    lineHeight: 27px
+    letterSpacing: -0.45px
   body-sm:
     fontFamily: System UI
     fontSize: 14px
     fontWeight: 400
-    lineHeight: 1.25
+    lineHeight: 17.5px
     letterSpacing: -0.15px
   body-sm-open:
     fontFamily: System UI
     fontSize: 14px
     fontWeight: 400
-    lineHeight: 1.5
+    lineHeight: 21px
     letterSpacing: -0.15px
   body-xs:
     fontFamily: System UI
     fontSize: 12px
     fontWeight: 400
-    lineHeight: 1.25
+    lineHeight: 15px
     letterSpacing: 0px
   supportive-s:
     fontFamily: System UI
     fontSize: 12px
     fontWeight: 400
-    lineHeight: 1.25
+    lineHeight: 15px
     letterSpacing: 0px
   supportive-s-strong:
     fontFamily: System UI
     fontSize: 12px
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 15px
     letterSpacing: 0px
   label-xs:
     fontFamily: System UI
     fontSize: 12px
     fontWeight: 600
-    lineHeight: 1.25
+    lineHeight: 15px
     letterSpacing: 0px
 rounded:
   xs: 4px
   sm: 8px
   entity-square-md: 12px
+  panel: 12px
   md: 16px
   lg: 24px
   xl: 32px
-  round: 360px
+  round: 999px
 spacing:
   xxs: 2px
   xs: 4px
@@ -182,7 +212,7 @@ layout:
   panel-expanded-width: 1280px
   panel-collapsed-height: 908px
   panel-expanded-height: 928px
-  panel-content-max: 640px
+  panel-content-max: 600px
   schedule-collapsed-surface-width: 896px
   schedule-collapsed-chat-track: 3fr
   schedule-collapsed-side-track: 5fr
@@ -190,7 +220,7 @@ layout:
   schedule-expanded-chat-track: 3fr
   schedule-expanded-side-track: 5fr
   chat-message-assistant-collapsed-max: "100%"
-  chat-message-assistant-expanded-max: 640px
+  chat-message-assistant-expanded-max: 600px
   confirmation-dialog-width: 336px
   mobile-panel-width: "100vw"
   mobile-panel-height: "100dvh"
@@ -199,6 +229,7 @@ layout:
   panel-header-height: 64px
   composer-height: 56px
   composer-input-max-height: 144px
+  composer-stop-action-height: 42px
   primary-action-height: 48px
   compact-action-height: 32px
   input-small-height: 28px
@@ -231,8 +262,19 @@ iconography:
     color: currentColor
 shadows:
   raised: "0px 0px 1px rgba(140, 140, 140, 0.2), 0px 4px 12px rgba(0, 0, 0, 0.3)"
+  raised-active: "0px 0px 1px rgba(140, 140, 140, 0.2), 0px 3px 9px rgba(0, 0, 0, 0.3)"
+  raised-faint: "0px 0px 1px rgba(140, 140, 140, 0.2), 0px 4px 12px rgba(0, 0, 0, 0.15)"
+  raised-faint-active: "0px 0px 1px rgba(140, 140, 140, 0.2), 0px 3px 9px rgba(0, 0, 0, 0.15)"
+  raised-faint-upward: "0px 0px 1px rgba(140, 140, 140, 0.2), 0px -4px 12px rgba(0, 0, 0, 0.15)"
+  raised-soft: "{shadows.raised-faint}"
+  raised-soft-active: "{shadows.raised-faint-active}"
 elevation:
   raised: "{shadows.raised}"
+  raised-active: "{shadows.raised-active}"
+  raised-faint: "{shadows.raised-faint}"
+  raised-faint-active: "{shadows.raised-faint-active}"
+  raised-soft: "{shadows.raised-soft}"
+  raised-soft-active: "{shadows.raised-soft-active}"
 motion:
   durations:
     instant: 0ms
@@ -551,20 +593,20 @@ components:
   chat-panel-collapsed:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.panel}"
     width: 400px
     height: 908px
     borderColor: "{colors.border-faint}"
-    shadow: "{shadows.raised}"
+    shadow: "{shadows.raised-faint}"
   chat-panel-expanded:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.panel}"
     width: 1280px
     height: 928px
     borderColor: "{colors.border-faint}"
     backdropColor: "{colors.overlay-dim}"
-    shadow: "{shadows.raised}"
+    shadow: "{shadows.raised-faint}"
   chat-header:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
@@ -574,24 +616,27 @@ components:
     actionWidth: 48px
     actionGap: 0px
   chat-thread:
-    maxWidth: 640px
+    maxWidth: 600px
     paddingInline: 24px
-    timestampPadding: "20px 0 8px"
+    timestampPadding: "20px 0 16px"
+    itemGap: "{spacing.xxl}"
+    relatedPromptGap: "{spacing.md}"
+    attachedItemGap: "{spacing.sm}"
   chat-message-assistant:
     backgroundColor: "transparent"
     textColor: "{colors.text}"
     typography: "{typography.body-sm-open}"
     collapsedMaxWidth: "100%"
-    expandedMaxWidth: 640px
-    rowPadding: "16px 0"
+    expandedMaxWidth: 600px
+    rowPadding: "0"
   chat-message-user:
-    backgroundColor: "{colors.ai-background-soft}"
+    backgroundColor: "{colors.ai-background-strong}"
     textColor: "{colors.text}"
     typography: "{typography.body-sm-open}"
     rounded: "{rounded.md}"
     maxWidth: 392px
     padding: "20px"
-    rowPadding: "16px 0"
+    rowPadding: "0"
   chat-message-representative:
     backgroundColor: "{colors.background-neutral-soft}"
     textColor: "{colors.text}"
@@ -599,7 +644,7 @@ components:
     rounded: "{rounded.md}"
     maxWidth: 392px
     padding: "20px"
-    rowPadding: "16px 0"
+    rowPadding: "0"
   recommendation-card:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
@@ -627,20 +672,21 @@ components:
     placeholderColor: "{colors.text-disabled}"
     typography: "{typography.body-sm-open}"
     rounded: "{rounded.round}"
-    multilineRounded: 28px
+    multilineRounded: "{rounded.md}"
     minHeight: 56px
     maxWidth: 640px
     maxInputHeight: 144px
     shellPadding: "8px 24px 24px"
     padding: "4px 12px"
-    multilinePadding: "10px 12px"
+    multilinePadding: "8px 12px"
     borderColor: "{colors.border-faint}"
-    hoverBorderColor: "{colors.border-hover}"
-    activeBorderColor: "{colors.border-faint}"
-    focusBorderColor: "{colors.border-hover}"
+    hoverBorderColor: "{colors.border-faint-hover}"
+    activeBorderColor: "{colors.border-faint-active}"
+    focusBorderColor: "{colors.border-faint-active}"
     focusRingWidth: 0px
     actionGap: "{spacing.sm}"
     actionSize: 32px
+    stopActionHeight: 42px
 ---
 
 ## Overview
@@ -651,7 +697,7 @@ It should feel like quiet enterprise software with conversational edges. The int
 The token frontmatter is the normative design contract. The Markdown body explains the intent behind those values so future implementation work can stay consistent without inventing new styling.
 
 ## Figma Implementation Guidance
-Figma is a visual reference, not automatically the implementation source of truth.
+Figma is the source of truth for global color, typography, spacing, radius, and elevation token values. The project keeps source-token layers in `src/styles/figma-colors.css`, `src/styles/figma-typography.css`, `src/styles/figma-dimensions.css`, and `src/styles/figma-elevation.css`, with app-friendly aliases in `src/styles/globals.css`; app aliases should map back to Figma variables or styles whenever a matching source token exists.
 
 When implementing from Figma:
 
@@ -668,11 +714,14 @@ The current palette is mostly white and neutral, with Figma's semantic action bl
 - **Action (`#0A66C2`)** is used for primary buttons, emphasized icon controls, links in controls, and the AI mark.
 - **Action hover/active (`#004182`)** is used for hover and pressed blue-action states.
 - **Background (`#FFFFFF`)** is the primary surface for the panel, composer, cards, and controls.
-- **Overlay dim (`rgba(0, 0, 0, 0.2)`)** is used behind the expanded desktop chat panel so the conversation is foregrounded without turning into a modal takeover.
+- **Overlay dim (`rgba(0, 0, 0, 0.15)`)** maps to Figma's `Background/color-background-overlay-a20` token and is used behind the expanded desktop chat panel so the conversation is foregrounded without turning into a modal takeover.
 - **Scrim (`rgba(0, 0, 0, 0.6)`)** is reserved for true modal interruption, such as confirming a destructive or conversation-ending action.
-- **AI background soft (`#D2E9FF`)** is used for the pale blue member chat message surface.
+- **AI background soft (`#E8F3FF`)** is Figma's soft AI surface token.
+- **AI background strong (`#D2E9FF`)** is used for the pale blue member chat message surface.
 - **Background neutral soft (`#F4F2EE`)** is used for specialist chat messages.
 - **Tag colors** are reserved for non-interactive status and category labels. Positive and negative mirror existing semantic status colors; caution, neutral, and supportive accent backgrounds should not be reused for broader product surfaces without a new design-system decision.
+- **Premium colors** are reserved for the existing Premium prototype surfaces and should not be reused for the core concierge or hiring surfaces.
+- **Data visualization colors** are available as Figma source tokens and Tailwind color utilities for future chart or analytics components.
 - **Entity ghost colors** are a warm neutral plus muted blue-grays used only for unloaded or placeholder identity imagery.
 - **Text** is black at 90% opacity.
 - **Text meta** is black at 60% opacity and is the only secondary/quiet text color.
@@ -684,10 +733,12 @@ The current palette is mostly white and neutral, with Figma's semantic action bl
 Do not add accent palettes for concepts that are not implemented yet.
 
 ## Typography
-The current system uses platform-native system UI to approximate the SF Pro Display and SF Pro Text styles in Figma. The feel should be compact, clear, and product-led.
+The current system uses platform-native system UI to approximate the SF Pro Display and SF Pro Text styles in Figma. Figma typography styles are encoded in `src/styles/figma-typography.css`, while app aliases in `globals.css` preserve component-friendly names. The feel should be compact, clear, and product-led.
 
-- Control text is semibold and intentionally denser than body copy.
-- Body copy uses regular weight with tighter product line heights for controls and more open line heights for chat copy.
+- Supportive and title styles are for compact UI text, such as buttons, labels, tags, controls, and metadata.
+- Body and prose styles are for readable content, especially chat messages, helper copy, and longer explanatory text.
+- Control text is semibold and intentionally denser than body/prose copy.
+- Body copy uses regular weight with more open line heights for chat and message reading.
 - Helper, counter, and timestamp text should stay small and quiet.
 - Use the existing type scale before adding new sizes.
 - Use `heading-lg` for compact dialog titles that need the 20px Figma confirmation-dialog scale without jumping to a full panel heading.
@@ -702,6 +753,7 @@ The layout includes a marketing landing context and a focused chat panel with a 
 - The header is 64px tall.
 - The composer is at least 56px tall and grows only when the input wraps.
 - Internal spacing follows the current 4/8/12/16/20/24/32 rhythm.
+- Spacing and radius aliases map to Figma dimension tokens where equivalents exist. `rounded.xl` remains app-specific at 32px because the current Figma corner radius scale stops at 24px before `full`.
 
 The component library and review surfaces may use the same tokens for demonstration, but they are not separate design-system products.
 
@@ -720,7 +772,7 @@ All UI and UX work must account for mobile and narrow screens before it is consi
 ## Elevation & Depth
 Depth is minimal. The chat panel is the only elevated product surface in the current implementation.
 
-Cards, messages, inputs, and controls rely on borders, surface color, and spacing rather than additional shadows. Avoid adding new shadow levels until a built component requires them.
+Shared elevation maps to the four VCA Figma elevation examples: `raised`, `raised-active`, `raised-faint`, and `raised-faint-active`; `raised-soft` remains a compatibility alias for the faint shadow. The chat shell uses `raised-faint`. The bottom-docked tray uses the same faint shadow ingredients with the y-offset inverted so the shadow casts upward. Cards, messages, inputs, and controls rely on borders, surface color, and spacing rather than additional shadows. Avoid adding new shadow levels until a built component requires them.
 
 ## Shapes
 The shape language separates precise form controls from softer conversational surfaces.
@@ -728,7 +780,7 @@ The shape language separates precise form controls from softer conversational su
 - Buttons and icon action surfaces use Figma's round radius token.
 - Text inputs use a tight 4px radius.
 - Recommendation cards use a 16px radius.
-- Chat panels use a 16px radius; message bubbles use 16px and 32px radii so the chat surface feels approachable.
+- Chat panels use Figma's 12px panel radius; message bubbles use 16px and 32px radii so the chat surface feels approachable.
 - The composer is pill-shaped when single-line and softens to a 28px radius when multiline.
 - Entity circles are fully round. Entity squares use progressively larger radii as they scale, including a 12px intermediate radius for the 96px size.
 
@@ -784,17 +836,21 @@ Hover darkens the border. Active, focused, and typing states use the same dark a
 Placeholder text uses the disabled text color so it reads clearly as a prompt rather than entered content. The composer follows the same rule.
 
 ### Chat Shell
-The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The body centers the thread within the panel content width.
+The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The minimized tray should use the same AI mark size, title typography, and icon-to-title gap as the header so the identity does not change scale when the shell collapses. Docked tray status uses the `new` blue token as a small inline dot after the tray title or representative name, not as an icon overlay. Tray-style headers expose three shell controls in order: dock to tray or restore from tray, maximize or minimize, and close. The body centers the thread within the panel content width.
 
-When a live sales consultant has joined the conversation, the header identity changes from the AI mark and `Contact sales` title to the representative identity. The same representative identity should appear in the minimized tray when the tray shell is docked. Use a 32px circular entity, an 8px gap to the text stack, `body-md` semibold for the name, and `body-xs` meta text for `Sales consultant` with no vertical gap between the two text lines. The shell controls on the right stay unchanged across default, tray, docked, and expanded modes.
+When a live sales consultant has joined the conversation, the header identity changes from the AI mark and `Contact sales` title to the representative identity. Use a 24px circular entity, an 8px gap, and a single-line `heading-md` representative name; do not show the role in the chat shell header. The same representative identity should appear in the minimized tray when the tray shell is docked. The shell controls on the right stay unchanged across default, tray, hybrid, docked, and expanded modes.
 
 The thread owns the shared horizontal content gutter. Message rows, prompt groups, cards, and other conversation items should align inside that gutter instead of adding their own panel-edge padding. Individual bubbles and cards own only their internal padding.
+
+The thread owns the default vertical rhythm with a 24px gap between top-level conversation items. Centered timestamp divider rows use 16px of breathing room before the following message. Message rows do not carry vertical padding. Related prompt rows should be grouped with the message, card, or response that produced them using a 12px gap. Feedback controls, inline feedback, and reason panels should sit after the message or prompt row they rate using an 8px attached-item gap so they feel connected without becoming part of the message bubble.
 
 The scrollable transcript should keep an 8px terminal inset before the composer boundary, so the newest message, card, prompt, or feedback control never rests directly against the composer divider when the thread is scrolled to the bottom.
 
 Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
 
-The tray-first shell is bottom-docked on desktop. Its maximum height should preserve the 64px landing header plus an 8px gap, so the shell never covers the page header on shorter viewports. The chat panel itself should inherit the docked frame height in tray mode so the composer keeps its bottom padding inside the visible shell.
+The tray-first shell is bottom-docked on desktop. Its maximum height should preserve the 64px landing header plus an 8px gap, so the shell never covers the page header on shorter viewports. The chat panel itself should inherit the docked frame height in tray mode so the composer keeps its bottom padding inside the visible shell. Hybrid shell mode starts with no tray and no panel; after `Contact sales`, it opens the same right-side tray-style bottom-attached panel. Minimizing creates the compact bottom tray, and closing removes both the panel and tray.
+
+Premium supports two review shells: `FAB`, which keeps the optional `Help me decide` floating action, and `Tray`, which replaces the FAB with a persistent docked `Help assistant` tray. The Premium tray shell should not expose a close action in the docked tray or open panel; visitors can only dock the panel back to the tray or expand/collapse it.
 
 High-value scheduling may add a side panel in either collapsed or expanded chat states: the left panel preserves the chat context while the right panel carries the scheduling task on the light neutral background token. The chat header remains visible above both panels. The scheduling panel starts with a `Back to chat` affordance that closes the side panel and preserves the current chat state. When opened from collapsed chat, the wider two-panel surface stays right-aligned; only expanded chat centers the wider surface. The collapsed scheduling surface should be about 896px wide with a 3:5 chat-to-scheduler split, yielding about 336px of chat context at max width. The expanded scheduling surface should be about 1280px wide with the same 3:5 split, yielding about 480px of chat context at max width. Use the named schedule layout rule for these panes rather than ad hoc arbitrary grid strings. While the scheduler is open, the in-thread specialist card is passive context, not a second CTA. After booking, the side panel closes and the specialist card is replaced by a booked confirmation card with no manage-booking action.
 
@@ -818,9 +874,11 @@ Prompts are compact buttons that let a visitor send a suggested message into the
 The visible label may be shorter than the prompt that is sent, but the component should keep the full prompt available to assistive tech and hover affordances. Long labels truncate to preserve the compact chip-like shape.
 
 ### Composer
-The composer is a rounded text area with microphone and send action controls. Its default border is intentionally lighter than the text input border.
+The composer is a rounded text area with an Add action on the left and microphone plus send/voice controls on the right. The Add action is discoverable but out of scope: keep it focusable and show tooltip copy explaining that attaching files is not in scope yet.
 
-Hover, focused, and typing states darken the composer border. Active does not add a separate border treatment, and the composer should not show a focus ring. When the message no longer fits beside the actions, the actions move to a second row.
+The default composer border uses the faint border token. Hover, focused, typing, and multiline states darken to the faint hover/active border tokens, not the stronger text-input border. The placeholder uses `text-disabled`.
+
+When the message no longer fits beside the actions, the actions move to a second row with Add on the left and microphone plus send on the right. While the assistant is thinking or streaming, the entire composer surface switches to a clickable stop-answering control. The stop mark uses `text-primary` for the square and animated indeterminate ring, while the label stays quieter in `text-meta`. If stopping happens before any text streams, replace the thinking row with neutral inline feedback that says `Response stopped.` If partial text has streamed, keep the partial response, mark it complete, and attach the same neutral inline feedback beneath it. Stopped responses should not append response follow-ups such as prompts, cards, or rating controls.
 
 ## Do's and Don'ts
 - Do keep the current system mostly white, structured, and calm.

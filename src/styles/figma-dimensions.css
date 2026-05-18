@@ -1,0 +1,85 @@
+/* Generated from Figma DS Typography 2.0 Library: Dimension Tokens. */
+:root {
+  /* Breakpoint */
+  --figma-dimension-breakpoint-breakpoint-2xlarge: 1920px;
+  --figma-dimension-breakpoint-breakpoint-2xsmall: 576px;
+  --figma-dimension-breakpoint-breakpoint-large: 1440px;
+  --figma-dimension-breakpoint-breakpoint-medium: 1200px;
+  --figma-dimension-breakpoint-breakpoint-small: 960px;
+  --figma-dimension-breakpoint-breakpoint-xlarge: 1600px;
+  --figma-dimension-breakpoint-breakpoint-xsmall: 768px;
+
+  /* Corner Radius */
+  --figma-dimension-corner-radius-default-corner-radius: 8px;
+  --figma-dimension-corner-radius-corner-radius-0-5x: 4px;
+  --figma-dimension-corner-radius-corner-radius-1x: 8px;
+  --figma-dimension-corner-radius-corner-radius-1-5x: 12px;
+  --figma-dimension-corner-radius-corner-radius-2x: 16px;
+  --figma-dimension-corner-radius-corner-radius-3x: 24px;
+  --figma-dimension-corner-radius-corner-radius-full: 999px;
+
+  /* Gap */
+  --figma-dimension-gap-gap-small: 8px;
+  --figma-dimension-gap-gap-medium: 16px;
+  --figma-dimension-gap-gap-large: 24px;
+
+  /* Padding */
+  --figma-dimension-padding-padding-small: 12px;
+  --figma-dimension-padding-padding-medium: 16px;
+  --figma-dimension-padding-padding-large: 20px;
+  --figma-dimension-padding-padding-xlarge: 24px;
+
+  /* Panel Widths */
+  --figma-dimension-panel-widths-panel-small: 256px;
+  --figma-dimension-panel-widths-panel-medium: 320px;
+  --figma-dimension-panel-widths-panel-large: 384px;
+
+  /* Size */
+  --figma-dimension-size-size-0-25x: 2px;
+  --figma-dimension-size-size-0-5x: 4px;
+  --figma-dimension-size-size-1x: 8px;
+  --figma-dimension-size-size-1-5x: 12px;
+  --figma-dimension-size-size-2x: 16px;
+  --figma-dimension-size-size-2-5x: 20px;
+  --figma-dimension-size-size-3x: 24px;
+  --figma-dimension-size-size-4x: 32px;
+  --figma-dimension-size-size-5x: 40px;
+  --figma-dimension-size-size-6x: 48px;
+  --figma-dimension-size-size-8x: 64px;
+  --figma-dimension-size-size-10x: 80px;
+  --figma-dimension-size-size-12x: 96px;
+  --figma-dimension-size-size-16x: 128px;
+  --figma-dimension-size-size-20x: 160px;
+
+  /* Stroke Width */
+  --figma-dimension-stroke-width-stroke-width-0-125x: 1px;
+  --figma-dimension-stroke-width-stroke-width-0-25x: 2px;
+  --figma-dimension-stroke-width-stroke-width-0-375x: 3px;
+  --figma-dimension-stroke-width-stroke-width-0-5x: 4px;
+  --figma-dimension-stroke-width-stroke-width-1x: 8px;
+
+  /* Text Width */
+  --figma-dimension-text-width-text-width-xsmall: 448px;
+  --figma-dimension-text-width-text-width-small: 512px;
+  --figma-dimension-text-width-text-width-medium: 576px;
+  --figma-dimension-text-width-text-width-large: 640px;
+  --figma-dimension-text-width-text-width-xlarge: 720px;
+  --figma-dimension-text-width-text-width-2xlarge: 800px;
+
+  /* Space */
+  --figma-dimension-space-none: 0px;
+  --figma-dimension-space-0-25x: 2px;
+  --figma-dimension-space-0-5x: 4px;
+  --figma-dimension-space-1x: 8px;
+  --figma-dimension-space-1-5x: 12px;
+  --figma-dimension-space-2x: 16px;
+  --figma-dimension-space-2-5x: 20px;
+  --figma-dimension-space-3x: 24px;
+  --figma-dimension-space-4x: 32px;
+  --figma-dimension-space-5x: 40px;
+  --figma-dimension-space-6x: 48px;
+  --figma-dimension-space-8x: 64px;
+  --figma-dimension-space-10x: 80px;
+  --figma-dimension-space-12x: 96px;
+  --figma-dimension-space-16x: 128px;
+}

@@ -75,6 +75,7 @@ const iconExamples = [
   "close",
   "search",
   "send",
+  "voice",
   "magic-wand",
   "signal-ai",
   "signal-success",
@@ -88,6 +89,7 @@ const ghostIconButtonStates = [
   "default",
   "hover",
   "active",
+  "focus-visible",
   "disabled",
   "loading",
 ] as const;
@@ -1067,7 +1069,7 @@ export default function InternalComponentsPage() {
                     <div className="space-y-xl">
                       <section className="space-y-sm">
                         <p className="text-body-xs text-text-meta">AI assistant</p>
-                        <ChatMessage className="!pb-xs">
+                        <ChatMessage>
                           I can help compare hiring options quickly.
                         </ChatMessage>
                         <div className="flex justify-start">
@@ -1079,7 +1081,7 @@ export default function InternalComponentsPage() {
                         <p className="text-body-xs text-text-meta">
                           Interactive AI assistant feedback
                         </p>
-                        <ChatMessage className="!pb-xs">
+                        <ChatMessage>
                           I would start by comparing the lighter hiring path
                           against Recruiter before routing you to sales.
                         </ChatMessage>
@@ -1091,8 +1093,8 @@ export default function InternalComponentsPage() {
                           AI assistant feedback states
                         </p>
                         <div className="space-y-xs">
-                          <div>
-                            <ChatMessage className="!pb-xs">
+                          <div className="flex flex-col gap-xs">
+                            <ChatMessage>
                               I can help compare hiring options quickly.
                             </ChatMessage>
                             <div className="flex justify-start">
@@ -1105,8 +1107,18 @@ export default function InternalComponentsPage() {
                               <ChatInlineFeedback />
                             </div>
                           </div>
-                          <div>
-                            <ChatMessage className="!pb-xs">
+                          <div className="flex flex-col gap-xs">
+                            <ChatMessage>
+                              I&apos;ll stop working on that response.
+                            </ChatMessage>
+                            <div className="flex justify-start">
+                              <ChatInlineFeedback tone="neutral">
+                                Response stopped.
+                              </ChatInlineFeedback>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-xs">
+                            <ChatMessage>
                               A sales consultant can narrow the setup fast.
                             </ChatMessage>
                             <div className="flex justify-start">
@@ -1228,6 +1240,10 @@ export default function InternalComponentsPage() {
                             "ka;sd kas;d kas;dl kas;ld kas;ld kasld; aksd; aksdl; askd a;ldk a sd;laksd ;adk asl;",
                         }}
                       />
+                      <ChatComposer
+                        className="px-0 pb-0"
+                        isResponding
+                      />
                     </div>
                   </div>
                 </div>
@@ -1348,10 +1364,11 @@ export default function InternalComponentsPage() {
 
                 <div className="space-y-sm">
                   <p className="text-body-xs text-text-meta">
-                    Tray shell · representative
+                    Tray shell · representative badge
                   </p>
                   <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
                     <ChatTray
+                      badge
                       identity={{
                         type: "representative",
                         name: "David S.",

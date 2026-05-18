@@ -13,6 +13,9 @@ type PremiumReviewFlowPageProps = Readonly<{
   params: Promise<{
     signal: string;
   }>;
+  searchParams: Promise<{
+    shell?: string | ReadonlyArray<string>;
+  }>;
 }>;
 
 export function generateStaticParams() {
@@ -41,8 +44,11 @@ export async function generateMetadata({
 
 export default async function PremiumReviewFlowPage({
   params,
+  searchParams,
 }: PremiumReviewFlowPageProps) {
   const { signal } = await params;
+  const { shell } = await searchParams;
+  const shellMode = shell === "tray" ? "tray" : "fab";
 
   if (!isPremiumReviewFlowId(signal)) {
     notFound();
@@ -59,6 +65,7 @@ export default async function PremiumReviewFlowPage({
       initialChatOpen={flow.initialChatOpen ?? true}
       conciergeNudge={flow.conciergeNudge}
       conversationFlow={flow}
+      shellMode={shellMode}
     />
   );
 }

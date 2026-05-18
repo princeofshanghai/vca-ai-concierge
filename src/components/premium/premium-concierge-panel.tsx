@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -15,6 +16,7 @@ import {
   ChatBody,
   ChatComposer,
   ChatHeader,
+  ChatInlineFeedback,
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
@@ -52,6 +54,8 @@ type PremiumLiveMessage = Readonly<{
   role: "assistant" | "user";
   content: string;
   status: ChatMessageStreamStatus;
+  feedbackEligible?: boolean;
+  responseStopped?: boolean;
 }>;
 
 type PremiumLiveRecommendation = Readonly<{
@@ -60,7 +64,17 @@ type PremiumLiveRecommendation = Readonly<{
   planId: PremiumPlanId;
 }>;
 
-type PremiumLiveItem = PremiumLiveMessage | PremiumLiveRecommendation;
+type PremiumLiveInlineFeedback = Readonly<{
+  id: string;
+  kind: "inline-feedback";
+  tone: "neutral";
+  content: string;
+}>;
+
+type PremiumLiveItem =
+  | PremiumLiveMessage
+  | PremiumLiveRecommendation
+  | PremiumLiveInlineFeedback;
 
 type PremiumScriptedResponse = Readonly<{
   messages: ReadonlyArray<string>;
@@ -333,6 +347,15 @@ function isPremiumLiveMessage(
   return item.kind === "message";
 }
 
+function createResponseStoppedFeedback(id: string): PremiumLiveInlineFeedback {
+  return {
+    id,
+    kind: "inline-feedback",
+    tone: "neutral",
+    content: "Response stopped.",
+  };
+}
+
 function PremiumPromptRow({
   prompts,
   readOnly = false,
@@ -343,7 +366,7 @@ function PremiumPromptRow({
   onPromptSelect?: (promptId: PremiumPromptId) => void;
 }>) {
   return (
-    <div className="chat-message-enter flex w-full pt-sm">
+    <div className="chat-message-enter flex w-full">
       <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
         {prompts.map((promptId) => {
           const label = getPromptLabel(promptId);
@@ -375,7 +398,9 @@ export function PremiumConciergePanel({
   flow,
   liveMode = "low-signal",
   onClose,
+  onMinimizeToTray,
   onVariantToggle,
+  showCloseAction = true,
 }: Readonly<{
   variant?: ChatPanelVariant;
   className?: string;
@@ -383,7 +408,9 @@ export function PremiumConciergePanel({
   flow?: PremiumConversationFlow;
   liveMode?: PremiumLiveMode;
   onClose?: () => void;
+  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  showCloseAction?: boolean;
 }>) {
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const liveItemIdRef = useRef(0);
@@ -553,6 +580,38 @@ export function PremiumConciergePanel({
     typedTurnCount,
   ]);
 
+  const handleStopAssistantResponse = useCallback(() => {
+    if (!pendingAssistantResponse) {
+      return;
+    }
+
+    const { id } = pendingAssistantResponse;
+    const stoppedFeedback = createResponseStoppedFeedback(
+      createLiveItemId("response-stopped"),
+    );
+
+    setPendingAssistantResponse(null);
+    setActivePrompts(null);
+    setLiveItems((currentItems) =>
+      currentItems.flatMap((item) => {
+        if (!isPremiumLiveMessage(item) || item.id !== id) {
+          return [item];
+        }
+
+        return item.content.trim().length === 0
+          ? [stoppedFeedback]
+          : [
+              {
+                ...item,
+                status: "complete" as const,
+                feedbackEligible: false,
+                responseStopped: true,
+              },
+            ];
+      }),
+    );
+  }, [createLiveItemId, pendingAssistantResponse]);
+
   useEffect(() => {
     if (!pendingAssistantResponse) {
       return;
@@ -664,37 +723,92 @@ export function PremiumConciergePanel({
   }
 
   function renderConversationStep(step: PremiumConversationStep, index: number) {
-    if (step.kind === "product-recommendation") {
-      return (
-        <PremiumProductRecommendationCard key={step.id} planId={step.planId} />
-      );
-    }
+    const attachedPromptStep = flow?.steps[index + 1];
+    const attachedPrompts =
+      attachedPromptStep?.kind === "prompt-row" ? attachedPromptStep.prompts : null;
 
     if (step.kind === "prompt-row") {
-      return <PremiumPromptRow key={step.id} prompts={step.prompts} readOnly />;
+      return null;
+    }
+
+    if (step.kind === "product-recommendation") {
+      const recommendationCard = (
+        <PremiumProductRecommendationCard planId={step.planId} />
+      );
+
+      if (attachedPrompts) {
+        return (
+          <div key={step.id} className="flex flex-col gap-md">
+            {recommendationCard}
+            <PremiumPromptRow prompts={attachedPrompts} readOnly />
+          </div>
+        );
+      }
+
+      return (
+        <Fragment key={step.id}>{recommendationCard}</Fragment>
+      );
     }
 
     const showFeedback = step.role === "assistant";
     const timestamp = getPrototypeMessageTimestamp(index);
-
-    return (
-      <div key={step.id} className="contents">
-        <ChatMessage
-          role={step.role}
-          className={showFeedback ? "!pb-xs" : undefined}
-          timestamp={showFeedback ? undefined : timestamp}
-        >
-          {renderPremiumMessageContent(step.content)}
-        </ChatMessage>
-        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
-      </div>
+    const messageNode = (
+      <ChatMessage role={step.role} timestamp={showFeedback ? undefined : timestamp}>
+        {renderPremiumMessageContent(step.content)}
+      </ChatMessage>
     );
+
+    if (attachedPrompts || showFeedback) {
+      return (
+        <div key={step.id} className="flex flex-col items-start">
+          {messageNode}
+          {attachedPrompts ? (
+            <div className="mt-md w-full">
+              <PremiumPromptRow prompts={attachedPrompts} readOnly />
+            </div>
+          ) : null}
+          {showFeedback ? (
+            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
+          ) : null}
+        </div>
+      );
+    }
+
+    return <Fragment key={step.id}>{messageNode}</Fragment>;
   }
 
-  function renderLiveItem(item: PremiumLiveItem, index: number) {
+  function renderLiveItem(
+    item: PremiumLiveItem,
+    index: number,
+    attachedPrompts: ReadonlyArray<PremiumPromptId> | null = null,
+  ) {
     if (item.kind === "product-recommendation") {
+      const recommendationCard = (
+        <PremiumProductRecommendationCard planId={item.planId} />
+      );
+
+      if (attachedPrompts) {
+        return (
+          <div key={item.id} className="flex flex-col gap-md">
+            {recommendationCard}
+            <PremiumPromptRow
+              prompts={attachedPrompts}
+              onPromptSelect={handlePromptSelect}
+            />
+          </div>
+        );
+      }
+
       return (
-        <PremiumProductRecommendationCard key={item.id} planId={item.planId} />
+        <Fragment key={item.id}>{recommendationCard}</Fragment>
+      );
+    }
+
+    if (item.kind === "inline-feedback") {
+      return (
+        <ChatInlineFeedback key={item.id} tone={item.tone}>
+          {item.content}
+        </ChatInlineFeedback>
       );
     }
 
@@ -702,23 +816,49 @@ export function PremiumConciergePanel({
       return <ChatThinkingMessage key={item.id} />;
     }
 
+    const showStoppedFeedback = item.responseStopped === true;
     const showFeedback =
-      item.role === "assistant" && item.status === "complete";
+      item.role === "assistant" &&
+      item.status === "complete" &&
+      item.feedbackEligible !== false &&
+      !showStoppedFeedback;
     const timestamp = getPrototypeMessageTimestamp(index);
 
-    return (
-      <div key={item.id} className="contents">
-        <ChatMessage
-          role={item.role}
-          aria-busy={item.status === "streaming" || undefined}
-          className={showFeedback ? "!pb-xs" : undefined}
-          timestamp={item.role === "user" ? timestamp : undefined}
-        >
-          {renderPremiumMessageContent(item.content)}
-        </ChatMessage>
-        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
-      </div>
+    const messageNode = (
+      <ChatMessage
+        role={item.role}
+        aria-busy={item.status === "streaming" || undefined}
+        timestamp={item.role === "user" ? timestamp : undefined}
+      >
+        {renderPremiumMessageContent(item.content)}
+      </ChatMessage>
     );
+
+    if (attachedPrompts || showFeedback || showStoppedFeedback) {
+      return (
+        <div key={item.id} className="flex flex-col items-start">
+          {messageNode}
+          {attachedPrompts ? (
+            <div className="mt-md w-full">
+              <PremiumPromptRow
+                prompts={attachedPrompts}
+                onPromptSelect={handlePromptSelect}
+              />
+            </div>
+          ) : null}
+          {showFeedback ? (
+            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
+          ) : null}
+          {showStoppedFeedback ? (
+            <ChatInlineFeedback className="mt-sm" tone="neutral">
+              Response stopped.
+            </ChatInlineFeedback>
+          ) : null}
+        </div>
+      );
+    }
+
+    return <Fragment key={item.id}>{messageNode}</Fragment>;
   }
 
   return (
@@ -727,33 +867,40 @@ export function PremiumConciergePanel({
         variant={variant}
         title={PREMIUM_CONCIERGE_TITLE}
         onClose={onClose}
+        onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
+        showCloseAction={showCloseAction}
       />
       <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
         {flow ? (
-          <ChatThread timestamp={null} aria-label={`${flow.label} transcript`}>
+          <ChatThread aria-label={`${flow.label} transcript`}>
             {flow.steps.map(renderConversationStep)}
           </ChatThread>
         ) : (
           <ChatThread
-            timestamp={null}
             aria-live="polite"
             aria-busy={isAssistantBusy || undefined}
             aria-label="Live Premium Concierge conversation"
           >
-            {liveItems.map(renderLiveItem)}
-            {activePrompts?.length && !isAssistantBusy ? (
-              <PremiumPromptRow
-                prompts={activePrompts}
-                onPromptSelect={handlePromptSelect}
-              />
-            ) : null}
+            {liveItems.map((item, index) =>
+              renderLiveItem(
+                item,
+                index,
+                activePrompts?.length &&
+                  !isAssistantBusy &&
+                  index === liveItems.length - 1
+                  ? activePrompts
+                  : null,
+              ),
+            )}
           </ChatThread>
         )}
       </ChatBody>
       <ChatComposer
         variant={variant}
         showTopDivider={hasChatBodyScrolled}
+        isResponding={isAssistantBusy}
+        onStopResponse={handleStopAssistantResponse}
         inputProps={{
           value: draft,
           disabled: Boolean(flow) || hasActivePrompts || isAssistantBusy,

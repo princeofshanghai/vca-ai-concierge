@@ -17,6 +17,7 @@ import {
   ChatBody,
   ChatComposer,
   ChatHeader,
+  ChatInlineFeedback,
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
@@ -77,6 +78,14 @@ type ConciergeMessage = Readonly<{
   content: string;
   status: ChatMessageStreamStatus;
   feedbackEligible?: boolean;
+  responseStopped?: boolean;
+}>;
+
+type ConciergeInlineFeedback = Readonly<{
+  id: string;
+  kind: "inline-feedback";
+  tone: "neutral";
+  content: string;
 }>;
 
 type ConciergeRecommendation = Readonly<{
@@ -99,6 +108,7 @@ type ConciergeAvailability = Readonly<{
 
 type ConciergeThreadItem =
   | ConciergeMessage
+  | ConciergeInlineFeedback
   | ConciergeRecommendation
   | ConciergeResources
   | ConciergeAvailability;
@@ -119,6 +129,15 @@ const MATCHING_DELAY_MS = 900;
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
+}
+
+function createResponseStoppedFeedback(id: string): ConciergeInlineFeedback {
+  return {
+    id,
+    kind: "inline-feedback",
+    tone: "neutral",
+    content: "Response stopped.",
+  };
 }
 
 function selectLiveFlowId(userMessage: string): FlowReviewId {
@@ -552,6 +571,37 @@ export function ConciergePanel({
     submitUserMessage(draft);
   }, [draft, submitUserMessage]);
 
+  const handleStopAssistantResponse = useCallback(() => {
+    if (!pendingAssistantResponse) {
+      return;
+    }
+
+    const { id } = pendingAssistantResponse;
+    const stoppedFeedback = createResponseStoppedFeedback(
+      createMessageId("response-stopped"),
+    );
+
+    setPendingAssistantResponse(null);
+    setMessages((currentMessages) =>
+      currentMessages.flatMap((message) => {
+        if (!isMessageItem(message) || message.id !== id) {
+          return [message];
+        }
+
+        return message.content.trim().length === 0
+          ? [stoppedFeedback]
+          : [
+              {
+                ...message,
+                status: "complete" as const,
+                feedbackEligible: false,
+                responseStopped: true,
+              },
+            ];
+      }),
+    );
+  }, [createMessageId, pendingAssistantResponse]);
+
   const handleStarterPromptSelect = useCallback(
     (prompt: string) => {
       submitUserMessage(prompt);
@@ -630,7 +680,18 @@ export function ConciergePanel({
 
   function renderThreadItem(message: ConciergeThreadItem, index: number) {
     const showFeedback = shouldShowMessageFeedback(message, index);
+    const showStarterPrompts = shouldShowStarterPrompts(message, index);
+    const showStoppedFeedback =
+      isMessageItem(message) && message.responseStopped === true;
     const timestamp = getPrototypeMessageTimestamp(index);
+
+    if (message.kind === "inline-feedback") {
+      return (
+        <ChatInlineFeedback key={message.id} tone={message.tone}>
+          {message.content}
+        </ChatInlineFeedback>
+      );
+    }
 
     if (message.kind === "recommendation") {
       if (isScheduledSpecialistRecommendation(message.step)) {
@@ -678,36 +739,50 @@ export function ConciergePanel({
       return <AvailabilityCard key={message.id} step={message.step} />;
     }
 
-    return (
-      <Fragment key={message.id}>
-        {message.status === "thinking" ? (
-          <ChatThinkingMessage />
-        ) : (
-          <ChatMessage
-            role={message.role}
-            aria-busy={message.status === "streaming" || undefined}
-            className={showFeedback ? "!pb-xs" : undefined}
-            timestamp={message.role === "user" ? timestamp : undefined}
-          >
-            {message.content}
-          </ChatMessage>
-        )}
-        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
-        {shouldShowStarterPrompts(message, index) ? (
-          <div className="chat-message-enter flex w-full">
-            <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
-              {STARTER_PROMPTS.map((prompt) => (
-                <Prompt
-                  key={prompt}
-                  prompt={prompt}
-                  onPromptSelect={handleStarterPromptSelect}
-                />
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </Fragment>
+    if (message.status === "thinking") {
+      return <ChatThinkingMessage key={message.id} />;
+    }
+
+    const messageNode = (
+      <ChatMessage
+        role={message.role}
+        aria-busy={message.status === "streaming" || undefined}
+        timestamp={message.role === "user" ? timestamp : undefined}
+      >
+        {message.content}
+      </ChatMessage>
     );
+
+    if (showStarterPrompts || showFeedback || showStoppedFeedback) {
+      return (
+        <div key={message.id} className="flex flex-col items-start">
+          {messageNode}
+          {showStarterPrompts ? (
+            <div className="chat-message-enter mt-md flex w-full">
+              <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+                {STARTER_PROMPTS.map((prompt) => (
+                  <Prompt
+                    key={prompt}
+                    prompt={prompt}
+                    onPromptSelect={handleStarterPromptSelect}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {showFeedback ? (
+            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
+          ) : null}
+          {showStoppedFeedback ? (
+            <ChatInlineFeedback className="mt-sm" tone="neutral">
+              Response stopped.
+            </ChatInlineFeedback>
+          ) : null}
+        </div>
+      );
+    }
+
+    return <Fragment key={message.id}>{messageNode}</Fragment>;
   }
 
   const thread = lead ? (
@@ -767,6 +842,8 @@ export function ConciergePanel({
             <ChatComposer
               variant={variant}
               showTopDivider={hasChatBodyScrolled}
+              isResponding={isAssistantBusy}
+              onStopResponse={handleStopAssistantResponse}
               inputProps={{
                 value: draft,
                 onChange: handleDraftChange,

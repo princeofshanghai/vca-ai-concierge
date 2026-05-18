@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   type UIEvent,
   useEffect,
   useId,
@@ -374,14 +375,16 @@ function AvailabilityVariant({
 
   return (
     <>
-      <ChatMessage
-        role={role}
-        className={showFeedback ? "!pb-xs" : undefined}
-        timestamp={showFeedback ? undefined : timestamp}
-      >
-        {variant.message}
-      </ChatMessage>
-      {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
+      {showFeedback ? (
+        <div className="flex flex-col items-start gap-sm">
+          <ChatMessage role={role}>{variant.message}</ChatMessage>
+          <ChatMessageFeedbackFlow timestamp={timestamp} />
+        </div>
+      ) : (
+        <ChatMessage role={role} timestamp={timestamp}>
+          {variant.message}
+        </ChatMessage>
+      )}
       <RecommendationCard
         title={variant.title}
         primaryAction={variant.primaryAction}
@@ -459,8 +462,8 @@ function MediumAvailableHandoff({
         ) : null}
       </article>
       {state === "connected" ? (
-        <>
-          <p className="chat-message-enter mb-md mt-md text-center text-body-xs text-text-meta">
+        <div className="flex flex-col gap-lg">
+          <p className="chat-message-enter text-center text-body-xs text-text-meta">
             {LIVE_HIRING_SPECIALIST.name} joined the chat -{" "}
             {LIVE_HIRING_SPECIALIST.timestamp}
           </p>
@@ -472,7 +475,7 @@ function MediumAvailableHandoff({
           >
             {variant.message}
           </ChatMessage>
-        </>
+        </div>
       ) : null}
     </>
   );
@@ -501,21 +504,31 @@ export function MediumAvailableHandoffPreview({
 function renderStep(step: FlowReviewStep, index = 0) {
   if (step.kind === "message") {
     const showFeedback = shouldShowFlowReviewMessageFeedback(step);
+    const showStarterPrompts = step.showStarterPromptsAfter === true;
     const timestamp = getPrototypeMessageTimestamp(index);
-
-    return (
-      <div key={step.id} className="contents">
-        <ChatMessage
-          role={step.role}
-          className={showFeedback ? "!pb-xs" : undefined}
-          timestamp={showFeedback ? undefined : timestamp}
-        >
-          {step.content}
-        </ChatMessage>
-        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
-        {step.showStarterPromptsAfter ? <StarterPromptRow /> : null}
-      </div>
+    const messageNode = (
+      <ChatMessage role={step.role} timestamp={showFeedback ? undefined : timestamp}>
+        {step.content}
+      </ChatMessage>
     );
+
+    if (showStarterPrompts || showFeedback) {
+      return (
+        <div key={step.id} className="flex flex-col items-start">
+          {messageNode}
+          {showStarterPrompts ? (
+            <div className="mt-md w-full">
+              <StarterPromptRow />
+            </div>
+          ) : null}
+          {showFeedback ? (
+            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
+          ) : null}
+        </div>
+      );
+    }
+
+    return <Fragment key={step.id}>{messageNode}</Fragment>;
   }
 
   if (step.kind === "recommendation") {

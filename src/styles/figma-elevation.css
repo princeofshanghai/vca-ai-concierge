@@ -1,0 +1,32 @@
+/* Generated from VCA design system Figma elevation examples. */
+:root {
+  /* Shadow Colors */
+  --figma-elevation-color-shadow-supplemental: rgba(140, 140, 140, 0.2);
+  --figma-elevation-color-shadow-strong: rgba(0, 0, 0, 0.3);
+  --figma-elevation-color-shadow-faint: rgba(0, 0, 0, 0.15);
+  --figma-elevation-color-shadow-soft: var(
+    --figma-elevation-color-shadow-faint
+  );
+
+  /* Strong Raised */
+  --figma-elevation-raised:
+    0px 0px 1px var(--figma-elevation-color-shadow-supplemental),
+    0px 4px 12px var(--figma-elevation-color-shadow-strong);
+  --figma-elevation-raised-active:
+    0px 0px 1px var(--figma-elevation-color-shadow-supplemental),
+    0px 3px 9px var(--figma-elevation-color-shadow-strong);
+
+  /* Soft Raised */
+  --figma-elevation-raised-soft:
+    0px 0px 1px var(--figma-elevation-color-shadow-supplemental),
+    0px 4px 12px var(--figma-elevation-color-shadow-faint);
+  --figma-elevation-raised-soft-active:
+    0px 0px 1px var(--figma-elevation-color-shadow-supplemental),
+    0px 3px 9px var(--figma-elevation-color-shadow-faint);
+
+  /* Figma label aliases. */
+  --figma-elevation-raised-faint: var(--figma-elevation-raised-soft);
+  --figma-elevation-raised-faint-active: var(
+    --figma-elevation-raised-soft-active
+  );
+}

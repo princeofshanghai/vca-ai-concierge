@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import {
   ChatMessage,
   ChatMessageFeedbackFlow,
@@ -74,15 +76,16 @@ function AvailabilityVariants({ step }: { step: FlowReviewAvailabilityStep }) {
           return (
             <section key={variant.id} className="flex flex-col gap-md">
               <p className="text-body-xs text-text-meta">{variant.label}</p>
-              <ChatMessage
-                role={role}
-                className={showFeedback ? "!pb-xs" : undefined}
-              >
-                {variant.message}
-              </ChatMessage>
               {showFeedback ? (
-                <ChatMessageFeedbackFlow timestamp={timestamp} />
-              ) : null}
+                <div className="flex flex-col items-start gap-sm">
+                  <ChatMessage role={role}>{variant.message}</ChatMessage>
+                  <ChatMessageFeedbackFlow timestamp={timestamp} />
+                </div>
+              ) : (
+                <ChatMessage role={role} timestamp={timestamp}>
+                  {variant.message}
+                </ChatMessage>
+              )}
               <RecommendationCard
                 title={variant.title}
                 primaryAction={variant.primaryAction}
@@ -99,20 +102,31 @@ function AvailabilityVariants({ step }: { step: FlowReviewAvailabilityStep }) {
 function renderStep(step: FlowReviewStep, index: number) {
   if (step.kind === "message") {
     const showFeedback = shouldShowFlowReviewMessageFeedback(step);
+    const showStarterPrompts = step.showStarterPromptsAfter === true;
     const timestamp = getPrototypeMessageTimestamp(index);
-
-    return (
-      <div key={step.id} className="contents">
-        <ChatMessage
-          role={step.role}
-          className={showFeedback ? "!pb-xs" : undefined}
-        >
-          {step.content}
-        </ChatMessage>
-        {showFeedback ? <ChatMessageFeedbackFlow timestamp={timestamp} /> : null}
-        {step.showStarterPromptsAfter ? <StarterPromptRow /> : null}
-      </div>
+    const messageNode = (
+      <ChatMessage role={step.role} timestamp={showFeedback ? undefined : timestamp}>
+        {step.content}
+      </ChatMessage>
     );
+
+    if (showStarterPrompts || showFeedback) {
+      return (
+        <div key={step.id} className="flex flex-col items-start">
+          {messageNode}
+          {showStarterPrompts ? (
+            <div className="mt-md w-full">
+              <StarterPromptRow />
+            </div>
+          ) : null}
+          {showFeedback ? (
+            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
+          ) : null}
+        </div>
+      );
+    }
+
+    return <Fragment key={step.id}>{messageNode}</Fragment>;
   }
 
   if (step.kind === "recommendation") {

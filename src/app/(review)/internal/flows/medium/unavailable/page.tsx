@@ -24,7 +24,8 @@ export default async function MediumUnavailableFlowPage({
   searchParams,
 }: MediumUnavailableFlowPageProps) {
   const { shell } = await searchParams;
-  const shellMode = shell === "tray" ? "tray" : "default";
+  const shellMode =
+    shell === "tray" || shell === "hybrid" ? shell : "default";
 
   return (
     <LandingPage

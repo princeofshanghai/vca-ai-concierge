@@ -8,9 +8,6 @@ import {
   type PremiumPlanId,
 } from "./premium-plan-data";
 
-const PREMIUM_GOLD_BORDER = "#F9C982";
-const PREMIUM_GOLD_ACCENT = "#ce7b00";
-
 export function PremiumProductRecommendationCard({
   planId = "business-suite",
 }: Readonly<{
@@ -21,10 +18,7 @@ export function PremiumProductRecommendationCard({
     premiumBusinessSuitePlan;
 
   return (
-    <article
-      className="chat-recommendation-enter flex w-full flex-col rounded-md border bg-background py-xl pl-xl pr-md"
-      style={{ borderColor: PREMIUM_GOLD_BORDER }}
-    >
+    <article className="chat-recommendation-enter flex w-full flex-col rounded-md border border-premium-brand bg-background py-xl pl-xl pr-md">
       <div className="flex flex-col gap-xxl">
         <div className="flex flex-col gap-lg">
           <div
@@ -32,8 +26,7 @@ export function PremiumProductRecommendationCard({
             className="relative flex size-12 items-center justify-center"
           >
             <span
-              className="absolute -inset-[2px] rounded-round border-[2px]"
-              style={{ borderColor: PREMIUM_GOLD_ACCENT }}
+              className="absolute -inset-[2px] rounded-round border-[2px] border-premium-inbug"
             />
             <Entity size={48} label={plan.name} />
           </div>
@@ -55,8 +48,7 @@ export function PremiumProductRecommendationCard({
                 >
                   <span
                     aria-hidden="true"
-                    className="mt-[2px] inline-flex size-4 shrink-0 items-center justify-center"
-                    style={{ color: PREMIUM_GOLD_ACCENT }}
+                    className="mt-[2px] inline-flex size-4 shrink-0 items-center justify-center text-premium-text-brand"
                   >
                     <Icon name="check" size="small" />
                   </span>

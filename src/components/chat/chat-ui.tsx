@@ -45,11 +45,16 @@ type ChatPanelProps = HTMLAttributes<HTMLDivElement> & {
   surface?: ChatPanelSurface;
 };
 
-type ChatTrayProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
+type ChatTrayProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
+  variant?: ChatPanelVariant;
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
   badge?: boolean;
   badgeLabel?: string;
+  onOpen?: () => void;
+  onClose?: () => void;
+  onVariantToggle?: () => void;
+  showCloseAction?: boolean;
 };
 
 type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
@@ -57,8 +62,10 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
   onClose?: () => void;
+  onDockToggle?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  showCloseAction?: boolean;
   transparent?: boolean;
   showAiMark?: boolean;
   // Optional class applied to the AI mark icon. Used by the concierge
@@ -74,8 +81,12 @@ type ChatComposerProps = HTMLAttributes<HTMLDivElement> & {
     "className"
   >;
   onSend?: () => void;
+  onStopResponse?: () => void;
   sendDisabled?: boolean;
   sendLoading?: boolean;
+  isResponding?: boolean;
+  showAttachAction?: boolean;
+  attachTooltip?: string;
   showTopDivider?: boolean;
   showVoiceMode?: boolean;
 };
@@ -117,7 +128,7 @@ type RecommendationCardProps = HTMLAttributes<HTMLDivElement> & {
 
 export type ChatMessageFeedbackValue = "thumbs-up" | "thumbs-down";
 
-type ChatInlineFeedbackTone = "positive";
+export type ChatInlineFeedbackTone = "positive" | "neutral";
 
 type ChatInlineFeedbackProps = HTMLAttributes<HTMLDivElement> & {
   tone?: ChatInlineFeedbackTone;
@@ -187,9 +198,9 @@ const defaultFeedbackReasonOptions: ReadonlyArray<ChatFeedbackReasonOption> = [
 
 const panelWidthClasses: Record<ChatPanelVariant, string> = {
   collapsed:
-    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(100%,var(--design-layout-panel-collapsed-width))] md:rounded-md",
+    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-collapsed-height))] md:w-[min(100%,var(--design-layout-panel-collapsed-width))] md:rounded-panel",
   expanded:
-    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-md",
+    "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-panel",
 };
 
 const headerActionIcon: Record<ChatPanelVariant, IconName> = {
@@ -213,6 +224,7 @@ const promptStateClasses: Partial<
 const COMPOSER_SINGLE_LINE_HEIGHT = 28;
 const COMPOSER_TEXTAREA_EMPTY_HEIGHT = 21;
 const VOICE_MODE_TOOLTIP = "Voice mode is WIP in this prototype.";
+const ATTACH_TOOLTIP = "Attaching files is not in scope yet.";
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -267,17 +279,15 @@ export function ChatPanel({
     <section
       {...props}
       className={cx(
-        "h-[var(--design-layout-mobile-panel-height)] w-[var(--design-layout-mobile-panel-width)] max-w-full rounded-none text-text shadow-raised transition-[width,height,border-radius] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none",
+        "h-[var(--design-layout-mobile-panel-height)] w-[var(--design-layout-mobile-panel-width)] max-w-full rounded-none text-text shadow-raised-faint transition-[width,height,border-radius] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none",
         panelWidthClasses[variant],
         className,
       )}
     >
       <div
+        data-surface={surface}
         className={cx(
-          "relative flex h-full flex-col overflow-hidden rounded-[inherit] border border-border-faint pt-[env(safe-area-inset-top)] transition-[background-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pt-0",
-          surface === "welcome"
-            ? "bg-gradient-to-b from-background to-surface-tint"
-            : "bg-background",
+          "relative flex h-full flex-col overflow-hidden rounded-[inherit] border border-border-faint bg-background pt-[env(safe-area-inset-top)] transition-[background-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pt-0",
         )}
       >
         {children}
@@ -287,65 +297,100 @@ export function ChatPanel({
 }
 
 export function ChatTray({
+  variant = "collapsed",
   identity,
   title = "Contact sales",
   badge = false,
   badgeLabel = "New activity",
   className,
-  type,
+  onOpen,
+  onClose,
+  onVariantToggle,
+  showCloseAction = true,
+  "aria-controls": ariaControls,
+  "aria-expanded": ariaExpanded,
+  "aria-haspopup": ariaHasPopup,
+  "aria-label": ariaLabel,
   ...props
 }: ChatTrayProps) {
+  const badgeIndicator = badge ? (
+    <span
+      role="status"
+      aria-label={badgeLabel}
+      className="inline-flex size-[10px] shrink-0 rounded-round bg-new"
+    />
+  ) : null;
+
   return (
-    <button
+    <div
       {...props}
-      type={type ?? "button"}
       className={cx(
-        "group inline-flex min-h-16 w-[min(100%,var(--design-layout-panel-collapsed-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-xl py-md text-left text-text shadow-[0_-4px_16px_rgba(0,0,0,0.18),0_0_1px_rgba(140,140,140,0.2)] outline-none transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard hover:border-border-hover hover:bg-background focus-visible:ring-4 focus-visible:ring-action-focus-ring motion-reduce:transition-none",
+        "inline-flex min-h-16 w-[min(100%,var(--design-layout-panel-collapsed-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-xl py-md text-left text-text shadow-raised-faint-upward transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
         className,
       )}
     >
-      {identity?.type === "representative" ? (
-        <span className="flex min-w-0 flex-1 items-center gap-sm">
-          <Entity
-            size={32}
-            src={identity.avatarSrc}
-            label={
-              identity.avatarLabel ?? `${identity.name}, ${identity.role}`
-            }
-          />
-          <span className="flex min-w-0 flex-col gap-0">
-            <span className="min-w-0 truncate text-body-md font-semibold text-text">
-              {identity.name}
-            </span>
-            <span className="min-w-0 truncate text-body-xs text-text-meta">
-              {identity.role}
-            </span>
-          </span>
-        </span>
-      ) : (
-        <>
-          <span className="relative inline-flex size-6 shrink-0 items-center justify-center text-ai-icon">
-            <Icon name="signal-ai" size="medium" />
-            {badge ? (
-              <span
-                role="status"
-                aria-label={badgeLabel}
-                className="absolute -right-xxs -top-xxs size-[10px] rounded-round border-2 border-background bg-action"
-              />
-            ) : null}
-          </span>
-          <span className="min-w-0 flex-1 truncate text-heading-lg text-text">
-            {identity?.type === "ai" ? (identity.title ?? title) : title}
-          </span>
-        </>
-      )}
-      <span
-        aria-hidden="true"
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-round text-icon transition-colors duration-150 ease-out group-hover:bg-background-transparent-hover"
+      <button
+        type="button"
+        aria-controls={ariaControls}
+        aria-expanded={ariaExpanded}
+        aria-haspopup={ariaHasPopup}
+        aria-label={ariaLabel ?? "Open AI Concierge chat"}
+        className="group flex min-w-0 flex-1 items-center gap-xs rounded-xs text-left outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+        onClick={onOpen}
       >
-        <Icon name="chevron-up" size="small" />
-      </span>
-    </button>
+        {identity?.type === "representative" ? (
+          <>
+            <Entity
+              size={24}
+              src={identity.avatarSrc}
+              label={
+                identity.avatarLabel ?? `${identity.name}, ${identity.role}`
+              }
+            />
+            <span className="min-w-0 inline-flex items-center gap-sm">
+              <span className="min-w-0 truncate text-heading-md text-text">
+                {identity.name}
+              </span>
+              {badgeIndicator}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="inline-flex shrink-0 items-center justify-center text-ai-icon">
+              <Icon name="signal-ai" size="small" label="AI Concierge" />
+            </span>
+            <span className="min-w-0 inline-flex flex-1 items-center gap-sm">
+              <span className="min-w-0 truncate text-heading-md text-text">
+                {identity?.type === "ai" ? (identity.title ?? title) : title}
+              </span>
+              {badgeIndicator}
+            </span>
+          </>
+        )}
+      </button>
+      <div className="flex shrink-0 items-center gap-0">
+        <GhostIconButton
+          label="Open chat"
+          icon="chevron-up"
+          size="medium"
+          onClick={onOpen}
+        />
+        <GhostIconButton
+          label={headerActionLabel[variant]}
+          icon={headerActionIcon[variant]}
+          size="medium"
+          onClick={onVariantToggle}
+        />
+        {showCloseAction ? (
+          <GhostIconButton
+            label="Close chat"
+            icon="close"
+            size="medium"
+            onClick={onClose}
+          />
+        ) : null}
+      </div>
+    </div>
   );
 }
 
@@ -359,7 +404,7 @@ function VoiceModePlaceholderButton() {
         className="inline-flex size-[var(--design-layout-compact-action-height)] shrink-0 select-none items-center justify-center rounded-full bg-transparent font-sans outline-none"
       >
         <span className="inline-flex size-[var(--design-layout-compact-action-height)] shrink-0 items-center justify-center rounded-round border border-transparent bg-action text-on-action transition-[background-color] duration-150 ease-out group-hover:bg-action-hover">
-          <Icon name="audio-lines" size="small" />
+          <Icon name="voice" size="small" />
         </span>
       </span>
       <span
@@ -372,14 +417,71 @@ function VoiceModePlaceholderButton() {
   );
 }
 
+function ComposerAttachButton({
+  tooltip = ATTACH_TOOLTIP,
+}: {
+  tooltip?: string;
+}) {
+  function handleAttachClick(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+  }
+
+  return (
+    <span className="group relative inline-flex shrink-0">
+      <GhostIconButton
+        label="Add attachment"
+        icon="add"
+        size="small"
+        touchTarget={false}
+        aria-disabled="true"
+        onClick={handleAttachClick}
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-[calc(100%+var(--design-spacing-sm))] left-0 z-20 max-w-[13rem] rounded-xs bg-text px-sm py-xs text-left text-body-xs text-background opacity-0 shadow-raised transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        {tooltip}
+      </span>
+    </span>
+  );
+}
+
+function StopAnsweringIcon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="composer-stop-icon relative inline-flex size-[var(--design-layout-compact-action-height)] shrink-0 items-center justify-center text-text-primary"
+    >
+      <svg
+        className="composer-stop-ring absolute inset-0 size-full"
+        viewBox="0 0 32 32"
+        fill="none"
+      >
+        <circle
+          className="composer-stop-ring-arc"
+          cx="16"
+          cy="16"
+          r="12.5"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className="block size-[10px] bg-current" />
+    </span>
+  );
+}
+
 export function ChatHeader({
   variant = "collapsed",
   identity,
   title,
   className,
   onClose,
+  onDockToggle,
   onMinimizeToTray,
   onVariantToggle,
+  showCloseAction = true,
   transparent = false,
   showAiMark = true,
   aiMarkClassName,
@@ -416,27 +518,36 @@ export function ChatHeader({
       ) : headerIdentity?.type === "representative" ? (
         <div className="flex min-w-0 items-center gap-sm">
           <Entity
-            size={32}
+            size={24}
             src={headerIdentity.avatarSrc}
             label={
               headerIdentity.avatarLabel ??
               `${headerIdentity.name}, ${headerIdentity.role}`
             }
           />
-          <div className="flex min-w-0 flex-col gap-0">
-            <span className="min-w-0 truncate text-body-md font-semibold text-text">
-              {headerIdentity.name}
-            </span>
-            <span className="min-w-0 truncate text-body-xs text-text-meta">
-              {headerIdentity.role}
-            </span>
-          </div>
+          <span className="min-w-0 truncate text-heading-md text-text">
+            {headerIdentity.name}
+          </span>
         </div>
       ) : (
         <span aria-hidden="true" />
       )}
       <div className="flex items-center gap-0">
-        <span className="hidden md:inline-flex">
+        {onDockToggle || onMinimizeToTray ? (
+          <GhostIconButton
+            label="Dock chat to tray"
+            icon="chevron-down"
+            size="medium"
+            onClick={onDockToggle ?? onMinimizeToTray}
+          />
+        ) : null}
+        <span
+          className={cx(
+            onDockToggle || onMinimizeToTray
+              ? "inline-flex"
+              : "hidden md:inline-flex",
+          )}
+        >
           <GhostIconButton
             label={headerActionLabel[variant]}
             icon={headerActionIcon[variant]}
@@ -444,21 +555,14 @@ export function ChatHeader({
             onClick={onVariantToggle}
           />
         </span>
-        {onMinimizeToTray ? (
-          <GhostIconButton
-            label="Minimize chat to tray"
-            icon="chevron-down"
-            size="medium"
-            onClick={onMinimizeToTray}
-          />
-        ) : (
+        {showCloseAction ? (
           <GhostIconButton
             label="Close chat"
             icon="close"
             size="medium"
             onClick={onClose}
           />
-        )}
+        ) : null}
       </div>
     </header>
   );
@@ -474,16 +578,16 @@ export function ChatThread({
     <div
       {...props}
       className={cx(
-        "flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col gap-0 px-xxl",
+        "flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col px-xxl",
         className,
       )}
     >
       {timestamp ? (
-        <p className="pb-sm pt-xl text-center text-body-xs text-text-meta">
+        <p className="pb-lg pt-xl text-center text-body-xs text-text-meta">
           {timestamp}
         </p>
       ) : null}
-      <div className="flex flex-col gap-0 pb-sm">{children}</div>
+      <div className="flex flex-col gap-xxl pb-sm">{children}</div>
     </div>
   );
 }
@@ -513,7 +617,7 @@ export function ChatThinkingMessage({
     <div
       {...props}
       className={cx(
-        "chat-message-enter flex w-full py-lg",
+        "chat-message-enter flex w-full",
         className,
       )}
     >
@@ -550,7 +654,6 @@ export function ChatMessage({
       className={cx(
         "chat-message-enter flex w-full",
         isUser && "justify-end",
-        "py-lg",
         className,
       )}
     >
@@ -565,7 +668,7 @@ export function ChatMessage({
           className={cx(
             "break-words text-body-sm-open text-text",
             isUser &&
-              "w-fit max-w-[min(100%,24.5rem)] rounded-bl-md rounded-tl-md rounded-tr-md bg-ai-background-soft p-xl",
+              "w-fit max-w-[min(100%,24.5rem)] rounded-bl-md rounded-tl-md rounded-tr-md bg-ai-background-strong p-xl",
             isRepresentative &&
               "w-fit max-w-[min(100%,24.5rem)] rounded-br-md rounded-tl-md rounded-tr-md bg-background-neutral-soft p-xl",
             !isUser &&
@@ -650,7 +753,20 @@ export function ChatInlineFeedback({
   children = "Thank you for the feedback.",
   ...props
 }: ChatInlineFeedbackProps) {
-  const iconName = tone === "positive" ? "signal-success" : "signal-success";
+  const toneStyle: Record<
+    ChatInlineFeedbackTone,
+    { iconName: IconName; className: string }
+  > = {
+    positive: {
+      iconName: "signal-success",
+      className: "text-checked",
+    },
+    neutral: {
+      iconName: "signal-notice",
+      className: "text-text-meta",
+    },
+  };
+  const { iconName, className: toneClassName } = toneStyle[tone];
 
   return (
     <div
@@ -658,7 +774,8 @@ export function ChatInlineFeedback({
       role="status"
       aria-live="polite"
       className={cx(
-        "chat-message-enter inline-flex max-w-full items-center gap-xs text-body-sm text-checked",
+        "chat-message-enter inline-flex max-w-full items-center gap-xs text-body-sm",
+        toneClassName,
         className,
       )}
     >
@@ -974,15 +1091,19 @@ export function ChatComposer({
   className,
   inputProps,
   onSend,
+  onStopResponse,
   sendDisabled = false,
   sendLoading = false,
+  isResponding = false,
+  showAttachAction = true,
+  attachTooltip = ATTACH_TOOLTIP,
   showTopDivider = false,
   showVoiceMode = true,
   ...props
 }: ChatComposerProps) {
   const composerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const actionsRef = useRef<HTMLDivElement>(null);
+  const actionControlsRef = useRef<HTMLDivElement>(null);
   const [isMultiline, setIsMultiline] = useState(false);
   const isTextareaControlled = inputProps?.value !== undefined;
   const [uncontrolledComposerText, setUncontrolledComposerText] = useState(
@@ -1019,13 +1140,23 @@ export function ChatComposer({
   const getSingleLineTextareaWidth = useCallback(
     (textarea: HTMLTextAreaElement) => {
       const contentWidth = getComposerContentWidth(textarea);
+      const attachActionWidth = showAttachAction
+        ? readPixelValue(textarea, "--design-layout-compact-action-height")
+        : 0;
       const actionsWidth =
-        actionsRef.current?.getBoundingClientRect().width ?? 0;
-      const singleLineGap = readPixelValue(textarea, "--design-spacing-xs");
+        actionControlsRef.current?.getBoundingClientRect().width ?? 0;
+      const singleLineGap = readPixelValue(textarea, "--design-spacing-sm");
+      const gapCount = Number(showAttachAction) + Number(actionsWidth > 0);
 
-      return Math.max(0, contentWidth - actionsWidth - singleLineGap);
+      return Math.max(
+        0,
+        contentWidth -
+          attachActionWidth -
+          actionsWidth -
+          singleLineGap * gapCount,
+      );
     },
-    [getComposerContentWidth],
+    [getComposerContentWidth, showAttachAction],
   );
 
   const resizeTextarea = useCallback(
@@ -1108,59 +1239,86 @@ export function ChatComposer({
         className,
       )}
     >
-      <div
-        ref={composerRef}
-        className={cx(
-          "grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background pl-lg pr-md transition-[border-color,border-radius,padding] duration-150 ease-out hover:border-border-hover focus-within:border-border-hover",
-          isMultiline
-            ? "grid grid-cols-1 gap-sm rounded-md py-[10px]"
-            : "h-[var(--design-layout-composer-height)] grid-cols-[minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",
-        )}
-      >
-        <textarea
-          {...inputProps}
-          ref={textareaRef}
-          rows={1}
-          aria-label={inputProps?.["aria-label"] ?? "Message"}
-          placeholder={inputProps?.placeholder ?? "Send a message"}
-          onChange={handleTextareaChange}
-          onKeyDown={handleTextareaKeyDown}
-          className={cx(
-            "min-w-0 resize-none bg-transparent text-body-sm-open text-text outline-none placeholder:text-text-disabled",
-            "max-h-[var(--design-layout-composer-input-max-height)]",
-            isMultiline ? "w-full overflow-y-auto" : "overflow-hidden",
-          )}
-        />
+      {isResponding ? (
+        <button
+          type="button"
+          className="grid h-[var(--design-layout-composer-height)] w-full max-w-[var(--design-layout-panel-content-max)] cursor-pointer grid-cols-1 items-center justify-items-end rounded-round border border-border-faint bg-background px-md py-xs text-left shadow-raised-faint outline-none transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover focus-visible:border-border-faint-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          onClick={onStopResponse}
+        >
+          <span className="inline-flex h-[var(--design-layout-composer-stop-action-height)] items-center gap-xs rounded-round pl-sm pr-0 text-body-sm-open text-text-meta">
+            <span>Stop answering</span>
+            <StopAnsweringIcon />
+          </span>
+        </button>
+      ) : (
         <div
-          ref={actionsRef}
+          ref={composerRef}
           className={cx(
-            "flex shrink-0 items-center gap-sm",
-            isMultiline && "justify-end justify-self-end",
+            "grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background px-md shadow-raised-faint transition-[border-color,border-radius,box-shadow,padding] duration-150 ease-out hover:border-border-faint-hover focus-within:border-border-faint-active",
+            isMultiline
+              ? "grid-cols-1 gap-sm rounded-md py-sm"
+              : "h-[var(--design-layout-composer-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",
           )}
         >
-          {showVoiceMode ? (
-            <GhostIconButton
-              label="Use microphone"
-              icon="microphone-fill"
-              size="small"
-              touchTarget={false}
+            {showAttachAction && !isMultiline ? (
+              <div className="flex shrink-0 items-center">
+                <ComposerAttachButton tooltip={attachTooltip} />
+              </div>
+            ) : null}
+            <textarea
+              {...inputProps}
+              ref={textareaRef}
+              rows={1}
+              aria-label={inputProps?.["aria-label"] ?? "Message"}
+              placeholder={inputProps?.placeholder ?? "Send a message"}
+              onChange={handleTextareaChange}
+              onKeyDown={handleTextareaKeyDown}
+              className={cx(
+                "min-w-0 resize-none bg-transparent text-body-sm-open text-text outline-none placeholder:text-text-disabled",
+                "max-h-[var(--design-layout-composer-input-max-height)]",
+                isMultiline
+                  ? "w-full overflow-y-auto"
+                  : "overflow-hidden",
+              )}
             />
-          ) : null}
-          {shouldShowSendButton ? (
-            <ButtonIcon
-              label="Send message"
-              icon="arrow-up"
-              size="small"
-              touchTarget={false}
-              disabled={isSendDisabled}
-              loading={sendLoading}
-              onClick={onSend}
-            />
-          ) : showVoiceMode ? (
-            <VoiceModePlaceholderButton />
-          ) : null}
+            <div
+              className={cx(
+                "flex shrink-0 items-center gap-sm",
+                isMultiline && "w-full justify-between justify-self-stretch",
+              )}
+            >
+              {isMultiline && showAttachAction ? (
+                <ComposerAttachButton tooltip={attachTooltip} />
+              ) : null}
+              <div
+                ref={actionControlsRef}
+                className="flex shrink-0 items-center gap-sm"
+              >
+                {showVoiceMode ? (
+                  <GhostIconButton
+                    label="Use microphone"
+                    icon="microphone-fill"
+                    size="small"
+                    touchTarget={false}
+                  />
+                ) : null}
+                {shouldShowSendButton ? (
+                  <ButtonIcon
+                    label="Send message"
+                    icon="arrow-up"
+                    size="small"
+                    touchTarget={false}
+                    disabled={isSendDisabled}
+                    loading={sendLoading}
+                    onClick={onSend}
+                  />
+                ) : showVoiceMode ? (
+                  <VoiceModePlaceholderButton />
+                ) : null}
+              </div>
+            </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

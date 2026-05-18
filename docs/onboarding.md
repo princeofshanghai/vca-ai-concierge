@@ -50,7 +50,7 @@ The screen has two visual states. A future review-shell toggle will flip between
 - All four fields are empty.
 - First name is focused on entry.
 
-The two states share one welcome treatment (centered AI mark + headline + subcopy at the top of the panel body, on a subtly tinted background). The only meaningful differences are the identity strip (signed-in only), the LinkedIn CTA + divider (signed-out only), and the prefill state of the profile-backed fields.
+The two states share one welcome treatment (centered AI mark + headline + subcopy at the top of the panel body, on a plain white background). The only meaningful differences are the identity strip (signed-in only), the LinkedIn CTA + divider (signed-out only), and the prefill state of the profile-backed fields.
 
 ## Layout
 
@@ -58,16 +58,16 @@ Inside the existing collapsed chat panel (`chat-panel-collapsed`, 400px wide, 78
 
 While the onboarding screen is showing, the panel surface and chrome shift to a "welcome" treatment so the moment reads as a quiet introduction rather than an in-progress chat:
 
-- The panel background uses a subtle vertical gradient from `colors.background` (white) at the top to `colors.surface-tint` at the bottom. The gradient covers the full panel including the header zone.
+- The panel background uses plain `colors.background` (white) across the full panel including the header zone.
 - The header keeps the close and expand controls, but its background and bottom divider become transparent. The AI mark is removed from the header and re-renders as a 32px centered mark above the welcome content.
-- On submit, the panel's gradient fades to the default white surface, the header's divider re-appears, and the AI mark morphs into its header position. See "Transition into chat" for details.
+- On submit, the panel stays on the default white surface, the header's divider re-appears, and the AI mark morphs into its header position. See "Transition into chat" for details.
 
 Internal gutters use `spacing.xxl` (24px) on the left and right inside the panel body. Form area is therefore 352px wide.
 
 Tokens used throughout:
 
-- Colors: `colors.background` and the new `colors.surface-tint` for the welcome gradient, `colors.ai-icon` for the AI mark, plus the standard `colors.text` / `colors.text-meta` for type and `colors.border-faint` for the (chat phase) header divider.
-- Spacing: `spacing.xxl` (24px) top form padding and left/right gutters, `spacing.xxxl` (32px) bottom form padding, `spacing.sm` (8px) headline-to-subcopy gap, `spacing.md` (12px) identity-strip internal gap, `spacing.lg` (16px) field-to-field gap, `spacing.xxxl` (32px) identity-strip-to-form gap, `spacing.stack` (40px) major section gap.
+- Colors: `colors.background` for the panel surface, `colors.ai-icon` for the AI mark, plus the standard `colors.text` / `colors.text-meta` for type and `colors.border-faint` for the (chat phase) header divider.
+- Spacing: `spacing.xxl` (24px) top form padding and left/right gutters, `spacing.xxxl` (32px) bottom form padding, `spacing.sm` (8px) headline-to-subcopy gap, `spacing.md` (12px) identity-strip internal gap, `spacing.lg` (16px) field-to-field gap, `spacing.xl` (20px) identity-strip-to-form gap, `spacing.stack` (40px) major section gap.
 - Typography: `heading-xl` for the headline, `body-md-open` with `colors.text-meta` for the subcopy, `supportive-s` with `colors.text-meta` for the identity-strip email and the "or" divider, plus the `TextInput` and button primitives' built-in type.
 - Layout: panel 400px wide, header 64px (existing), body 716px tall. AI mark sized to 32px in the welcome state and 24px in the chat header.
 - Motion: `motion.patterns.message-enter` for the first-chat bubble, and the View Transitions API (with `motion.duration.moderate` / `motion.easing.emphasized`) for the welcome-to-chat handoff and the AI-mark morph.
@@ -75,7 +75,7 @@ Tokens used throughout:
 ### Signed-in layout
 
 ```
-┌─────────────────────────────────────────────┐  panel surface gradient
+┌─────────────────────────────────────────────┐  white panel surface
 │                                      [×]    │  transparent header (64px)
 │                  ✦                          │  AI mark, 32px, colors.ai-icon
 │                                             │  spacing.stack (40px)
@@ -87,7 +87,7 @@ Tokens used throughout:
 │                                             │  spacing.stack (40px)
 │   ◯  jamie.chen@gmail.com      Not Jamie?   │  identity strip:
 │                                             │  Entity size=24 + email + link
-│                                             │  spacing.xxxl (32px)
+│                                             │  spacing.xl (20px)
 │   First name                                │  TextInput size=large
 │   ┌─────────────────────────────────────┐   │
 │   │ Jamie                               │   │  prefilled, editable
@@ -112,13 +112,13 @@ Tokens used throughout:
 │   │             Start chat              │   │  button-primary medium
 │   └─────────────────────────────────────┘   │
 │                                             │  spacing.xxxl (32px)
-└─────────────────────────────────────────────┘  gradient bottom: surface-tint
+└─────────────────────────────────────────────┘  white panel surface
 ```
 
 ### Signed-out layout
 
 ```
-┌─────────────────────────────────────────────┐  panel surface gradient
+┌─────────────────────────────────────────────┐  white panel surface
 │                                      [×]    │  transparent header (64px)
 │                  ✦                          │  AI mark, 32px, colors.ai-icon
 │                                             │  spacing.stack (40px)
@@ -158,7 +158,7 @@ Tokens used throughout:
 │   │             Start chat              │   │  button-primary medium
 │   └─────────────────────────────────────┘   │
 │                                             │  spacing.xxxl (32px)
-└─────────────────────────────────────────────┘  gradient bottom: surface-tint
+└─────────────────────────────────────────────┘  white panel surface
 ```
 
 ## Identity strip (signed-in only)
@@ -237,10 +237,8 @@ The tone follows PROJECT.md's "consultative, not salesy" rule. It does not re-se
 
 While the onboarding screen is showing, the panel surface and header chrome shift to a "welcome" treatment:
 
-- **Panel background.** A subtle vertical gradient from `colors.background` (white) at the top of the panel to `colors.surface-tint` at the bottom. The gradient covers the full panel height including the header zone, so the welcome content reads as one continuous, gently tinted card rather than a header strip on top of a white form.
+- **Panel background.** Plain `colors.background` (white) across the full panel height including the header zone, so the welcome content reads as one continuous surface rather than a tinted card.
 - **Header chrome.** The header keeps its layout and controls (close, expand) but its background and bottom divider become transparent. The AI mark is removed from the header in this state because the centered welcome AI mark is the canonical mark for the moment.
-
-`colors.surface-tint` is a new design token introduced specifically for this treatment. It is intentionally near-white so the gradient is felt but never dominant.
 
 When the user submits the form, the panel returns to its default white surface and the header divider re-appears. Both transitions are folded into the welcome-to-chat handoff (see "Transition into chat" below).
 
@@ -385,7 +383,7 @@ The LinkedIn email is intentionally a personal address, reflecting the common ca
 The handoff from welcome to chat is a single coordinated transition, not a hard cut. Three things happen together:
 
 1. **AI mark morph.** The centered 32px AI mark glides from its welcome position to the top-left of the header at 24px. This is implemented with the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API): the same `view-transition-name` is applied to both the welcome AI mark and the header AI mark, so the browser captures both rects and animates position, size, and opacity for us.
-2. **Surface handoff.** The panel background gradient fades back to flat `colors.background` and the header's bottom divider fades back in.
+2. **Surface handoff.** The panel remains on flat `colors.background` and the header's bottom divider fades back in.
 3. **Body crossfade.** The welcome content (headline, subcopy, identity strip, form, CTA) fades and ships out while the chat thread and composer fade in.
 
 All three are animated with `motion.duration.moderate` and `motion.easing.emphasized` so the morph is felt as one motion rather than three independent ones.

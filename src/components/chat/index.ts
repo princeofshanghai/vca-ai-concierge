@@ -17,6 +17,7 @@ export {
   RecommendationCard,
   type ChatFeedbackReason,
   type ChatHeaderIdentity,
+  type ChatInlineFeedbackTone,
   type ChatMessageFeedbackValue,
   type ChatMessageRole,
   type ChatPanelSurface,
