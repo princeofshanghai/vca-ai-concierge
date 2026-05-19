@@ -82,6 +82,17 @@ type PremiumScriptedResponse = Readonly<{
   nextPrompts?: ReadonlyArray<PremiumPromptId> | null;
 }>;
 
+type PremiumTypedIntent =
+  | "business-growth"
+  | "career"
+  | "compare"
+  | "features"
+  | "hiring"
+  | "mismatch"
+  | "trial"
+  | "unsure"
+  | "general";
+
 type PremiumPendingAssistantResponse = Readonly<{
   id: string;
   text: string;
@@ -280,19 +291,121 @@ function buildPremiumPromptResponse({
   };
 }
 
+function getPremiumTypedIntent(message: string): PremiumTypedIntent {
+  const normalizedMessage = message.toLowerCase();
+
+  if (/\b(trial|free|cancel|price|cost|pay|billing)\b/.test(normalizedMessage)) {
+    return "trial";
+  }
+
+  if (
+    /\b(feature|features|include|included|inmail|inmails|boost|boosts|insight|insights)\b/.test(
+      normalizedMessage,
+    )
+  ) {
+    return "features";
+  }
+
+  if (/\b(compare|difference|versus| vs |which plan)\b/.test(normalizedMessage)) {
+    return "compare";
+  }
+
+  if (
+    /\b(wrong|off|not right|doesn't|doesnt|don't|dont|not really|no\b|mismatch)\b/.test(
+      normalizedMessage,
+    )
+  ) {
+    return "mismatch";
+  }
+
+  if (
+    /\b(job|jobs|career|hired|hiring manager|recruiter|interview|application|applying)\b/.test(
+      normalizedMessage,
+    )
+  ) {
+    return "career";
+  }
+
+  if (/\b(hire|hiring|applicant|candidate|candidates|recruit)\b/.test(normalizedMessage)) {
+    return "hiring";
+  }
+
+  if (
+    /\b(client|clients|customer|customers|lead|leads|sales|sell|selling|visibility|brand|network|networking|business|growth)\b/.test(
+      normalizedMessage,
+    )
+  ) {
+    return "business-growth";
+  }
+
+  if (/\b(not sure|unsure|help|recommend|pick|choose|confused)\b/.test(normalizedMessage)) {
+    return "unsure";
+  }
+
+  return "general";
+}
+
 function buildPremiumTypedResponse({
   hasRecommendation,
+  message,
   liveMode,
   typedTurnCount,
 }: {
   hasRecommendation: boolean;
+  message: string;
   liveMode: PremiumLiveMode;
   typedTurnCount: number;
 }): PremiumScriptedResponse {
+  const intent = getPremiumTypedIntent(message);
+
+  if (intent === "trial") {
+    return {
+      messages: [
+        "Yes. The page shows a 1-month free trial, and you can cancel anytime. I would use the trial to test the plan against the outcome you care about most, not just the feature list.",
+      ],
+      nextPrompts: hasRecommendation
+        ? premiumPostRecommendationPromptIds
+        : ["help-pick-plan", "premium-features", "compare-career-business"],
+    };
+  }
+
+  if (intent === "features") {
+    return {
+      messages: [
+        "Premium features vary by plan. Career is more job-search focused, Business is stronger for research and networking, and Business Suite adds customer growth, visibility, and light hiring tools.",
+      ],
+      nextPrompts: hasRecommendation
+        ? premiumPostRecommendationPromptIds
+        : ["help-pick-plan", "compare-career-business", "free-trial"],
+    };
+  }
+
+  if (intent === "compare") {
+    return {
+      messages: [
+        "The simplest split is this: Career helps most when the goal is getting hired, Business helps with research and networking, and Business Suite is the better fit when you also want customer growth, visibility, or hiring support.",
+      ],
+      nextPrompts: hasRecommendation
+        ? ["why-business-suite", "is-business-enough"]
+        : ["help-pick-plan", "free-trial", "premium-features"],
+    };
+  }
+
+  if (hasRecommendation && (intent === "mismatch" || intent === "career")) {
+    return {
+      messages: [
+        "Got it. If this is mainly about your own job search or career move, I would recalibrate away from Business Suite and look at Career first.",
+        "Career is the cleaner fit for getting hired and messaging hiring managers without paying for business growth tools you may not need.",
+      ],
+      recommendationPlanId: "career",
+      nextPrompts: ["compare-career-business", "free-trial", "premium-features"],
+    };
+  }
+
   if (liveMode === "high-signal" && hasRecommendation) {
     return {
       messages: [
-        "Thanks, that helps. If clients and visibility are not the right priorities, I would step back from Business Suite and recalibrate around what you actually want Premium to help with.",
+        "Thanks, that helps. I would use Business Suite if clients, visibility, or light hiring are part of the goal. If those are not the right priorities, I would step back and recalibrate around what you actually want Premium to help with.",
       ],
       nextPrompts: [
         "help-pick-plan",
@@ -302,10 +415,42 @@ function buildPremiumTypedResponse({
     };
   }
 
-  if (!hasRecommendation && typedTurnCount === 0) {
+  if (!hasRecommendation && intent === "career") {
     return {
       messages: [
-        "Nice, that helps. Customers and visibility are exactly the kinds of goals Premium can support.",
+        "That points more toward Career than Business Suite. Career is designed around getting hired, finding stronger-fit jobs, and reaching hiring managers.",
+        "One useful check: is this mostly about your own job search, or are you also trying to grow a business or hire people?",
+      ],
+      nextPrompts: ["compare-career-business", "free-trial", "premium-features"],
+    };
+  }
+
+  if (!hasRecommendation && intent === "mismatch") {
+    return {
+      messages: [
+        "Got it. I won't assume the plan yet.",
+        "Tell me what feels off, and I can narrow the recommendation around the outcome you actually care about.",
+      ],
+      nextPrompts: ["help-pick-plan", "premium-features", "free-trial"],
+    };
+  }
+
+  if (!hasRecommendation && typedTurnCount === 0) {
+    if (intent === "unsure" || intent === "general") {
+      return {
+        messages: [
+          "Totally okay. I would start with the outcome, not the plan names.",
+          "What would make Premium feel worth it right now: getting hired, growing your network, finding clients, or hiring?",
+        ],
+        nextPrompts: ["compare-career-business", "free-trial", "premium-features"],
+      };
+    }
+
+    return {
+      messages: [
+        intent === "hiring"
+          ? "Nice, that helps. Hiring is one of the reasons Business Suite may be relevant here."
+          : "Nice, that helps. Customers and visibility are exactly the kinds of goals Premium can support.",
         "Before I pick a plan, one quick question: do you expect hiring to matter soon too?",
       ],
       nextPrompts: null,
@@ -313,6 +458,18 @@ function buildPremiumTypedResponse({
   }
 
   if (!hasRecommendation) {
+    if (intent === "career") {
+      return {
+        messages: [
+          "Great, that gives me enough to make a call.",
+          "I'd recommend Career because your need sounds centered on your own job search, not customer growth or hiring.",
+          "Good news: **you can start with the 1-month free trial**, so you can test whether it actually supports that goal before committing.",
+        ],
+        recommendationPlanId: "career",
+        nextPrompts: ["compare-career-business", "free-trial", "premium-features"],
+      };
+    }
+
     return {
       messages: [
         "Great, that gives me enough to make a call.",
@@ -439,13 +596,7 @@ export function PremiumConciergePanel({
         item.role === "assistant" &&
         (item.status === "thinking" || item.status === "streaming"),
     );
-  const hasActivePrompts =
-    !flow && !isAssistantBusy && Boolean(activePrompts?.length);
-  const composerPlaceholder = flow
-    ? "Send a message"
-    : hasActivePrompts
-      ? "Choose a prompt to continue"
-      : "Send a message";
+  const composerPlaceholder = "Send a message";
 
   const createLiveItemId = useCallback((prefix: string) => {
     liveItemIdRef.current += 1;
@@ -556,12 +707,13 @@ export function PremiumConciergePanel({
   const handleSendMessage = useCallback(() => {
     const userMessage = draft.trim();
 
-    if (!userMessage || hasActivePrompts || isAssistantBusy) {
+    if (!userMessage || isAssistantBusy) {
       return;
     }
 
     const response = buildPremiumTypedResponse({
       hasRecommendation,
+      message: userMessage,
       liveMode,
       typedTurnCount,
     });
@@ -573,7 +725,6 @@ export function PremiumConciergePanel({
   }, [
     appendScriptedResponse,
     draft,
-    hasActivePrompts,
     hasRecommendation,
     isAssistantBusy,
     liveMode,
@@ -903,14 +1054,13 @@ export function PremiumConciergePanel({
         onStopResponse={handleStopAssistantResponse}
         inputProps={{
           value: draft,
-          disabled: Boolean(flow) || hasActivePrompts || isAssistantBusy,
+          disabled: Boolean(flow) || isAssistantBusy,
           placeholder: composerPlaceholder,
           onChange: handleDraftChange,
         }}
         onSend={handleSendMessage}
         sendDisabled={
           Boolean(flow) ||
-          hasActivePrompts ||
           isAssistantBusy ||
           draft.trim() === ""
         }

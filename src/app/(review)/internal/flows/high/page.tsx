@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { LandingPage } from "@/components/landing";
 import { flowReviews } from "@/lib/conversation-flows";
+import { getHiringShellMode } from "@/lib/hiring-shell";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
@@ -23,8 +24,7 @@ export default async function HighFlowPage({
   searchParams,
 }: HighFlowPageProps) {
   const { shell } = await searchParams;
-  const shellMode =
-    shell === "tray" || shell === "hybrid" ? shell : "default";
+  const shellMode = getHiringShellMode(shell);
 
   return <LandingPage reviewFlow={flowReviews.high} shellMode={shellMode} />;
 }

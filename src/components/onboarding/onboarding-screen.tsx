@@ -264,10 +264,10 @@ export function OnboardingScreen({
           <Icon
             name="signal-ai"
             label="AI Concierge"
-            className="concierge-ai-mark text-ai-icon !size-8"
+            className="concierge-ai-mark text-ai-icon !size-7"
           />
           <h2 className="mt-md text-display-md text-text">{HEADLINE}</h2>
-          <p className="mt-sm text-body-md-open text-text-meta">
+          <p className="mt-sm text-body-md text-text-meta">
             {SUBCOPY}
           </p>
         </div>

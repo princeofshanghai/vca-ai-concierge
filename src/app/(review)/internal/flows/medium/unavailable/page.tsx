@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { LandingPage } from "@/components/landing";
 import { getMediumFlowReview } from "@/lib/conversation-flows";
+import { getHiringShellMode } from "@/lib/hiring-shell";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
@@ -24,8 +25,7 @@ export default async function MediumUnavailableFlowPage({
   searchParams,
 }: MediumUnavailableFlowPageProps) {
   const { shell } = await searchParams;
-  const shellMode =
-    shell === "tray" || shell === "hybrid" ? shell : "default";
+  const shellMode = getHiringShellMode(shell);
 
   return (
     <LandingPage

@@ -59,7 +59,7 @@ Inside the existing collapsed chat panel (`chat-panel-collapsed`, 400px wide, 78
 While the onboarding screen is showing, the panel surface and chrome shift to a "welcome" treatment so the moment reads as a quiet introduction rather than an in-progress chat:
 
 - The panel background uses plain `colors.background` (white) across the full panel including the header zone.
-- The header keeps the close and expand controls, but its background and bottom divider become transparent. The AI mark is removed from the header and re-renders as a 32px centered mark above the welcome content.
+- The header keeps the close and expand controls, but its background and bottom divider become transparent. The AI mark is removed from the header and re-renders as a 28px centered mark above the welcome content.
 - On submit, the panel stays on the default white surface, the header's divider re-appears, and the AI mark morphs into its header position. See "Transition into chat" for details.
 
 Internal gutters use `spacing.xxl` (24px) on the left and right inside the panel body. Form area is therefore 352px wide.
@@ -68,8 +68,8 @@ Tokens used throughout:
 
 - Colors: `colors.background` for the panel surface, `colors.ai-icon` for the AI mark, plus the standard `colors.text` / `colors.text-meta` for type and `colors.border-faint` for the (chat phase) header divider.
 - Spacing: `spacing.xxl` (24px) top form padding and left/right gutters, `spacing.xxxl` (32px) bottom form padding, `spacing.sm` (8px) headline-to-subcopy gap, `spacing.md` (12px) identity-strip internal gap, `spacing.lg` (16px) field-to-field gap, `spacing.xl` (20px) identity-strip-to-form gap, `spacing.stack` (40px) major section gap.
-- Typography: `heading-xl` for the headline, `body-md-open` with `colors.text-meta` for the subcopy, `supportive-s` with `colors.text-meta` for the identity-strip email and the "or" divider, plus the `TextInput` and button primitives' built-in type.
-- Layout: panel 400px wide, header 64px (existing), body 716px tall. AI mark sized to 32px in the welcome state and 24px in the chat header.
+- Typography: `heading-xl` for the headline, `body-md` with `colors.text-meta` for the subcopy, `supportive-s` with `colors.text-meta` for the identity-strip email and the "or" divider, plus the `TextInput` and button primitives' built-in type.
+- Layout: panel 400px wide, header 64px (existing), body 716px tall. AI mark sized to 28px in the welcome state and 24px in the chat header.
 - Motion: `motion.patterns.message-enter` for the first-chat bubble, and the View Transitions API (with `motion.duration.moderate` / `motion.easing.emphasized`) for the welcome-to-chat handoff and the AI-mark morph.
 
 ### Signed-in layout
@@ -77,11 +77,11 @@ Tokens used throughout:
 ```
 ┌─────────────────────────────────────────────┐  white panel surface
 │                                      [×]    │  transparent header (64px)
-│                  ✦                          │  AI mark, 32px, colors.ai-icon
+│                  ✦                          │  AI mark, 28px, colors.ai-icon
 │                                             │  spacing.stack (40px)
 │                 Hire better                 │  heading-xl, colors.text
 │                                             │  spacing.sm (8px)
-│    Get personalized answers to your hiring  │  body-md-open
+│    Get personalized answers to your hiring  │  body-md
 │      questions with our AI-powered chat     │  colors.text-meta
 │                                             │  centered, max-w 320px
 │                                             │  spacing.stack (40px)
@@ -120,11 +120,11 @@ Tokens used throughout:
 ```
 ┌─────────────────────────────────────────────┐  white panel surface
 │                                      [×]    │  transparent header (64px)
-│                  ✦                          │  AI mark, 32px, colors.ai-icon
+│                  ✦                          │  AI mark, 28px, colors.ai-icon
 │                                             │  spacing.stack (40px)
 │                 Hire better                 │  heading-xl, colors.text
 │                                             │  spacing.sm (8px)
-│    Get personalized answers to your hiring  │  body-md-open
+│    Get personalized answers to your hiring  │  body-md
 │      questions with our AI-powered chat     │  colors.text-meta
 │                                             │  centered, max-w 320px
 │                                             │  spacing.stack (40px)
@@ -211,7 +211,7 @@ The three pieces stack vertically and are horizontally centered as a single bloc
 
 ### AI mark (centered)
 
-The AI mark is the same `signal-ai` icon used in the chat header, rendered at 32px in `colors.ai-icon` directly above the headline. It sits about `spacing.xxl` (24px) below the top of the panel body.
+The AI mark is the same `signal-ai` icon used in the chat header, rendered at 28px in `colors.ai-icon` directly above the headline. It sits about `spacing.xxl` (24px) below the top of the panel body.
 
 This is the same DOM element (paired by `view-transition-name`) that becomes the header AI mark once the chat starts; see "Transition into chat" for the morph behavior.
 
@@ -225,7 +225,7 @@ A short action-oriented promise. It frames the chat as a way to improve the visi
 
 ### Subcopy
 
-In `typography.body-md-open`, `colors.text-meta`. Centered, capped at `max-width: 320px` so the line breaks shape into a calm three-line block:
+In `typography.body-md`, `colors.text-meta`. Centered, capped at `max-width: 320px` so the line breaks shape into a calm three-line block:
 
 > Get personalized answers to your hiring questions with our AI-powered chat
 
@@ -382,7 +382,7 @@ The LinkedIn email is intentionally a personal address, reflecting the common ca
 
 The handoff from welcome to chat is a single coordinated transition, not a hard cut. Three things happen together:
 
-1. **AI mark morph.** The centered 32px AI mark glides from its welcome position to the top-left of the header at 24px. This is implemented with the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API): the same `view-transition-name` is applied to both the welcome AI mark and the header AI mark, so the browser captures both rects and animates position, size, and opacity for us.
+1. **AI mark morph.** The centered 28px AI mark glides from its welcome position to the top-left of the header at 24px. This is implemented with the browser's [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API): the same `view-transition-name` is applied to both the welcome AI mark and the header AI mark, so the browser captures both rects and animates position, size, and opacity for us.
 2. **Surface handoff.** The panel remains on flat `colors.background` and the header's bottom divider fades back in.
 3. **Body crossfade.** The welcome content (headline, subcopy, identity strip, form, CTA) fades and ships out while the chat thread and composer fade in.
 
