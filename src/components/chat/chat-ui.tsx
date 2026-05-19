@@ -93,6 +93,8 @@ type ChatComposerProps = HTMLAttributes<HTMLDivElement> & {
 
 type ChatThreadProps = HTMLAttributes<HTMLDivElement> & {
   timestamp?: string | null;
+  showAiDisclaimer?: boolean;
+  aiDisclaimerHref?: string;
 };
 
 type ChatMessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -216,7 +218,8 @@ const headerActionLabel: Record<ChatPanelVariant, string> = {
 const promptStateClasses: Partial<
   Record<Exclude<PromptVisualState, "default">, string>
 > = {
-  hover: "bg-background-transparent-hover",
+  hover:
+    "bg-background-transparent-hover shadow-[inset_0_0_0_1px_var(--color-border-faint)]",
   active: "bg-background-transparent-active",
   "focus-visible": "ring-4 ring-neutral-focus-ring",
 };
@@ -225,6 +228,8 @@ const COMPOSER_SINGLE_LINE_HEIGHT = 28;
 const COMPOSER_TEXTAREA_EMPTY_HEIGHT = 21;
 const VOICE_MODE_TOOLTIP = "Voice mode is WIP in this prototype.";
 const ATTACH_TOOLTIP = "Attaching files is not in scope yet.";
+const AI_DISCLAIMER_HREF =
+  "https://www.linkedin.com/help/linkedin/answer/a1665456";
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -569,11 +574,31 @@ export function ChatHeader({
 }
 
 export function ChatThread({
-  timestamp = "Today",
+  timestamp = null,
+  showAiDisclaimer = true,
+  aiDisclaimerHref = AI_DISCLAIMER_HREF,
   className,
   children,
   ...props
 }: ChatThreadProps) {
+  const topNotice = timestamp ? (
+    <p className="pb-lg pt-xl text-body-xs text-text-meta">
+      {timestamp}
+    </p>
+  ) : showAiDisclaimer ? (
+    <p className="pb-lg pt-xl text-body-xs text-text-meta">
+      This AI-powered chat may make mistakes.{" "}
+      <a
+        href={aiDisclaimerHref}
+        target="_blank"
+        rel="noreferrer"
+        className="text-action transition-colors duration-150 ease-out hover:text-action-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring active:text-action-active"
+      >
+        Learn more
+      </a>
+    </p>
+  ) : null;
+
   return (
     <div
       {...props}
@@ -582,12 +607,10 @@ export function ChatThread({
         className,
       )}
     >
-      {timestamp ? (
-        <p className="pb-lg pt-xl text-center text-body-xs text-text-meta">
-          {timestamp}
-        </p>
-      ) : null}
-      <div className="flex flex-col gap-xxl pb-sm">{children}</div>
+      {topNotice}
+      <div className={cx("flex flex-col gap-xxl pb-sm", !topNotice && "pt-xl")}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -1033,7 +1056,7 @@ export function Prompt({
       aria-label={ariaLabel ?? `Send message: ${prompt}`}
       data-visual-state={visualState}
       className={cx(
-        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
+        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover hover:shadow-[inset_0_0_0_1px_var(--color-border-faint)] active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
         visualState !== "default" && promptStateClasses[visualState],
         className,
       )}

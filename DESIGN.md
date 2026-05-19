@@ -436,6 +436,7 @@ components:
     hoverBackgroundColor: "{colors.background-transparent-hover}"
     hoverTextColor: "{colors.text-hover}"
     hoverBorderColor: "{colors.border}"
+    hoverBorderWidth: 2px
     activeBackgroundColor: "{colors.background-transparent-active}"
     activeTextColor: "{colors.text-active}"
     activeBorderColor: "{colors.border-active}"
@@ -660,6 +661,7 @@ components:
     rounded: "{rounded.md}"
     borderColor: "{colors.border-faint}"
     hoverBackgroundColor: "{colors.background-transparent-hover}"
+    hoverBorderWidth: 2px
     activeBackgroundColor: "{colors.background-transparent-active}"
     focusRingColor: "{colors.neutral-focus-ring}"
     disabledBackgroundColor: "{colors.background-disabled}"

@@ -25,7 +25,8 @@ export type PillProps = Omit<
 const uncheckedStateClasses: Partial<
   Record<Exclude<PillVisualState, "default">, string>
 > = {
-  hover: "border-border bg-background-transparent-hover text-text-hover",
+  hover:
+    "border-border bg-background-transparent-hover text-text-hover shadow-[inset_0_0_0_1px_var(--color-border)]",
   active: "border-border-active bg-background-transparent-active text-text-active",
   "focus-visible": "ring-4 ring-neutral-focus-ring",
 };
@@ -74,12 +75,12 @@ export const Pill = forwardRef<HTMLButtonElement, PillProps>(
       >
         <span
           className={cx(
-            "inline-flex min-h-[32px] shrink-0 items-center justify-center gap-xs rounded-md border px-md py-xs text-control-sm transition-[background-color,border-color,color] duration-150 ease-out",
+            "inline-flex min-h-[32px] shrink-0 items-center justify-center gap-xs rounded-md border px-md py-xs text-control-sm transition-[background-color,border-color,box-shadow,color] duration-150 ease-out",
             disabled
               ? "border-transparent bg-background-disabled text-label-disabled"
               : checked
                 ? "border-transparent bg-checked text-on-checked group-hover:bg-checked-hover group-active:bg-checked-active group-active:text-on-checked-active"
-                : "border-border-subtle bg-background text-label group-hover:border-border group-hover:bg-background-transparent-hover group-hover:text-text-hover group-active:border-border-active group-active:bg-background-transparent-active group-active:text-text-active",
+                : "border-border-subtle bg-background text-label group-hover:border-border group-hover:bg-background-transparent-hover group-hover:text-text-hover group-hover:shadow-[inset_0_0_0_1px_var(--color-border)] group-active:border-border-active group-active:bg-background-transparent-active group-active:text-text-active",
             !disabled &&
               visualState !== "default" &&
               (checked
