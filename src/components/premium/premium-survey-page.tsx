@@ -336,10 +336,12 @@ export function PremiumSurveyPage({
       ? "md:right-6 md:bottom-0 md:h-[min(calc(100dvh_-_60px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
       : chatPanelVariant === "expanded"
         ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-      : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
-  const trayDockedPanelClass = isBottomAttachedChatSurface
+      : "md:right-6 md:bottom-6 md:h-[min(calc(100dvh_-_84px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+  const chatPanelFrameClass = isBottomAttachedChatSurface
     ? "md:!h-full md:!rounded-t-md md:!rounded-b-none"
-    : undefined;
+    : chatPanelVariant === "expanded"
+      ? undefined
+      : "md:!h-full";
 
   const toggleChatPanelVariant = useCallback(() => {
     setChatPanelVariant((variant) =>
@@ -599,7 +601,7 @@ export function PremiumSurveyPage({
               ].join(" ")}
             >
               <PremiumConciergePanel
-                className={trayDockedPanelClass}
+                className={chatPanelFrameClass}
                 variant={chatPanelVariant}
                 context={step}
                 flow={conversationFlow}

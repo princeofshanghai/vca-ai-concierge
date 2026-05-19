@@ -98,11 +98,13 @@ export function LandingPage({
         ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-expanded-surface-width))] md:-translate-x-1/2 md:-translate-y-1/2"
         : "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
       : isWideChatSurface
-        ? "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
-        : "md:top-6 md:right-6 md:bottom-6 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
-  const trayDockedPanelClass = isBottomAttachedChatSurface
+        ? "md:right-6 md:bottom-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-schedule-collapsed-surface-width))]"
+        : "md:right-6 md:bottom-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+  const chatPanelFrameClass = isBottomAttachedChatSurface
     ? "md:!h-full md:!rounded-t-md md:!rounded-b-none"
-    : undefined;
+    : isCenteredChatSurface
+      ? undefined
+      : "md:!h-full";
 
   const openChat = useCallback(() => {
     if (isReviewFlow && !isTrayStyleShell) {
@@ -378,7 +380,7 @@ export function LandingPage({
             >
               {reviewFlow ? (
                 <FlowReviewChatPanel
-                  className={trayDockedPanelClass}
+                  className={chatPanelFrameClass}
                   flow={reviewFlow}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
@@ -391,7 +393,7 @@ export function LandingPage({
                 />
               ) : (
                 <ConciergePanel
-                  className={trayDockedPanelClass}
+                  className={chatPanelFrameClass}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
                   onMinimizeToTray={
