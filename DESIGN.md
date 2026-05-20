@@ -683,6 +683,7 @@ components:
     multilinePadding: "8px 12px"
     borderColor: "{colors.border-faint}"
     hoverBorderColor: "{colors.border-faint-hover}"
+    hoverBorderWidth: 2px
     activeBorderColor: "{colors.border-faint-active}"
     focusBorderColor: "{colors.border-faint-active}"
     focusRingWidth: 0px

@@ -36,8 +36,8 @@ export function ComponentSidebar() {
   );
 
   return (
-    <aside className="border-b border-border-faint bg-background px-6 pb-xl sm:px-10 lg:fixed lg:bottom-0 lg:left-0 lg:top-0 lg:w-[15rem] lg:overflow-y-auto lg:border-r lg:border-b-0 lg:px-lg lg:py-lg lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
-      <div className="mb-5 px-md text-[16px] font-semibold leading-5 text-text">
+    <aside className="border-b border-border-faint bg-background px-6 pb-xl sm:px-10 lg:fixed lg:bottom-0 lg:left-0 lg:top-0 lg:w-[15rem] lg:overflow-y-auto lg:border-r lg:border-b-0 lg:px-lg lg:pb-lg lg:pt-0 lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">
+      <div className="px-md pb-8 pt-7 text-[16px] font-semibold leading-5 text-text">
         Component library
       </div>
       <div
@@ -82,11 +82,11 @@ export function ComponentSidebar() {
                 {section.groups.map((group) => (
                   <div key={group.title} className="space-y-2">
                     {section.title === "SDUI" ? null : (
-                      <h3 className="px-md text-[12px] font-medium leading-4 text-text-meta">
+                      <h3 className="px-md text-[12px] font-semibold leading-4 tracking-[0.02em] text-text-meta">
                         {group.title}
                       </h3>
                     )}
-                    <div className="space-y-[2px]">
+                    <div className="space-y-1">
                       {group.items.map((item) => {
                         const isActive = pathname === item.href;
 

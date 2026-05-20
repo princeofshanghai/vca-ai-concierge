@@ -1,4 +1,6 @@
-import { Button } from "@/components/primitives/button";
+import Link from "next/link";
+
+import { getButtonClassName } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 
@@ -59,16 +61,25 @@ export function PremiumProductRecommendationCard({
             <span>* 1-month free trial</span>
           </p>
           <div className="flex flex-wrap items-center gap-sm">
-            <Button size="small" className="px-pill-padding-inline">
+            <Link
+              href="/premium/checkout"
+              className={getButtonClassName({
+                size: "small",
+                className: "px-pill-padding-inline",
+              })}
+            >
               Start free trial
-            </Button>
-            <Button
-              size="small"
-              variant="secondary"
-              className="px-pill-padding-inline"
+            </Link>
+            <Link
+              href="/premium/learn-more"
+              className={getButtonClassName({
+                size: "small",
+                variant: "secondary",
+                className: "px-pill-padding-inline",
+              })}
             >
               Learn more
-            </Button>
+            </Link>
           </div>
         </div>
       </div>

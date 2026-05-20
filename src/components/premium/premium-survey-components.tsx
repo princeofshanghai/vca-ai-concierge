@@ -1,6 +1,8 @@
 "use client";
 
-import { Button } from "@/components/primitives/button";
+import Link from "next/link";
+
+import { getButtonClassName } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 
@@ -177,9 +179,16 @@ export function PremiumPlanCard({ plan }: Readonly<{ plan: PremiumPlan }>) {
         </ul>
       </div>
 
-      <Button variant="tertiary" size="medium" className="mt-xxl w-full">
+      <Link
+        href="/premium/learn-more"
+        className={getButtonClassName({
+          variant: "tertiary",
+          size: "medium",
+          className: "mt-xxl w-full",
+        })}
+      >
         Learn more
-      </Button>
+      </Link>
     </article>
   );
 }

@@ -25,17 +25,9 @@ import {
 } from "@/components/flow-review";
 import {
   premiumConversationFlows,
-  premiumPromptLabels,
-  premiumPromptRowsBySurveyStep,
 } from "@/components/premium";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
-import { premiumBusinessSuitePlan } from "@/components/premium/premium-plan-data";
-import {
-  PremiumPlanCard,
-  PremiumProfileMark,
-  PremiumProgressIndicator,
-} from "@/components/premium/premium-survey-components";
 import { Badge } from "@/components/primitives/badge";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
@@ -53,7 +45,6 @@ import {
 
 import {
   PremiumFabReviewPreview,
-  PremiumSurveyOptionReviewPreview,
 } from "./component-client-previews";
 import type { ComponentNavItem } from "./component-nav";
 
@@ -183,8 +174,10 @@ function PageHeader({
 }>) {
   return (
     <header className="space-y-sm border-b border-border-faint pb-xxxl">
-      <h1 className="text-display-md text-text">{title}</h1>
-      <p className="max-w-3xl text-body-sm-open text-text-meta">
+      <h1 className="text-[32px] font-semibold leading-10 text-text">
+        {title}
+      </h1>
+      <p className="max-w-3xl text-[16px] leading-6 text-text-meta">
         {description}
       </p>
     </header>
@@ -203,14 +196,16 @@ function PreviewSection({
   return (
     <section className="space-y-lg border-t border-border-faint pt-xxxl first:border-t-0 first:pt-0">
       <div className="space-y-xs">
-        <h2 className="text-heading-xl text-text">{title}</h2>
+        <h2 className="text-[24px] font-semibold leading-[30px] text-text">
+          {title}
+        </h2>
         {description ? (
           <p className="max-w-2xl text-body-sm-open text-text-meta">
             {description}
           </p>
         ) : null}
       </div>
-      {children}
+      <div className="component-library-preview">{children}</div>
     </section>
   );
 }
@@ -228,11 +223,13 @@ function PreviewCard({
 }>) {
   return (
     <section className={wide ? "space-y-sm lg:col-span-2" : "space-y-sm"}>
-      <h3 className="text-heading-md text-text">{title}</h3>
+      <h3 className="text-[18px] font-semibold leading-6 text-text">
+        {title}
+      </h3>
       {description ? (
         <p className="text-body-xs text-text-meta">{description}</p>
       ) : null}
-      {children}
+      <div className="component-library-preview">{children}</div>
     </section>
   );
 }
@@ -668,63 +665,10 @@ function HiringBookingSidePanelPage({ item }: Readonly<{ item: ComponentNavItem 
 function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium">
-      <PreviewSection title="Entry affordances">
-        <div className="grid gap-xl lg:grid-cols-2">
-          <PreviewCard title="Floating entry point">
-            <PremiumFabReviewPreview />
-          </PreviewCard>
-          <PreviewCard title="Profile mark">
-            <Frame className="flex min-h-28 items-center">
-              <PremiumProfileMark />
-            </Frame>
-          </PreviewCard>
-        </div>
-      </PreviewSection>
-    </ComponentPageShell>
-  );
-}
-
-function PremiumSurveyOptionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
-  return (
-    <ComponentPageShell item={item} section="Premium">
-      <PreviewSection title="Survey option states">
-        <Frame>
-          <PremiumSurveyOptionReviewPreview />
-        </Frame>
-      </PreviewSection>
-    </ComponentPageShell>
-  );
-}
-
-function PremiumProgressPage({ item }: Readonly<{ item: ComponentNavItem }>) {
-  return (
-    <ComponentPageShell item={item} section="Premium">
-      <PreviewSection title="Progress indicator">
-        <Frame className="flex">
-          <PremiumProgressIndicator progress={60} />
-        </Frame>
-      </PreviewSection>
-      <PreviewSection title="Premium prompt rows">
-        <Frame>
-          <div className="grid gap-md md:grid-cols-3">
-            {(["use-case", "goals", "plans"] as const).map((step) => (
-              <div key={step} className="space-y-sm">
-                <p className="text-body-xs capitalize text-text-meta">
-                  {step.replace("-", " ")}
-                </p>
-                <div className="flex flex-wrap gap-sm">
-                  {premiumPromptRowsBySurveyStep[step].map((promptId) => (
-                    <Prompt
-                      key={promptId}
-                      prompt={premiumPromptLabels[promptId]}
-                      tabIndex={-1}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Frame>
+      <PreviewSection title="Floating action button">
+        <PreviewCard title="Default">
+          <PremiumFabReviewPreview />
+        </PreviewCard>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -733,22 +677,10 @@ function PremiumProgressPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium">
-      <PreviewSection title="In-chat recommendation card">
+      <PreviewSection title="Plan recommendation">
         <Frame className="max-w-[28rem]">
           <PremiumProductRecommendationCard />
         </Frame>
-      </PreviewSection>
-    </ComponentPageShell>
-  );
-}
-
-function PremiumPlanCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
-  return (
-    <ComponentPageShell item={item} section="Premium">
-      <PreviewSection title="Plan comparison card">
-        <div className="max-w-[28rem]">
-          <PremiumPlanCard plan={premiumBusinessSuitePlan} />
-        </div>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -777,7 +709,9 @@ function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="space-y-8">
           {buttonSizes.map(({ label, size }) => (
             <section key={size} className="space-y-6">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               {buttonRows.map(({ label: rowLabel, variant }) => (
                 <div key={`${size}-${variant}`} className="space-y-sm">
                   <p className="text-body-xs text-text-meta">{rowLabel}</p>
@@ -795,7 +729,7 @@ function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
           ))}
         </div>
       </PreviewSection>
-      <PreviewSection title="Brand CTA">
+      <PreviewSection title="Sign in CTA">
         <div className="flex w-full max-w-[384px]">
           <Button
             leadingIcon={
@@ -828,7 +762,9 @@ function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             { label: "Checked", checked: true },
           ].map(({ label, checked }) => (
             <section key={label} className="space-y-4">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               <div className="flex flex-wrap items-start gap-lg">
                 {pillStates.map((state) => (
                   <div key={`${label}-${state}`} className="space-y-sm">
@@ -884,7 +820,9 @@ function SduiEntityPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             { label: "Square", shape: "square" },
           ] as const).map(({ label, shape }) => (
             <section key={shape} className="space-y-4">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               <div className="flex flex-wrap items-end gap-lg">
                 {entitySizes.map((size) => (
                   <div key={`${shape}-${size}`} className="flex min-w-16 flex-col items-center gap-sm">
@@ -912,7 +850,9 @@ function SduiButtonIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="space-y-8">
           {buttonSizes.map(({ label, size }) => (
             <section key={size} className="space-y-6">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               {buttonRows.map(({ label: rowLabel, variant }) => (
                 <div key={`${size}-${variant}`} className="space-y-sm">
                   <p className="text-body-xs text-text-meta">{rowLabel}</p>
@@ -941,7 +881,9 @@ function SduiGhostIconButtonPage({ item }: Readonly<{ item: ComponentNavItem }>)
         <div className="grid gap-lg lg:grid-cols-2">
           {(["small", "medium"] as const).map((size) => (
             <section key={size} className="space-y-4">
-              <h2 className="text-heading-md capitalize text-text">{size}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text capitalize">
+                {size}
+              </h3>
               {[
                 { label: "Padded", horizontalPadding: true },
                 { label: "Compact", horizontalPadding: false },
@@ -989,7 +931,9 @@ function SduiTextInputPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="grid gap-xl lg:grid-cols-2">
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               <TextInput className="max-w-80" counter helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextInput className="max-w-80" counter defaultValue="Input text value" helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextInput className="max-w-80" counter errorText="Error text" label="Label" placeholder="Hint text (Optional)" required size={size} />
@@ -1002,7 +946,9 @@ function SduiTextInputPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="grid gap-xl lg:grid-cols-2">
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               {textInputStates.map((state) => (
                 <TextInput
                   className="max-w-80"
@@ -1031,7 +977,9 @@ function SduiTextAreaPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="grid gap-xl lg:grid-cols-2">
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               <TextArea className="max-w-80" counter helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextArea className="max-w-80" counter defaultValue="Input text value" helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextArea className="max-w-80" counter errorText="Error text" label="Label" placeholder="Hint text (Optional)" required size={size} />
@@ -1051,7 +999,9 @@ function SduiTagPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="space-y-8">
           {tagSizes.map(({ label, size }) => (
             <section key={size} className="space-y-4">
-              <h2 className="text-heading-md text-text">{label}</h2>
+              <h3 className="text-[18px] font-semibold leading-6 text-text">
+                {label}
+              </h3>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
                 {tagTones.map(({ label: toneLabel, tone }) => (
                   <div key={`${size}-${tone}`} className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm">
@@ -1131,14 +1081,8 @@ export function ComponentPageContent({
       return <HiringBookingSidePanelPage item={item} />;
     case "premium-survey-entry":
       return <PremiumSurveyEntryPage item={item} />;
-    case "premium-survey-option":
-      return <PremiumSurveyOptionPage item={item} />;
-    case "premium-progress-indicator":
-      return <PremiumProgressPage item={item} />;
     case "premium-product-recommendation-card":
       return <PremiumProductCardPage item={item} />;
-    case "premium-plan-card":
-      return <PremiumPlanCardPage item={item} />;
     case "premium-concierge-panel":
       return <PremiumConciergePanelPage item={item} />;
     case "sdui-button":

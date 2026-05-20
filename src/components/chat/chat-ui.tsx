@@ -1277,7 +1277,7 @@ export function ChatComposer({
         <div
           ref={composerRef}
           className={cx(
-            "grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background px-md shadow-raised-faint transition-[border-color,border-radius,box-shadow,padding] duration-150 ease-out hover:border-border-faint-hover focus-within:border-border-faint-active",
+            "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background px-md shadow-raised-faint transition-[border-color,border-radius,box-shadow,padding] duration-150 ease-out after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_0_0_0_0_var(--color-border-faint-hover)] after:transition-shadow after:duration-150 after:ease-out hover:border-border-faint-hover hover:after:shadow-[inset_0_0_0_1px_var(--color-border-faint-hover)] focus-within:border-border-faint-active",
             isMultiline
               ? "grid-cols-1 gap-sm rounded-md py-sm"
               : "h-[var(--design-layout-composer-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",

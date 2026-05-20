@@ -98,38 +98,17 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
         items: [
           {
             id: "premium-survey-entry",
-            title: "Survey entry",
+            title: "Floating Action Button",
             description:
-              "Premium entry and assistant affordance that sit around the plan survey.",
+              "Premium floating entry point that opens the concierge experience.",
             href: "/internal/components/premium/survey-entry",
           },
           {
-            id: "premium-survey-option",
-            title: "Survey option",
-            description:
-              "Choice row for the Premium survey spine in unchecked and checked states.",
-            href: "/internal/components/premium/survey-option",
-          },
-          {
-            id: "premium-progress-indicator",
-            title: "Progress indicator",
-            description:
-              "Header progress treatment used across Premium survey steps.",
-            href: "/internal/components/premium/progress-indicator",
-          },
-          {
             id: "premium-product-recommendation-card",
-            title: "Product recommendation card",
-            description:
-              "Premium plan recommendation card with trial CTA and included features.",
-            href: "/internal/components/premium/product-recommendation-card",
-          },
-          {
-            id: "premium-plan-card",
             title: "Plan card",
             description:
-              "Plan-comparison card used on the Premium plan selection step.",
-            href: "/internal/components/premium/plan-card",
+              "Premium plan card with trial CTA and included features.",
+            href: "/internal/components/premium/product-recommendation-card",
           },
           {
             id: "premium-concierge-panel",

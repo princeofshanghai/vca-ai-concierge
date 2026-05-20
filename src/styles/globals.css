@@ -965,6 +965,16 @@ body {
   color: var(--color-text);
 }
 
+.component-library-chrome {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.component-library-preview {
+  text-rendering: auto;
+}
+
 .chat-message-enter {
   animation: chat-message-enter var(--design-motion-duration-base)
     var(--design-motion-easing-standard) both;
