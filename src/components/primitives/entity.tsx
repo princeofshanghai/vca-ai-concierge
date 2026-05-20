@@ -40,75 +40,19 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-function PersonGhost() {
+function EntityGhost({ shape }: Readonly<{ shape: EntityShape }>) {
   return (
-    <svg
+    <span
       aria-hidden="true"
-      className="size-full"
-      focusable="false"
-      viewBox="0 0 160 160"
-    >
-      <rect
-        width="160"
-        height="160"
-        fill="var(--design-color-entity-ghost-background)"
-      />
-      <circle
-        cx="80"
-        cy="68"
-        r="38"
-        fill="var(--design-color-entity-ghost-strong)"
-      />
-      <path
-        d="M0 160C8 120 42 96 80 96C118 96 152 120 160 160H0Z"
-        fill="var(--design-color-entity-ghost-medium)"
-      />
-      <ellipse
-        cx="80"
-        cy="112"
-        rx="42"
-        ry="14"
-        fill="var(--design-color-entity-ghost-dark)"
-      />
-    </svg>
-  );
-}
-
-function CompanyGhost() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-full"
-      focusable="false"
-      viewBox="0 0 160 160"
-    >
-      <rect
-        width="160"
-        height="160"
-        fill="var(--design-color-entity-ghost-background)"
-      />
-      <rect
-        x="60"
-        y="20"
-        width="100"
-        height="140"
-        fill="var(--design-color-entity-ghost-medium)"
-      />
-      <rect
-        x="20"
-        y="105"
-        width="40"
-        height="55"
-        fill="var(--design-color-entity-ghost-strong)"
-      />
-      <rect
-        x="60"
-        y="105"
-        width="45"
-        height="55"
-        fill="var(--design-color-entity-ghost-dark)"
-      />
-    </svg>
+      className="pointer-events-none absolute inset-0 bg-cover bg-center"
+      style={{
+        backgroundImage: `url(${
+          shape === "circle"
+            ? "/assets/entity-ghost-person.png"
+            : "/assets/entity-ghost-company.png"
+        })`,
+      }}
+    />
   );
 }
 
@@ -148,11 +92,7 @@ export function Entity({
         className,
       )}
     >
-      {src ? null : shape === "circle" ? (
-        <PersonGhost />
-      ) : (
-        <CompanyGhost />
-      )}
+      {src ? null : <EntityGhost shape={shape} />}
     </span>
   );
 }

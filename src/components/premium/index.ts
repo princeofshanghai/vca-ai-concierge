@@ -2,6 +2,8 @@ export {
   isPremiumReviewFlowId,
   premiumConversationFlows,
   premiumLiveModeNavItems,
+  premiumPromptLabels,
+  premiumPromptRowsBySurveyStep,
   premiumReviewFlowIds,
   premiumReviewFlowNavItems,
   type PremiumConversationFlow,

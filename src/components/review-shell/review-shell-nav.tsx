@@ -66,17 +66,22 @@ type ReviewDestination = Readonly<{
 
 type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
 type PremiumShellLabel = (typeof PREMIUM_SHELL_OPTIONS)[number]["label"];
+type ComponentProductLens = "hiring" | "premium";
 
 const HOME_DESTINATION: ReviewDestination = {
   href: "/",
   label: "Home",
   matches: (candidate) => candidate === "/",
 };
-const COMPONENTS_DESTINATION: ReviewDestination = {
-  href: "/internal/components",
-  label: "Components",
-  matches: (candidate) => candidate.startsWith("/internal/components"),
-};
+function getComponentsDestination(
+  productLens: ComponentProductLens,
+): ReviewDestination {
+  return {
+    href: `/internal/components?product=${productLens}`,
+    label: "Components",
+    matches: (candidate) => candidate.startsWith("/internal/components"),
+  };
+}
 
 function HomeNavIcon() {
   return (
@@ -141,8 +146,12 @@ function getPrototypeDestination(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
+  componentProductLens: ComponentProductLens = "hiring",
 ): ReviewDestination {
-  const isPremium = pathname.startsWith("/premium");
+  const isPremium =
+    pathname.startsWith("/premium") ||
+    (pathname.startsWith("/internal/components") &&
+      componentProductLens === "premium");
 
   return {
     href: isPremium ? PREMIUM_PROTOTYPE_HREF : HIRING_PROTOTYPE_HREF,
@@ -165,18 +174,17 @@ function getReviewDestinations(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
+  componentProductLens: ComponentProductLens = "hiring",
 ): ReadonlyArray<ReviewDestination> {
-  if (pathname.startsWith("/premium")) {
-    return [
-      HOME_DESTINATION,
-      getPrototypeDestination(pathname, hiringShellLabel, premiumShellLabel),
-    ];
-  }
-
   return [
     HOME_DESTINATION,
-    getPrototypeDestination(pathname, hiringShellLabel, premiumShellLabel),
-    COMPONENTS_DESTINATION,
+    getPrototypeDestination(
+      pathname,
+      hiringShellLabel,
+      premiumShellLabel,
+      componentProductLens,
+    ),
+    getComponentsDestination(componentProductLens),
   ];
 }
 
@@ -246,6 +254,10 @@ export function ReviewShellNav() {
         : currentHref;
   const activePremiumShellLabel: PremiumShellLabel =
     searchParams.get("shell") === "tray" ? "Tray" : "FAB";
+  const componentProductLens: ComponentProductLens =
+    pathname.startsWith("/premium") || searchParams.get("product") === "premium"
+      ? "premium"
+      : "hiring";
   const shellAwareHiringModeOptions = useMemo(
     () =>
       hiringModeOptions.map((option) => ({
@@ -276,8 +288,14 @@ export function ReviewShellNav() {
         pathname,
         activeHiringShellLabel,
         activePremiumShellLabel,
+        componentProductLens,
       ),
-    [activeHiringShellLabel, activePremiumShellLabel, pathname],
+    [
+      activeHiringShellLabel,
+      activePremiumShellLabel,
+      componentProductLens,
+      pathname,
+    ],
   );
 
   const listRef = useRef<HTMLUListElement | null>(null);

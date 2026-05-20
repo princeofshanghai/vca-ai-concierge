@@ -7,13 +7,22 @@ export function PremiumConciergeFab({
   chatPanelId,
   isChatOpen = false,
   onClick,
+  position = "fixed",
 }: Readonly<{
   chatPanelId?: string;
   isChatOpen?: boolean;
   onClick: () => void;
+  position?: "fixed" | "static";
 }>) {
   return (
-    <div className="pointer-events-none fixed bottom-6 right-6 z-20 flex max-w-[calc(100vw-3rem)] items-center md:bottom-8 md:right-10">
+    <div
+      className={[
+        "pointer-events-none flex max-w-[calc(100vw-3rem)] items-center",
+        position === "fixed"
+          ? "fixed bottom-6 right-6 z-20 md:bottom-8 md:right-10"
+          : "relative justify-end",
+      ].join(" ")}
+    >
       <Button
         aria-label="Help me decide"
         aria-controls={chatPanelId}

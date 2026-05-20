@@ -21,13 +21,7 @@ export function PremiumProductRecommendationCard({
     <article className="chat-recommendation-enter flex w-full flex-col rounded-md border border-premium-brand bg-background py-xl pl-xl pr-md">
       <div className="flex flex-col gap-xxl">
         <div className="flex flex-col gap-lg">
-          <div
-            aria-hidden="true"
-            className="relative flex size-12 items-center justify-center"
-          >
-            <span
-              className="absolute -inset-[2px] rounded-round border-[2px] border-premium-inbug"
-            />
+          <div aria-hidden="true" className="flex size-12 items-center justify-center">
             <Entity size={48} label={plan.name} />
           </div>
 
