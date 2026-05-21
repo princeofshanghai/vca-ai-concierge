@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { PremiumSurveyPage } from "@/components/premium";
 import { createPageMetadata } from "@/lib/metadata";
+import { getPremiumShellMode } from "@/lib/premium-shell";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Premium Concierge",
@@ -17,7 +18,7 @@ type PremiumPageProps = Readonly<{
 
 export default async function PremiumPage({ searchParams }: PremiumPageProps) {
   const { shell } = await searchParams;
-  const shellMode = shell === "tray" ? "tray" : "fab";
+  const shellMode = getPremiumShellMode(shell);
 
   return <PremiumSurveyPage shellMode={shellMode} />;
 }

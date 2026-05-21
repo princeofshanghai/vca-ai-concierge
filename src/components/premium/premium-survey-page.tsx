@@ -4,12 +4,14 @@ import { useCallback, useEffect, useId, useState } from "react";
 
 import {
   ChatTray,
+  startChatPanelViewTransition,
   type ChatPanelVariant,
   useChatPanelPresence,
 } from "@/components/chat";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";
+import type { PremiumShellMode } from "@/lib/premium-shell";
 
 import type {
   PremiumConversationFlow,
@@ -115,7 +117,7 @@ type PremiumSurveyPageProps = Readonly<{
   conciergeNudge?: string;
   conversationFlow?: PremiumConversationFlow;
   liveMode?: PremiumLiveMode;
-  shellMode?: "fab" | "tray";
+  shellMode?: PremiumShellMode;
 }>;
 
 const defaultInitialGoalOptions: ReadonlyArray<GoalOptionId> = [];
@@ -127,9 +129,9 @@ export function PremiumSurveyPage({
   initialChatOpen = false,
   conversationFlow,
   liveMode = "low-signal",
-  shellMode = "fab",
+  shellMode = "dismissable-tray",
 }: PremiumSurveyPageProps = {}) {
-  const isTrayShell = shellMode === "tray";
+  const isDockableTrayShell = shellMode === "dockable-tray";
   const [step, setStep] = useState<SurveyStep>(initialStep);
   const [selectedUseCaseOption, setSelectedUseCaseOption] =
     useState<UseCaseOptionId>(initialUseCaseOption);
@@ -149,33 +151,48 @@ export function PremiumSurveyPage({
     open: openChat,
     close: closeChat,
   } = useChatPanelPresence({
-    initialOpen: isTrayShell ? false : initialChatOpen,
-    onBeforeOpen: isTrayShell ? undefined : resetChatPanelState,
-    onBeforeClose: isTrayShell ? undefined : resetChatPanelState,
+    initialOpen: isDockableTrayShell ? false : initialChatOpen,
+    onBeforeOpen: isDockableTrayShell ? undefined : resetChatPanelState,
+    onBeforeClose: isDockableTrayShell ? undefined : resetChatPanelState,
   });
 
   const isGoalStep = step === "goals";
   const isPlanStep = step === "plans";
-  const isChatPanelMounted = isTrayShell || isChatMounted;
+  const isChatPanelMounted = isDockableTrayShell || isChatMounted;
   const progress = isPlanStep ? 60 : isGoalStep ? 33 : 0;
-  const isBottomAttachedChatSurface =
-    isTrayShell && chatPanelVariant !== "expanded";
+  const isBottomAttachedChatSurface = chatPanelVariant !== "expanded";
   const chatPanelPositionClass =
     isBottomAttachedChatSurface
       ? "md:right-6 md:bottom-0 md:h-[min(calc(100dvh_-_60px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
       : chatPanelVariant === "expanded"
-        ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+        ? "md:top-1/2 md:left-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
       : "md:right-6 md:bottom-6 md:h-[min(calc(100dvh_-_84px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
   const chatPanelFrameClass = isBottomAttachedChatSurface
-    ? "md:!h-full md:!rounded-t-md md:!rounded-b-none"
+    ? "md:!h-full md:!w-full md:!rounded-t-md md:!rounded-b-none"
     : chatPanelVariant === "expanded"
-      ? undefined
-      : "md:!h-full";
+      ? "md:!h-full md:!w-full"
+      : "md:!h-full md:!w-full";
 
   const toggleChatPanelVariant = useCallback(() => {
-    setChatPanelVariant((variant) =>
-      variant === "collapsed" ? "expanded" : "collapsed",
-    );
+    const toggleVariant = () => {
+      setChatPanelVariant((variant) =>
+        variant === "collapsed" ? "expanded" : "collapsed",
+      );
+    };
+
+    if (!startChatPanelViewTransition(toggleVariant)) {
+      toggleVariant();
+    }
+  }, []);
+
+  const collapseChatPanelVariant = useCallback(() => {
+    const collapseVariant = () => {
+      setChatPanelVariant("collapsed");
+    };
+
+    if (!startChatPanelViewTransition(collapseVariant)) {
+      collapseVariant();
+    }
   }, []);
 
   const dockChatToTray = useCallback(() => {
@@ -194,7 +211,7 @@ export function PremiumSurveyPage({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        if (isTrayShell) {
+        if (isDockableTrayShell) {
           dockChatToTray();
           return;
         }
@@ -208,7 +225,7 @@ export function PremiumSurveyPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [closeChat, dockChatToTray, isChatMounted, isTrayShell]);
+  }, [closeChat, dockChatToTray, isChatMounted, isDockableTrayShell]);
 
   function advanceSurvey() {
     if (step === "use-case") {
@@ -369,7 +386,7 @@ export function PremiumSurveyPage({
         </>
       )}
 
-      {isTrayShell && !isChatInteractive ? (
+      {isDockableTrayShell && !isChatInteractive ? (
         <ChatTray
           variant={chatPanelVariant}
           aria-controls={chatPanelId}
@@ -389,20 +406,18 @@ export function PremiumSurveyPage({
 
       {isChatPanelMounted ? (
         <>
-          {chatPanelVariant === "expanded" ? (
-            <button
-              type="button"
-              aria-label="Collapse expanded chat"
-              tabIndex={-1}
-              className={[
-                "fixed inset-0 z-30 hidden cursor-default bg-overlay-dim transition-opacity duration-[var(--design-motion-duration-moderate)] ease-emphasized focus:outline-none motion-reduce:duration-[var(--design-motion-duration-instant)] md:block",
-                isChatInteractive
-                  ? "opacity-100"
-                  : "pointer-events-none opacity-0",
-              ].join(" ")}
-              onClick={() => setChatPanelVariant("collapsed")}
-            />
-          ) : null}
+          <button
+            type="button"
+            aria-label="Collapse expanded chat"
+            tabIndex={-1}
+            className={[
+              "fixed inset-0 z-30 hidden cursor-default bg-overlay-dim transition-opacity duration-[var(--design-motion-duration-moderate)] ease-emphasized focus:outline-none motion-reduce:duration-[var(--design-motion-duration-instant)] md:block",
+              chatPanelVariant === "expanded" && isChatInteractive
+                ? "opacity-100"
+                : "pointer-events-none opacity-0",
+            ].join(" ")}
+            onClick={collapseChatPanelVariant}
+          />
 
           <div
             id={chatPanelId}
@@ -411,7 +426,7 @@ export function PremiumSurveyPage({
             aria-hidden={!isChatOpen}
             inert={!isChatOpen}
             className={[
-              "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)] md:inset-auto",
+              "concierge-chat-panel fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform,opacity] duration-[var(--design-motion-duration-slow)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)] md:inset-auto",
               chatPanelPositionClass,
               isChatOpen ? "pointer-events-auto" : "pointer-events-none",
             ].join(" ")}
@@ -419,12 +434,12 @@ export function PremiumSurveyPage({
             <div
               className={[
                 "h-full w-full ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
-                isTrayShell
+                isDockableTrayShell
                   ? "transition-transform duration-[var(--design-motion-duration-slow)]"
                   : "transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)]",
                 isChatInteractive
                   ? "translate-y-0 opacity-100"
-                  : isTrayShell
+                  : isDockableTrayShell
                     ? "pointer-events-none translate-y-full opacity-100"
                     : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
               ].join(" ")}
@@ -435,15 +450,17 @@ export function PremiumSurveyPage({
                 context={step}
                 flow={conversationFlow}
                 liveMode={liveMode}
-                onClose={isTrayShell ? undefined : closeChat}
-                onMinimizeToTray={isTrayShell ? dockChatToTray : undefined}
+                onClose={isDockableTrayShell ? undefined : closeChat}
+                onMinimizeToTray={
+                  isDockableTrayShell ? dockChatToTray : undefined
+                }
                 onVariantToggle={toggleChatPanelVariant}
-                showCloseAction={!isTrayShell}
+                showCloseAction={!isDockableTrayShell}
               />
             </div>
           </div>
         </>
-      ) : !isTrayShell ? (
+      ) : !isDockableTrayShell ? (
         <PremiumConciergeFab
           chatPanelId={chatPanelId}
           isChatOpen={isChatOpen}

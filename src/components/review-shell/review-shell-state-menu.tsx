@@ -3,6 +3,7 @@
 import {
   useEffect,
   useRef,
+  useState,
   type KeyboardEvent,
   type ReactNode,
   type RefObject,
@@ -16,7 +17,9 @@ import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 const LIVE_PROTOTYPE_NAV_ITEM = {
   id: "live",
   href: "/hiring",
-  label: "Live (interactive)",
+  label: "All intents",
+  description: "Interact with the prototype to see results across all intents",
+  typeLabel: "Interactive",
 } as const;
 
 type ReviewShellStateMenuOption = Readonly<{
@@ -27,8 +30,19 @@ type ReviewShellStateMenuOption = Readonly<{
 
 type ReviewShellModeMenuOption = Readonly<{
   id: string;
-  href: string;
+  href?: string;
   label: string;
+  description?: string;
+  typeLabel?: string;
+  hasDividerAfter?: boolean;
+  options?: ReadonlyArray<ReviewShellModeMenuOption>;
+}>;
+
+export type ReviewShellModeMenuGroup = Readonly<{
+  id: string;
+  label: string;
+  description?: string;
+  options: ReadonlyArray<ReviewShellModeMenuOption>;
 }>;
 
 type ReviewShellShellMenuOption = Readonly<{
@@ -56,6 +70,7 @@ type ReviewShellStateMenuProps = Readonly<{
   triggerRef: RefObject<HTMLElement | null>;
   labelledBy?: string;
   modeOptions?: ReadonlyArray<ReviewShellModeMenuOption>;
+  modeGroups?: ReadonlyArray<ReviewShellModeMenuGroup>;
   modeHeading?: string;
   shellOptions?: ReadonlyArray<ReviewShellShellMenuOption>;
   shellHeading?: string;
@@ -72,6 +87,7 @@ export function ReviewShellStateMenu({
   triggerRef,
   labelledBy,
   modeOptions = defaultModeOptions,
+  modeGroups,
   modeHeading = "Mode",
   shellOptions = [],
   shellHeading = "Shell",
@@ -79,13 +95,25 @@ export function ReviewShellStateMenu({
 }: ReviewShellStateMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Array<HTMLElement | null>>([]);
+  const [activeModeGroupId, setActiveModeGroupId] = useState<string | null>(
+    null,
+  );
   const visitorOptions = showVisitorControls ? loginOptions : [];
+  const modeControlCount = modeGroups?.length ?? modeOptions.length;
   const hasSettings = visitorOptions.length > 0 || shellOptions.length > 0;
   const optionCount =
-    modeOptions.length + shellOptions.length + visitorOptions.length;
-  const activeModeIndex = modeOptions.findIndex(
-    (option) => option.href.split("?")[0] === pathname,
-  );
+    modeControlCount + shellOptions.length + visitorOptions.length;
+  const activeModeIndex = modeGroups
+    ? modeGroups.findIndex((group) =>
+        group.options.some((option) => option.href?.split("?")[0] === pathname),
+      )
+    : modeOptions.findIndex((option) =>
+        option.options
+          ? option.options.some(
+              (childOption) => childOption.href?.split("?")[0] === pathname,
+            )
+          : option.href?.split("?")[0] === pathname,
+      );
   const activeShellIndex = shellOptions.findIndex(
     (option) => option.href === currentHref,
   );
@@ -96,9 +124,9 @@ export function ReviewShellStateMenu({
     activeModeIndex >= 0
       ? activeModeIndex
       : activeLoginIndex >= 0
-        ? modeOptions.length + activeLoginIndex
+        ? modeControlCount + activeLoginIndex
         : activeShellIndex >= 0
-          ? modeOptions.length + visitorOptions.length + activeShellIndex
+          ? modeControlCount + visitorOptions.length + activeShellIndex
           : 0;
   const shellGridClass =
     shellOptions.length > 2
@@ -107,7 +135,7 @@ export function ReviewShellStateMenu({
 
   function getSegmentClasses(isSelected: boolean) {
     return [
-      "flex min-h-9 items-center justify-center rounded-lg px-2.5 py-1.5 text-center text-[11px] font-medium leading-tight tracking-[0.01em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+      "flex min-h-7 items-center justify-center rounded-[9px] px-2 py-1 text-center text-[10px] font-medium leading-tight transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
       isSelected
         ? "bg-white text-sky-900 shadow-sm ring-1 ring-sky-100"
         : "text-slate-600 hover:bg-white/80 hover:text-sky-900 focus-visible:bg-white",
@@ -119,8 +147,8 @@ export function ReviewShellStateMenu({
     optionIndex: number,
   ) {
     return group === "auth"
-      ? modeOptions.length + optionIndex
-      : modeOptions.length + visitorOptions.length + optionIndex;
+      ? modeControlCount + optionIndex
+      : modeControlCount + visitorOptions.length + optionIndex;
   }
 
   function renderSettingRow({
@@ -136,7 +164,7 @@ export function ReviewShellStateMenu({
       <div className="grid grid-cols-[56px_minmax(0,1fr)] items-center gap-3 px-1">
         <p
           id={id}
-          className="pl-2 text-[11px] font-medium leading-none text-slate-500"
+          className="pl-2 text-[11px] font-semibold leading-none text-slate-500"
         >
           {heading}
         </p>
@@ -228,43 +256,184 @@ export function ReviewShellStateMenu({
     }
   }
 
-  return (
-    <div
-      ref={menuRef}
-      role="menu"
-      aria-orientation="vertical"
-      aria-labelledby={labelledBy}
-      className="absolute left-0 top-full z-50 mt-2 min-w-[320px] rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5"
-    >
-      <div
-        role="group"
-        aria-labelledby="review-shell-mode-menu-heading"
-        className="space-y-1"
-      >
-        <p
-          id="review-shell-mode-menu-heading"
-          className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
-        >
-          {modeHeading}
-        </p>
-        {modeOptions.map((option, optionIndex) => {
-          const index = optionIndex;
-          const isSelected = option.href.split("?")[0] === pathname;
+  function getModeOptionDisplay(option: ReviewShellModeMenuOption) {
+    const match = option.label.match(
+      /\s+\((interactive|static)(?: screen)?\)$/i,
+    );
+    const parentheticalStart = match?.index ?? option.label.length;
 
-          return (
-            <Link
-              key={option.id}
+    return {
+      label: match
+        ? option.label.slice(0, parentheticalStart).trim()
+        : option.label,
+      typeLabel:
+        option.typeLabel ??
+        (match
+          ? match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase()
+          : undefined),
+    };
+  }
+
+  function renderModeOptions() {
+    if (modeGroups) {
+      return modeGroups.map((group, groupIndex) => {
+        const isGroupSelected = group.options.some(
+          (option) => option.href?.split("?")[0] === pathname,
+        );
+
+        const isSubmenuOpen = activeModeGroupId === group.id;
+
+        return (
+          <div
+            key={group.id}
+            className="relative"
+            onMouseEnter={() => setActiveModeGroupId(group.id)}
+            onMouseLeave={() => setActiveModeGroupId(null)}
+            onFocusCapture={() => setActiveModeGroupId(group.id)}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup="menu"
+              aria-expanded={isSubmenuOpen}
+              tabIndex={groupIndex === focusIndex ? 0 : -1}
+              onKeyDown={(event) => handleItemKeyDown(event, groupIndex)}
+              ref={(element) => {
+                itemRefs.current[groupIndex] = element;
+              }}
+              className={[
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+                isGroupSelected
+                  ? "bg-sky-50 text-sky-900"
+                  : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
+              ].join(" ")}
+            >
+              <span
+                aria-hidden="true"
+                className={[
+                  "inline-flex w-3 shrink-0 items-center justify-center",
+                  isGroupSelected ? "text-sky-700" : "text-transparent",
+                ].join(" ")}
+              >
+                <Icon name="check" size="small" className="[&&]:size-3" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12px] font-medium leading-tight tracking-[0.01em]">
+                  {group.label}
+                </span>
+                {group.description ? (
+                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+                    {group.description}
+                  </span>
+                ) : null}
+              </span>
+              <Icon
+                name="chevron-right"
+                size="small"
+                className="shrink-0 text-slate-400 [&&]:size-3"
+              />
+            </button>
+            <div
+              role="menu"
+              aria-label={`${group.label} view type`}
+              className={[
+                "absolute left-[calc(100%+8px)] top-0 min-w-44 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5 transition-[opacity,visibility] duration-150 ease-out",
+                isSubmenuOpen
+                  ? "visible opacity-100"
+                  : "invisible opacity-0",
+              ].join(" ")}
+            >
+              {group.options.map((option) => {
+                const display = getModeOptionDisplay(option);
+                const isSelected = option.href?.split("?")[0] === pathname;
+
+                return (
+                  <Link
+                    key={option.id}
+                    href={option.href ?? "#"}
+                    role="menuitemradio"
+                    aria-checked={isSelected}
+                    tabIndex={0}
+                    onClick={onClose}
+                    onKeyDown={(event) => {
+                      if (event.key === "ArrowLeft") {
+                        event.preventDefault();
+                        itemRefs.current[groupIndex]?.focus();
+                      } else {
+                        handleItemKeyDown(event, groupIndex);
+                      }
+                    }}
+                    className={[
+                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+                      isSelected
+                        ? "bg-sky-50 text-sky-900"
+                        : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
+                    ].join(" ")}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={[
+                        "inline-flex w-3 shrink-0 items-center justify-center",
+                        isSelected ? "text-sky-700" : "text-transparent",
+                      ].join(" ")}
+                    >
+                      <Icon name="check" size="small" className="[&&]:size-3" />
+                    </span>
+                    <span className="min-w-max flex-1 whitespace-nowrap text-[12px] font-medium leading-tight tracking-[0.01em]">
+                      {display.label}
+                    </span>
+                    {display.typeLabel ? (
+                      <span className="shrink-0 text-[11px] font-medium leading-none text-slate-400">
+                        {display.typeLabel}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      });
+    }
+
+    return modeOptions.map((option, optionIndex) => {
+      const index = optionIndex;
+      const hasSubmenu = Boolean(option.options?.length);
+      const isSelected = hasSubmenu
+        ? option.options?.some(
+            (childOption) => childOption.href?.split("?")[0] === pathname,
+          ) ?? false
+        : option.href?.split("?")[0] === pathname;
+      const display = getModeOptionDisplay(option);
+
+      if (hasSubmenu) {
+        const isSubmenuOpen = activeModeGroupId === option.id;
+
+        return (
+          <div
+            key={option.id}
+            className={[
+              "relative",
+              option.hasDividerAfter
+                ? "mb-1.5 border-b border-slate-200/70 pb-1.5"
+                : "",
+            ].join(" ")}
+            onMouseEnter={() => setActiveModeGroupId(option.id)}
+            onMouseLeave={() => setActiveModeGroupId(null)}
+            onFocusCapture={() => setActiveModeGroupId(option.id)}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              aria-haspopup="menu"
+              aria-expanded={isSubmenuOpen}
+              tabIndex={index === focusIndex ? 0 : -1}
+              onKeyDown={(event) => handleItemKeyDown(event, index)}
               ref={(element) => {
                 itemRefs.current[index] = element;
               }}
-              href={option.href}
-              role="menuitemradio"
-              aria-checked={isSelected}
-              tabIndex={index === focusIndex ? 0 : -1}
-              onClick={onClose}
-              onKeyDown={(event) => handleItemKeyDown(event, index)}
               className={[
-                "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[12px] font-medium tracking-[0.01em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+                "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
                 isSelected
                   ? "bg-sky-50 text-sky-900"
                   : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
@@ -273,16 +442,167 @@ export function ReviewShellStateMenu({
               <span
                 aria-hidden="true"
                 className={[
-                  "inline-flex size-4 shrink-0 items-center justify-center",
+                  "inline-flex w-3 shrink-0 items-center justify-center",
                   isSelected ? "text-sky-700" : "text-transparent",
                 ].join(" ")}
               >
-                <Icon name="check" size="small" />
+                <Icon name="check" size="small" className="[&&]:size-3" />
               </span>
-              <span>{option.label}</span>
-            </Link>
-          );
-        })}
+              <span className="min-w-0 flex-1">
+                <span className="block text-[12px] font-medium leading-tight tracking-[0.01em]">
+                  {display.label}
+                </span>
+                {option.description ? (
+                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+                    {option.description}
+                  </span>
+                ) : null}
+              </span>
+              <Icon
+                name="chevron-right"
+                size="small"
+                className="shrink-0 text-slate-400 [&&]:size-3"
+              />
+            </button>
+            <div
+              role="menu"
+              aria-label={`${display.label} options`}
+              className={[
+                "absolute left-[calc(100%+8px)] top-0 min-w-48 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5 transition-[opacity,visibility] duration-150 ease-out",
+                isSubmenuOpen
+                  ? "visible opacity-100"
+                  : "invisible opacity-0",
+              ].join(" ")}
+            >
+              {option.options?.map((childOption) => {
+                const childDisplay = getModeOptionDisplay(childOption);
+                const isChildSelected =
+                  childOption.href?.split("?")[0] === pathname;
+
+                return (
+                  <Link
+                    key={childOption.id}
+                    href={childOption.href ?? "#"}
+                    role="menuitemradio"
+                    aria-checked={isChildSelected}
+                    tabIndex={0}
+                    onClick={onClose}
+                    onKeyDown={(event) => {
+                      if (event.key === "ArrowLeft") {
+                        event.preventDefault();
+                        itemRefs.current[index]?.focus();
+                      } else {
+                        handleItemKeyDown(event, index);
+                      }
+                    }}
+                    className={[
+                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+                      isChildSelected
+                        ? "bg-sky-50 text-sky-900"
+                        : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
+                    ].join(" ")}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={[
+                        "inline-flex w-3 shrink-0 items-center justify-center",
+                        isChildSelected ? "text-sky-700" : "text-transparent",
+                      ].join(" ")}
+                    >
+                      <Icon name="check" size="small" className="[&&]:size-3" />
+                    </span>
+                    <span className="min-w-max flex-1 whitespace-nowrap text-[12px] font-medium leading-tight tracking-[0.01em]">
+                      {childDisplay.label}
+                    </span>
+                    {childDisplay.typeLabel ? (
+                      <span className="shrink-0 text-[11px] font-medium leading-none text-slate-400">
+                        {childDisplay.typeLabel}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div
+          key={option.id}
+          className={[
+            option.hasDividerAfter
+              ? "mb-1.5 border-b border-slate-200/70 pb-1.5"
+              : "",
+          ].join(" ")}
+        >
+          <Link
+            ref={(element) => {
+              itemRefs.current[index] = element;
+            }}
+            href={option.href ?? "#"}
+            role="menuitemradio"
+            aria-checked={isSelected}
+            tabIndex={index === focusIndex ? 0 : -1}
+            onClick={onClose}
+            onKeyDown={(event) => handleItemKeyDown(event, index)}
+            className={[
+              "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+              isSelected
+                ? "bg-sky-50 text-sky-900"
+                : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
+            ].join(" ")}
+          >
+            <span
+              aria-hidden="true"
+              className={[
+                "inline-flex w-3 shrink-0 items-center justify-center",
+                isSelected ? "text-sky-700" : "text-transparent",
+              ].join(" ")}
+            >
+              <Icon name="check" size="small" className="[&&]:size-3" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12px] font-medium leading-tight tracking-[0.01em]">
+                {display.label}
+              </span>
+              {option.description ? (
+                <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+                  {option.description}
+                </span>
+              ) : null}
+            </span>
+            {display.typeLabel ? (
+              <span className="shrink-0 text-[11px] font-medium leading-none text-slate-400">
+                {display.typeLabel}
+              </span>
+            ) : null}
+          </Link>
+        </div>
+      );
+    });
+  }
+
+  return (
+    <div
+      ref={menuRef}
+      role="menu"
+      aria-orientation="vertical"
+      aria-labelledby={labelledBy}
+      className="absolute left-0 top-full z-50 mt-2 min-w-[320px] rounded-2xl border border-slate-200 bg-white px-2 pb-2 pt-3 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5"
+    >
+      <div
+        role="group"
+        aria-labelledby="review-shell-mode-menu-heading"
+        className="space-y-1"
+      >
+        <p
+          id="review-shell-mode-menu-heading"
+          className="px-3 pb-1 pt-0 text-[11px] font-semibold leading-none text-slate-500"
+        >
+          {modeHeading}
+        </p>
+        {renderModeOptions()}
       </div>
 
       {hasSettings ? (
@@ -293,7 +613,7 @@ export function ReviewShellStateMenu({
         >
           <p
             id="review-shell-settings-menu-heading"
-            className="px-3 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-slate-500"
+            className="px-3 pb-1 pt-1 text-[11px] font-semibold leading-none text-slate-500"
           >
             Settings
           </p>
@@ -304,7 +624,7 @@ export function ReviewShellStateMenu({
                 children: (
                   <div
                     aria-labelledby="review-shell-login-menu-heading"
-                    className="grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1"
+                    className="grid grid-cols-2 gap-0.5 rounded-[11px] bg-slate-100 p-0.5"
                   >
                     {visitorOptions.map((option, optionIndex) => {
                       const index = getSettingsControlIndex(
@@ -347,7 +667,7 @@ export function ReviewShellStateMenu({
                   <div
                     aria-labelledby="review-shell-shell-menu-heading"
                     className={[
-                      "grid gap-1 rounded-xl bg-slate-100 p-1",
+                      "grid gap-0.5 rounded-[11px] bg-slate-100 p-0.5",
                       shellGridClass,
                     ].join(" ")}
                   >

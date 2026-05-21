@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export const CHAT_PANEL_TRANSITION_MS = 240;
 export const CHAT_ASSISTANT_THINKING_DELAY_MS = 650;
+const CHAT_PANEL_VIEW_TRANSITION_CLASS = "chat-panel-view-transition";
 
 export type ChatPanelPresence = "closed" | "entering" | "open" | "exiting";
 export type ChatMessageStreamStatus = "thinking" | "streaming" | "complete";
@@ -31,6 +32,37 @@ export function supportsViewTransitions(): boolean {
   }
 
   return "startViewTransition" in document;
+}
+
+type ViewTransition = Readonly<{
+  finished: Promise<void>;
+  ready: Promise<void>;
+  updateCallbackDone: Promise<void>;
+  skipTransition: () => void;
+}>;
+
+type ViewTransitionDocument = Document & {
+  startViewTransition: (callback: () => void) => ViewTransition;
+};
+
+export function startChatPanelViewTransition(callback: () => void): boolean {
+  if (!supportsViewTransitions()) {
+    return false;
+  }
+
+  document.documentElement.classList.add(CHAT_PANEL_VIEW_TRANSITION_CLASS);
+
+  const transition = (document as ViewTransitionDocument).startViewTransition(
+    callback,
+  );
+
+  const clearTransitionClass = () => {
+    document.documentElement.classList.remove(CHAT_PANEL_VIEW_TRANSITION_CLASS);
+  };
+
+  transition.finished.then(clearTransitionClass, clearTransitionClass);
+
+  return true;
 }
 
 export function splitIntoStreamChunks(text: string): Array<string> {

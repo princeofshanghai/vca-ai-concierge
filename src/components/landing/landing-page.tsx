@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 
 import {
   ChatTray,
+  startChatPanelViewTransition,
   type ChatHeaderIdentity,
   type ChatPanelVariant,
   useChatPanelPresence,
@@ -95,16 +96,16 @@ export function LandingPage({
         : "md:right-6 md:bottom-0 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
     : isCenteredChatSurface
       ? isReviewSidePanelOpen
-        ? "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-expanded-surface-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-        : "md:top-1/2 md:left-1/2 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+        ? "md:top-1/2 md:left-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-expanded-surface-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+        : "md:top-1/2 md:left-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
       : isWideChatSurface
         ? "md:right-6 md:bottom-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-collapsed-surface-width))]"
         : "md:right-6 md:bottom-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
   const chatPanelFrameClass = isBottomAttachedChatSurface
-    ? "md:!h-full md:!rounded-t-md md:!rounded-b-none"
+    ? "md:!h-full md:!w-full md:!rounded-t-md md:!rounded-b-none"
     : isCenteredChatSurface
-      ? undefined
-      : "md:!h-full";
+      ? "md:!h-full md:!w-full"
+      : "md:!h-full md:!w-full";
 
   const openChat = useCallback(() => {
     if (isReviewFlow && !isTrayStyleShell) {
@@ -150,9 +151,25 @@ export function LandingPage({
   ]);
 
   const toggleChatPanelVariant = useCallback(() => {
-    setChatPanelVariant((variant) =>
-      variant === "collapsed" ? "expanded" : "collapsed",
-    );
+    const toggleVariant = () => {
+      setChatPanelVariant((variant) =>
+        variant === "collapsed" ? "expanded" : "collapsed",
+      );
+    };
+
+    if (!startChatPanelViewTransition(toggleVariant)) {
+      toggleVariant();
+    }
+  }, []);
+
+  const collapseChatPanelVariant = useCallback(() => {
+    const collapseVariant = () => {
+      setChatPanelVariant("collapsed");
+    };
+
+    if (!startChatPanelViewTransition(collapseVariant)) {
+      collapseVariant();
+    }
   }, []);
 
   const closeChat = useCallback(() => {
@@ -338,20 +355,18 @@ export function LandingPage({
 
       {isChatPanelMounted ? (
         <>
-          {chatPanelVariant === "expanded" ? (
-            <button
-              type="button"
-              aria-label="Collapse expanded chat"
-              tabIndex={-1}
-              className={[
-                "fixed inset-0 z-30 hidden cursor-default bg-overlay-dim transition-opacity duration-[var(--design-motion-duration-moderate)] ease-emphasized focus:outline-none motion-reduce:duration-[var(--design-motion-duration-instant)] md:block",
-                isChatInteractive
-                  ? "opacity-100"
-                  : "pointer-events-none opacity-0",
-              ].join(" ")}
-              onClick={() => setChatPanelVariant("collapsed")}
-            />
-          ) : null}
+          <button
+            type="button"
+            aria-label="Collapse expanded chat"
+            tabIndex={-1}
+            className={[
+              "fixed inset-0 z-30 hidden cursor-default bg-overlay-dim transition-opacity duration-[var(--design-motion-duration-moderate)] ease-emphasized focus:outline-none motion-reduce:duration-[var(--design-motion-duration-instant)] md:block",
+              chatPanelVariant === "expanded" && isChatInteractive
+                ? "opacity-100"
+                : "pointer-events-none opacity-0",
+            ].join(" ")}
+            onClick={collapseChatPanelVariant}
+          />
 
           <div
             id={chatPanelId}
@@ -360,7 +375,7 @@ export function LandingPage({
             aria-hidden={!isChatOpen}
             inert={!isChatOpen}
             className={[
-              "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)] md:inset-auto",
+              "concierge-chat-panel fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform,opacity] duration-[var(--design-motion-duration-slow)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)] md:inset-auto",
               chatPanelPositionClass,
               isChatOpen ? "pointer-events-auto" : "pointer-events-none",
             ].join(" ")}

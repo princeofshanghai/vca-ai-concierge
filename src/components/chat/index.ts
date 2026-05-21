@@ -31,6 +31,7 @@ export {
   getStreamDelay,
   prefersReducedMotion,
   splitIntoStreamChunks,
+  startChatPanelViewTransition,
   supportsViewTransitions,
   useChatPanelPresence,
   type ChatMessageStreamStatus,

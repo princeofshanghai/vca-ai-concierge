@@ -1255,6 +1255,38 @@ body {
   view-transition-name: concierge-ai-mark;
 }
 
+.concierge-chat-panel {
+  view-transition-name: concierge-chat-panel;
+  contain: layout;
+}
+
+html.chat-panel-view-transition .concierge-chat-panel,
+html.chat-panel-view-transition .concierge-chat-panel * {
+  transition-duration: 0ms !important;
+}
+
+html.chat-panel-view-transition::view-transition-group(root),
+html.chat-panel-view-transition::view-transition-old(root),
+html.chat-panel-view-transition::view-transition-new(root) {
+  animation-duration: 0ms;
+}
+
+html.chat-panel-view-transition::view-transition-group(concierge-chat-panel),
+html.chat-panel-view-transition::view-transition-old(concierge-chat-panel),
+html.chat-panel-view-transition::view-transition-new(concierge-chat-panel) {
+  animation-duration: var(--design-motion-duration-slow);
+  animation-timing-function: var(--design-motion-easing-emphasized);
+}
+
+html.chat-panel-view-transition::view-transition-image-pair(
+    concierge-chat-panel
+  ),
+html.chat-panel-view-transition::view-transition-old(concierge-chat-panel),
+html.chat-panel-view-transition::view-transition-new(concierge-chat-panel) {
+  isolation: isolate;
+  mix-blend-mode: normal;
+}
+
 ::view-transition-group(concierge-ai-mark),
 ::view-transition-old(concierge-ai-mark),
 ::view-transition-new(concierge-ai-mark) {

@@ -1018,6 +1018,7 @@ export function PremiumConciergePanel({
         variant={variant}
         title={PREMIUM_CONCIERGE_TITLE}
         onClose={onClose}
+        dockActionPosition="after-variant"
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}

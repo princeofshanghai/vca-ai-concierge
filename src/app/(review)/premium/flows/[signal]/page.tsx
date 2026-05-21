@@ -8,6 +8,7 @@ import {
   PremiumSurveyPage,
 } from "@/components/premium";
 import { createPageMetadata } from "@/lib/metadata";
+import { getPremiumShellMode } from "@/lib/premium-shell";
 
 type PremiumReviewFlowPageProps = Readonly<{
   params: Promise<{
@@ -48,7 +49,7 @@ export default async function PremiumReviewFlowPage({
 }: PremiumReviewFlowPageProps) {
   const { signal } = await params;
   const { shell } = await searchParams;
-  const shellMode = shell === "tray" ? "tray" : "fab";
+  const shellMode = getPremiumShellMode(shell);
 
   if (!isPremiumReviewFlowId(signal)) {
     notFound();

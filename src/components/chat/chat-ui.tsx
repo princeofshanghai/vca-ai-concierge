@@ -65,6 +65,7 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   onDockToggle?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  dockActionPosition?: "before-variant" | "after-variant";
   showCloseAction?: boolean;
   transparent?: boolean;
   showAiMark?: boolean;
@@ -486,6 +487,7 @@ export function ChatHeader({
   onDockToggle,
   onMinimizeToTray,
   onVariantToggle,
+  dockActionPosition = "before-variant",
   showCloseAction = true,
   transparent = false,
   showAiMark = true,
@@ -494,6 +496,31 @@ export function ChatHeader({
 }: ChatHeaderProps) {
   const headerIdentity =
     identity ?? (showAiMark ? ({ type: "ai", title } as const) : null);
+  const dockAction =
+    onDockToggle || onMinimizeToTray ? (
+      <GhostIconButton
+        label="Dock chat to tray"
+        icon="chevron-down"
+        size="medium"
+        onClick={onDockToggle ?? onMinimizeToTray}
+      />
+    ) : null;
+  const variantAction = (
+    <span
+      className={cx(
+        onDockToggle || onMinimizeToTray
+          ? "inline-flex"
+          : "hidden md:inline-flex",
+      )}
+    >
+      <GhostIconButton
+        label={headerActionLabel[variant]}
+        icon={headerActionIcon[variant]}
+        size="medium"
+        onClick={onVariantToggle}
+      />
+    </span>
+  );
 
   return (
     <header
@@ -538,28 +565,9 @@ export function ChatHeader({
         <span aria-hidden="true" />
       )}
       <div className="flex items-center gap-0">
-        {onDockToggle || onMinimizeToTray ? (
-          <GhostIconButton
-            label="Dock chat to tray"
-            icon="chevron-down"
-            size="medium"
-            onClick={onDockToggle ?? onMinimizeToTray}
-          />
-        ) : null}
-        <span
-          className={cx(
-            onDockToggle || onMinimizeToTray
-              ? "inline-flex"
-              : "hidden md:inline-flex",
-          )}
-        >
-          <GhostIconButton
-            label={headerActionLabel[variant]}
-            icon={headerActionIcon[variant]}
-            size="medium"
-            onClick={onVariantToggle}
-          />
-        </span>
+        {dockActionPosition === "before-variant" ? dockAction : null}
+        {variantAction}
+        {dockActionPosition === "after-variant" ? dockAction : null}
         {showCloseAction ? (
           <GhostIconButton
             label="Close chat"
@@ -841,7 +849,7 @@ export function ChatFeedbackReasonChips({
       role="group"
       aria-label="Feedback reasons"
       className={cx(
-        "chat-feedback-reason-chips chat-message-enter flex max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] flex-wrap gap-x-sm gap-y-xs",
+        "chat-feedback-reason-chips chat-message-enter flex max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] flex-wrap gap-xs",
         className,
       )}
     >

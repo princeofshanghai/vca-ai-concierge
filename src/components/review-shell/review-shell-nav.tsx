@@ -10,10 +10,12 @@ import {
   premiumReviewFlowNavItems,
 } from "@/components/premium/premium-concierge-flows";
 import { Icon } from "@/components/primitives/icon";
-import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 
 import { useReviewShellState } from "./review-shell-state";
-import { ReviewShellStateMenu } from "./review-shell-state-menu";
+import {
+  ReviewShellStateMenu,
+  type ReviewShellModeMenuGroup,
+} from "./review-shell-state-menu";
 
 const HIRING_PROTOTYPE_HREF = "/hiring";
 const PREMIUM_PROTOTYPE_HREF = "/premium";
@@ -21,7 +23,10 @@ const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
   href: HIRING_PROTOTYPE_HREF,
-  label: "Live (interactive)",
+  label: "All intents",
+  description: "Interact with the prototype to see results across all intents",
+  typeLabel: "Interactive",
+  hasDividerAfter: true,
 } as const;
 const HIRING_SHELL_OPTIONS = [
   {
@@ -39,17 +44,40 @@ const HIRING_SHELL_OPTIONS = [
 ] as const;
 const PREMIUM_SHELL_OPTIONS = [
   {
-    id: "premium-shell-fab",
-    label: "FAB",
+    id: "premium-shell-dismissable-tray",
+    label: "Tray (dismissable)",
   },
   {
-    id: "premium-shell-tray",
-    label: "Tray",
+    id: "premium-shell-dockable-tray",
+    label: "Tray (dockable)",
   },
 ] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
-  ...FLOW_REVIEW_NAV_ITEMS,
+  {
+    id: "high",
+    href: "/internal/flows/high",
+    label: "High intent (static)",
+  },
+  {
+    id: "medium",
+    label: "Medium intent",
+    options: [
+      {
+        id: "medium-available",
+        href: "/internal/flows/medium/available",
+        label: "SDR available",
+        typeLabel: "Static",
+      },
+      {
+        id: "medium-unavailable",
+        href: "/internal/flows/medium/unavailable",
+        label: "SDR unavailable",
+        typeLabel: "Static",
+      },
+    ],
+  },
+  { id: "low", href: "/internal/flows/low", label: "Low intent (static)" },
 ] as const;
 const premiumModeOptions = [
   ...premiumLiveModeNavItems,
@@ -87,7 +115,7 @@ function HomeNavIcon() {
   return (
     <span
       aria-hidden="true"
-      className="inline-flex size-[var(--design-icon-size-small)] shrink-0 items-center justify-center"
+      className="inline-flex size-3 shrink-0 items-center justify-center"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -122,19 +150,30 @@ function getPrototypeMetaLabel(
     const modeLabel =
       activePremiumMode?.label ?? premiumLiveModeNavItems[0].label;
 
-    return premiumShellLabel === "Tray"
-      ? `${modeLabel} · ${premiumShellLabel}`
-      : modeLabel;
+    return `${modeLabel} · ${premiumShellLabel}`;
   }
 
   if (
     pathname === HIRING_PROTOTYPE_HREF ||
     pathname.startsWith("/internal/flows")
   ) {
-    const activeHiringMode = hiringModeOptions.find(
-      (option) => option.href === pathname,
-    );
-    const modeLabel = activeHiringMode?.label ?? "Live (interactive)";
+    let modeLabel = "All intents";
+
+    for (const option of hiringModeOptions) {
+      if ("options" in option) {
+        const activeChildOption = option.options.find(
+          (childOption) => childOption.href === pathname,
+        );
+
+        if (activeChildOption) {
+          modeLabel = `${option.label} · ${activeChildOption.label}`;
+          break;
+        }
+      } else if (option.href === pathname) {
+        modeLabel = option.label;
+        break;
+      }
+    }
 
     return `${modeLabel} · ${hiringShellLabel}`;
   }
@@ -201,7 +240,7 @@ function withHiringShell(href: string, shellLabel: HiringShellLabel) {
 }
 
 function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
-  if (shellLabel === "Tray") {
+  if (shellLabel === "Tray (dockable)") {
     return `${href}?shell=tray`;
   }
 
@@ -253,7 +292,13 @@ export function ReviewShellNav() {
         ? `${pathname}?shell=default`
         : currentHref;
   const activePremiumShellLabel: PremiumShellLabel =
-    searchParams.get("shell") === "tray" ? "Tray" : "FAB";
+    searchParams.get("shell") === "tray"
+      ? "Tray (dockable)"
+      : "Tray (dismissable)";
+  const normalizedPremiumHref =
+    activePremiumShellLabel === "Tray (dockable)"
+      ? currentHref
+      : pathname;
   const componentProductLens: ComponentProductLens =
     pathname.startsWith("/premium") || searchParams.get("product") === "premium"
       ? "premium"
@@ -262,7 +307,18 @@ export function ReviewShellNav() {
     () =>
       hiringModeOptions.map((option) => ({
         ...option,
-        href: withHiringShell(option.href, activeHiringShellLabel),
+        href: "href" in option && option.href
+          ? withHiringShell(option.href, activeHiringShellLabel)
+          : undefined,
+        options:
+          "options" in option
+            ? option.options.map((childOption) => ({
+                ...childOption,
+                href: childOption.href
+                  ? withHiringShell(childOption.href, activeHiringShellLabel)
+                  : undefined,
+              }))
+            : undefined,
       })),
     [activeHiringShellLabel],
   );
@@ -273,6 +329,60 @@ export function ReviewShellNav() {
         href: withPremiumShell(option.href, activePremiumShellLabel),
       })),
     [activePremiumShellLabel],
+  );
+  const premiumModeGroups = useMemo<ReadonlyArray<ReviewShellModeMenuGroup>>(
+    () => [
+      {
+        id: "premium-low-signal",
+        label: "Low signal",
+        description: "Ask user questions before recommending plan",
+        options: [
+          {
+            id: "premium-low-signal-interactive",
+            href:
+              shellAwarePremiumModeOptions.find(
+                (option) => option.id === "low-signal",
+              )?.href ?? withPremiumShell("/premium", activePremiumShellLabel),
+            label: "Interactive",
+          },
+          {
+            id: "premium-low-signal-static",
+            href:
+              shellAwarePremiumModeOptions.find(
+                (option) => option.id === "low",
+              )?.href ??
+              withPremiumShell("/premium/flows/low", activePremiumShellLabel),
+            label: "Static",
+          },
+        ],
+      },
+      {
+        id: "premium-high-signal",
+        label: "High signal",
+        description: "Give recommended plan immediately",
+        options: [
+          {
+            id: "premium-high-signal-interactive",
+            href:
+              shellAwarePremiumModeOptions.find(
+                (option) => option.id === "high-signal",
+              )?.href ??
+              withPremiumShell("/premium/live/high", activePremiumShellLabel),
+            label: "Interactive",
+          },
+          {
+            id: "premium-high-signal-static",
+            href:
+              shellAwarePremiumModeOptions.find(
+                (option) => option.id === "high",
+              )?.href ??
+              withPremiumShell("/premium/flows/high", activePremiumShellLabel),
+            label: "Static",
+          },
+        ],
+      },
+    ],
+    [activePremiumShellLabel, shellAwarePremiumModeOptions],
   );
   const hiringShellOptions = useMemo(
     () => getHiringShellOptions(pathname),
@@ -398,20 +508,20 @@ export function ReviewShellNav() {
                       triggerRef.current = element;
                     }}
                     className={[
-                      "inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
+                      "inline-flex min-h-9 min-w-0 items-center gap-4 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
                       isActive
                         ? "text-sky-900"
-                        : "text-slate-600 hover:text-slate-950",
+                        : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
                     ].join(" ")}
                   >
-                    <span className="flex min-w-0 flex-col items-start leading-none">
+                    <span className="inline-flex min-w-0 items-baseline gap-2 leading-none">
                       <span className="leading-[1.1]">
                         {destination.label}
                       </span>
                       {destination.metaLabel ? (
                         <span
                           className={[
-                            "mt-0.5 max-w-[96px] truncate text-[10px] font-medium leading-[1.05] tracking-normal sm:max-w-[220px]",
+                            "max-w-[44vw] truncate text-[10px] font-medium leading-[1.05] tracking-normal sm:max-w-none",
                             isActive ? "text-sky-700/75" : "text-slate-500",
                           ].join(" ")}
                         >
@@ -423,7 +533,7 @@ export function ReviewShellNav() {
                       name="chevron-down"
                       size="small"
                       className={[
-                        "transition-transform duration-200 ease-out motion-reduce:transition-none",
+                        "[&&]:size-3 transition-transform duration-200 ease-out motion-reduce:transition-none",
                         isMenuOpen ? "rotate-180" : "",
                       ].join(" ")}
                     />
@@ -433,7 +543,7 @@ export function ReviewShellNav() {
                     isSignedIn={isSignedIn}
                     pathname={pathname}
                     currentHref={
-                      isPremiumMenu ? currentHref : normalizedHiringHref
+                      isPremiumMenu ? normalizedPremiumHref : normalizedHiringHref
                     }
                     onLoginSelect={
                       isPremiumMenu ? undefined : handleLoginSelect
@@ -442,6 +552,7 @@ export function ReviewShellNav() {
                     triggerRef={triggerRef}
                     labelledBy={TRIGGER_ID}
                     modeOptions={modeOptions}
+                    modeGroups={isPremiumMenu ? premiumModeGroups : undefined}
                     modeHeading="Choose flow"
                     shellOptions={shellOptions}
                     showVisitorControls={!isPremiumMenu}
@@ -462,7 +573,7 @@ export function ReviewShellNav() {
                     "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
                     isActive
                       ? "text-sky-900"
-                      : "text-slate-600 hover:text-slate-950",
+                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
                   ].join(" ")}
                 >
                   {destination.href === HOME_DESTINATION.href ? (
