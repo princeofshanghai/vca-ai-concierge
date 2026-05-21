@@ -59,7 +59,7 @@ export function ComponentSidebar() {
                   [section.title]: !(current[section.title] ?? false),
                 }));
               }}
-              className="flex w-full items-center justify-between rounded-sm px-md py-[6px] text-left text-sm font-medium leading-4 text-text outline-none transition-colors duration-150 ease-out hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+              className="flex min-h-[44px] w-full items-center justify-between rounded-sm px-md py-[10px] text-left text-sm font-medium leading-4 text-text outline-none transition-colors duration-150 ease-out hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
             >
               <span>{section.title}</span>
               <Icon
@@ -82,7 +82,7 @@ export function ComponentSidebar() {
                 {section.groups.map((group) => (
                   <div key={group.title} className="space-y-2">
                     {section.title === "SDUI" ? null : (
-                      <h3 className="px-md text-[12px] font-semibold leading-4 tracking-[0.02em] text-text-meta">
+                      <h3 className="px-md text-[12px] font-medium leading-4 text-text-meta">
                         {group.title}
                       </h3>
                     )}
@@ -96,7 +96,7 @@ export function ComponentSidebar() {
                             href={item.href}
                             aria-current={isActive ? "page" : undefined}
                             className={cx(
-                              "block rounded-sm py-[8px] pl-lg pr-md text-[13px] leading-4 text-text outline-none transition-colors duration-150 ease-out focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
+                              "block rounded-sm py-[8px] pl-[32px] pr-md text-[13px] leading-4 text-text outline-none transition-colors duration-150 ease-out focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
                               isActive
                                 ? "bg-background-neutral-soft font-medium hover:bg-border-faint"
                                 : "font-normal hover:bg-background-transparent-hover",

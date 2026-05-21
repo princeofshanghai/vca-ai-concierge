@@ -103,6 +103,12 @@
   --design-color-border-hover: var(--figma-color-border-color-border-hover);
   --design-color-border-active: var(--figma-color-border-color-border-active);
   --design-color-border-subtle: var(--figma-color-border-color-border-subtle);
+  --design-color-border-subtle-hover: var(
+    --figma-color-border-color-border-subtle-hover
+  );
+  --design-color-border-subtle-active: var(
+    --figma-color-border-color-border-subtle-active
+  );
   --design-color-border-faint: var(--figma-color-border-color-border-faint);
   --design-color-border-faint-hover: var(
     --figma-color-border-color-border-faint-hover
@@ -384,13 +390,31 @@
   --design-layout-panel-collapsed-height: 908px;
   --design-layout-panel-expanded-height: 928px;
   --design-layout-panel-content-max: 600px;
-  --design-layout-schedule-collapsed-surface-width: 896px;
-  --design-layout-schedule-collapsed-chat-track: 3fr;
-  --design-layout-schedule-collapsed-side-track: 5fr;
-  --design-layout-schedule-expanded-surface-width: 1280px;
-  --design-layout-schedule-expanded-chat-track: 3fr;
-  --design-layout-schedule-expanded-side-track: 5fr;
+  --design-layout-side-panel-collapsed-surface-width: 896px;
+  --design-layout-side-panel-collapsed-chat-track: 3fr;
+  --design-layout-side-panel-collapsed-side-track: 5fr;
+  --design-layout-side-panel-expanded-surface-width: 1280px;
+  --design-layout-side-panel-expanded-chat-track: 3fr;
+  --design-layout-side-panel-expanded-side-track: 5fr;
   --design-layout-side-panel-padding-inline: var(--design-spacing-xxxl);
+  --design-layout-schedule-collapsed-surface-width: var(
+    --design-layout-side-panel-collapsed-surface-width
+  );
+  --design-layout-schedule-collapsed-chat-track: var(
+    --design-layout-side-panel-collapsed-chat-track
+  );
+  --design-layout-schedule-collapsed-side-track: var(
+    --design-layout-side-panel-collapsed-side-track
+  );
+  --design-layout-schedule-expanded-surface-width: var(
+    --design-layout-side-panel-expanded-surface-width
+  );
+  --design-layout-schedule-expanded-chat-track: var(
+    --design-layout-side-panel-expanded-chat-track
+  );
+  --design-layout-schedule-expanded-side-track: var(
+    --design-layout-side-panel-expanded-side-track
+  );
   --design-layout-schedule-panel-padding-inline: var(
     --design-layout-side-panel-padding-inline
   );
@@ -571,6 +595,8 @@
   --color-border-hover: var(--design-color-border-hover);
   --color-border-active: var(--design-color-border-active);
   --color-border-subtle: var(--design-color-border-subtle);
+  --color-border-subtle-hover: var(--design-color-border-subtle-hover);
+  --color-border-subtle-active: var(--design-color-border-subtle-active);
   --color-border-faint: var(--design-color-border-faint);
   --color-border-faint-hover: var(--design-color-border-faint-hover);
   --color-border-faint-active: var(--design-color-border-faint-active);
@@ -966,6 +992,8 @@ body {
 }
 
 .component-library-chrome {
+  --component-library-mobile-chat-width: 390px;
+  --component-library-mobile-chat-height: 640px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -1019,7 +1047,7 @@ body {
   will-change: stroke-dasharray, stroke-dashoffset;
 }
 
-.chat-schedule-layout {
+.chat-side-panel-layout {
   --design-layout-side-panel-padding-inline: var(--design-spacing-xxxl);
   --design-layout-schedule-panel-padding-inline: var(
     --design-layout-side-panel-padding-inline
@@ -1030,21 +1058,21 @@ body {
 }
 
 @media (min-width: 768px) {
-  .chat-schedule-layout {
+  .chat-side-panel-layout {
     grid-template-columns:
-      minmax(0, var(--design-layout-schedule-collapsed-chat-track))
-      minmax(0, var(--design-layout-schedule-collapsed-side-track));
+      minmax(0, var(--design-layout-side-panel-collapsed-chat-track))
+      minmax(0, var(--design-layout-side-panel-collapsed-side-track));
   }
 
-  .chat-schedule-layout[data-chat-variant="expanded"] {
+  .chat-side-panel-layout[data-chat-variant="expanded"] {
     --design-layout-side-panel-padding-inline: 48px;
     --design-layout-schedule-panel-padding-inline: var(
       --design-layout-side-panel-padding-inline
     );
 
     grid-template-columns:
-      minmax(0, var(--design-layout-schedule-expanded-chat-track))
-      minmax(0, var(--design-layout-schedule-expanded-side-track));
+      minmax(0, var(--design-layout-side-panel-expanded-chat-track))
+      minmax(0, var(--design-layout-side-panel-expanded-side-track));
   }
 }
 

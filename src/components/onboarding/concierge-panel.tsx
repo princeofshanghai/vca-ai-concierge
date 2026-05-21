@@ -21,6 +21,7 @@ import {
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatSidePanelLayout,
   ChatThinkingMessage,
   ChatThread,
   Prompt,
@@ -815,25 +816,18 @@ export function ConciergePanel({
 
       {lead ? (
         isSchedulePanelOpen ? (
-          <div
-            data-chat-variant={variant}
-            className="chat-schedule-layout min-h-0 flex-1"
-          >
-            <div className="hidden min-h-0 min-w-0 border-r border-border-faint md:flex">
-              <ChatBody
-                ref={chatBodyRef}
-                onScroll={handleChatBodyScroll}
-                className={
-                  variant === "collapsed"
-                    ? "chat-schedule-history [--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)]"
-                    : "chat-schedule-history"
-                }
-              >
-                {thread}
-              </ChatBody>
-            </div>
-            <SchedulePanel onBack={handleBackToChat} onBook={handleBookMeeting} />
-          </div>
+          <ChatSidePanelLayout
+            chatBodyRef={chatBodyRef}
+            history={thread}
+            onChatBodyScroll={handleChatBodyScroll}
+            sidePanel={
+              <SchedulePanel
+                onBack={handleBackToChat}
+                onBook={handleBookMeeting}
+              />
+            }
+            variant={variant}
+          />
         ) : (
           <>
             <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>

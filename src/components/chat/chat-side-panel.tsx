@@ -4,13 +4,27 @@ import {
   useEffect,
   useRef,
   useState,
+  type Ref,
   type ReactNode,
   type UIEvent,
+  type UIEventHandler,
 } from "react";
 
 import { Icon } from "@/components/primitives/icon";
 
+import { ChatBody, type ChatPanelVariant } from "./chat-ui";
+
 export type ChatSidePanelInitialScrollPosition = "top" | "footer";
+
+export type ChatSidePanelLayoutProps = Readonly<{
+  chatBodyRef?: Ref<HTMLDivElement>;
+  chatBodyClassName?: string;
+  history: ReactNode;
+  onChatBodyScroll?: UIEventHandler<HTMLDivElement>;
+  sidePanel: ReactNode;
+  variant?: ChatPanelVariant;
+  className?: string;
+}>;
 
 export type ChatSidePanelProps = Readonly<{
   children: ReactNode;
@@ -25,6 +39,39 @@ export type ChatSidePanelProps = Readonly<{
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
+}
+
+export function ChatSidePanelLayout({
+  chatBodyRef,
+  chatBodyClassName,
+  className,
+  history,
+  onChatBodyScroll,
+  sidePanel,
+  variant = "collapsed",
+}: ChatSidePanelLayoutProps) {
+  return (
+    <div
+      data-chat-variant={variant}
+      className={cx("chat-side-panel-layout min-h-0 flex-1", className)}
+    >
+      <div className="hidden min-h-0 min-w-0 border-r border-border-faint md:flex">
+        <ChatBody
+          ref={chatBodyRef}
+          onScroll={onChatBodyScroll}
+          className={cx(
+            "chat-side-panel-history",
+            variant === "collapsed" &&
+              "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)]",
+            chatBodyClassName,
+          )}
+        >
+          {history}
+        </ChatBody>
+      </div>
+      {sidePanel}
+    </div>
+  );
 }
 
 export function ChatSidePanel({

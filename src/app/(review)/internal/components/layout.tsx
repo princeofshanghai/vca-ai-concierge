@@ -12,7 +12,7 @@ export default function InternalComponentsLayout({
       <div className="grid w-full gap-xxxl pt-8 pb-[4.75rem] lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-0 lg:pt-14">
         <ComponentSidebar />
         <div className="min-w-0 px-6 sm:px-10 lg:col-start-2 lg:px-16 xl:px-24">
-          <div className="mx-auto max-w-[48rem]">{children}</div>
+          <div className="mx-auto max-w-[88rem]">{children}</div>
         </div>
       </div>
     </main>

@@ -12,8 +12,12 @@ import {
 
 export function PremiumProductRecommendationCard({
   planId = "business-suite",
+  showAvatar = true,
+  showPrice = true,
 }: Readonly<{
   planId?: PremiumPlanId;
+  showAvatar?: boolean;
+  showPrice?: boolean;
 }>) {
   const plan =
     premiumPlans.find((premiumPlan) => premiumPlan.id === planId) ??
@@ -23,9 +27,14 @@ export function PremiumProductRecommendationCard({
     <article className="chat-recommendation-enter flex w-full flex-col rounded-md border border-premium-brand bg-background py-xl pl-xl pr-md">
       <div className="flex flex-col gap-xxl">
         <div className="flex flex-col gap-lg">
-          <div aria-hidden="true" className="flex size-12 items-center justify-center">
-            <Entity size={48} label={plan.name} />
-          </div>
+          {showAvatar ? (
+            <div
+              aria-hidden="true"
+              className="flex size-12 items-center justify-center"
+            >
+              <Entity size={48} label={plan.name} />
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-xs">
             <h2 className="text-heading-lg text-text">
@@ -56,10 +65,12 @@ export function PremiumProductRecommendationCard({
         </div>
 
         <div className="flex flex-col gap-sm">
-          <p className="flex items-baseline gap-xs text-control-sm text-checked">
-            <span className="line-through">$76.98</span>
-            <span>* 1-month free trial</span>
-          </p>
+          {showPrice ? (
+            <p className="flex items-baseline gap-xs text-control-sm text-checked">
+              <span className="line-through">$76.98</span>
+              <span>* 1-month free trial</span>
+            </p>
+          ) : null}
           <div className="flex flex-wrap items-center gap-sm">
             <Link
               href="/premium/checkout"

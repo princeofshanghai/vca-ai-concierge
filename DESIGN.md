@@ -54,6 +54,8 @@ colors:
   border-hover: "rgba(0, 0, 0, 0.9)"
   border-active: "rgba(0, 0, 0, 0.9)"
   border-subtle: "rgba(0, 0, 0, 0.3)"
+  border-subtle-hover: "rgba(0, 0, 0, 0.45)"
+  border-subtle-active: "rgba(0, 0, 0, 0.45)"
   border-faint: "rgba(140, 140, 140, 0.2)"
   border-faint-hover: "rgba(140, 140, 140, 0.3)"
   border-faint-active: "rgba(140, 140, 140, 0.4)"
@@ -213,12 +215,18 @@ layout:
   panel-collapsed-height: 908px
   panel-expanded-height: 928px
   panel-content-max: 600px
-  schedule-collapsed-surface-width: 896px
-  schedule-collapsed-chat-track: 3fr
-  schedule-collapsed-side-track: 5fr
-  schedule-expanded-surface-width: 1280px
-  schedule-expanded-chat-track: 3fr
-  schedule-expanded-side-track: 5fr
+  side-panel-collapsed-surface-width: 896px
+  side-panel-collapsed-chat-track: 3fr
+  side-panel-collapsed-side-track: 5fr
+  side-panel-expanded-surface-width: 1280px
+  side-panel-expanded-chat-track: 3fr
+  side-panel-expanded-side-track: 5fr
+  schedule-collapsed-surface-width: "{layout.side-panel-collapsed-surface-width}"
+  schedule-collapsed-chat-track: "{layout.side-panel-collapsed-chat-track}"
+  schedule-collapsed-side-track: "{layout.side-panel-collapsed-side-track}"
+  schedule-expanded-surface-width: "{layout.side-panel-expanded-surface-width}"
+  schedule-expanded-chat-track: "{layout.side-panel-expanded-chat-track}"
+  schedule-expanded-side-track: "{layout.side-panel-expanded-side-track}"
   chat-message-assistant-collapsed-max: "100%"
   chat-message-assistant-expanded-max: 600px
   confirmation-dialog-width: 336px
@@ -681,11 +689,11 @@ components:
     shellPadding: "8px 24px 24px"
     padding: "4px 12px"
     multilinePadding: "8px 12px"
-    borderColor: "{colors.border-faint}"
-    hoverBorderColor: "{colors.border-faint-hover}"
-    hoverBorderWidth: 2px
-    activeBorderColor: "{colors.border-faint-active}"
-    focusBorderColor: "{colors.border-faint-active}"
+    borderColor: "{colors.border-subtle}"
+    hoverBorderColor: "{colors.border-subtle-hover}"
+    hoverBorderWidth: 1px
+    activeBorderColor: "{colors.border-subtle-active}"
+    focusBorderColor: "{colors.border-subtle-active}"
     focusRingWidth: 0px
     actionGap: "{spacing.sm}"
     actionSize: 32px
@@ -698,6 +706,8 @@ This design system describes the UI that is implemented now and the responsive b
 It should feel like quiet enterprise software with conversational edges. The interface is light, restrained, and LinkedIn-adjacent through blue, neutral text, crisp borders, compact typography, and practical spacing. It should not introduce future product surfaces, marketing treatments, premium states, booking flows, or unbuilt voice experiences until those components exist.
 
 The token frontmatter is the normative design contract. The Markdown body explains the intent behind those values so future implementation work can stay consistent without inventing new styling.
+
+For any component library page work, read [docs/component-library-design.md](docs/component-library-design.md) first. Component library presentation rules belong there, and review-page styling should not bleed into the actual product components unless the component itself is intentionally being changed.
 
 ## Figma Implementation Guidance
 Figma is the source of truth for global color, typography, spacing, radius, and elevation token values. The project keeps source-token layers in `src/styles/figma-colors.css`, `src/styles/figma-typography.css`, `src/styles/figma-dimensions.css`, and `src/styles/figma-elevation.css`, with app-friendly aliases in `src/styles/globals.css`; app aliases should map back to Figma variables or styles whenever a matching source token exists.
@@ -879,7 +889,7 @@ The visible label may be shorter than the prompt that is sent, but the component
 ### Composer
 The composer is a rounded text area with an Add action on the left and microphone plus send/voice controls on the right. The Add action is discoverable but out of scope: keep it focusable and show tooltip copy explaining that attaching files is not in scope yet.
 
-The default composer border uses the faint border token. Hover, focused, typing, and multiline states darken to the faint hover/active border tokens, not the stronger text-input border. The placeholder uses `text-disabled`.
+The default composer border uses the subtle border token. Hover states use `border-subtle-hover`, while focused, typing, and multiline states use `border-subtle-active`. Do not add inset hover shadows that visually thicken the stroke. The placeholder uses `text-disabled`.
 
 When the message no longer fits beside the actions, the actions move to a second row with Add on the left and microphone plus send on the right. While the assistant is thinking or streaming, the entire composer surface switches to a clickable stop-answering control. The stop mark uses `text-primary` for the square and animated indeterminate ring, while the label stays quieter in `text-meta`. If stopping happens before any text streams, replace the thinking row with neutral inline feedback that says `Response stopped.` If partial text has streamed, keep the partial response, mark it complete, and attach the same neutral inline feedback beneath it. Stopped responses should not append response follow-ups such as prompts, cards, or rating controls.
 

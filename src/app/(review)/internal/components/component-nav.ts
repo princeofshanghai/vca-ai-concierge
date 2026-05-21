@@ -27,69 +27,49 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "shared-shell",
             title: "Shell",
             description:
-              "Panel and tray containers that define how the assistant opens, minimizes, and expands.",
+              "The overall UI container for the VCA AI Concierge experience.",
             href: "/internal/components/shared/shell",
           },
           {
             id: "shared-header",
             title: "Header",
-            description:
-              "Top chrome for the chat panel, including AI identity and shell controls.",
+            description: "Displays the concierge identity and key controls.",
             href: "/internal/components/shared/header",
           },
           {
             id: "shared-messages",
             title: "Messages",
             description:
-              "Assistant, visitor, and representative turns, including feedback and rich states.",
+              "Displays chat messages for members, visitors, the AI agent, and live agents.",
             href: "/internal/components/shared/messages",
           },
           {
             id: "shared-composer",
             title: "Composer",
             description:
-              "Message input and send controls, including long drafts and responding states.",
+              "Lets members or visitors type and send a message to the concierge.",
             href: "/internal/components/shared/composer",
           },
           {
             id: "shared-prompts",
             title: "Prompts",
             description:
-              "Suggested user intents that help people start or steer the conversation.",
+              "Shows suggested questions members or visitors can choose from.",
             href: "/internal/components/shared/prompts",
           },
           {
-            id: "shared-recommendation-card",
-            title: "Recommendation card",
+            id: "shared-action-card",
+            title: "Action card",
             description:
-              "Compact in-chat decision card for suggested products or next-best actions.",
-            href: "/internal/components/shared/recommendation-card",
-          },
-        ],
-      },
-      {
-        title: "Hiring",
-        items: [
-          {
-            id: "hiring-specialist-recommendation",
-            title: "Specialist recommendation",
-            description:
-              "In-chat appointment recommendation flow from matching through confirmed details.",
-            href: "/internal/components/hiring/specialist-recommendation",
+              "Displays a recommended action inside the conversation.",
+            href: "/internal/components/shared/action-card",
           },
           {
-            id: "hiring-live-handoff",
-            title: "Live handoff",
+            id: "shared-side-panel",
+            title: "Side panel",
             description:
-              "Card states for connecting a visitor to a live human representative.",
-            href: "/internal/components/hiring/live-handoff",
-          },
-          {
-            id: "hiring-booking-side-panel",
-            title: "Booking side panel",
-            description:
-              "Scheduling surface used alongside chat when a visitor is ready to book.",
-            href: "/internal/components/hiring/booking-side-panel",
+              "Supports a focused task alongside the conversation.",
+            href: "/internal/components/shared/side-panel",
           },
         ],
       },
@@ -100,21 +80,20 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "premium-survey-entry",
             title: "Floating Action Button",
             description:
-              "Premium floating entry point that opens the concierge experience.",
+              "Opens the Premium concierge from the Premium experience.",
             href: "/internal/components/premium/survey-entry",
           },
           {
             id: "premium-product-recommendation-card",
             title: "Plan card",
-            description:
-              "Premium plan card with trial CTA and included features.",
+            description: "Displays premium plan recommendations.",
             href: "/internal/components/premium/product-recommendation-card",
           },
           {
             id: "premium-concierge-panel",
             title: "Concierge panel",
             description:
-              "High-signal transcript showing rationale, plan card, and escape-hatch prompts.",
+              "Shows the full Premium concierge conversation experience.",
             href: "/internal/components/premium/concierge-panel",
           },
         ],
@@ -131,70 +110,66 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "sdui-button",
             title: "Button",
             description:
-              "Core action controls used across the review surfaces.",
+              "Supports primary and secondary actions across the experience.",
             href: "/internal/components/sdui/button",
           },
           {
             id: "sdui-button-icon",
             title: "Button icon",
             description:
-              "Icon-only action controls for compact toolbars and chat header commands.",
+              "Supports compact actions using only an icon.",
             href: "/internal/components/sdui/button-icon",
           },
           {
             id: "sdui-ghost-icon-button",
             title: "Ghost icon button",
             description:
-              "Low-emphasis icon actions for chrome, dismissal, and secondary controls.",
+              "Supports quieter actions like closing, minimizing, or expanding.",
             href: "/internal/components/sdui/ghost-icon-button",
           },
           {
             id: "sdui-pill",
             title: "Pill",
-            description:
-              "Choice chips for lightweight selection patterns.",
+            description: "Lets members or visitors make a lightweight choice.",
             href: "/internal/components/sdui/pill",
           },
           {
             id: "sdui-icon",
             title: "Icon",
             description:
-              "Small symbolic marks for actions, statuses, and AI affordances.",
+              "Provides visual cues for actions, statuses, and AI moments.",
             href: "/internal/components/sdui/icon",
           },
           {
             id: "sdui-entity",
             title: "Entity",
             description:
-              "Avatar and placeholder shapes for people, companies, and named entities.",
+              "Represents a member, visitor, company, or live agent.",
             href: "/internal/components/sdui/entity",
           },
           {
             id: "sdui-text-input",
             title: "Text input",
-            description:
-              "Single-line supporting form input.",
+            description: "Captures a short text response.",
             href: "/internal/components/sdui/text-input",
           },
           {
             id: "sdui-text-area",
             title: "Text area",
-            description:
-              "Multi-line supporting form input.",
+            description: "Captures a longer written response.",
             href: "/internal/components/sdui/text-area",
           },
           {
             id: "sdui-tag",
             title: "Tag",
-            description:
-              "Short metadata labels for status, category, and contextual emphasis.",
+            description: "Labels important status or context.",
             href: "/internal/components/sdui/tag",
           },
           {
             id: "sdui-badge",
             title: "Badge",
             description:
-              "Overlay indicators for new activity, alerts, and notification counts.",
+              "Signals new activity, alerts, or updates.",
             href: "/internal/components/sdui/badge",
           },
         ],

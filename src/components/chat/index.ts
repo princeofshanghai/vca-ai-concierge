@@ -38,6 +38,8 @@ export {
 } from "./chat-motion";
 export {
   ChatSidePanel,
+  ChatSidePanelLayout,
   type ChatSidePanelInitialScrollPosition,
+  type ChatSidePanelLayoutProps,
   type ChatSidePanelProps,
 } from "./chat-side-panel";

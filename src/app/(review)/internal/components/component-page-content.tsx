@@ -11,6 +11,7 @@ import {
   ChatMessageFeedbackFlow,
   ChatPanelPreview,
   ChatThinkingMessage,
+  ChatThread,
   ChatTray,
   Prompt,
   RecommendationCard,
@@ -44,7 +45,27 @@ import {
 } from "@/lib/concierge-copy";
 
 import {
+  PremiumConciergePanelDemo,
+  PremiumFabDemo,
   PremiumFabReviewPreview,
+  PremiumPlanCardDemo,
+  SduiBadgeDemo,
+  SduiButtonDemo,
+  SduiButtonIconDemo,
+  SduiEntityDemo,
+  SduiGhostIconButtonDemo,
+  SduiIconDemo,
+  SduiPillDemo,
+  SduiTagDemo,
+  SduiTextAreaDemo,
+  SduiTextInputDemo,
+  SharedActionCardDemo,
+  SharedComposerDemo,
+  SharedHeaderDemo,
+  SharedMessagesDemo,
+  SharedPromptsDemo,
+  SharedShellDemo,
+  SharedSidePanelDemo,
 } from "./component-client-previews";
 import type { ComponentNavItem } from "./component-nav";
 
@@ -173,8 +194,8 @@ function PageHeader({
   description: string;
 }>) {
   return (
-    <header className="space-y-sm border-b border-border-faint pb-xxxl">
-      <h1 className="text-[32px] font-semibold leading-10 text-text">
+    <header className="max-w-[48rem] space-y-sm border-b border-border-faint pb-xxxl">
+      <h1 className="text-[32px] font-medium leading-10 text-text">
         {title}
       </h1>
       <p className="max-w-3xl text-[16px] leading-6 text-text-meta">
@@ -194,9 +215,9 @@ function PreviewSection({
   children: ReactNode;
 }>) {
   return (
-    <section className="space-y-lg border-t border-border-faint pt-xxxl first:border-t-0 first:pt-0">
-      <div className="space-y-xs">
-        <h2 className="text-[24px] font-semibold leading-[30px] text-text">
+    <section className="space-y-12 border-t border-border-faint pt-xxxl first:border-t-0 first:pt-0">
+      <div className="max-w-[48rem] space-y-sm">
+        <h2 className="text-[24px] font-medium leading-[30px] text-text">
           {title}
         </h2>
         {description ? (
@@ -205,7 +226,9 @@ function PreviewSection({
           </p>
         ) : null}
       </div>
-      <div className="component-library-preview">{children}</div>
+      <div className="component-library-preview overflow-x-auto pb-1">
+        {children}
+      </div>
     </section>
   );
 }
@@ -223,9 +246,7 @@ function PreviewCard({
 }>) {
   return (
     <section className={wide ? "space-y-sm lg:col-span-2" : "space-y-sm"}>
-      <h3 className="text-[18px] font-semibold leading-6 text-text">
-        {title}
-      </h3>
+      <PreviewExampleHeading>{title}</PreviewExampleHeading>
       {description ? (
         <p className="text-body-xs text-text-meta">{description}</p>
       ) : null}
@@ -234,7 +255,32 @@ function PreviewCard({
   );
 }
 
-function Frame({
+// Use this for titled examples inside a preview so labels stay semantic headings.
+function PreviewExampleHeading({
+  children,
+  className: extraClassName,
+  level = "h3",
+}: Readonly<{
+  children: ReactNode;
+  className?: string;
+  level?: "h3" | "h4";
+}>) {
+  const Heading = level;
+  const headingClassName =
+    level === "h3"
+      ? "mb-md text-[18px] font-medium leading-6 text-text"
+      : "text-body-xs font-medium leading-[1.25] text-text-meta";
+
+  return (
+    <Heading
+      className={[headingClassName, extraClassName].filter(Boolean).join(" ")}
+    >
+      {children}
+    </Heading>
+  );
+}
+
+function PreviewMomentStack({
   children,
   className,
 }: Readonly<{
@@ -242,13 +288,108 @@ function Frame({
   className?: string;
 }>) {
   return (
+    <div className={["space-y-16", className].filter(Boolean).join(" ")}>
+      {children}
+    </div>
+  );
+}
+
+function PreviewMoment({
+  children,
+  className,
+}: Readonly<{
+  children: ReactNode;
+  className?: string;
+}>) {
+  return (
+    <section className={["space-y-lg", className].filter(Boolean).join(" ")}>
+      {children}
+    </section>
+  );
+}
+
+type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
+
+function getChatContextWidthClass(context: ComponentLibraryContext) {
+  return context === "mobile"
+    ? "w-[var(--component-library-mobile-chat-width)]"
+    : context === "expanded"
+    ? "w-[var(--design-layout-panel-expanded-width)]"
+    : "w-[var(--design-layout-panel-collapsed-width)]";
+}
+
+function getSidePanelContextWidthClass(context: ComponentLibraryContext) {
+  return context === "mobile"
+    ? "w-[var(--component-library-mobile-chat-width)]"
+    : context === "expanded"
+    ? "w-[var(--design-layout-side-panel-expanded-surface-width)]"
+    : "w-[var(--design-layout-side-panel-collapsed-surface-width)]";
+}
+
+function getChatContextAssistantMaxClass(context: ComponentLibraryContext) {
+  return context === "expanded"
+    ? "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)]"
+    : "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-collapsed-max)]";
+}
+
+function ChatPanelReferenceFrame({
+  context = "collapsed",
+  children,
+  className,
+}: Readonly<{
+  context?: ComponentLibraryContext;
+  children: ReactNode;
+  className?: string;
+}>) {
+  return (
     <div
       className={[
-        "rounded-lg border border-border-faint bg-background p-panel-padding",
+        "overflow-hidden border border-border-faint bg-background",
+        context === "mobile" ? "rounded-none" : "rounded-panel",
+        getChatContextWidthClass(context),
+        getChatContextAssistantMaxClass(context),
         className,
       ]
         .filter(Boolean)
         .join(" ")}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ChatThreadReferenceFrame({
+  context = "collapsed",
+  children,
+}: Readonly<{
+  context?: ComponentLibraryContext;
+  children: ReactNode;
+}>) {
+  return (
+    <ChatPanelReferenceFrame context={context}>
+      <div className="flex justify-center py-xl">
+        <ChatThread showAiDisclaimer={false}>{children}</ChatThread>
+      </div>
+    </ChatPanelReferenceFrame>
+  );
+}
+
+function SidePanelReferenceFrame({
+  context = "collapsed",
+  children,
+}: Readonly<{
+  context?: ComponentLibraryContext;
+  children: ReactNode;
+}>) {
+  return (
+    <div
+      className={[
+        "max-h-[calc(100dvh-8rem)] overflow-hidden border border-border-faint bg-background-neutral-soft",
+        context === "mobile"
+          ? "h-[var(--component-library-mobile-chat-height)] rounded-none"
+          : "h-[48rem] rounded-lg",
+        getSidePanelContextWidthClass(context),
+      ].join(" ")}
     >
       {children}
     </div>
@@ -406,15 +547,18 @@ function renderPillState(
 function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedHeaderDemo />
+      </PreviewSection>
       <PreviewSection title="Header variants">
-        <div className="space-y-sm">
-          <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
+        <div className="space-y-md">
+          <ChatPanelReferenceFrame>
             <ChatHeader title={HIRING_CONCIERGE_TITLE} />
-          </div>
-          <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
+          </ChatPanelReferenceFrame>
+          <ChatPanelReferenceFrame>
             <ChatHeader title={PREMIUM_CONCIERGE_TITLE} />
-          </div>
-          <div className="overflow-hidden rounded-t-md border border-border-faint bg-background">
+          </ChatPanelReferenceFrame>
+          <ChatPanelReferenceFrame>
             <ChatHeader
               identity={{
                 type: "representative",
@@ -422,7 +566,7 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                 role: "Sales consultant",
               }}
             />
-          </div>
+          </ChatPanelReferenceFrame>
         </div>
       </PreviewSection>
     </ComponentPageShell>
@@ -432,25 +576,32 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedMessagesDemo />
+      </PreviewSection>
       <PreviewSection title="Message states">
-        <Frame>
-          <div className="space-y-xl">
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">AI assistant</p>
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>AI assistant</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
               <div className="flex justify-start">
                 <ChatMessageFeedback timestamp="1:00 PM" />
               </div>
-            </section>
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">Interactive AI feedback</p>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Interactive AI feedback</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <ChatMessage>
                 I would compare the lighter hiring path against Recruiter before routing you to sales.
               </ChatMessage>
               <ChatMessageFeedbackFlow timestamp="1:01 PM" />
-            </section>
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">Feedback result states</p>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Feedback result states</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <div className="space-y-xs">
                 <ChatMessage>A sales consultant can narrow the setup fast.</ChatMessage>
                 <div className="flex justify-start">
@@ -460,46 +611,54 @@ function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                   <ChatFeedbackReasonChips value="confusing" />
                 </div>
               </div>
-            </section>
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">User</p>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Member or visitor</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <ChatMessage role="user" timestamp="1:04 PM">
                 We need to ramp hiring fast this quarter.
               </ChatMessage>
-            </section>
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">Human representative</p>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Live agent</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <ChatMessage
                 role="representative"
                 authorName="David S."
-                avatarLabel="David S., Human representative"
+                avatarLabel="David S., Live agent"
                 timestamp="9:37 PM"
               >
                 Hey Jamie, how can I help you?
               </ChatMessage>
-            </section>
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">Thinking and stopped</p>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Thinking and stopped</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <ChatThinkingMessage />
               <div className="flex justify-start">
                 <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
               </div>
-            </section>
-            <section className="space-y-sm">
-              <p className="text-body-xs text-text-meta">Rich content</p>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Rich content</PreviewExampleHeading>
+            <ChatThreadReferenceFrame>
               <ChatMessage>
                 <div className="space-y-sm">
                   <p>Here are the fastest next steps:</p>
                   <ul className="list-disc space-y-xs pl-lg">
                     <li>Confirm hiring volume and timeline.</li>
                     <li>Choose whether the team needs sourcing tools.</li>
-                    <li>Route complex questions to a representative.</li>
+                    <li>Route complex questions to a live agent.</li>
                   </ul>
                 </div>
               </ChatMessage>
-            </section>
-          </div>
-        </Frame>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -508,21 +667,36 @@ function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedComposerDemo />
+      </PreviewSection>
       <PreviewSection title="Composer states">
-        <Frame>
-          <div className="space-y-md">
-            <ChatComposer className="px-0 pb-0" />
-            <ChatComposer
-              className="px-0 pb-0"
-              inputProps={{
-                "aria-label": "Long message draft",
-                defaultValue:
-                  "We have several hiring teams moving at different speeds, and I need a path that works for a small pilot now but can still scale.",
-              }}
-            />
-            <ChatComposer className="px-0 pb-0" isResponding />
-          </div>
-        </Frame>
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Empty</PreviewExampleHeading>
+            <ChatPanelReferenceFrame>
+              <ChatComposer />
+            </ChatPanelReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Draft</PreviewExampleHeading>
+            <ChatPanelReferenceFrame>
+              <ChatComposer
+                inputProps={{
+                  "aria-label": "Long message draft",
+                  defaultValue:
+                    "We have several hiring teams moving at different speeds, and I need a path that works for a small pilot now but can still scale.",
+                }}
+              />
+            </ChatPanelReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Responding</PreviewExampleHeading>
+            <ChatPanelReferenceFrame>
+              <ChatComposer isResponding />
+            </ChatPanelReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -531,15 +705,18 @@ function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SharedPromptsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedPromptsDemo />
+      </PreviewSection>
       <PreviewSection title="Prompt examples">
-        <Frame>
+        <ChatThreadReferenceFrame>
           <div className="flex flex-wrap gap-sm">
             <Prompt prompt="We need to ramp hiring fast this quarter." />
             <Prompt prompt="Help me compare Recruiter and Hiring Pro.">
               Compare products
             </Prompt>
           </div>
-        </Frame>
+        </ChatThreadReferenceFrame>
       </PreviewSection>
       <PreviewSection title="Interaction states">
         <div className="flex flex-wrap items-start gap-lg">
@@ -555,13 +732,50 @@ function SharedPromptsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
-function SharedRecommendationPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
-      <PreviewSection title="Recommendation card">
-        <Frame className="max-w-[28rem]">
+      <PreviewSection title="Demo">
+        <SharedActionCardDemo />
+      </PreviewSection>
+      <PreviewSection title="Shared pattern">
+        <ChatThreadReferenceFrame>
           <RecommendationCard />
-        </Frame>
+        </ChatThreadReferenceFrame>
+      </PreviewSection>
+
+      <PreviewSection title="Hiring examples">
+        <PreviewMomentStack>
+          {highValueMatchCardStates.map(({ label, state, bookedMeeting }) => (
+            <PreviewMoment key={`${state}-${label}`}>
+              <PreviewExampleHeading>
+                Specialist recommendation · {label}
+              </PreviewExampleHeading>
+              <ChatThreadReferenceFrame>
+                <HighValueMatchCardPreview
+                  state={state}
+                  bookedMeeting={bookedMeeting}
+                />
+              </ChatThreadReferenceFrame>
+            </PreviewMoment>
+          ))}
+          {mediumAvailableHandoffStates.map(({ label, state }) => (
+            <PreviewMoment key={state}>
+              <PreviewExampleHeading>
+                Live handoff · {label}
+              </PreviewExampleHeading>
+              <ChatThreadReferenceFrame>
+                <MediumAvailableHandoffPreview state={state} />
+              </ChatThreadReferenceFrame>
+            </PreviewMoment>
+          ))}
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection title="Premium examples">
+        <ChatThreadReferenceFrame>
+          <PremiumProductRecommendationCard />
+        </ChatThreadReferenceFrame>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -570,22 +784,27 @@ function SharedRecommendationPage({ item }: Readonly<{ item: ComponentNavItem }>
 function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedShellDemo />
+      </PreviewSection>
       <PreviewSection title="Panel and tray versions">
-        <div className="space-y-xl">
-          <div className="space-y-sm">
-            <p className="text-body-xs text-text-meta">Default shell</p>
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Default shell</PreviewExampleHeading>
             <div className="overflow-x-auto px-xl pb-xxxl pt-md">
               <ChatPanelPreview variant="collapsed" />
             </div>
-          </div>
-          <div className="space-y-sm">
-            <p className="text-body-xs text-text-meta">Tray shell</p>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Tray shell</PreviewExampleHeading>
             <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
               <ChatTray />
             </div>
-          </div>
-          <div className="space-y-sm">
-            <p className="text-body-xs text-text-meta">Tray shell with representative badge</p>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>
+              Tray shell with live agent badge
+            </PreviewExampleHeading>
             <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
               <ChatTray
                 badge
@@ -596,67 +815,38 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                 }}
               />
             </div>
-          </div>
-          <div className="space-y-sm">
-            <p className="text-body-xs text-text-meta">Wide shell</p>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Wide shell</PreviewExampleHeading>
             <div className="overflow-x-auto px-xl pb-xxxl pt-md">
               <ChatPanelPreview variant="expanded" />
             </div>
-          </div>
-        </div>
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
 }
 
-function HiringSpecialistPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function SharedSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
-    <ComponentPageShell item={item} section="Hiring">
-      <PreviewSection title="Card states">
-        <div className="grid gap-xl md:grid-cols-2">
-          {highValueMatchCardStates.map(({ label, state, bookedMeeting }) => (
-            <div key={`${state}-${label}`} className="space-y-sm">
-              <p className="text-body-xs text-text-meta">{label}</p>
-              <HighValueMatchCardPreview state={state} bookedMeeting={bookedMeeting} />
-            </div>
-          ))}
-        </div>
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedSidePanelDemo />
       </PreviewSection>
-    </ComponentPageShell>
-  );
-}
-
-function HiringLiveHandoffPage({ item }: Readonly<{ item: ComponentNavItem }>) {
-  return (
-    <ComponentPageShell item={item} section="Hiring">
-      <PreviewSection title="Live handoff states">
-        <div className="grid gap-xl md:grid-cols-2 xl:grid-cols-3">
-          {mediumAvailableHandoffStates.map(({ label, state }) => (
-            <div key={state} className="space-y-sm">
-              <p className="text-body-xs text-text-meta">{label}</p>
-              <MediumAvailableHandoffPreview state={state} />
-            </div>
-          ))}
-        </div>
-      </PreviewSection>
-    </ComponentPageShell>
-  );
-}
-
-function HiringBookingSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
-  return (
-    <ComponentPageShell item={item} section="Hiring">
-      <PreviewSection title="Booking panel states">
-        <div className="space-y-xl">
+      <PreviewSection title="Hiring examples">
+        <PreviewMomentStack>
           {highValueBookingPanelStates.map(({ label, state }) => (
-            <div key={state} className="space-y-sm">
-              <p className="text-body-xs text-text-meta">{label}</p>
-              <div className="h-[48rem] max-h-[calc(100dvh-8rem)] max-w-[54rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+            <PreviewMoment key={state}>
+              <PreviewExampleHeading>
+                Booking side panel · {label}
+              </PreviewExampleHeading>
+              <SidePanelReferenceFrame>
                 <HighValueSchedulePanelPreview state={state} />
-              </div>
-            </div>
+              </SidePanelReferenceFrame>
+            </PreviewMoment>
           ))}
-        </div>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -665,6 +855,9 @@ function HiringBookingSidePanelPage({ item }: Readonly<{ item: ComponentNavItem 
 function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium">
+      <PreviewSection title="Demo">
+        <PremiumFabDemo />
+      </PreviewSection>
       <PreviewSection title="Floating action button">
         <PreviewCard title="Default">
           <PremiumFabReviewPreview />
@@ -677,10 +870,13 @@ function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) 
 function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium">
+      <PreviewSection title="Demo">
+        <PremiumPlanCardDemo />
+      </PreviewSection>
       <PreviewSection title="Plan recommendation">
-        <Frame className="max-w-[28rem]">
+        <ChatThreadReferenceFrame>
           <PremiumProductRecommendationCard />
-        </Frame>
+        </ChatThreadReferenceFrame>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -689,8 +885,11 @@ function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) 
 function PremiumConciergePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium">
+      <PreviewSection title="Demo">
+        <PremiumConciergePanelDemo />
+      </PreviewSection>
       <PreviewSection title="High-signal transcript">
-        <div className="h-[48rem] max-h-[calc(100dvh-8rem)] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft p-md">
+        <div className="h-[48rem] max-h-[calc(100dvh-8rem)] w-[var(--design-layout-panel-collapsed-width)] overflow-hidden rounded-lg bg-background-neutral-soft">
           <PremiumConciergePanel
             className="md:!h-full"
             flow={premiumConversationFlows.high}
@@ -705,16 +904,19 @@ function PremiumConciergePanelPage({ item }: Readonly<{ item: ComponentNavItem }
 function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiButtonDemo />
+      </PreviewSection>
       <PreviewSection title="Button states">
         <div className="space-y-8">
           {buttonSizes.map(({ label, size }) => (
             <section key={size} className="space-y-6">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               {buttonRows.map(({ label: rowLabel, variant }) => (
                 <div key={`${size}-${variant}`} className="space-y-sm">
-                  <p className="text-body-xs text-text-meta">{rowLabel}</p>
+                  <PreviewExampleHeading level="h4">
+                    {rowLabel}
+                  </PreviewExampleHeading>
                   <div className="flex flex-wrap items-center gap-md">
                     {buttonStates.map((state) => (
                       <div key={`${size}-${variant}-${state}`} className="space-y-xs">
@@ -755,6 +957,9 @@ function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiPillDemo />
+      </PreviewSection>
       <PreviewSection title="Pill states">
         <div className="space-y-8">
           {[
@@ -762,9 +967,7 @@ function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             { label: "Checked", checked: true },
           ].map(({ label, checked }) => (
             <section key={label} className="space-y-4">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <div className="flex flex-wrap items-start gap-lg">
                 {pillStates.map((state) => (
                   <div key={`${label}-${state}`} className="space-y-sm">
@@ -784,6 +987,9 @@ function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiIconDemo />
+      </PreviewSection>
       <PreviewSection title="Common icons">
         <div className="flex flex-wrap items-center gap-md text-text-meta">
           {iconExamples.map((name) => (
@@ -813,6 +1019,9 @@ function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiEntityPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiEntityDemo />
+      </PreviewSection>
       <PreviewSection title="Entity sizes">
         <div className="space-y-8">
           {([
@@ -820,9 +1029,7 @@ function SduiEntityPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             { label: "Square", shape: "square" },
           ] as const).map(({ label, shape }) => (
             <section key={shape} className="space-y-4">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <div className="flex flex-wrap items-end gap-lg">
                 {entitySizes.map((size) => (
                   <div key={`${shape}-${size}`} className="flex min-w-16 flex-col items-center gap-sm">
@@ -846,16 +1053,19 @@ function SduiEntityPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiButtonIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiButtonIconDemo />
+      </PreviewSection>
       <PreviewSection title="Button icon states">
         <div className="space-y-8">
           {buttonSizes.map(({ label, size }) => (
             <section key={size} className="space-y-6">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               {buttonRows.map(({ label: rowLabel, variant }) => (
                 <div key={`${size}-${variant}`} className="space-y-sm">
-                  <p className="text-body-xs text-text-meta">{rowLabel}</p>
+                  <PreviewExampleHeading level="h4">
+                    {rowLabel}
+                  </PreviewExampleHeading>
                   <div className="flex flex-wrap items-center gap-md">
                     {buttonStates.map((state) => (
                       <div key={`${size}-${variant}-${state}`} className="space-y-xs">
@@ -877,19 +1087,24 @@ function SduiButtonIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiGhostIconButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiGhostIconButtonDemo />
+      </PreviewSection>
       <PreviewSection title="Ghost icon button states">
         <div className="grid gap-lg lg:grid-cols-2">
           {(["small", "medium"] as const).map((size) => (
             <section key={size} className="space-y-4">
-              <h3 className="text-[18px] font-semibold leading-6 text-text capitalize">
+              <PreviewExampleHeading className="capitalize">
                 {size}
-              </h3>
+              </PreviewExampleHeading>
               {[
                 { label: "Padded", horizontalPadding: true },
                 { label: "Compact", horizontalPadding: false },
               ].map(({ label, horizontalPadding }) => (
                 <div key={`${size}-${label}`} className="space-y-sm">
-                  <p className="text-body-xs text-text-meta">{label}</p>
+                  <PreviewExampleHeading level="h4">
+                    {label}
+                  </PreviewExampleHeading>
                   <div className="flex flex-wrap items-center gap-sm">
                     {ghostIconButtonStates.map((state) => (
                       <span key={`${size}-${label}-${state}`}>
@@ -927,13 +1142,14 @@ function SduiGhostIconButtonPage({ item }: Readonly<{ item: ComponentNavItem }>)
 function SduiTextInputPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiTextInputDemo />
+      </PreviewSection>
       <PreviewSection title="Text input variants">
         <div className="grid gap-xl lg:grid-cols-2">
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <TextInput className="max-w-80" counter helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextInput className="max-w-80" counter defaultValue="Input text value" helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextInput className="max-w-80" counter errorText="Error text" label="Label" placeholder="Hint text (Optional)" required size={size} />
@@ -946,9 +1162,7 @@ function SduiTextInputPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="grid gap-xl lg:grid-cols-2">
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               {textInputStates.map((state) => (
                 <TextInput
                   className="max-w-80"
@@ -973,13 +1187,14 @@ function SduiTextInputPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiTextAreaPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiTextAreaDemo />
+      </PreviewSection>
       <PreviewSection title="Text area variants">
         <div className="grid gap-xl lg:grid-cols-2">
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <TextArea className="max-w-80" counter helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextArea className="max-w-80" counter defaultValue="Input text value" helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
               <TextArea className="max-w-80" counter errorText="Error text" label="Label" placeholder="Hint text (Optional)" required size={size} />
@@ -995,13 +1210,14 @@ function SduiTextAreaPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiTagPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiTagDemo />
+      </PreviewSection>
       <PreviewSection title="Tag tones">
         <div className="space-y-8">
           {tagSizes.map(({ label, size }) => (
             <section key={size} className="space-y-4">
-              <h3 className="text-[18px] font-semibold leading-6 text-text">
-                {label}
-              </h3>
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
                 {tagTones.map(({ label: toneLabel, tone }) => (
                   <div key={`${size}-${tone}`} className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm">
@@ -1023,6 +1239,9 @@ function SduiTagPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiBadgeDemo />
+      </PreviewSection>
       <PreviewSection title="Badge examples">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
           {badgeExamples.map(({ label, tone, size, count }) => (
@@ -1071,14 +1290,10 @@ export function ComponentPageContent({
       return <SharedComposerPage item={item} />;
     case "shared-prompts":
       return <SharedPromptsPage item={item} />;
-    case "shared-recommendation-card":
-      return <SharedRecommendationPage item={item} />;
-    case "hiring-specialist-recommendation":
-      return <HiringSpecialistPage item={item} />;
-    case "hiring-live-handoff":
-      return <HiringLiveHandoffPage item={item} />;
-    case "hiring-booking-side-panel":
-      return <HiringBookingSidePanelPage item={item} />;
+    case "shared-action-card":
+      return <SharedActionCardPage item={item} />;
+    case "shared-side-panel":
+      return <SharedSidePanelPage item={item} />;
     case "premium-survey-entry":
       return <PremiumSurveyEntryPage item={item} />;
     case "premium-product-recommendation-card":

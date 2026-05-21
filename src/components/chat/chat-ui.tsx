@@ -1265,7 +1265,7 @@ export function ChatComposer({
       {isResponding ? (
         <button
           type="button"
-          className="grid h-[var(--design-layout-composer-height)] w-full max-w-[var(--design-layout-panel-content-max)] cursor-pointer grid-cols-1 items-center justify-items-end rounded-round border border-border-faint bg-background px-md py-xs text-left shadow-raised-faint outline-none transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover focus-visible:border-border-faint-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          className="grid h-[var(--design-layout-composer-height)] w-full max-w-[var(--design-layout-panel-content-max)] cursor-pointer grid-cols-1 items-center justify-items-end rounded-round border border-border-subtle bg-background px-md py-xs text-left shadow-raised-faint outline-none transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-subtle-hover focus-visible:border-border-subtle-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
           onClick={onStopResponse}
         >
           <span className="inline-flex h-[var(--design-layout-composer-stop-action-height)] items-center gap-xs rounded-round pl-sm pr-0 text-body-sm-open text-text-meta">
@@ -1277,7 +1277,7 @@ export function ChatComposer({
         <div
           ref={composerRef}
           className={cx(
-            "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-faint bg-background px-md shadow-raised-faint transition-[border-color,border-radius,box-shadow,padding] duration-150 ease-out after:pointer-events-none after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[inset_0_0_0_0_var(--color-border-faint-hover)] after:transition-shadow after:duration-150 after:ease-out hover:border-border-faint-hover hover:after:shadow-[inset_0_0_0_1px_var(--color-border-faint-hover)] focus-within:border-border-faint-active",
+            "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-subtle bg-background px-md shadow-raised-faint transition-[border-color,border-radius,box-shadow,padding] duration-150 ease-out hover:border-border-subtle-hover focus-within:border-border-subtle-active",
             isMultiline
               ? "grid-cols-1 gap-sm rounded-md py-sm"
               : "h-[var(--design-layout-composer-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",
