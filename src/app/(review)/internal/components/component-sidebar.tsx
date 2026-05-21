@@ -29,7 +29,7 @@ export function ComponentSidebar() {
     Object.fromEntries(
       componentNavGroups.map((section) => [
         section.title,
-        section.title === "VCA AI concierge" ||
+        section.title === "VCA components" ||
           sectionHasActivePage(section, pathname),
       ]),
     ),
@@ -81,7 +81,7 @@ export function ComponentSidebar() {
               >
                 {section.groups.map((group) => (
                   <div key={group.title} className="space-y-2">
-                    {section.title === "SDUI" ? null : (
+                    {section.title === "SDUI components" ? null : (
                       <h3 className="px-md text-[12px] font-medium leading-4 text-text-meta">
                         {group.title}
                       </h3>

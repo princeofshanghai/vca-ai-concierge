@@ -31,15 +31,15 @@ const HIRING_LIVE_NAV_ITEM = {
 const HIRING_SHELL_OPTIONS = [
   {
     id: "hiring-shell-default",
-    label: "Floating card",
+    label: "Tray (dismissable)",
   },
   {
     id: "hiring-shell-tray",
-    label: "Tray",
+    label: "Tray (persistent)",
   },
   {
     id: "hiring-shell-hybrid",
-    label: "Hybrid",
+    label: "Tray (hybrid)",
   },
 ] as const;
 const PREMIUM_SHELL_OPTIONS = [
@@ -228,15 +228,15 @@ function getReviewDestinations(
 }
 
 function withHiringShell(href: string, shellLabel: HiringShellLabel) {
-  if (shellLabel === "Floating card") {
-    return `${href}?shell=default`;
+  if (shellLabel === "Tray (dismissable)") {
+    return href;
   }
 
-  if (shellLabel === "Tray") {
+  if (shellLabel === "Tray (persistent)") {
     return `${href}?shell=tray`;
   }
 
-  return href;
+  return `${href}?shell=hybrid`;
 }
 
 function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
@@ -280,16 +280,15 @@ export function ReviewShellNav() {
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const activeHiringShellLabel: HiringShellLabel =
     searchParams.get("shell") === "tray"
-      ? "Tray"
-      : searchParams.get("shell") === "default" ||
-          searchParams.get("shell") === "floating"
-        ? "Floating card"
-        : "Hybrid";
+      ? "Tray (persistent)"
+      : searchParams.get("shell") === "hybrid"
+        ? "Tray (hybrid)"
+        : "Tray (dismissable)";
   const normalizedHiringHref =
-    activeHiringShellLabel === "Hybrid"
-      ? pathname
-      : activeHiringShellLabel === "Floating card"
-        ? `${pathname}?shell=default`
+    activeHiringShellLabel === "Tray (hybrid)"
+      ? `${pathname}?shell=hybrid`
+      : activeHiringShellLabel === "Tray (dismissable)"
+        ? pathname
         : currentHref;
   const activePremiumShellLabel: PremiumShellLabel =
     searchParams.get("shell") === "tray"
@@ -554,6 +553,7 @@ export function ReviewShellNav() {
                     modeOptions={modeOptions}
                     modeGroups={isPremiumMenu ? premiumModeGroups : undefined}
                     modeHeading="Choose flow"
+                    shellHeading="UI"
                     shellOptions={shellOptions}
                     showVisitorControls={!isPremiumMenu}
                   />

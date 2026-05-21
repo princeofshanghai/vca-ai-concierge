@@ -330,7 +330,7 @@ motion:
       visual: "Text-only Thinking label with colors.ai-border sweeping across the text; do not use animated dots."
       intent: "Use for temporary AI thinking states before a simulated assistant response begins."
     assistant-response-stream:
-      cadence: "Reveal assistant text in short word-sized chunks, with slightly longer pauses after punctuation."
+      cadence: "Reveal assistant text in short word-sized chunks, with each word fading in inline and slightly longer pauses after punctuation."
       intent: "Use for prototype-only simulated AI responses so the chat feels live without implying a real model call."
     panel-transition:
       duration: "{motion.durations.moderate}"
@@ -806,7 +806,7 @@ Motion should feel quiet, useful, and consultative. It should make the prototype
 - Keep routine control feedback fast. Hover, press, focus, border, and background changes should feel immediate.
 - Let messages enter with a short fade and slight upward movement so the thread feels alive without imitating a long typing performance.
 - Use a subtle text-only thinking state before AI responses when simulated latency helps the conversation feel live.
-- Stream simulated AI responses in short chunks, with the message surface fading in once and the text revealing progressively.
+- Stream simulated AI responses in short word-sized chunks, with the message surface fading in once and each word fading in inline as the text reflows naturally. Treat an assistant answer and its attached prompts, feedback, or next-step surfaces as one response block so follow-up UI appears as a continuation rather than a separate layout jump.
 - Give recommendation and next-step surfaces slightly more presence than routine messages because they mark a decision moment.
 - Use panel and route transitions to maintain context when the experience opens, expands, collapses, or moves between major states.
 - Avoid bounce, elastic overshoot, large scale pops, decorative sparkle loops, and long delays that slow a high-intent visitor down.
@@ -841,6 +841,9 @@ Entity sizes are 16, 24, 32, 40, 48, 64, 80, 96, 128, and 160px. Deprecated Figm
 ### Badge
 Badges are tiny overlay indicators for new activity, alerts, and capped notification counts. They are not inline labels; use `Tag` for inline status copy. Alert badges use the negative token, new badges use the action token, and counters cap at `99+`.
 
+### Presence Badge
+Presence badges are compact availability indicators for people or live agents. `Active` uses the checked green token as a filled dot; `On mobile` uses the same checked token as a ring over the background surface. Sizes are `small`, `medium`, and `large`; use the smallest size that remains legible at the avatar size.
+
 ### Text Input
 Text inputs come in small and large sizes. They use strong default borders, compact helper text, and restrained error messaging.
 
@@ -849,9 +852,9 @@ Hover darkens the border. Active, focused, and typing states use the same dark a
 Placeholder text uses the disabled text color so it reads clearly as a prompt rather than entered content. The composer follows the same rule.
 
 ### Chat Shell
-The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The minimized tray should use the same AI mark size, title typography, and icon-to-title gap as the header so the identity does not change scale when the shell collapses. Docked tray status uses the `new` blue token as a small inline dot after the tray title or representative name, not as an icon overlay. Tray-style headers expose three shell controls in order: dock to tray or restore from tray, maximize or minimize, and close. The body centers the thread within the panel content width.
+The chat panel is a contained conversation surface. The header carries the AI mark on the left and utility controls on the right. The minimized tray should use the same AI mark size, title typography, and icon-to-title gap as the header so the identity does not change scale when the shell collapses. Docked tray unread status uses the large alert badge dot after the tray title or representative name, not as an icon overlay; only unread AI or live-agent messages should light this dot. Tray-style headers expose only the shell controls that are valid for the current shell mode: expand/collapse, dock to tray or restore from tray, and close. The body centers the thread within the panel content width.
 
-When a live sales consultant has joined the conversation, the header identity changes from the AI mark and `Contact sales` title to the representative identity. Use a 24px circular entity, an 8px gap, and a single-line `heading-md` representative name; do not show the role in the chat shell header. The same representative identity should appear in the minimized tray when the tray shell is docked. The shell controls on the right stay unchanged across default, tray, hybrid, docked, and expanded modes.
+When a live sales consultant has joined the conversation, the header identity changes from the AI mark and `Contact sales` title to the representative identity. Use a 32px circular entity with a small active presence badge over the lower-right edge, an 8px gap, and a single-line `heading-md` representative name; do not show the role in the chat shell header. The same representative identity should appear in the minimized tray when the tray shell is docked. Representative message metadata uses a 24px circular entity with the same small active presence badge treatment. Shell control behavior should stay consistent within a selected review shell as the conversation moves between default, docked, expanded, and handoff states.
 
 The thread owns the shared horizontal content gutter. Message rows, prompt groups, cards, and other conversation items should align inside that gutter instead of adding their own panel-edge padding. Individual bubbles and cards own only their internal padding.
 
@@ -861,7 +864,9 @@ The scrollable transcript should keep an 8px terminal inset before the composer 
 
 Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
 
-The tray-first shell is bottom-docked on desktop. Its maximum height should preserve the 64px landing header plus an 8px gap, so the shell never covers the page header on shorter viewports. The chat panel itself should inherit the docked frame height in tray mode so the composer keeps its bottom padding inside the visible shell. Hybrid shell mode starts with no tray and no panel; after `Contact sales`, it opens the same right-side tray-style bottom-attached panel. Minimizing creates the compact bottom tray, and closing removes both the panel and tray.
+Hiring supports three review shells: `Tray (dismissable)`, `Tray (persistent)`, and `Tray (hybrid)`. `Tray (dismissable)` is the default review shell and opens a bottom-attached tray-shaped panel instead of the legacy floating card; its header exposes expand/collapse and close. The legacy floating-card code path remains available internally, but it is not the current review picker option. `Tray (persistent)` starts from the persistent docked tray and should not expose a close action in the docked tray or open panel; its open panel header shows expand/collapse before dock. `Tray (hybrid)` keeps the existing hybrid UX: it starts with no tray and no panel; after `Contact sales`, it opens the same right-side tray-style bottom-attached panel. Minimizing creates the compact bottom tray, and closing removes both the panel and tray.
+
+The tray-first shell is bottom-docked on desktop. Its maximum height should preserve the 64px landing header plus an 8px gap, so the shell never covers the page header on shorter viewports. The chat panel itself should inherit the docked frame height in tray mode so the composer keeps its bottom padding inside the visible shell.
 
 Premium supports two review shells: `Tray (dismissable)`, which keeps the optional `Help me decide` floating action as the re-entry point, and `Tray (dockable)`, which replaces the FAB with a persistent docked `Help assistant` tray. Both Premium shells open as bottom-attached tray-shaped panels with rounded top corners and square bottom corners that meet the browser edge. `Tray (dismissable)` does not dock; its header exposes only expand/collapse and close, and closing returns the FAB. `Tray (dockable)` should not expose a close action in the docked tray or open panel; visitors can only expand/collapse it or dock the panel back to the tray. In the Premium dockable header, expand/collapse appears before dock.
 
@@ -874,7 +879,7 @@ Assistant messages should use the available chat column in the collapsed panel s
 
 Messages should keep readable line lengths and avoid stretching across the full expanded panel.
 
-Prototype AI responses may be deterministic and fake, but they should still follow the conversation rhythm: a brief text-only thinking state, then a streamed assistant message. The thinking text may use `colors.ai-border` as a light-blue sweep across the label. The stream should support the user's sense that the concierge is responding, not become a theatrical typing performance or a source of delay.
+Prototype AI responses may be deterministic and fake, but they should still follow the conversation rhythm: a brief text-only thinking state, then a streamed assistant message. The thinking text may use `colors.ai-border` as a light-blue sweep across the label. The stream should reveal short word-sized chunks with a clean inline opacity fade and no movement. Attached prompts, feedback, and next-step UI should open inside the same response block after the stream completes. It should support the user's sense that the concierge is responding, not become a theatrical typing performance or a source of delay.
 
 ### Recommendation Card
 The recommendation card is a compact next-step surface with a heading, optional short supporting text, and one or two actions depending on the flow. It should feel like a practical next step inside the conversation, not a promotional card.

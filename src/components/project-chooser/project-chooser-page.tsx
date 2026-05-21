@@ -11,6 +11,10 @@ const conciergeOptions = [
     href: "/premium",
     label: "Premium survey concierge",
   },
+  {
+    href: "/internal/components",
+    label: "Browse UI components",
+  },
 ] as const;
 
 export function ProjectChooserPage() {

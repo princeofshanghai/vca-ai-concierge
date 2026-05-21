@@ -46,6 +46,10 @@ import { Entity, type EntityProps } from "@/components/primitives/entity";
 import { GhostIconButton, type GhostIconButtonProps } from "@/components/primitives/ghost-icon-button";
 import { Icon, iconMetadata, type IconName } from "@/components/primitives/icon";
 import { Pill, type PillProps } from "@/components/primitives/pill";
+import {
+  PresenceBadge,
+  type PresenceBadgeProps,
+} from "@/components/primitives/presence-badge";
 import { Tag, type TagProps } from "@/components/primitives/tag";
 import { TextArea, type TextAreaProps } from "@/components/primitives/text-area";
 import { TextInput, type TextInputProps } from "@/components/primitives/text-input";
@@ -1467,6 +1471,47 @@ export function SduiBadgeDemo() {
         label={mode === "counter" ? "99 updates" : "New update"}
         size={size === "small" ? "small" : "large"}
         tone={tone === "new" ? "new" : "alert"}
+      />
+    </ComponentDemoSection>
+  );
+}
+
+export function SduiPresenceBadgeDemo() {
+  const [presence, setPresence] =
+    useState<NonNullable<PresenceBadgeProps["presence"]>>("active");
+  const [size, setSize] =
+    useState<NonNullable<PresenceBadgeProps["size"]>>("small");
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="Presence"
+            value={presence}
+            options={[
+              { label: "Active", value: "active" },
+              { label: "On mobile", value: "mobile" },
+            ]}
+            onChange={setPresence}
+          />
+          <SegmentedControl
+            label="Size"
+            value={size}
+            options={[
+              { label: "Small", value: "small" },
+              { label: "Medium", value: "medium" },
+              { label: "Large", value: "large" },
+            ]}
+            onChange={setSize}
+          />
+        </>
+      }
+    >
+      <PresenceBadge
+        label={presence === "active" ? "Active" : "On mobile"}
+        presence={presence}
+        size={size}
       />
     </ComponentDemoSection>
   );

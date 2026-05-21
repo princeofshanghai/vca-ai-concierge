@@ -10,6 +10,8 @@ export {
   ChatMessageFeedbackFlow,
   ChatPanel,
   ChatPanelPreview,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatTray,
   ChatThinkingMessage,
   ChatThread,
@@ -27,12 +29,14 @@ export {
 } from "./chat-ui";
 export {
   CHAT_ASSISTANT_THINKING_DELAY_MS,
+  CHAT_ASSISTANT_STREAM_WORD_FADE_MS,
   CHAT_PANEL_TRANSITION_MS,
   getStreamDelay,
   prefersReducedMotion,
   splitIntoStreamChunks,
   startChatPanelViewTransition,
   supportsViewTransitions,
+  useChatAssistantStream,
   useChatPanelPresence,
   type ChatMessageStreamStatus,
   type ChatPanelPresence,

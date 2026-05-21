@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -12,7 +11,6 @@ import {
 } from "react";
 
 import {
-  CHAT_ASSISTANT_THINKING_DELAY_MS,
   ChatBody,
   ChatComposer,
   ChatHeader,
@@ -20,12 +18,12 @@ import {
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThinkingMessage,
   ChatThread,
   Prompt,
-  getStreamDelay,
-  prefersReducedMotion,
-  splitIntoStreamChunks,
+  useChatAssistantStream,
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
@@ -516,14 +514,20 @@ function createResponseStoppedFeedback(id: string): PremiumLiveInlineFeedback {
 function PremiumPromptRow({
   prompts,
   readOnly = false,
+  animated = true,
   onPromptSelect,
 }: Readonly<{
   prompts: ReadonlyArray<PremiumPromptId>;
   readOnly?: boolean;
+  animated?: boolean;
   onPromptSelect?: (promptId: PremiumPromptId) => void;
 }>) {
   return (
-    <div className="chat-message-enter flex w-full">
+    <div
+      className={[animated && "chat-message-enter", "flex w-full"]
+        .filter(Boolean)
+        .join(" ")}
+    >
       <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
         {prompts.map((promptId) => {
           const label = getPromptLabel(promptId);
@@ -763,25 +767,16 @@ export function PremiumConciergePanel({
     );
   }, [createLiveItemId, pendingAssistantResponse]);
 
-  useEffect(() => {
-    if (!pendingAssistantResponse) {
-      return;
-    }
+  const completePendingAssistantResponse = useCallback(
+    (response: PremiumPendingAssistantResponse) => {
+      const {
+        id,
+        text,
+        remainingMessages,
+        recommendation,
+        nextPrompts,
+      } = response;
 
-    const {
-      id,
-      text,
-      remainingMessages,
-      recommendation,
-      nextPrompts,
-    } = pendingAssistantResponse;
-    const shouldReduceMotion = prefersReducedMotion();
-    const chunks = splitIntoStreamChunks(text);
-    let streamTimer: number | null = null;
-    let visibleText = "";
-    let index = 0;
-
-    function completePendingAssistantResponse() {
       setLiveItems((currentItems) => {
         const completedItems = currentItems.map((item) =>
           isPremiumLiveMessage(item) && item.id === id
@@ -800,57 +795,42 @@ export function PremiumConciergePanel({
       }
       setActivePrompts(nextPrompts ?? null);
       setPendingAssistantResponse(null);
-    }
+    },
+    [],
+  );
 
-    const thinkingTimer = window.setTimeout(() => {
-      if (shouldReduceMotion) {
-        completePendingAssistantResponse();
-        return;
-      }
-
+  const handleAssistantStreamStart = useCallback(
+    (response: PremiumPendingAssistantResponse) => {
       setLiveItems((currentItems) =>
         currentItems.map((item) =>
-          isPremiumLiveMessage(item) && item.id === id
+          isPremiumLiveMessage(item) && item.id === response.id
             ? { ...item, content: "", status: "streaming" }
             : item,
         ),
       );
+    },
+    [],
+  );
 
-      function streamNextChunk() {
-        const nextChunk = chunks[index];
+  const handleAssistantStreamText = useCallback(
+    (response: PremiumPendingAssistantResponse, visibleText: string) => {
+      setLiveItems((currentItems) =>
+        currentItems.map((item) =>
+          isPremiumLiveMessage(item) && item.id === response.id
+            ? { ...item, content: visibleText, status: "streaming" }
+            : item,
+        ),
+      );
+    },
+    [],
+  );
 
-        if (!nextChunk) {
-          completePendingAssistantResponse();
-          return;
-        }
-
-        visibleText += nextChunk;
-        index += 1;
-
-        setLiveItems((currentItems) =>
-          currentItems.map((item) =>
-            isPremiumLiveMessage(item) && item.id === id
-              ? { ...item, content: visibleText, status: "streaming" }
-              : item,
-          ),
-        );
-
-        streamTimer = window.setTimeout(
-          streamNextChunk,
-          getStreamDelay(nextChunk),
-        );
-      }
-
-      streamNextChunk();
-    }, shouldReduceMotion ? 0 : CHAT_ASSISTANT_THINKING_DELAY_MS);
-
-    return () => {
-      window.clearTimeout(thinkingTimer);
-      if (streamTimer !== null) {
-        window.clearTimeout(streamTimer);
-      }
-    };
-  }, [pendingAssistantResponse]);
+  useChatAssistantStream({
+    pendingResponse: pendingAssistantResponse,
+    onStreamStart: handleAssistantStreamStart,
+    onStreamText: handleAssistantStreamText,
+    onComplete: completePendingAssistantResponse,
+  });
 
   useEffect(() => {
     const chatBody = chatBodyRef.current;
@@ -889,15 +869,21 @@ export function PremiumConciergePanel({
 
       if (attachedPrompts) {
         return (
-          <div key={step.id} className="flex flex-col gap-md">
+          <ChatResponseBlock key={step.id}>
             {recommendationCard}
-            <PremiumPromptRow prompts={attachedPrompts} readOnly />
-          </div>
+            <ChatResponseAttachment>
+              <PremiumPromptRow
+                prompts={attachedPrompts}
+                readOnly
+                animated={false}
+              />
+            </ChatResponseAttachment>
+          </ChatResponseBlock>
         );
       }
 
       return (
-        <Fragment key={step.id}>{recommendationCard}</Fragment>
+        <ChatResponseBlock key={step.id}>{recommendationCard}</ChatResponseBlock>
       );
     }
 
@@ -909,23 +895,25 @@ export function PremiumConciergePanel({
       </ChatMessage>
     );
 
-    if (attachedPrompts || showFeedback) {
-      return (
-        <div key={step.id} className="flex flex-col items-start">
-          {messageNode}
-          {attachedPrompts ? (
-            <div className="mt-md w-full">
-              <PremiumPromptRow prompts={attachedPrompts} readOnly />
-            </div>
-          ) : null}
-          {showFeedback ? (
-            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
-          ) : null}
-        </div>
-      );
-    }
-
-    return <Fragment key={step.id}>{messageNode}</Fragment>;
+    return (
+      <ChatResponseBlock key={step.id}>
+        {messageNode}
+        {attachedPrompts ? (
+          <ChatResponseAttachment>
+            <PremiumPromptRow
+              prompts={attachedPrompts}
+              readOnly
+              animated={false}
+            />
+          </ChatResponseAttachment>
+        ) : null}
+        {showFeedback ? (
+          <ChatResponseAttachment gap="sm">
+            <ChatMessageFeedbackFlow timestamp={timestamp} />
+          </ChatResponseAttachment>
+        ) : null}
+      </ChatResponseBlock>
+    );
   }
 
   function renderLiveItem(
@@ -940,18 +928,21 @@ export function PremiumConciergePanel({
 
       if (attachedPrompts) {
         return (
-          <div key={item.id} className="flex flex-col gap-md">
+          <ChatResponseBlock key={item.id}>
             {recommendationCard}
-            <PremiumPromptRow
-              prompts={attachedPrompts}
-              onPromptSelect={handlePromptSelect}
-            />
-          </div>
+            <ChatResponseAttachment>
+              <PremiumPromptRow
+                prompts={attachedPrompts}
+                animated={false}
+                onPromptSelect={handlePromptSelect}
+              />
+            </ChatResponseAttachment>
+          </ChatResponseBlock>
         );
       }
 
       return (
-        <Fragment key={item.id}>{recommendationCard}</Fragment>
+        <ChatResponseBlock key={item.id}>{recommendationCard}</ChatResponseBlock>
       );
     }
 
@@ -979,37 +970,38 @@ export function PremiumConciergePanel({
       <ChatMessage
         role={item.role}
         aria-busy={item.status === "streaming" || undefined}
+        streamStatus={item.status}
+        streamText={item.content}
         timestamp={item.role === "user" ? timestamp : undefined}
       >
         {renderPremiumMessageContent(item.content)}
       </ChatMessage>
     );
 
-    if (attachedPrompts || showFeedback || showStoppedFeedback) {
-      return (
-        <div key={item.id} className="flex flex-col items-start">
-          {messageNode}
-          {attachedPrompts ? (
-            <div className="mt-md w-full">
-              <PremiumPromptRow
-                prompts={attachedPrompts}
-                onPromptSelect={handlePromptSelect}
-              />
-            </div>
-          ) : null}
-          {showFeedback ? (
-            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
-          ) : null}
-          {showStoppedFeedback ? (
-            <ChatInlineFeedback className="mt-sm" tone="neutral">
-              Response stopped.
-            </ChatInlineFeedback>
-          ) : null}
-        </div>
-      );
-    }
-
-    return <Fragment key={item.id}>{messageNode}</Fragment>;
+    return (
+      <ChatResponseBlock key={item.id}>
+        {messageNode}
+        {attachedPrompts ? (
+          <ChatResponseAttachment>
+            <PremiumPromptRow
+              prompts={attachedPrompts}
+              animated={false}
+              onPromptSelect={handlePromptSelect}
+            />
+          </ChatResponseAttachment>
+        ) : null}
+        {showFeedback ? (
+          <ChatResponseAttachment gap="sm">
+            <ChatMessageFeedbackFlow timestamp={timestamp} />
+          </ChatResponseAttachment>
+        ) : null}
+        {showStoppedFeedback ? (
+          <ChatResponseAttachment gap="sm">
+            <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
+          </ChatResponseAttachment>
+        ) : null}
+      </ChatResponseBlock>
+    );
   }
 
   return (

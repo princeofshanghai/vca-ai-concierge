@@ -36,6 +36,7 @@ import { Entity } from "@/components/primitives/entity";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, iconMetadata } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
+import { PresenceBadge } from "@/components/primitives/presence-badge";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
@@ -56,6 +57,7 @@ import {
   SduiGhostIconButtonDemo,
   SduiIconDemo,
   SduiPillDemo,
+  SduiPresenceBadgeDemo,
   SduiTagDemo,
   SduiTextAreaDemo,
   SduiTextInputDemo,
@@ -139,6 +141,11 @@ const badgeExamples = [
   { label: "Alert counter", tone: "alert", size: "small", count: 99 },
   { label: "New dot", tone: "new", size: "small", count: undefined },
   { label: "New counter", tone: "new", size: "large", count: 99 },
+] as const;
+const presenceBadgeExamples = [
+  { label: "Small", size: "small" },
+  { label: "Medium", size: "medium" },
+  { label: "Large", size: "large" },
 ] as const;
 
 const bookedMeetingPreview: BookedMeeting = {
@@ -358,6 +365,16 @@ function ChatPanelReferenceFrame({
   );
 }
 
+function ChatHeaderReferenceFrame({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <ChatPanelReferenceFrame className="border-b-0">
+      {children}
+    </ChatPanelReferenceFrame>
+  );
+}
+
 function ChatThreadReferenceFrame({
   context = "collapsed",
   children,
@@ -552,13 +569,13 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       </PreviewSection>
       <PreviewSection title="Header variants">
         <div className="space-y-md">
-          <ChatPanelReferenceFrame>
+          <ChatHeaderReferenceFrame>
             <ChatHeader title={HIRING_CONCIERGE_TITLE} />
-          </ChatPanelReferenceFrame>
-          <ChatPanelReferenceFrame>
+          </ChatHeaderReferenceFrame>
+          <ChatHeaderReferenceFrame>
             <ChatHeader title={PREMIUM_CONCIERGE_TITLE} />
-          </ChatPanelReferenceFrame>
-          <ChatPanelReferenceFrame>
+          </ChatHeaderReferenceFrame>
+          <ChatHeaderReferenceFrame>
             <ChatHeader
               identity={{
                 type: "representative",
@@ -566,7 +583,7 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                 role: "Sales consultant",
               }}
             />
-          </ChatPanelReferenceFrame>
+          </ChatHeaderReferenceFrame>
         </div>
       </PreviewSection>
     </ComponentPageShell>
@@ -1258,6 +1275,31 @@ function SduiBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SduiPresenceBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiPresenceBadgeDemo />
+      </PreviewSection>
+      <PreviewSection title="Presence badge examples">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
+          {presenceBadgeExamples.map(({ label, size }) => (
+            <div key={size} className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm">
+              <p className="whitespace-nowrap text-body-xs text-text-meta">
+                {label}
+              </p>
+              <div className="flex items-center gap-lg">
+                <PresenceBadge label={`${label} active`} presence="active" size={size} />
+                <PresenceBadge label={`${label} on mobile`} presence="mobile" size={size} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function ComponentPageShell({
   item,
   children,
@@ -1320,6 +1362,8 @@ export function ComponentPageContent({
       return <SduiTagPage item={item} />;
     case "sdui-badge":
       return <SduiBadgePage item={item} />;
+    case "sdui-presence-badge":
+      return <SduiPresenceBadgePage item={item} />;
     default:
       return null;
   }

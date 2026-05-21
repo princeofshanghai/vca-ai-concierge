@@ -127,7 +127,7 @@ export function ChatSidePanel({
     >
       <div
         className={cx(
-          "chat-side-panel-x shrink-0 border-b bg-background-neutral-soft pb-xxl pt-lg transition-colors duration-150 ease-out",
+          "chat-side-panel-x flex h-16 shrink-0 items-center border-b bg-background-neutral-soft transition-colors duration-150 ease-out",
           hasScrolled ? "border-border-faint" : "border-transparent",
         )}
       >

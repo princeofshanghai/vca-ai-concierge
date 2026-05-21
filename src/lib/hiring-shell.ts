@@ -1,17 +1,29 @@
-export type HiringShellMode = "default" | "tray" | "hybrid";
+export type HiringShellMode =
+  | "default"
+  | "tray"
+  | "hybrid"
+  | "floating-card";
 
 export function getHiringShellMode(
   shell: string | ReadonlyArray<string> | undefined,
 ): HiringShellMode {
   const shellValue = Array.isArray(shell) ? shell[0] : shell;
 
-  if (shellValue === "default" || shellValue === "floating") {
+  if (shellValue === "floating" || shellValue === "floating-card") {
+    return "floating-card";
+  }
+
+  if (shellValue === "default" || shellValue === "dismissable-tray") {
     return "default";
   }
 
-  if (shellValue === "tray") {
+  if (shellValue === "tray" || shellValue === "persistent-tray") {
     return "tray";
   }
 
-  return "hybrid";
+  if (shellValue === "hybrid") {
+    return "hybrid";
+  }
+
+  return "default";
 }

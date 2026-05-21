@@ -52,7 +52,10 @@ type FlowReviewChatPanelProps = Readonly<{
   onClose?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  dockActionPosition?: "before-variant" | "after-variant";
+  showCloseAction?: boolean;
   onHeaderIdentityChange?: (identity: ChatHeaderIdentity | null) => void;
+  onUnreadActivity?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
 }>;
 
@@ -934,7 +937,10 @@ export function FlowReviewChatPanel({
   onClose,
   onMinimizeToTray,
   onVariantToggle,
+  dockActionPosition,
+  showCloseAction = true,
   onHeaderIdentityChange,
+  onUnreadActivity,
   onSidePanelOpenChange,
 }: FlowReviewChatPanelProps) {
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
@@ -1023,12 +1029,13 @@ export function FlowReviewChatPanel({
 
     const connectingTimer = window.setTimeout(() => {
       setMediumAvailableHandoffState("connected");
+      onUnreadActivity?.();
     }, MATCHING_DELAY_MS);
 
     return () => {
       window.clearTimeout(connectingTimer);
     };
-  }, [mediumAvailableHandoffState]);
+  }, [mediumAvailableHandoffState, onUnreadActivity]);
 
   useEffect(() => {
     return () => {
@@ -1181,8 +1188,10 @@ export function FlowReviewChatPanel({
         identity={chatHeaderIdentity}
         title={HIRING_CONCIERGE_TITLE}
         onClose={onClose}
+        dockActionPosition={dockActionPosition}
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
+        showCloseAction={showCloseAction}
       />
       {isSchedulePanelOpen ? (
         <ChatSidePanelLayout

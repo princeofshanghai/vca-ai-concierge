@@ -130,7 +130,7 @@ export function ReviewShellStateMenu({
           : 0;
   const shellGridClass =
     shellOptions.length > 2
-      ? "grid-cols-[1.35fr_0.8fr_0.85fr]"
+      ? "grid-cols-1"
       : "grid-cols-2";
 
   function getSegmentClasses(isSelected: boolean) {

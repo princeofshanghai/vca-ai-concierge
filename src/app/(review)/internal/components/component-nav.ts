@@ -18,7 +18,7 @@ export type ComponentNavSection = Readonly<{
 
 export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
   {
-    title: "VCA AI concierge",
+    title: "VCA components",
     groups: [
       {
         title: "Shared",
@@ -101,7 +101,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
     ],
   },
   {
-    title: "SDUI",
+    title: "SDUI components",
     groups: [
       {
         title: "Primitives",
@@ -171,6 +171,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Signals new activity, alerts, or updates.",
             href: "/internal/components/sdui/badge",
+          },
+          {
+            id: "sdui-presence-badge",
+            title: "Presence badge",
+            description:
+              "Signals whether a person or agent is active or on mobile.",
+            href: "/internal/components/sdui/presence-badge",
           },
         ],
       },

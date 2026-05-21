@@ -2,6 +2,7 @@
 
 import {
   type ButtonHTMLAttributes,
+  type CSSProperties,
   forwardRef,
   useEffect,
   useCallback,
@@ -17,12 +18,20 @@ import {
 } from "react";
 
 import { Button } from "@/components/primitives/button";
+import { Badge } from "@/components/primitives/badge";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
+import { PresenceBadge } from "@/components/primitives/presence-badge";
 import { TextArea } from "@/components/primitives/text-area";
+
+import {
+  CHAT_ASSISTANT_STREAM_WORD_FADE_MS,
+  splitIntoStreamChunks,
+  type ChatMessageStreamStatus,
+} from "./chat-motion";
 
 export type ChatPanelVariant = "collapsed" | "expanded";
 export type ChatPanelSurface = "default" | "welcome";
@@ -40,6 +49,11 @@ export type ChatHeaderIdentity =
       avatarLabel?: string;
     };
 
+type RepresentativeChatHeaderIdentity = Extract<
+  ChatHeaderIdentity,
+  { type: "representative" }
+>;
+
 type ChatPanelProps = HTMLAttributes<HTMLDivElement> & {
   variant?: ChatPanelVariant;
   surface?: ChatPanelSurface;
@@ -54,6 +68,7 @@ type ChatTrayProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   onOpen?: () => void;
   onClose?: () => void;
   onVariantToggle?: () => void;
+  openActionPosition?: "before-variant" | "after-variant";
   showCloseAction?: boolean;
 };
 
@@ -104,6 +119,12 @@ type ChatMessageProps = HTMLAttributes<HTMLDivElement> & {
   avatarLabel?: string;
   avatarSrc?: string;
   timestamp?: string;
+  streamStatus?: ChatMessageStreamStatus;
+  streamText?: string;
+};
+
+type ChatResponseAttachmentProps = HTMLAttributes<HTMLDivElement> & {
+  gap?: "sm" | "md";
 };
 
 export type PromptVisualState =
@@ -312,6 +333,7 @@ export function ChatTray({
   onOpen,
   onClose,
   onVariantToggle,
+  openActionPosition = "before-variant",
   showCloseAction = true,
   "aria-controls": ariaControls,
   "aria-expanded": ariaExpanded,
@@ -320,12 +342,24 @@ export function ChatTray({
   ...props
 }: ChatTrayProps) {
   const badgeIndicator = badge ? (
-    <span
-      role="status"
-      aria-label={badgeLabel}
-      className="inline-flex size-[10px] shrink-0 rounded-round bg-new"
-    />
+    <Badge role="status" tone="alert" size="large" label={badgeLabel} />
   ) : null;
+  const openAction = (
+    <GhostIconButton
+      label="Open chat"
+      icon="chevron-up"
+      size="medium"
+      onClick={onOpen}
+    />
+  );
+  const variantAction = (
+    <GhostIconButton
+      label={headerActionLabel[variant]}
+      icon={headerActionIcon[variant]}
+      size="medium"
+      onClick={onVariantToggle}
+    />
+  );
 
   return (
     <div
@@ -346,13 +380,7 @@ export function ChatTray({
       >
         {identity?.type === "representative" ? (
           <>
-            <Entity
-              size={24}
-              src={identity.avatarSrc}
-              label={
-                identity.avatarLabel ?? `${identity.name}, ${identity.role}`
-              }
-            />
+            <RepresentativeAvatar identity={identity} />
             <span className="min-w-0 inline-flex items-center gap-sm">
               <span className="min-w-0 truncate text-heading-md text-text">
                 {identity.name}
@@ -375,18 +403,9 @@ export function ChatTray({
         )}
       </button>
       <div className="flex shrink-0 items-center gap-0">
-        <GhostIconButton
-          label="Open chat"
-          icon="chevron-up"
-          size="medium"
-          onClick={onOpen}
-        />
-        <GhostIconButton
-          label={headerActionLabel[variant]}
-          icon={headerActionIcon[variant]}
-          size="medium"
-          onClick={onVariantToggle}
-        />
+        {openActionPosition === "before-variant" ? openAction : null}
+        {variantAction}
+        {openActionPosition === "after-variant" ? openAction : null}
         {showCloseAction ? (
           <GhostIconButton
             label="Close chat"
@@ -397,6 +416,26 @@ export function ChatTray({
         ) : null}
       </div>
     </div>
+  );
+}
+
+function RepresentativeAvatar({
+  identity,
+}: Readonly<{ identity: RepresentativeChatHeaderIdentity }>) {
+  return (
+    <span className="relative inline-flex size-8 shrink-0">
+      <Entity
+        size={32}
+        src={identity.avatarSrc}
+        label={identity.avatarLabel ?? `${identity.name}, ${identity.role}`}
+      />
+      <PresenceBadge
+        className="absolute -right-xs -bottom-xs bg-background"
+        label="Online and available"
+        presence="active"
+        size="small"
+      />
+    </span>
   );
 }
 
@@ -549,14 +588,7 @@ export function ChatHeader({
         </div>
       ) : headerIdentity?.type === "representative" ? (
         <div className="flex min-w-0 items-center gap-sm">
-          <Entity
-            size={24}
-            src={headerIdentity.avatarSrc}
-            label={
-              headerIdentity.avatarLabel ??
-              `${headerIdentity.name}, ${headerIdentity.role}`
-            }
-          />
+          <RepresentativeAvatar identity={headerIdentity} />
           <span className="min-w-0 truncate text-heading-md text-text">
             {headerIdentity.name}
           </span>
@@ -630,7 +662,7 @@ export const ChatBody = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement
         {...props}
         ref={ref}
         className={cx(
-          "flex min-h-0 flex-1 justify-center overflow-y-auto",
+          "flex min-h-0 min-w-0 flex-1 justify-center overflow-x-hidden overflow-y-auto",
           className,
         )}
       >
@@ -663,12 +695,32 @@ export function ChatThinkingMessage({
   );
 }
 
+function ChatStreamingText({ text }: Readonly<{ text: string }>) {
+  return (
+    <>
+      {splitIntoStreamChunks(text).map((chunk, index) => (
+        <span
+          key={index}
+          className="chat-stream-word"
+          style={{
+            animationDuration: `${CHAT_ASSISTANT_STREAM_WORD_FADE_MS}ms`,
+          }}
+        >
+          {chunk}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function ChatMessage({
   role = "assistant",
   authorName,
   avatarLabel,
   avatarSrc,
   timestamp,
+  streamStatus,
+  streamText,
   className,
   children,
   ...props
@@ -707,14 +759,19 @@ export function ChatMessage({
               "max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] pr-sm",
           )}
         >
-          {children}
+          {role === "assistant" &&
+          streamStatus === "streaming" &&
+          streamText !== undefined ? (
+            <ChatStreamingText text={streamText} />
+          ) : (
+            children
+          )}
         </div>
         {hasRepresentativeMeta ? (
           <div className="flex items-center gap-sm text-body-xs text-text-meta">
-            <Entity
-              size={24}
-              src={avatarSrc}
+            <RepresentativeMessageAvatar
               label={avatarLabel ?? authorName ?? "Human representative"}
+              src={avatarSrc}
             />
             <div className="flex min-w-0 flex-wrap items-baseline gap-x-xs">
               {authorName ? <span>{authorName}</span> : null}
@@ -726,6 +783,67 @@ export function ChatMessage({
           <span className="pt-xs text-body-xs text-text-meta">{timestamp}</span>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function RepresentativeMessageAvatar({
+  label,
+  src,
+}: Readonly<{
+  label: string;
+  src?: string;
+}>) {
+  return (
+    <span className="relative inline-flex size-6 shrink-0">
+      <Entity size={24} src={src} label={label} />
+      <PresenceBadge
+        className="absolute -right-xs -bottom-xs bg-background"
+        label="Online and available"
+        presence="active"
+        size="small"
+      />
+    </span>
+  );
+}
+
+export function ChatResponseBlock({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      {...props}
+      className={cx(
+        "chat-response-block flex w-full flex-col items-start",
+        className,
+      )}
+    />
+  );
+}
+
+export function ChatResponseAttachment({
+  gap = "md",
+  className,
+  style,
+  children,
+  ...props
+}: ChatResponseAttachmentProps) {
+  const gapValue =
+    gap === "sm" ? "var(--spacing-sm)" : "var(--spacing-md)";
+
+  return (
+    <div
+      {...props}
+      className={cx("chat-response-attachment w-full", className)}
+      style={
+        {
+          "--chat-response-attachment-gap": gapValue,
+          ...style,
+        } as CSSProperties
+      }
+    >
+      <div className="chat-response-attachment-inner">{children}</div>
     </div>
   );
 }
@@ -1064,7 +1182,7 @@ export function Prompt({
       aria-label={ariaLabel ?? `Send message: ${prompt}`}
       data-visual-state={visualState}
       className={cx(
-        "inline-flex max-w-full shrink-0 select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover hover:shadow-[inset_0_0_0_1px_var(--color-border-faint)] active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
+        "inline-flex min-w-0 max-w-full select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover hover:shadow-[inset_0_0_0_1px_var(--color-border-faint)] active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
         visualState !== "default" && promptStateClasses[visualState],
         className,
       )}

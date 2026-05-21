@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -13,7 +12,6 @@ import {
 import { flushSync } from "react-dom";
 
 import {
-  CHAT_ASSISTANT_THINKING_DELAY_MS,
   ChatBody,
   ChatComposer,
   ChatHeader,
@@ -21,15 +19,15 @@ import {
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatSidePanelLayout,
   ChatThinkingMessage,
   ChatThread,
   Prompt,
   RecommendationCard,
-  getStreamDelay,
-  prefersReducedMotion,
-  splitIntoStreamChunks,
   supportsViewTransitions,
+  useChatAssistantStream,
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
@@ -63,7 +61,10 @@ type ConciergePanelProps = Readonly<{
   onClose?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  dockActionPosition?: "before-variant" | "after-variant";
+  showCloseAction?: boolean;
   onConversationStart?: () => void;
+  onUnreadActivity?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
   confirmationDialog?: ReactNode;
 }>;
@@ -295,7 +296,10 @@ export function ConciergePanel({
   onClose,
   onMinimizeToTray,
   onVariantToggle,
+  dockActionPosition,
+  showCloseAction = true,
   onConversationStart,
+  onUnreadActivity,
   onSidePanelOpenChange,
   confirmationDialog,
 }: ConciergePanelProps) {
@@ -367,19 +371,10 @@ export function ConciergePanel({
     [createMessageId],
   );
 
-  useEffect(() => {
-    if (!pendingAssistantResponse) {
-      return;
-    }
+  const completePendingAssistantResponse = useCallback(
+    (response: PendingAssistantResponse) => {
+      const { id, text, surfaceAfter } = response;
 
-    const { id, text, surfaceAfter } = pendingAssistantResponse;
-    const shouldReduceMotion = prefersReducedMotion();
-    const chunks = splitIntoStreamChunks(text);
-    let streamTimer: number | null = null;
-    let visibleText = "";
-    let index = 0;
-
-    function completePendingAssistantResponse() {
       setMessages((currentMessages) => {
         const completedMessages = currentMessages.map((message) =>
           isMessageItem(message) && message.id === id
@@ -392,57 +387,43 @@ export function ConciergePanel({
           : completedMessages;
       });
       setPendingAssistantResponse(null);
-    }
+      onUnreadActivity?.();
+    },
+    [onUnreadActivity],
+  );
 
-    const thinkingTimer = window.setTimeout(() => {
-      if (shouldReduceMotion) {
-        completePendingAssistantResponse();
-        return;
-      }
-
+  const handleAssistantStreamStart = useCallback(
+    (response: PendingAssistantResponse) => {
       setMessages((currentMessages) =>
         currentMessages.map((message) =>
-          isMessageItem(message) && message.id === id
+          isMessageItem(message) && message.id === response.id
             ? { ...message, content: "", status: "streaming" }
             : message,
         ),
       );
+    },
+    [],
+  );
 
-      function streamNextChunk() {
-        const nextChunk = chunks[index];
+  const handleAssistantStreamText = useCallback(
+    (response: PendingAssistantResponse, visibleText: string) => {
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          isMessageItem(message) && message.id === response.id
+            ? { ...message, content: visibleText, status: "streaming" }
+            : message,
+        ),
+      );
+    },
+    [],
+  );
 
-        if (!nextChunk) {
-          completePendingAssistantResponse();
-          return;
-        }
-
-        visibleText += nextChunk;
-        index += 1;
-
-        setMessages((currentMessages) =>
-          currentMessages.map((message) =>
-            isMessageItem(message) && message.id === id
-              ? { ...message, content: visibleText, status: "streaming" }
-              : message,
-          ),
-        );
-
-        streamTimer = window.setTimeout(
-          streamNextChunk,
-          getStreamDelay(nextChunk),
-        );
-      }
-
-      streamNextChunk();
-    }, shouldReduceMotion ? 0 : CHAT_ASSISTANT_THINKING_DELAY_MS);
-
-    return () => {
-      window.clearTimeout(thinkingTimer);
-      if (streamTimer !== null) {
-        window.clearTimeout(streamTimer);
-      }
-    };
-  }, [pendingAssistantResponse]);
+  useChatAssistantStream({
+    pendingResponse: pendingAssistantResponse,
+    onStreamStart: handleAssistantStreamStart,
+    onStreamText: handleAssistantStreamText,
+    onComplete: completePendingAssistantResponse,
+  });
 
   useEffect(() => {
     return () => {
@@ -748,42 +729,42 @@ export function ConciergePanel({
       <ChatMessage
         role={message.role}
         aria-busy={message.status === "streaming" || undefined}
+        streamStatus={message.status}
+        streamText={message.content}
         timestamp={message.role === "user" ? timestamp : undefined}
       >
         {message.content}
       </ChatMessage>
     );
 
-    if (showStarterPrompts || showFeedback || showStoppedFeedback) {
-      return (
-        <div key={message.id} className="flex flex-col items-start">
-          {messageNode}
-          {showStarterPrompts ? (
-            <div className="chat-message-enter mt-md flex w-full">
-              <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
-                {STARTER_PROMPTS.map((prompt) => (
-                  <Prompt
-                    key={prompt}
-                    prompt={prompt}
-                    onPromptSelect={handleStarterPromptSelect}
-                  />
-                ))}
-              </div>
+    return (
+      <ChatResponseBlock key={message.id}>
+        {messageNode}
+        {showStarterPrompts ? (
+          <ChatResponseAttachment>
+            <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+              {STARTER_PROMPTS.map((prompt) => (
+                <Prompt
+                  key={prompt}
+                  prompt={prompt}
+                  onPromptSelect={handleStarterPromptSelect}
+                />
+              ))}
             </div>
-          ) : null}
-          {showFeedback ? (
-            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
-          ) : null}
-          {showStoppedFeedback ? (
-            <ChatInlineFeedback className="mt-sm" tone="neutral">
-              Response stopped.
-            </ChatInlineFeedback>
-          ) : null}
-        </div>
-      );
-    }
-
-    return <Fragment key={message.id}>{messageNode}</Fragment>;
+          </ChatResponseAttachment>
+        ) : null}
+        {showFeedback ? (
+          <ChatResponseAttachment gap="sm">
+            <ChatMessageFeedbackFlow timestamp={timestamp} />
+          </ChatResponseAttachment>
+        ) : null}
+        {showStoppedFeedback ? (
+          <ChatResponseAttachment gap="sm">
+            <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
+          </ChatResponseAttachment>
+        ) : null}
+      </ChatResponseBlock>
+    );
   }
 
   const thread = lead ? (
@@ -807,8 +788,10 @@ export function ConciergePanel({
         variant={variant}
         title={phase === "chat" ? HIRING_CONCIERGE_TITLE : undefined}
         onClose={onClose}
+        dockActionPosition={dockActionPosition}
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
+        showCloseAction={showCloseAction}
         transparent={phase === "onboarding"}
         showAiMark={phase === "chat"}
         aiMarkClassName="concierge-ai-mark"

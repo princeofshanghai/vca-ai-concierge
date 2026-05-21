@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import Image from "next/image";
 import localFont from "next/font/local";
@@ -19,6 +19,7 @@ import { ConciergePanel } from "@/components/onboarding";
 import { Button } from "@/components/primitives/button";
 import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog";
 import type { FlowReview } from "@/lib/conversation-flows";
+import type { HiringShellMode } from "@/lib/hiring-shell";
 
 const navItems = [
   { href: "#products", label: "Products" },
@@ -29,7 +30,7 @@ const navItems = [
 type LandingPageProps = Readonly<{
   homeHref?: string;
   reviewFlow?: FlowReview;
-  shellMode?: "default" | "tray" | "hybrid";
+  shellMode?: HiringShellMode;
 }>;
 
 const communityProBold = localFont({
@@ -46,9 +47,11 @@ export function LandingPage({
 }: LandingPageProps) {
   const router = useRouter();
   const isReviewFlow = Boolean(reviewFlow);
-  const isTrayShell = shellMode === "tray";
+  const isDismissableTrayShell = shellMode === "default";
+  const isPersistentTrayShell = shellMode === "tray";
   const isHybridShell = shellMode === "hybrid";
-  const isTrayStyleShell = isTrayShell || isHybridShell;
+  const isTrayStyleShell =
+    isDismissableTrayShell || isPersistentTrayShell || isHybridShell;
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [isReviewSidePanelOpen, setIsReviewSidePanelOpen] = useState(false);
@@ -56,6 +59,7 @@ export function LandingPage({
   const [isChatConversationStarted, setIsChatConversationStarted] =
     useState(false);
   const [isHybridTrayVisible, setIsHybridTrayVisible] = useState(false);
+  const [hasUnreadTrayActivity, setHasUnreadTrayActivity] = useState(false);
   const [trayIdentity, setTrayIdentity] =
     useState<ChatHeaderIdentity | null>(null);
   const chatPanelId = useId();
@@ -64,6 +68,7 @@ export function LandingPage({
     setIsChatConversationStarted(false);
     setIsReviewSidePanelOpen(false);
     setIsHybridTrayVisible(false);
+    setHasUnreadTrayActivity(false);
     setTrayIdentity(null);
     setChatPanelVariant("collapsed");
   }, []);
@@ -79,12 +84,15 @@ export function LandingPage({
     onBeforeOpen: isTrayStyleShell ? undefined : resetChatPanelState,
     onBeforeClose: isTrayStyleShell ? undefined : resetChatPanelState,
   });
-  const isChatPanelMounted = isTrayShell || isChatMounted;
+  const isChatInteractiveRef = useRef(isChatInteractive);
+  const isChatPanelMounted = isPersistentTrayShell || isChatMounted;
   const isWideChatSurface =
     chatPanelVariant === "expanded" || isReviewSidePanelOpen;
   const isCenteredChatSurface = chatPanelVariant === "expanded";
   const isBottomAttachedChatSurface =
-    isTrayShell || (isHybridShell && !isCenteredChatSurface);
+    isDismissableTrayShell ||
+    isPersistentTrayShell ||
+    (isHybridShell && !isCenteredChatSurface);
   // Tray shells are bottom-docked; 72px preserves the 64px landing header plus an 8px gap.
   const chatPanelPositionClass = isBottomAttachedChatSurface
     ? isCenteredChatSurface
@@ -107,6 +115,22 @@ export function LandingPage({
       ? "md:!h-full md:!w-full"
       : "md:!h-full md:!w-full";
 
+  useEffect(() => {
+    isChatInteractiveRef.current = isChatInteractive;
+  }, [isChatInteractive]);
+
+  const clearUnreadTrayActivity = useCallback(() => {
+    setHasUnreadTrayActivity(false);
+  }, []);
+
+  const markUnreadTrayActivity = useCallback(() => {
+    if (isChatInteractiveRef.current) {
+      return;
+    }
+
+    setHasUnreadTrayActivity(true);
+  }, []);
+
   const openChat = useCallback(() => {
     if (isReviewFlow && !isTrayStyleShell) {
       return;
@@ -116,9 +140,11 @@ export function LandingPage({
       resetChatPanelState();
     }
 
+    clearUnreadTrayActivity();
     setIsHybridTrayVisible(false);
     openChatPanel();
   }, [
+    clearUnreadTrayActivity,
     isChatOpen,
     isHybridShell,
     isHybridTrayVisible,
@@ -137,10 +163,12 @@ export function LandingPage({
       resetChatPanelState();
     }
 
+    clearUnreadTrayActivity();
     setIsHybridTrayVisible(false);
     setChatPanelVariant("expanded");
     openChatPanel();
   }, [
+    clearUnreadTrayActivity,
     isChatOpen,
     isHybridShell,
     isHybridTrayVisible,
@@ -336,7 +364,7 @@ export function LandingPage({
         </div>
       </section>
 
-      {(isTrayShell || (isHybridShell && isHybridTrayVisible)) &&
+      {(isPersistentTrayShell || (isHybridShell && isHybridTrayVisible)) &&
       !isChatInteractive ? (
         <ChatTray
           variant={chatPanelVariant}
@@ -344,12 +372,16 @@ export function LandingPage({
           aria-expanded={false}
           aria-haspopup="dialog"
           aria-label="Open AI Concierge chat"
-          badge
+          badge={hasUnreadTrayActivity}
           className="fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-panel-collapsed-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
           identity={trayIdentity}
           onOpen={openChat}
           onVariantToggle={openChatExpanded}
-          onClose={closeChat}
+          openActionPosition={
+            isPersistentTrayShell ? "after-variant" : undefined
+          }
+          onClose={isHybridShell ? closeChat : undefined}
+          showCloseAction={isHybridShell}
         />
       ) : null}
 
@@ -400,10 +432,17 @@ export function LandingPage({
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
                   onMinimizeToTray={
-                    isTrayStyleShell ? minimizeChatToTray : undefined
+                    isPersistentTrayShell || isHybridShell
+                      ? minimizeChatToTray
+                      : undefined
                   }
                   onVariantToggle={toggleChatPanelVariant}
+                  dockActionPosition={
+                    isPersistentTrayShell ? "after-variant" : undefined
+                  }
+                  showCloseAction={!isPersistentTrayShell}
                   onHeaderIdentityChange={setTrayIdentity}
+                  onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                 />
               ) : (
@@ -412,9 +451,16 @@ export function LandingPage({
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
                   onMinimizeToTray={
-                    isTrayStyleShell ? minimizeChatToTray : undefined
+                    isPersistentTrayShell || isHybridShell
+                      ? minimizeChatToTray
+                      : undefined
                   }
                   onVariantToggle={toggleChatPanelVariant}
+                  dockActionPosition={
+                    isPersistentTrayShell ? "after-variant" : undefined
+                  }
+                  showCloseAction={!isPersistentTrayShell}
+                  onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}
                   confirmationDialog={

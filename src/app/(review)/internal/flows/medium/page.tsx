@@ -19,8 +19,12 @@ export default async function MediumFlowRedirectPage({
   }
 
   if (shellMode === "default") {
-    redirect("/internal/flows/medium/available?shell=default");
+    redirect("/internal/flows/medium/available");
   }
 
-  redirect("/internal/flows/medium/available");
+  if (shellMode === "floating-card") {
+    redirect("/internal/flows/medium/available?shell=floating-card");
+  }
+
+  redirect("/internal/flows/medium/available?shell=hybrid");
 }
