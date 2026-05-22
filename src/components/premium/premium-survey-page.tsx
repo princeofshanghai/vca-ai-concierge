@@ -400,6 +400,7 @@ export function PremiumSurveyPage({
             setChatPanelVariant("expanded");
             openChat();
           }}
+          openActionPosition="after-close"
           showCloseAction={false}
         />
       ) : null}

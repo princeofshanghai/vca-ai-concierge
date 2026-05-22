@@ -31,7 +31,7 @@ const HIRING_LIVE_NAV_ITEM = {
 const HIRING_SHELL_OPTIONS = [
   {
     id: "hiring-shell-default",
-    label: "Tray (dismissable)",
+    label: "Tray (hidden)",
   },
   {
     id: "hiring-shell-tray",
@@ -45,11 +45,11 @@ const HIRING_SHELL_OPTIONS = [
 const PREMIUM_SHELL_OPTIONS = [
   {
     id: "premium-shell-dismissable-tray",
-    label: "Tray (dismissable)",
+    label: "Tray (hidden)",
   },
   {
     id: "premium-shell-dockable-tray",
-    label: "Tray (dockable)",
+    label: "Tray (persistent)",
   },
 ] as const;
 const hiringModeOptions = [
@@ -228,7 +228,7 @@ function getReviewDestinations(
 }
 
 function withHiringShell(href: string, shellLabel: HiringShellLabel) {
-  if (shellLabel === "Tray (dismissable)") {
+  if (shellLabel === "Tray (hidden)") {
     return href;
   }
 
@@ -240,7 +240,7 @@ function withHiringShell(href: string, shellLabel: HiringShellLabel) {
 }
 
 function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
-  if (shellLabel === "Tray (dockable)") {
+  if (shellLabel === "Tray (persistent)") {
     return `${href}?shell=tray`;
   }
 
@@ -283,19 +283,19 @@ export function ReviewShellNav() {
       ? "Tray (persistent)"
       : searchParams.get("shell") === "hybrid"
         ? "Tray (hybrid)"
-        : "Tray (dismissable)";
+        : "Tray (hidden)";
   const normalizedHiringHref =
     activeHiringShellLabel === "Tray (hybrid)"
       ? `${pathname}?shell=hybrid`
-      : activeHiringShellLabel === "Tray (dismissable)"
+      : activeHiringShellLabel === "Tray (hidden)"
         ? pathname
         : currentHref;
   const activePremiumShellLabel: PremiumShellLabel =
     searchParams.get("shell") === "tray"
-      ? "Tray (dockable)"
-      : "Tray (dismissable)";
+      ? "Tray (persistent)"
+      : "Tray (hidden)";
   const normalizedPremiumHref =
-    activePremiumShellLabel === "Tray (dockable)"
+    activePremiumShellLabel === "Tray (persistent)"
       ? currentHref
       : pathname;
   const componentProductLens: ComponentProductLens =

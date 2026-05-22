@@ -68,7 +68,7 @@ type ChatTrayProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   onOpen?: () => void;
   onClose?: () => void;
   onVariantToggle?: () => void;
-  openActionPosition?: "before-variant" | "after-variant";
+  openActionPosition?: "before-variant" | "after-variant" | "after-close";
   showCloseAction?: boolean;
 };
 
@@ -104,6 +104,7 @@ type ChatComposerProps = HTMLAttributes<HTMLDivElement> & {
   showAttachAction?: boolean;
   attachTooltip?: string;
   showTopDivider?: boolean;
+  showDictationAction?: boolean;
   showVoiceMode?: boolean;
 };
 
@@ -352,14 +353,16 @@ export function ChatTray({
       onClick={onOpen}
     />
   );
-  const variantAction = (
-    <GhostIconButton
-      label={headerActionLabel[variant]}
-      icon={headerActionIcon[variant]}
-      size="medium"
-      onClick={onVariantToggle}
-    />
-  );
+  const variantAction = onVariantToggle ? (
+    <span className="hidden md:inline-flex">
+      <GhostIconButton
+        label={headerActionLabel[variant]}
+        icon={headerActionIcon[variant]}
+        size="medium"
+        onClick={onVariantToggle}
+      />
+    </span>
+  ) : null;
 
   return (
     <div
@@ -414,6 +417,7 @@ export function ChatTray({
             onClick={onClose}
           />
         ) : null}
+        {openActionPosition === "after-close" ? openAction : null}
       </div>
     </div>
   );
@@ -544,14 +548,8 @@ export function ChatHeader({
         onClick={onDockToggle ?? onMinimizeToTray}
       />
     ) : null;
-  const variantAction = (
-    <span
-      className={cx(
-        onDockToggle || onMinimizeToTray
-          ? "inline-flex"
-          : "hidden md:inline-flex",
-      )}
-    >
+  const variantAction = onVariantToggle ? (
+    <span className="hidden md:inline-flex">
       <GhostIconButton
         label={headerActionLabel[variant]}
         icon={headerActionIcon[variant]}
@@ -559,7 +557,7 @@ export function ChatHeader({
         onClick={onVariantToggle}
       />
     </span>
-  );
+  ) : null;
 
   return (
     <header
@@ -1247,6 +1245,7 @@ export function ChatComposer({
   showAttachAction = true,
   attachTooltip = ATTACH_TOOLTIP,
   showTopDivider = false,
+  showDictationAction = true,
   showVoiceMode = true,
   ...props
 }: ChatComposerProps) {
@@ -1254,6 +1253,9 @@ export function ChatComposer({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const actionControlsRef = useRef<HTMLDivElement>(null);
   const [isMultiline, setIsMultiline] = useState(false);
+  const [composerSurfaceHeight, setComposerSurfaceHeight] = useState<
+    number | null
+  >(null);
   const isTextareaControlled = inputProps?.value !== undefined;
   const [uncontrolledComposerText, setUncontrolledComposerText] = useState(
     () => getTextareaValueText(inputProps?.defaultValue),
@@ -1310,9 +1312,13 @@ export function ChatComposer({
 
   const resizeTextarea = useCallback(
     (textarea: HTMLTextAreaElement) => {
+      const composerHeight =
+        readPixelValue(textarea, "--design-layout-composer-height") || 56;
+
       if (textarea.value.length === 0) {
         textarea.style.height = `${COMPOSER_TEXTAREA_EMPTY_HEIGHT}px`;
         setIsMultiline(false);
+        setComposerSurfaceHeight(composerHeight);
         return;
       }
 
@@ -1337,9 +1343,28 @@ export function ChatComposer({
         nextIsMultiline ? contentWidth : singleLineWidth,
         maxHeight,
       );
+      const composer = composerRef.current;
+      const composerStyles = composer ? getComputedStyle(composer) : null;
+      const compactActionHeight = readPixelValue(
+        textarea,
+        "--design-layout-compact-action-height",
+      );
+      const multilineGap = readPixelValue(textarea, "--design-spacing-sm");
+      const multilineBlockPadding = multilineGap * 2;
+      const composerBorder =
+        Number.parseFloat(composerStyles?.borderTopWidth ?? "") +
+          Number.parseFloat(composerStyles?.borderBottomWidth ?? "") || 2;
+      const nextComposerSurfaceHeight = nextIsMultiline
+        ? nextHeight +
+          compactActionHeight +
+          multilineGap +
+          multilineBlockPadding +
+          composerBorder
+        : composerHeight;
 
       textarea.style.height = `${nextHeight}px`;
       setIsMultiline(nextIsMultiline);
+      setComposerSurfaceHeight(nextComposerSurfaceHeight);
     },
     [getComposerContentWidth, getSingleLineTextareaWidth],
   );
@@ -1376,7 +1401,14 @@ export function ChatComposer({
     if (textareaRef.current) {
       resizeTextarea(textareaRef.current);
     }
-  }, [inputProps?.defaultValue, inputProps?.value, resizeTextarea]);
+  }, [
+    inputProps?.defaultValue,
+    inputProps?.value,
+    resizeTextarea,
+    sendLoading,
+    showDictationAction,
+    showVoiceMode,
+  ]);
 
   return (
     <div
@@ -1402,11 +1434,24 @@ export function ChatComposer({
       ) : (
         <div
           ref={composerRef}
+          style={
+            {
+              height:
+                composerSurfaceHeight === null
+                  ? "var(--design-layout-composer-height)"
+                  : `${composerSurfaceHeight}px`,
+            } as CSSProperties
+          }
           className={cx(
-            "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-subtle bg-background px-md shadow-raised-faint transition-[border-color,border-radius,box-shadow,padding] duration-150 ease-out hover:border-border-subtle-hover focus-within:border-border-subtle-active",
+            "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-subtle bg-background px-md shadow-raised-faint transition-[height,border-color,box-shadow] duration-150 ease-out hover:border-border-subtle-hover focus-within:border-border-subtle-active",
             isMultiline
               ? "grid-cols-1 gap-sm rounded-md py-sm"
-              : "h-[var(--design-layout-composer-height)] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-sm rounded-round py-xs",
+              : cx(
+                  "items-center gap-sm rounded-round py-xs",
+                  showAttachAction
+                    ? "grid-cols-[auto_minmax(0,1fr)_auto]"
+                    : "grid-cols-[minmax(0,1fr)_auto]",
+                ),
           )}
         >
             {showAttachAction && !isMultiline ? (
@@ -1425,6 +1470,7 @@ export function ChatComposer({
               className={cx(
                 "min-w-0 resize-none bg-transparent text-body-sm-open text-text outline-none placeholder:text-text-disabled",
                 "max-h-[var(--design-layout-composer-input-max-height)]",
+                !showAttachAction && "pl-xs",
                 isMultiline
                   ? "w-full overflow-y-auto"
                   : "overflow-hidden",
@@ -1433,7 +1479,10 @@ export function ChatComposer({
             <div
               className={cx(
                 "flex shrink-0 items-center gap-sm",
-                isMultiline && "w-full justify-between justify-self-stretch",
+                isMultiline &&
+                  (showAttachAction
+                    ? "w-full justify-between justify-self-stretch"
+                    : "w-full justify-end justify-self-stretch"),
               )}
             >
               {isMultiline && showAttachAction ? (
@@ -1443,7 +1492,7 @@ export function ChatComposer({
                 ref={actionControlsRef}
                 className="flex shrink-0 items-center gap-sm"
               >
-                {showVoiceMode ? (
+                {showDictationAction ? (
                   <GhostIconButton
                     label="Use microphone"
                     icon="microphone-fill"
@@ -1475,16 +1524,22 @@ export function ChatComposer({
 export function ChatPanelPreview({
   variant = "collapsed",
   className,
+  title,
   onClose,
   onMinimizeToTray,
   onVariantToggle,
+  dockActionPosition,
+  showCloseAction = true,
   showMinimizeToTrayAction = false,
 }: {
   variant?: ChatPanelVariant;
   className?: string;
+  title?: string;
   onClose?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
+  dockActionPosition?: "before-variant" | "after-variant";
+  showCloseAction?: boolean;
   showMinimizeToTrayAction?: boolean;
 }) {
   const minimizeToTrayHandler = onMinimizeToTray
@@ -1497,9 +1552,12 @@ export function ChatPanelPreview({
     <ChatPanel variant={variant} className={className}>
       <ChatHeader
         variant={variant}
+        title={title}
         onClose={onClose}
+        dockActionPosition={dockActionPosition}
         onMinimizeToTray={minimizeToTrayHandler}
         onVariantToggle={onVariantToggle}
+        showCloseAction={showCloseAction}
       />
       <ChatBody>
         <ChatThread>

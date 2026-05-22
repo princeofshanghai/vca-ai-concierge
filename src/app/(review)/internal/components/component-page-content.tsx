@@ -9,10 +9,8 @@ import {
   ChatMessage,
   ChatMessageFeedback,
   ChatMessageFeedbackFlow,
-  ChatPanelPreview,
   ChatThinkingMessage,
   ChatThread,
-  ChatTray,
   Prompt,
   RecommendationCard,
 } from "@/components/chat";
@@ -67,6 +65,8 @@ import {
   SharedMessagesDemo,
   SharedPromptsDemo,
   SharedShellDemo,
+  SharedShellHiringMicrositeDemo,
+  SharedShellPremiumSurveyDemo,
   SharedSidePanelDemo,
 } from "./component-client-previews";
 import type { ComponentNavItem } from "./component-nav";
@@ -804,42 +804,11 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedShellDemo />
       </PreviewSection>
-      <PreviewSection title="Panel and tray versions">
-        <PreviewMomentStack>
-          <PreviewMoment>
-            <PreviewExampleHeading>Default shell</PreviewExampleHeading>
-            <div className="overflow-x-auto px-xl pb-xxxl pt-md">
-              <ChatPanelPreview variant="collapsed" />
-            </div>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Tray shell</PreviewExampleHeading>
-            <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
-              <ChatTray />
-            </div>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>
-              Tray shell with live agent badge
-            </PreviewExampleHeading>
-            <div className="flex justify-end rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
-              <ChatTray
-                badge
-                identity={{
-                  type: "representative",
-                  name: "David S.",
-                  role: "Sales consultant",
-                }}
-              />
-            </div>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Wide shell</PreviewExampleHeading>
-            <div className="overflow-x-auto px-xl pb-xxxl pt-md">
-              <ChatPanelPreview variant="expanded" />
-            </div>
-          </PreviewMoment>
-        </PreviewMomentStack>
+      <PreviewSection title="LTS hiring microsite">
+        <SharedShellHiringMicrositeDemo />
+      </PreviewSection>
+      <PreviewSection title="Premium survey">
+        <SharedShellPremiumSurveyDemo />
       </PreviewSection>
     </ComponentPageShell>
   );
