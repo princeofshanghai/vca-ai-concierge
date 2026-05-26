@@ -38,6 +38,8 @@ import {
   type HighValueRecommendationState,
 } from "@/components/flow-review";
 import { Button } from "@/components/primitives/button";
+import { IdleSessionPrompt } from "@/components/primitives/idle-session-prompt";
+import { InterimLoadingState } from "@/components/primitives/interim-loading-state";
 import { useReviewShellState } from "@/components/review-shell";
 import { HIRING_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import {
@@ -64,6 +66,7 @@ type ConciergePanelProps = Readonly<{
   dockActionPosition?: "before-variant" | "after-variant";
   showCloseAction?: boolean;
   onConversationStart?: () => void;
+  onSessionEnd?: () => void;
   onUnreadActivity?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
   confirmationDialog?: ReactNode;
@@ -128,6 +131,9 @@ type PendingAssistantResponse = Readonly<{
 
 const INITIAL_LIVE_SCRIPT_INDEX = 0;
 const MATCHING_DELAY_MS = 900;
+const PREPARING_CHAT_DELAY_MS = 1200;
+const IDLE_PROMPT_DELAY_MS = 45000;
+const IDLE_SESSION_SECONDS = 8 * 60 + 22;
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
@@ -140,6 +146,13 @@ function createResponseStoppedFeedback(id: string): ConciergeInlineFeedback {
     tone: "neutral",
     content: "Response stopped.",
   };
+}
+
+function formatIdleTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function selectLiveFlowId(userMessage: string): FlowReviewId {
@@ -299,12 +312,15 @@ export function ConciergePanel({
   dockActionPosition,
   showCloseAction = true,
   onConversationStart,
+  onSessionEnd,
   onUnreadActivity,
   onSidePanelOpenChange,
   confirmationDialog,
 }: ConciergePanelProps) {
   const { isSignedIn } = useReviewShellState();
   const [lead, setLead] = useState<OnboardingResult | null>(null);
+  const [preparingLead, setPreparingLead] =
+    useState<OnboardingResult | null>(null);
   const [messages, setMessages] = useState<ReadonlyArray<ConciergeThreadItem>>(
     [],
   );
@@ -321,10 +337,18 @@ export function ConciergePanel({
     null,
   );
   const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
+  const [isIdlePromptOpen, setIsIdlePromptOpen] = useState(false);
+  const [idleRemainingSeconds, setIdleRemainingSeconds] = useState(
+    IDLE_SESSION_SECONDS,
+  );
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(0);
 
-  const phase: "onboarding" | "chat" = lead ? "chat" : "onboarding";
+  const phase: "onboarding" | "preparing" | "chat" = lead
+    ? "chat"
+    : preparingLead
+      ? "preparing"
+      : "onboarding";
   const isSchedulePanelOpen = scheduledSpecialistState === "scheduling";
   const shellVariant = variant;
   const hasUserMessages = messages.some(
@@ -456,48 +480,134 @@ export function ConciergePanel({
     setHasChatBodyScrolled(chatBody.scrollTop > 0);
   }, [messages, isSchedulePanelOpen]);
 
-  // Submitting the onboarding form swaps the welcome content for the chat
-  // thread. We trigger a View Transition so the AI mark morphs from the
-  // centered welcome position to its place in the header, while the body
-  // cross-fades. Falls back to an instant swap on browsers without support
-  // and when the user prefers reduced motion.
-  const handleOnboardingSubmit = useCallback(
+  const resetIdleSession = useCallback(() => {
+    setIsIdlePromptOpen(false);
+    setIdleRemainingSeconds(IDLE_SESSION_SECONDS);
+  }, []);
+
+  const endIdleSession = useCallback(() => {
+    resetIdleSession();
+    if (onSessionEnd) {
+      onSessionEnd();
+      return;
+    }
+
+    onClose?.();
+  }, [onClose, onSessionEnd, resetIdleSession]);
+
+  useEffect(() => {
+    if (!lead || isIdlePromptOpen || isAssistantBusy || isSchedulePanelOpen) {
+      return;
+    }
+
+    const idleTimer = window.setTimeout(() => {
+      setIdleRemainingSeconds(IDLE_SESSION_SECONDS);
+      setIsIdlePromptOpen(true);
+    }, IDLE_PROMPT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(idleTimer);
+    };
+  }, [
+    draft,
+    isAssistantBusy,
+    isIdlePromptOpen,
+    isSchedulePanelOpen,
+    lead,
+    messages,
+  ]);
+
+  useEffect(() => {
+    if (!isIdlePromptOpen) {
+      return;
+    }
+
+    const countdownTimer = window.setInterval(() => {
+      setIdleRemainingSeconds((currentSeconds) => {
+        if (currentSeconds <= 1) {
+          window.clearInterval(countdownTimer);
+          window.setTimeout(endIdleSession, 0);
+          return 0;
+        }
+
+        return currentSeconds - 1;
+      });
+    }, 1000);
+
+    return () => {
+      window.clearInterval(countdownTimer);
+    };
+  }, [endIdleSession, isIdlePromptOpen]);
+
+  const startChat = useCallback(
     (result: OnboardingResult) => {
       const assistantId = createMessageId("assistant");
-      const enterChat = () => {
-        onConversationStart?.();
-        setLead(result);
-        setDraft("");
-        setLiveFlowId(null);
-        setLiveStepIndex(INITIAL_LIVE_SCRIPT_INDEX);
-        setScheduledSpecialistState("initial");
-        setBookedMeeting(null);
-        onSidePanelOpenChange?.(false);
-        setMessages([
-          {
-            kind: "message",
-            id: assistantId,
-            role: "assistant",
-            content: "",
-            status: "thinking",
-          },
-        ]);
-        setPendingAssistantResponse({
-          id: assistantId,
-          text: buildInitialAssistantResponse(result),
-        });
-      };
 
-      if (!supportsViewTransitions()) {
-        enterChat();
-        return;
-      }
-      (document as ViewTransitionDocument).startViewTransition(() => {
-        flushSync(enterChat);
+      onConversationStart?.();
+      resetIdleSession();
+      setLead(result);
+      setPreparingLead(null);
+      setDraft("");
+      setLiveFlowId(null);
+      setLiveStepIndex(INITIAL_LIVE_SCRIPT_INDEX);
+      setScheduledSpecialistState("initial");
+      setBookedMeeting(null);
+      onSidePanelOpenChange?.(false);
+      setMessages([
+        {
+          kind: "message",
+          id: assistantId,
+          role: "assistant",
+          content: "",
+          status: "thinking",
+        },
+      ]);
+      setPendingAssistantResponse({
+        id: assistantId,
+        text: buildInitialAssistantResponse(result),
       });
     },
-    [createMessageId, onConversationStart, onSidePanelOpenChange],
+    [
+      createMessageId,
+      onConversationStart,
+      onSidePanelOpenChange,
+      resetIdleSession,
+    ],
   );
+
+  // The prototype keeps a brief interim state after "Start chat" so async
+  // setup feels intentional before the thread appears.
+  useEffect(() => {
+    if (!preparingLead) {
+      return;
+    }
+
+    const preparingTimer = window.setTimeout(() => {
+      if (!supportsViewTransitions()) {
+        startChat(preparingLead);
+        return;
+      }
+
+      (document as ViewTransitionDocument).startViewTransition(() => {
+        flushSync(() => startChat(preparingLead));
+      });
+    }, PREPARING_CHAT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(preparingTimer);
+    };
+  }, [preparingLead, startChat]);
+
+  const handleOnboardingSubmit = useCallback((result: OnboardingResult) => {
+    if (!supportsViewTransitions()) {
+      setPreparingLead(result);
+      return;
+    }
+
+    (document as ViewTransitionDocument).startViewTransition(() => {
+      flushSync(() => setPreparingLead(result));
+    });
+  }, []);
 
   const handleDraftChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -831,6 +941,10 @@ export function ConciergePanel({
             />
           </>
         )
+      ) : phase === "preparing" ? (
+        <InterimLoadingState
+          title="Your AI assistant is getting ready"
+        />
       ) : (
         // Re-key on the demo preset so toggling between signed-in and
         // signed-out in the review shell remounts the screen with fresh
@@ -841,6 +955,17 @@ export function ConciergePanel({
           onSubmit={handleOnboardingSubmit}
         />
       )}
+      {lead && isIdlePromptOpen ? (
+        <IdleSessionPrompt
+          title="Still there?"
+          description="Your hiring chat will close soon."
+          timeRemaining={`${formatIdleTime(idleRemainingSeconds)} remaining`}
+          primaryActionLabel="Continue chat"
+          secondaryActionLabel="End chat"
+          onPrimaryAction={resetIdleSession}
+          onSecondaryAction={endIdleSession}
+        />
+      ) : null}
       {confirmationDialog}
     </ChatPanel>
   );

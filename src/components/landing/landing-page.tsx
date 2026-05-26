@@ -90,9 +90,8 @@ export function LandingPage({
     chatPanelVariant === "expanded" || isReviewSidePanelOpen;
   const isCenteredChatSurface = chatPanelVariant === "expanded";
   const isBottomAttachedChatSurface =
-    isDismissableTrayShell ||
-    isPersistentTrayShell ||
-    (isHybridShell && !isCenteredChatSurface);
+    !isCenteredChatSurface &&
+    (isDismissableTrayShell || isPersistentTrayShell || isHybridShell);
   // Tray shells are bottom-docked; 72px preserves the 64px landing header plus an 8px gap.
   const chatPanelPositionClass = isBottomAttachedChatSurface
     ? isCenteredChatSurface
@@ -463,6 +462,7 @@ export function LandingPage({
                   onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}
+                  onSessionEnd={closeChat}
                   confirmationDialog={
                     <ConfirmationDialog
                       open={isEndChatDialogOpen && isChatConversationStarted}

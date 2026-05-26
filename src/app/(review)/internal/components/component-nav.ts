@@ -44,6 +44,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/shared/messages",
           },
           {
+            id: "shared-feedback",
+            title: "Feedback",
+            description:
+              "Lets visitors rate an assistant response and optionally share why.",
+            href: "/internal/components/shared/feedback",
+          },
+          {
             id: "shared-composer",
             title: "Composer",
             description:
@@ -70,6 +77,20 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Supports a focused task alongside the conversation.",
             href: "/internal/components/shared/side-panel",
+          },
+          {
+            id: "shared-interim-state",
+            title: "Interim state",
+            description:
+              "Shows a calm waiting moment while an assistant or session is prepared.",
+            href: "/internal/components/shared/interim-state",
+          },
+          {
+            id: "shared-idle-session",
+            title: "Idle session",
+            description:
+              "Prompts visitors to continue or end a chat after inactivity.",
+            href: "/internal/components/shared/idle-session",
           },
         ],
       },
@@ -178,6 +199,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Signals whether a person or agent is active or on mobile.",
             href: "/internal/components/sdui/presence-badge",
+          },
+          {
+            id: "sdui-progress-indicator-circular",
+            title: "Progress indicator circular",
+            description:
+              "Communicates that a system action is processing or taking more time.",
+            href: "/internal/components/sdui/progress-indicator-circular",
           },
         ],
       },

@@ -12,6 +12,7 @@ import {
 import {
   ChatBody,
   ChatComposer,
+  ChatFeedbackReasonPanel,
   ChatFeedbackReasonChips,
   ChatHeader,
   ChatInlineFeedback,
@@ -19,16 +20,18 @@ import {
   ChatMessageFeedback,
   ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatSidePanel,
+  ChatSidePanelLayout,
   ChatThinkingMessage,
   ChatThread,
   ChatTray,
   Prompt,
   RecommendationCard,
+  type ChatFeedbackReason,
   type ChatPanelVariant,
 } from "@/components/chat";
 import {
   HighValueMatchCardPreview,
-  HighValueSchedulePanelPreview,
   MediumAvailableHandoffPreview,
   type BookedMeeting,
   type HighValueRecommendationState,
@@ -79,10 +82,10 @@ type ButtonDemoState =
   | "loading";
 type FieldContentState = "empty" | "filled" | "error" | "disabled";
 type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
+type SidePanelDemoView = "panel" | "shell";
 type ShellDemoVersion = "dismissable" | "persistent" | "hybrid";
 type ShellDemoDevice = "desktop" | "mobile";
 type ShellDemoState = "closed" | "tray" | "panel";
-type HeaderDemoView = "open" | "docked";
 type ShellDemoPanelRenderProps = Readonly<{
   className: string;
   variant: ChatPanelVariant;
@@ -192,11 +195,6 @@ const shellDemoDeviceOptions: ReadonlyArray<
 > = [
   { label: "Desktop", value: "desktop", Icon: Monitor },
   { label: "Mobile", value: "mobile", Icon: Smartphone },
-];
-
-const headerDemoViewOptions: ReadonlyArray<DemoOption<HeaderDemoView>> = [
-  { label: "Open", value: "open" },
-  { label: "Docked", value: "docked" },
 ];
 
 const shellDemoDesktopHeight = 820;
@@ -345,6 +343,7 @@ function ToggleControl({
       <span>{label}</span>
       <input
         type="checkbox"
+        role="switch"
         checked={checked}
         className="peer sr-only"
         onChange={(event) => onChange(event.currentTarget.checked)}
@@ -1152,8 +1151,10 @@ function HiringMicrositeBackdrop({
 
 function PremiumSurveyBackdrop({
   onOpen,
+  showFab = true,
 }: Readonly<{
   onOpen: () => void;
+  showFab?: boolean;
 }>) {
   return (
     <>
@@ -1220,9 +1221,11 @@ function PremiumSurveyBackdrop({
           </div>
         </div>
       </section>
-      <div className="absolute bottom-8 right-10 z-10">
-        <PremiumConciergeFab onClick={onOpen} position="static" />
-      </div>
+      {showFab ? (
+        <div className="absolute bottom-8 right-10 z-10">
+          <PremiumConciergeFab onClick={onOpen} position="static" />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -1326,20 +1329,21 @@ export function SharedShellPremiumSurveyDemo() {
 
 export function SharedHeaderDemo() {
   const [mode, setMode] = useState("hiring");
+  const [hasLiveAgent, setHasLiveAgent] = useState(false);
   const [shellVersion, setShellVersion] =
     useState<ShellDemoVersion>("dismissable");
-  const [view, setView] = useState<HeaderDemoView>("open");
+  const [isDocked, setIsDocked] = useState(false);
   const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
   const isMobile = device === "mobile";
   const isPersistent = shellVersion === "persistent";
   const hasDockAction = shellVersion === "persistent" || shellVersion === "hybrid";
-  const isDocked = hasDockAction && view === "docked";
+  const shouldShowDockedTray = hasDockAction && isDocked;
   const panelVariant = getPanelVariantForContext(
     isMobile ? "mobile" : "collapsed",
   );
   const headerIdentity =
-    mode === "agent"
+    hasLiveAgent
       ? ({
           type: "representative",
           name: "David S.",
@@ -1349,9 +1353,9 @@ export function SharedHeaderDemo() {
   const headerTitle =
     mode === "premium" ? PREMIUM_CONCIERGE_TITLE : HIRING_CONCIERGE_TITLE;
 
-  function handleHeaderModeChange(nextMode: string) {
-    setMode(nextMode);
-    if (nextMode !== "agent") {
+  function handleLiveAgentChange(nextHasLiveAgent: boolean) {
+    setHasLiveAgent(nextHasLiveAgent);
+    if (!nextHasLiveAgent) {
       setHasUnreadMessage(false);
     }
   }
@@ -1359,8 +1363,18 @@ export function SharedHeaderDemo() {
   function handleHeaderShellChange(nextShellVersion: ShellDemoVersion) {
     setShellVersion(nextShellVersion);
     if (nextShellVersion === "dismissable") {
-      setView("open");
+      setIsDocked(false);
     }
+  }
+
+  function dockHeaderDemo() {
+    if (hasDockAction) {
+      setIsDocked(true);
+    }
+  }
+
+  function openHeaderDemo() {
+    setIsDocked(false);
   }
 
   return (
@@ -1373,9 +1387,13 @@ export function SharedHeaderDemo() {
             options={[
               { label: "Hiring", value: "hiring" },
               { label: "Premium", value: "premium" },
-              { label: "Live agent", value: "agent" },
             ]}
-            onChange={handleHeaderModeChange}
+            onChange={setMode}
+          />
+          <ToggleControl
+            label="Live agent"
+            checked={hasLiveAgent}
+            onChange={handleLiveAgentChange}
           />
           <SegmentedControl
             label="Shell"
@@ -1383,15 +1401,7 @@ export function SharedHeaderDemo() {
             options={shellDemoVersionOptions}
             onChange={handleHeaderShellChange}
           />
-          {hasDockAction ? (
-            <SegmentedControl
-              label="View"
-              value={view}
-              options={headerDemoViewOptions}
-              onChange={setView}
-            />
-          ) : null}
-          {mode === "agent" ? (
+          {hasLiveAgent ? (
             <ToggleControl
               label="Unread message"
               checked={hasUnreadMessage}
@@ -1403,22 +1413,22 @@ export function SharedHeaderDemo() {
       }
     >
       <ChatSurfaceDemoFrame device={device} height="short">
-        {isDocked ? (
+        {shouldShowDockedTray ? (
           <div className="relative flex min-h-0 flex-1 items-center justify-center bg-background-neutral-soft px-xl text-center">
             <p className="max-w-[18rem] text-body-sm-open text-text-meta">
               Docked tray uses the compact header treatment.
             </p>
             <ChatTray
               aria-label="Open AI Concierge chat"
-              badge={mode === "agent" && hasUnreadMessage}
+              badge={hasLiveAgent && hasUnreadMessage}
               badgeLabel="Unread message"
               className="absolute bottom-0 left-0 right-0 w-full max-w-none"
               identity={headerIdentity}
               title={headerTitle}
-              onOpen={() => {}}
+              onOpen={openHeaderDemo}
               onVariantToggle={isMobile ? undefined : () => {}}
               openActionPosition={isPersistent ? "after-variant" : undefined}
-              onClose={shellVersion === "hybrid" ? () => {} : undefined}
+              onClose={shellVersion === "hybrid" ? openHeaderDemo : undefined}
               showCloseAction={shellVersion === "hybrid"}
             />
           </div>
@@ -1428,12 +1438,12 @@ export function SharedHeaderDemo() {
             identity={headerIdentity}
             title={headerTitle}
             dockActionPosition={isPersistent ? "after-variant" : undefined}
-            onMinimizeToTray={hasDockAction ? () => {} : undefined}
+            onMinimizeToTray={hasDockAction ? dockHeaderDemo : undefined}
             onVariantToggle={isMobile ? undefined : () => {}}
             showCloseAction={!isPersistent}
           />
         ) }
-        {!isDocked ? (
+        {!shouldShowDockedTray ? (
           <div className="flex min-h-0 flex-1 items-center justify-center bg-background-neutral-soft px-xl text-center">
             <p className="max-w-[18rem] text-body-sm-open text-text-meta">
               Header controls adapt to the selected shell and device.
@@ -1442,6 +1452,61 @@ export function SharedHeaderDemo() {
         ) : null}
       </ChatSurfaceDemoFrame>
     </ContextualComponentDemoSection>
+  );
+}
+
+function HeaderVariantReferenceFrame({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <ChatPanel
+      variant="collapsed"
+      className="!h-auto border-b-0 md:!w-[var(--design-layout-panel-collapsed-width)]"
+    >
+      {children}
+    </ChatPanel>
+  );
+}
+
+export function SharedHeaderVariants() {
+  return (
+    <div className="space-y-16">
+      <section>
+        <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
+          LTS hiring microsite
+        </h3>
+        <HeaderVariantReferenceFrame>
+          <ChatHeader title={HIRING_CONCIERGE_TITLE} onVariantToggle={() => {}} />
+        </HeaderVariantReferenceFrame>
+      </section>
+      <section>
+        <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
+          Premium survey
+        </h3>
+        <HeaderVariantReferenceFrame>
+          <ChatHeader title={PREMIUM_CONCIERGE_TITLE} onVariantToggle={() => {}} />
+        </HeaderVariantReferenceFrame>
+      </section>
+      <section>
+        <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
+          Live agent
+        </h3>
+        <p className="mb-md max-w-[40rem] text-body-sm-open text-text-meta">
+          Used once a live agent joins. The header shows the agent avatar and
+          name so it feels clear that a person is now helping.
+        </p>
+        <HeaderVariantReferenceFrame>
+          <ChatHeader
+            identity={{
+              type: "representative",
+              name: "David S.",
+              role: "Sales consultant",
+            }}
+            onVariantToggle={() => {}}
+          />
+        </HeaderVariantReferenceFrame>
+      </section>
+    </div>
   );
 }
 
@@ -1459,8 +1524,6 @@ export function SharedMessagesDemo() {
             value={messageType}
             options={[
               { label: "AI assistant", value: "ai" },
-              { label: "Interactive AI feedback", value: "feedback" },
-              { label: "Feedback result", value: "feedback-result" },
               { label: "Member or visitor", value: "user" },
               { label: "Live agent", value: "agent" },
               { label: "Thinking", value: "thinking" },
@@ -1473,24 +1536,7 @@ export function SharedMessagesDemo() {
       }
     >
       <ChatThreadContextFrame context={context}>
-        {messageType === "feedback" ? (
-          <div className="space-y-xs">
-            <ChatMessage>
-              I would compare the lighter hiring path against Recruiter before routing you to sales.
-            </ChatMessage>
-            <ChatMessageFeedbackFlow timestamp="1:01 PM" />
-          </div>
-        ) : messageType === "feedback-result" ? (
-          <div className="space-y-xs">
-            <ChatMessage>A sales consultant can narrow the setup fast.</ChatMessage>
-            <div className="flex justify-start">
-              <ChatMessageFeedback value="thumbs-down" timestamp="1:03 PM" />
-            </div>
-            <div className="flex justify-start">
-              <ChatFeedbackReasonChips value="confusing" />
-            </div>
-          </div>
-        ) : messageType === "user" ? (
+        {messageType === "user" ? (
           <ChatMessage role="user" timestamp="1:04 PM">
             We need to ramp hiring fast this quarter.
           </ChatMessage>
@@ -1522,15 +1568,88 @@ export function SharedMessagesDemo() {
             </div>
           </ChatMessage>
         ) : (
-          <div className="space-y-xs">
-            <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
-            <div className="flex justify-start">
-              <ChatMessageFeedback timestamp="1:00 PM" />
-            </div>
-          </div>
+          <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
         )}
       </ChatThreadContextFrame>
     </ComponentDemoSection>
+  );
+}
+
+export function SharedFeedbackDemo() {
+  return (
+    <ComponentDemoSection>
+      <ChatThreadContextFrame context="collapsed">
+        <div className="space-y-xs">
+          <ChatMessage>
+            I would compare the lighter hiring path against Recruiter before routing you to sales.
+          </ChatMessage>
+          <ChatMessageFeedbackFlow timestamp="1:01 PM" />
+        </div>
+      </ChatThreadContextFrame>
+    </ComponentDemoSection>
+  );
+}
+
+function FeedbackVariantHeading({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
+      {children}
+    </h3>
+  );
+}
+
+export function SharedFeedbackVariants() {
+  const selectedReasons: ReadonlyArray<ChatFeedbackReason> = [
+    "confusing",
+    "not-what-im-looking-for",
+  ];
+
+  return (
+    <div className="space-y-16">
+      <section>
+        <FeedbackVariantHeading>Rating</FeedbackVariantHeading>
+        <ChatThreadContextFrame context="collapsed">
+          <div className="flex justify-start">
+            <ChatMessageFeedback timestamp="1:00 PM" />
+          </div>
+        </ChatThreadContextFrame>
+      </section>
+      <section>
+        <FeedbackVariantHeading>Selected rating</FeedbackVariantHeading>
+        <ChatThreadContextFrame context="collapsed">
+          <div className="flex justify-start">
+            <ChatMessageFeedback value="thumbs-down" timestamp="1:03 PM" />
+          </div>
+        </ChatThreadContextFrame>
+      </section>
+      <section>
+        <FeedbackVariantHeading>Reason chips</FeedbackVariantHeading>
+        <ChatThreadContextFrame context="collapsed">
+          <ChatFeedbackReasonChips values={selectedReasons} />
+        </ChatThreadContextFrame>
+      </section>
+      <section>
+        <FeedbackVariantHeading>Optional feedback</FeedbackVariantHeading>
+        <ChatThreadContextFrame context="collapsed">
+          <ChatFeedbackReasonPanel
+            values={selectedReasons}
+            comment="The recommendation did not explain which option is fastest to launch."
+            onValuesChange={() => {}}
+            onCommentChange={() => {}}
+            onClose={() => {}}
+            onSubmit={() => {}}
+          />
+        </ChatThreadContextFrame>
+      </section>
+      <section>
+        <FeedbackVariantHeading>Submitted</FeedbackVariantHeading>
+        <ChatThreadContextFrame context="collapsed">
+          <div className="flex justify-start">
+            <ChatInlineFeedback>Thank you for the feedback.</ChatInlineFeedback>
+          </div>
+        </ChatThreadContextFrame>
+      </section>
+    </div>
   );
 }
 
@@ -1742,33 +1861,125 @@ export function SharedActionCardDemo() {
   );
 }
 
+function GenericSidePanelDemoContent() {
+  return (
+    <ChatSidePanel
+      onBack={() => {}}
+      footerClassName="mt-stack-lg flex flex-col gap-md border-t border-border-faint pt-xl sm:flex-row sm:items-center sm:justify-between"
+      footer={
+        <>
+          <p className="min-h-[1.25rem] text-body-sm-open text-text-meta">
+            You can return to chat at any time.
+          </p>
+          <div className="flex flex-col gap-sm sm:flex-row">
+            <Button className="w-full sm:w-fit" variant="secondary">
+              Cancel
+            </Button>
+            <Button className="w-full sm:w-fit">Continue</Button>
+          </div>
+        </>
+      }
+    >
+      <div className="flex flex-wrap items-center gap-md">
+        <h2 className="text-heading-xl text-text">Review request details</h2>
+        <Tag size="medium">Example</Tag>
+      </div>
+
+      <p className="mt-sm max-w-[34rem] text-body-sm-open text-text-meta">
+        Confirm the context before moving ahead with the next step.
+      </p>
+
+      <article className="mt-xxl flex w-full max-w-[21.5rem] items-center gap-sm rounded-md border border-border-faint bg-background pb-xl pl-xl pr-lg pt-xl">
+        <Entity size={48} label="Focused task placeholder" />
+        <div className="min-w-0">
+          <p className="text-heading-md text-text">Focused task</p>
+          <p className="text-body-xs text-text-meta">
+            Reusable side panel content
+          </p>
+        </div>
+      </article>
+
+      <section className="mt-stack-lg space-y-lg">
+        <h3 className="text-heading-lg text-text">Context</h3>
+        <p className="max-w-[34rem] text-body-sm-open text-text-meta">
+          Confirm the context before moving ahead with the next step.
+        </p>
+      </section>
+
+      <section className="mt-stack-lg space-y-lg">
+        <h3 className="text-heading-lg text-text">Selected option</h3>
+        <div className="flex flex-wrap gap-x-sm gap-y-xs">
+          <Pill checked>Recommended</Pill>
+          <Pill>Alternative</Pill>
+          <Pill>More details</Pill>
+        </div>
+      </section>
+
+      <section className="mt-stack-lg space-y-lg">
+        <h3 className="text-heading-lg text-text">Next step</h3>
+        <p className="max-w-[34rem] text-body-sm-open text-text-meta">
+          Continue with a guided setup while the chat remains available.
+        </p>
+      </section>
+    </ChatSidePanel>
+  );
+}
+
+function GenericSidePanelChatHistory() {
+  return (
+    <ChatThread timestamp="9:24 PM" showAiDisclaimer={false}>
+      <ChatMessage>
+        I can keep the conversation here while you complete a focused task.
+      </ChatMessage>
+      <ChatMessage role="user" timestamp="9:25 PM">
+        Show me the next step.
+      </ChatMessage>
+    </ChatThread>
+  );
+}
+
 export function SharedSidePanelDemo() {
-  const [state, setState] = useState("default");
+  const [view, setView] = useState<SidePanelDemoView>("panel");
   const [context, setContext] =
     useState<ComponentLibraryContext>("collapsed");
+  const variant = getPanelVariantForContext(context);
 
   return (
     <ComponentDemoSection
       controls={
         <>
-          <ChatContextControl value={context} onChange={setContext} />
           <SegmentedControl
-            label="Booking state"
-            value={state}
+            label="View"
+            value={view}
             options={[
-              { label: "Default", value: "default" },
-              { label: "Confirming", value: "confirming" },
+              { label: "Panel only", value: "panel" },
+              { label: "In chat shell", value: "shell" },
             ]}
-            onChange={setState}
+            onChange={setView}
           />
+          <ChatContextControl value={context} onChange={setContext} />
         </>
       }
     >
       <SidePanelContextFrame context={context}>
-        <HighValueSchedulePanelPreview
-          key={state}
-          state={state === "confirming" ? "confirming" : "default"}
-        />
+        {view === "panel" ? (
+          <GenericSidePanelDemoContent />
+        ) : (
+          <ChatPanel
+            variant={variant}
+            className={cx(
+              "md:!h-full md:!w-full",
+              getMobilePanelOverrideClass(context),
+            )}
+          >
+            <ChatHeader title="Contact sales" showAiMark variant={variant} />
+            <ChatSidePanelLayout
+              history={<GenericSidePanelChatHistory />}
+              sidePanel={<GenericSidePanelDemoContent />}
+              variant={variant}
+            />
+          </ChatPanel>
+        )}
       </SidePanelContextFrame>
     </ComponentDemoSection>
   );
@@ -1776,37 +1987,76 @@ export function SharedSidePanelDemo() {
 
 export function PremiumFabReviewPreview() {
   return (
-    <div className="relative min-h-28 overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+    <PremiumFabPreviewFrame>
+      <PremiumConciergeFab onClick={() => {}} position="static" />
+    </PremiumFabPreviewFrame>
+  );
+}
+
+function PremiumFabPreviewFrame({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <div className="relative h-56 w-full min-w-[20rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
       <div className="absolute bottom-xl right-xl">
-        <PremiumConciergeFab onClick={() => {}} position="static" />
+        {children}
       </div>
     </div>
   );
 }
 
 export function PremiumFabDemo() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [shellState, setShellState] = useState<ShellDemoState>("closed");
+  const [panelVariant, setPanelVariant] =
+    useState<ChatPanelVariant>("collapsed");
+
+  function openPanel() {
+    setPanelVariant("collapsed");
+    setShellState("panel");
+  }
+
+  function closeShell() {
+    setPanelVariant("collapsed");
+    setShellState("closed");
+  }
+
+  function togglePanelVariant() {
+    setPanelVariant((currentVariant) =>
+      currentVariant === "collapsed" ? "expanded" : "collapsed",
+    );
+  }
 
   return (
-    <ComponentDemoSection
-      controls={
-        <ToggleControl
-          label="Chat open"
-          checked={isOpen}
-          onChange={setIsOpen}
-        />
-      }
-    >
-      <div className="relative min-h-28 overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-        <div className="absolute bottom-xl right-xl">
-          <PremiumConciergeFab
-            isChatOpen={isOpen}
-            onClick={() => setIsOpen((current) => !current)}
-            position="static"
+    <ContextualComponentDemoSection previewClassName="w-full">
+      <ShellDemoFrame
+        device="desktop"
+        renderBackdrop={(handleOpen) => (
+          <PremiumSurveyBackdrop
+            onOpen={handleOpen}
+            showFab={shellState === "closed"}
           />
-        </div>
-      </div>
-    </ComponentDemoSection>
+        )}
+        renderPanel={(panelProps) => (
+          <PremiumConciergePanel
+            className={panelProps.className}
+            variant={panelProps.variant}
+            context="use-case"
+            onClose={panelProps.onClose}
+            onVariantToggle={panelProps.onVariantToggle}
+            showCloseAction={panelProps.showCloseAction}
+          />
+        )}
+        version="dismissable"
+        shellState={shellState}
+        shellTitle={PREMIUM_CONCIERGE_TITLE}
+        panelVariant={panelVariant}
+        onClose={closeShell}
+        onDock={closeShell}
+        onOpen={openPanel}
+        onOpenExpanded={openPanel}
+        onVariantToggle={togglePanelVariant}
+      />
+    </ContextualComponentDemoSection>
   );
 }
 

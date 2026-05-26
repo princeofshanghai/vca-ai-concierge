@@ -19,6 +19,7 @@ The product-specific layer lives in dedicated briefs:
 
 - [LinkedIn Hiring / LTS concierge](docs/hiring-concierge.md)
 - [LinkedIn Premium concierge](docs/premium-concierge.md)
+- [Premium Company Pages](docs/premium-company-pages.md)
 
 ## Workstreams
 
@@ -38,12 +39,21 @@ Entry route: `/premium`
 
 For now, Premium has a fake survey path with static question steps and a static plan comparison page. Do not add concierge conversation logic, plan-selection logic, or product recommendations until the Premium brief and flow decisions are defined.
 
+### Premium Company Pages
+
+Premium Company Pages is a new visionary design prototype for communicating to executives how an AI chat experience could work for Premium Company Pages.
+
+Entry route: `/premium-company-pages`
+
+For now, this workstream is a placeholder only. Do not add conversation logic, recommendations, monetization assumptions, admin workflows, analytics claims, or branded design tokens until the Premium Company Pages brief and design direction are defined.
+
 ## Separation Rule
 
 Product-specific assumptions must not leak across workstreams.
 
 - Hiring copy, personas, routing tiers, sales handoff logic, onboarding requirements, and conversation flows belong only to the Hiring workstream.
 - Premium survey steps, member motivations, plan logic, recommendations, and upsell content belong only to the Premium workstream.
+- Premium Company Pages executive narrative, company-page admin workflows, AI chat behavior, value claims, monetization assumptions, and page-growth scenarios belong only to the Premium Company Pages workstream.
 - Shared primitives and layout patterns may be reused, but product-specific data and copy should be passed in through product-owned routes or modules.
 - The root route `/` is a neutral project chooser, not a product experience.
 

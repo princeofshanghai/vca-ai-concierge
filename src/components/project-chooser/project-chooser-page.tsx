@@ -12,6 +12,10 @@ const conciergeOptions = [
     label: "Premium survey concierge",
   },
   {
+    href: "/premium-company-pages",
+    label: "Premium Company Pages",
+  },
+  {
     href: "/internal/components",
     label: "Browse UI components",
   },

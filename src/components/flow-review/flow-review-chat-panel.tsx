@@ -30,6 +30,7 @@ import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
+import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
@@ -422,12 +423,11 @@ function MediumAvailableHandoff({
       >
         {state === "connecting" ? (
           <div className="flex items-center gap-md">
-            <span
-              aria-hidden="true"
-              className="inline-flex size-6 shrink-0 items-center justify-center rounded-round bg-background"
-            >
-              <span className="block size-4 animate-spin rounded-full border-[1.5px] border-action border-r-transparent" />
-            </span>
+            <ProgressIndicatorCircular
+              aria-label="Connecting"
+              size={20}
+              type="indeterminate"
+            />
             <h2 className="text-heading-md">Connecting you now</h2>
           </div>
         ) : null}

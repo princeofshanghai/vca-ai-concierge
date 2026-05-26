@@ -2,13 +2,12 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 
 import {
+  ChatBody,
   ChatComposer,
-  ChatFeedbackReasonChips,
   ChatHeader,
   ChatInlineFeedback,
   ChatMessage,
-  ChatMessageFeedback,
-  ChatMessageFeedbackFlow,
+  ChatPanel,
   ChatThinkingMessage,
   ChatThread,
   Prompt,
@@ -33,15 +32,14 @@ import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, iconMetadata } from "@/components/primitives/icon";
+import { IdleSessionPrompt } from "@/components/primitives/idle-session-prompt";
+import { InterimLoadingState } from "@/components/primitives/interim-loading-state";
 import { Pill } from "@/components/primitives/pill";
 import { PresenceBadge } from "@/components/primitives/presence-badge";
+import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
-import {
-  HIRING_CONCIERGE_TITLE,
-  PREMIUM_CONCIERGE_TITLE,
-} from "@/lib/concierge-copy";
 
 import {
   PremiumConciergePanelDemo,
@@ -61,7 +59,10 @@ import {
   SduiTextInputDemo,
   SharedActionCardDemo,
   SharedComposerDemo,
+  SharedFeedbackDemo,
+  SharedFeedbackVariants,
   SharedHeaderDemo,
+  SharedHeaderVariants,
   SharedMessagesDemo,
   SharedPromptsDemo,
   SharedShellDemo,
@@ -147,6 +148,7 @@ const presenceBadgeExamples = [
   { label: "Medium", size: "medium" },
   { label: "Large", size: "large" },
 ] as const;
+const progressIndicatorCircularSizes = [16, 20, 24, 32, 40, 48, 64] as const;
 
 const bookedMeetingPreview: BookedMeeting = {
   format: "Online meeting",
@@ -365,13 +367,15 @@ function ChatPanelReferenceFrame({
   );
 }
 
-function ChatHeaderReferenceFrame({
+function ChatShellContainerPreview({
   children,
-}: Readonly<{ children: ReactNode }>) {
+}: Readonly<{
+  children: ReactNode;
+}>) {
   return (
-    <ChatPanelReferenceFrame className="border-b-0">
+    <div className="h-[760px] w-[var(--design-layout-panel-collapsed-width)] max-w-full">
       {children}
-    </ChatPanelReferenceFrame>
+    </div>
   );
 }
 
@@ -567,24 +571,8 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedHeaderDemo />
       </PreviewSection>
-      <PreviewSection title="Header variants">
-        <div className="space-y-md">
-          <ChatHeaderReferenceFrame>
-            <ChatHeader title={HIRING_CONCIERGE_TITLE} />
-          </ChatHeaderReferenceFrame>
-          <ChatHeaderReferenceFrame>
-            <ChatHeader title={PREMIUM_CONCIERGE_TITLE} />
-          </ChatHeaderReferenceFrame>
-          <ChatHeaderReferenceFrame>
-            <ChatHeader
-              identity={{
-                type: "representative",
-                name: "David S.",
-                role: "Sales consultant",
-              }}
-            />
-          </ChatHeaderReferenceFrame>
-        </div>
+      <PreviewSection title="Variants">
+        <SharedHeaderVariants />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -602,32 +590,6 @@ function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             <PreviewExampleHeading>AI assistant</PreviewExampleHeading>
             <ChatThreadReferenceFrame>
               <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
-              <div className="flex justify-start">
-                <ChatMessageFeedback timestamp="1:00 PM" />
-              </div>
-            </ChatThreadReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Interactive AI feedback</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <ChatMessage>
-                I would compare the lighter hiring path against Recruiter before routing you to sales.
-              </ChatMessage>
-              <ChatMessageFeedbackFlow timestamp="1:01 PM" />
-            </ChatThreadReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Feedback result states</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <div className="space-y-xs">
-                <ChatMessage>A sales consultant can narrow the setup fast.</ChatMessage>
-                <div className="flex justify-start">
-                  <ChatMessageFeedback value="thumbs-down" timestamp="1:03 PM" />
-                </div>
-                <div className="flex justify-start">
-                  <ChatFeedbackReasonChips value="confusing" />
-                </div>
-              </div>
             </ChatThreadReferenceFrame>
           </PreviewMoment>
           <PreviewMoment>
@@ -676,6 +638,19 @@ function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             </ChatThreadReferenceFrame>
           </PreviewMoment>
         </PreviewMomentStack>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedFeedbackPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedFeedbackDemo />
+      </PreviewSection>
+      <PreviewSection title="Variants">
+        <SharedFeedbackVariants />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -820,7 +795,7 @@ function SharedSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedSidePanelDemo />
       </PreviewSection>
-      <PreviewSection title="Hiring examples">
+      <PreviewSection title="LTS microsite examples">
         <PreviewMomentStack>
           {highValueBookingPanelStates.map(({ label, state }) => (
             <PreviewMoment key={state}>
@@ -833,6 +808,82 @@ function SharedSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             </PreviewMoment>
           ))}
         </PreviewMomentStack>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedInterimStatePage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection
+        title="Assistant setup"
+        description="A reusable neutral state for short delays before a chat, session, or workflow is ready."
+      >
+        <ChatShellContainerPreview>
+          <ChatPanel
+            variant="collapsed"
+            className="md:!h-full md:!w-full"
+          >
+            <ChatHeader variant="collapsed" />
+            <ChatBody>
+              <InterimLoadingState
+                title="Your AI assistant is getting ready"
+              />
+            </ChatBody>
+            <ChatComposer
+              inputProps={{
+                disabled: true,
+                placeholder: "Send a message",
+              }}
+              showAttachAction={false}
+              showDictationAction={false}
+            />
+          </ChatPanel>
+        </ChatShellContainerPreview>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection
+        title="Chat inactivity"
+        description="A reusable overlay for asking whether someone wants to keep a session open after a quiet period."
+      >
+        <ChatShellContainerPreview>
+          <ChatPanel
+            variant="collapsed"
+            className="md:!h-full md:!w-full"
+          >
+            <ChatHeader title="Contact sales" showAiMark />
+            <ChatBody className="opacity-20">
+              <ChatThread timestamp="23:02" showAiDisclaimer={false}>
+                <ChatMessage>
+                  Hi there. With the help of AI, I can answer questions about
+                  LinkedIn hiring solutions or connect you to our team.
+                </ChatMessage>
+              </ChatThread>
+            </ChatBody>
+            <ChatComposer
+              inputProps={{
+                disabled: true,
+                placeholder: "Send a message",
+              }}
+              showAttachAction={false}
+              showDictationAction={false}
+            />
+            <IdleSessionPrompt
+              title="Still there?"
+              description="Your hiring chat will close soon."
+              timeRemaining="8:22 remaining"
+              primaryActionLabel="Continue chat"
+              secondaryActionLabel="End chat"
+            />
+          </ChatPanel>
+        </ChatShellContainerPreview>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1269,6 +1320,97 @@ function SduiPresenceBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SduiProgressIndicatorCircularPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection
+        title="Demo"
+        description="Circular progress indicators are for short system waits or actions that need more time to complete."
+      >
+        <div className="flex flex-wrap items-center gap-xxxl">
+          <ProgressIndicatorCircular
+            aria-label="Loading"
+            size={16}
+            type="indeterminate"
+          />
+          <ProgressIndicatorCircular
+            label="Optional label"
+            size={24}
+            type="indeterminate"
+          />
+          <ProgressIndicatorCircular
+            label="Optional label"
+            size={40}
+            type="determinate"
+            value={66}
+          />
+        </div>
+      </PreviewSection>
+      <PreviewSection title="Indeterminate">
+        <div className="space-y-10">
+          {[
+            { label: "Default", muted: false },
+            { label: "Muted", muted: true },
+          ].map(({ label, muted }) => (
+            <section key={label} className="space-y-md">
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
+              <div className="flex flex-wrap items-end gap-xxxl">
+                {progressIndicatorCircularSizes.map((size) => (
+                  <div
+                    key={`${label}-${size}`}
+                    className="flex min-w-16 flex-col items-center gap-sm"
+                  >
+                    <ProgressIndicatorCircular
+                      aria-label={`${label} loading indicator, ${size}px`}
+                      label="Optional label"
+                      muted={muted}
+                      size={size}
+                      type="indeterminate"
+                    />
+                    <span className="text-body-xs text-text-meta">{size}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </PreviewSection>
+      <PreviewSection title="Determinate">
+        <div className="space-y-10">
+          {[
+            { label: "Default", muted: false },
+            { label: "Muted", muted: true },
+          ].map(({ label, muted }) => (
+            <section key={label} className="space-y-md">
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
+              <div className="flex flex-wrap items-end gap-xxxl">
+                {progressIndicatorCircularSizes.map((size) => (
+                  <div
+                    key={`${label}-${size}`}
+                    className="flex min-w-16 flex-col items-center gap-sm"
+                  >
+                    <ProgressIndicatorCircular
+                      aria-label={`${label} progress indicator, ${size}px`}
+                      label="Optional label"
+                      muted={muted}
+                      size={size}
+                      type="determinate"
+                      value={66}
+                    />
+                    <span className="text-body-xs text-text-meta">{size}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function ComponentPageShell({
   item,
   children,
@@ -1297,6 +1439,8 @@ export function ComponentPageContent({
       return <SharedHeaderPage item={item} />;
     case "shared-messages":
       return <SharedMessagesPage item={item} />;
+    case "shared-feedback":
+      return <SharedFeedbackPage item={item} />;
     case "shared-composer":
       return <SharedComposerPage item={item} />;
     case "shared-prompts":
@@ -1305,6 +1449,10 @@ export function ComponentPageContent({
       return <SharedActionCardPage item={item} />;
     case "shared-side-panel":
       return <SharedSidePanelPage item={item} />;
+    case "shared-interim-state":
+      return <SharedInterimStatePage item={item} />;
+    case "shared-idle-session":
+      return <SharedIdleSessionPage item={item} />;
     case "premium-survey-entry":
       return <PremiumSurveyEntryPage item={item} />;
     case "premium-product-recommendation-card":
@@ -1333,6 +1481,8 @@ export function ComponentPageContent({
       return <SduiBadgePage item={item} />;
     case "sdui-presence-badge":
       return <SduiPresenceBadgePage item={item} />;
+    case "sdui-progress-indicator-circular":
+      return <SduiProgressIndicatorCircularPage item={item} />;
     default:
       return null;
   }

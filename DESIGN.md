@@ -1,7 +1,28 @@
 ---
 version: "alpha"
-name: VCA AI Concierge Chat
-description: "Design system for the built VCA AI concierge landing surface, primitives, pills, chat UI components, and responsive behavior requirements."
+name: VCA AI Concierge Prototypes
+description: "Design system for the shared VCA AI concierge prototype workspace, reusable primitives, chat UI components, and responsive behavior requirements across separate product workstreams."
+workstreams:
+  shared:
+    intent: "Shared design language and component foundation for all concierge prototypes."
+    guidance: "Keep primitives product-neutral; pass product-specific labels, routes, and content from workstream-owned modules."
+  hiring:
+    name: "LTS Hiring Concierge"
+    route: "/hiring"
+    status: "Built prototype"
+    guidance: "Hiring-specific marketing copy, personas, routing tiers, sales handoff logic, onboarding requirements, and conversation flows stay inside the Hiring workstream."
+  premium:
+    name: "Premium Concierge"
+    route: "/premium"
+    status: "Early prototype"
+    guidance: "Premium survey steps, plan comparison content, signal logic, recommendations, and upsell behavior stay inside the Premium workstream."
+  premium-company-pages:
+    name: "Premium Company Pages"
+    route: "/premium-company-pages"
+    status: "Visionary placeholder"
+    audience: "Executive storytelling and design alignment"
+    intent: "Explore how an AI chat experience could communicate the value of Premium Company Pages."
+    guidance: "Keep this separate from member Premium and Hiring. Until the brief is defined, do not add conversation logic, recommendations, monetization assumptions, admin workflows, analytics claims, or branded design tokens."
 colors:
   action: "#0A66C2"
   action-hover: "#004182"

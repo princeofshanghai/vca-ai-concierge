@@ -1166,6 +1166,56 @@ body {
   }
 }
 
+.interim-loading-visual {
+  isolation: isolate;
+}
+
+.interim-loading-mark {
+  animation: interim-loading-mark-wave 2600ms
+    var(--design-motion-easing-standard) infinite;
+  transform-origin: 50% 60%;
+  will-change: transform;
+}
+
+.progress-indicator-circular__spinner {
+  animation: progress-indicator-circular-rotate 900ms linear infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes interim-loading-mark-wave {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  12% {
+    transform: translateY(-3px) rotate(-18deg);
+  }
+
+  24% {
+    transform: translateY(-2px) rotate(15deg);
+  }
+
+  36% {
+    transform: translateY(-3px) rotate(-12deg);
+  }
+
+  48% {
+    transform: translateY(-1px) rotate(8deg);
+  }
+
+  60% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes progress-indicator-circular-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes composer-stop-ring-rotate {
   0% {
     transform: rotate(-90deg);
@@ -1229,6 +1279,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .matching-entity {
+    animation: none;
+    will-change: auto;
+  }
+
+  .interim-loading-mark,
+  .progress-indicator-circular__spinner {
     animation: none;
     will-change: auto;
   }
