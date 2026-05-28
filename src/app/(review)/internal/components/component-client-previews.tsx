@@ -55,15 +55,31 @@ import {
 import { Badge } from "@/components/primitives/badge";
 import { Button, type ButtonProps } from "@/components/primitives/button";
 import { ButtonIcon, type ButtonIconProps } from "@/components/primitives/button-icon";
+import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog";
 import { Entity, type EntityProps } from "@/components/primitives/entity";
+import { GhostButton, type GhostButtonProps } from "@/components/primitives/ghost-button";
 import { GhostIconButton, type GhostIconButtonProps } from "@/components/primitives/ghost-icon-button";
-import { Icon, iconMetadata, type IconName } from "@/components/primitives/icon";
+import { Icon } from "@/components/primitives/icon";
+import {
+  NavLinkItemHorizontal,
+  type NavLinkItemHorizontalIndicator,
+  type NavLinkItemHorizontalVisualState,
+} from "@/components/primitives/nav-link-item-horizontal";
+import {
+  OverlayButtonIcon,
+  type OverlayButtonIconProps,
+} from "@/components/primitives/overlay-button-icon";
 import { Pill, type PillProps } from "@/components/primitives/pill";
 import {
   PresenceBadge,
   type PresenceBadgeProps,
 } from "@/components/primitives/presence-badge";
 import { Tag, type TagProps } from "@/components/primitives/tag";
+import {
+  TabItemHorizontal,
+  type TabItemHorizontalTone,
+  type TabItemHorizontalVisualState,
+} from "@/components/primitives/tab-item-horizontal";
 import { TextArea, type TextAreaProps } from "@/components/primitives/text-area";
 import { TextInput, type TextInputProps } from "@/components/primitives/text-input";
 import {
@@ -80,7 +96,17 @@ type ButtonDemoState =
   | NonNullable<ButtonProps["visualState"]>
   | "disabled"
   | "loading";
+type GhostButtonDemoState =
+  | NonNullable<GhostButtonProps["visualState"]>
+  | "disabled"
+  | "loading";
+type OverlayButtonIconDemoState =
+  | NonNullable<OverlayButtonIconProps["visualState"]>
+  | "disabled"
+  | "loading";
 type FieldContentState = "empty" | "filled" | "error" | "disabled";
+type NavLinkItemDemoState = NavLinkItemHorizontalVisualState;
+type TabItemDemoState = TabItemHorizontalVisualState;
 type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
 type SidePanelDemoView = "panel" | "shell";
 type ShellDemoVersion = "dismissable" | "persistent" | "hybrid";
@@ -163,11 +189,40 @@ const buttonStates: ReadonlyArray<DemoOption<ButtonDemoState>> = [
   { label: "Loading", value: "loading" },
 ];
 
+const overlayButtonIconStates: ReadonlyArray<
+  DemoOption<OverlayButtonIconDemoState>
+> = buttonStates;
+
 const fieldContentStates: ReadonlyArray<DemoOption<FieldContentState>> = [
   { label: "Empty", value: "empty" },
   { label: "Filled", value: "filled" },
   { label: "Error", value: "error" },
   { label: "Disabled", value: "disabled" },
+];
+
+const navLinkItemStates: ReadonlyArray<DemoOption<NavLinkItemDemoState>> = [
+  { label: "Default", value: "default" },
+  { label: "Hover", value: "hover" },
+  { label: "Active", value: "active" },
+];
+
+const navLinkItemIndicators: ReadonlyArray<
+  DemoOption<NavLinkItemHorizontalIndicator>
+> = [
+  { label: "Bottom", value: "bottom" },
+  { label: "Top", value: "top" },
+  { label: "None", value: "none" },
+];
+
+const tabItemStates: ReadonlyArray<DemoOption<TabItemDemoState>> = [
+  { label: "Default", value: "default" },
+  { label: "Hover", value: "hover" },
+  { label: "Active", value: "active" },
+];
+
+const tabItemTones: ReadonlyArray<DemoOption<TabItemHorizontalTone>> = [
+  { label: "Default", value: "default" },
+  { label: "Overlay", value: "overlay" },
 ];
 
 const chatContextOptions: ReadonlyArray<DemoOption<ComponentLibraryContext>> = [
@@ -624,6 +679,99 @@ function renderDemoButtonIcon(
       variant={variant}
       visualState={state}
     />
+  );
+}
+
+function renderDemoOverlayButtonIcon(
+  state: OverlayButtonIconDemoState,
+  color: NonNullable<OverlayButtonIconProps["color"]>,
+  size: NonNullable<OverlayButtonIconProps["size"]>,
+) {
+  if (state === "disabled") {
+    return (
+      <OverlayButtonIcon
+        color={color}
+        disabled
+        icon="placeholder"
+        label="Overlay action"
+        size={size}
+      />
+    );
+  }
+
+  if (state === "loading") {
+    return (
+      <OverlayButtonIcon
+        color={color}
+        icon="placeholder"
+        label="Overlay action"
+        loading
+        loadingLabel="Loading overlay action"
+        size={size}
+      />
+    );
+  }
+
+  return (
+    <OverlayButtonIcon
+      color={color}
+      icon="placeholder"
+      label="Overlay action"
+      size={size}
+      visualState={state}
+    />
+  );
+}
+
+function renderDemoGhostButton(
+  state: GhostButtonDemoState,
+  size: NonNullable<GhostButtonProps["size"]>,
+  emphasis: boolean,
+  horizontalPadding: boolean,
+  icon?: NonNullable<GhostButtonProps["icon"]>,
+  iconAtEnd = false,
+) {
+  if (state === "disabled") {
+    return (
+      <GhostButton
+        disabled
+        emphasis={emphasis}
+        horizontalPadding={horizontalPadding}
+        icon={icon}
+        iconAtEnd={iconAtEnd}
+        size={size}
+      >
+        Button
+      </GhostButton>
+    );
+  }
+
+  if (state === "loading") {
+    return (
+      <GhostButton
+        emphasis={emphasis}
+        horizontalPadding={horizontalPadding}
+        icon={icon}
+        iconAtEnd={iconAtEnd}
+        loading
+        size={size}
+      >
+        Button
+      </GhostButton>
+    );
+  }
+
+  return (
+    <GhostButton
+      emphasis={emphasis}
+      horizontalPadding={horizontalPadding}
+      icon={icon}
+      iconAtEnd={iconAtEnd}
+      size={size}
+      visualState={state}
+    >
+      Button
+    </GhostButton>
   );
 }
 
@@ -1227,6 +1375,119 @@ function PremiumSurveyBackdrop({
         </div>
       ) : null}
     </>
+  );
+}
+
+export function SharedConfirmationDemo() {
+  const [isDialogOpen, setIsDialogOpen] = useState(true);
+
+  function openDialog() {
+    setIsDialogOpen(true);
+  }
+
+  function closeDialog() {
+    setIsDialogOpen(false);
+  }
+
+  return (
+    <ContextualComponentDemoSection previewClassName="w-full">
+      <div className="relative h-[420px] min-w-[760px] overflow-hidden rounded-[16px] border border-border-faint bg-background shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
+        <header className="relative z-0 flex h-16 items-center justify-between border-b border-border-subtle bg-background px-6">
+          <Image
+            src="/assets/logo-lockup.svg"
+            alt="LinkedIn Hire"
+            width={162}
+            height={27}
+            className="h-[27px] w-[162px]"
+          />
+          <div className="flex items-center gap-5">
+            <nav
+              aria-label="LinkedIn Hiring"
+              className="flex items-center gap-5 text-[15px] font-semibold leading-none text-action"
+            >
+              <button
+                type="button"
+                className="outline-none transition-colors duration-150 ease-out hover:text-action-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+                onClick={openDialog}
+              >
+                Products
+              </button>
+              <button
+                type="button"
+                className="outline-none transition-colors duration-150 ease-out hover:text-action-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+                onClick={openDialog}
+              >
+                Compare Products
+              </button>
+              <button
+                type="button"
+                className="outline-none transition-colors duration-150 ease-out hover:text-action-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+                onClick={openDialog}
+              >
+                Resources &amp; Support
+              </button>
+            </nav>
+            <Button variant="secondary" size="small">
+              Contact sales
+            </Button>
+          </div>
+        </header>
+        <div className="h-[356px] bg-white" />
+
+        <ConfirmationDialog
+          open={isDialogOpen}
+          title="Leave this page?"
+          confirmLabel="Leave page"
+          cancelLabel="Stay in chat"
+          onDismiss={closeDialog}
+          scope="container"
+          onConfirm={closeDialog}
+          onCancel={closeDialog}
+        >
+          <p className="m-0">Leaving will clear this chat.</p>
+        </ConfirmationDialog>
+      </div>
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function SharedConfirmationVariants() {
+  const [alignment, setAlignment] = useState<"center" | "top">("center");
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <SegmentedControl
+          label="Alignment"
+          value={alignment}
+          options={[
+            { label: "Center", value: "center" },
+            { label: "Top", value: "top" },
+          ]}
+          onChange={setAlignment}
+        />
+      }
+      previewClassName="w-full"
+    >
+      <div className="relative h-[420px] min-w-[760px] overflow-hidden rounded-[16px] border border-border-faint bg-background shadow-[0_12px_32px_rgba(0,0,0,0.08)]">
+        <div className="h-full bg-white" />
+        <ConfirmationDialog
+          open
+          title="Confirmation"
+          confirmLabel="Confirm"
+          cancelLabel="Secondary"
+          tertiaryLabel="Tertiary"
+          alignment={alignment}
+          scope="container"
+          onConfirm={() => {}}
+          onCancel={() => {}}
+          onTertiary={() => {}}
+          onDismiss={() => {}}
+        >
+          <p className="m-0">Body copy explaining the consequence.</p>
+        </ConfirmationDialog>
+      </div>
+    </ContextualComponentDemoSection>
   );
 }
 
@@ -2153,6 +2414,101 @@ export function PremiumConciergePanelDemo() {
   );
 }
 
+export function SduiNavLinkItemHorizontalDemo() {
+  const [state, setState] = useState<NavLinkItemDemoState>("default");
+  const [indicator, setIndicator] =
+    useState<NavLinkItemHorizontalIndicator>("bottom");
+  const [current, setCurrent] = useState(false);
+  const [badge, setBadge] = useState(true);
+  const [hasDropdown, setHasDropdown] = useState(true);
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SelectControl
+            label="State"
+            value={state}
+            options={navLinkItemStates}
+            onChange={setState}
+          />
+          <SegmentedControl
+            label="Indicator"
+            value={indicator}
+            options={navLinkItemIndicators}
+            onChange={setIndicator}
+          />
+          <ToggleControl label="Current" checked={current} onChange={setCurrent} />
+          <ToggleControl label="Badge" checked={badge} onChange={setBadge} />
+          <ToggleControl
+            label="Dropdown"
+            checked={hasDropdown}
+            onChange={setHasDropdown}
+          />
+        </>
+      }
+    >
+      <NavLinkItemHorizontal
+        badge={badge}
+        current={current}
+        hasDropdown={hasDropdown}
+        icon="placeholder"
+        indicator={indicator}
+        label="Nav link"
+        visualState={state}
+      />
+    </ComponentDemoSection>
+  );
+}
+
+export function SduiTabItemHorizontalDemo() {
+  const [state, setState] = useState<TabItemDemoState>("default");
+  const [tone, setTone] = useState<TabItemHorizontalTone>("default");
+  const [selected, setSelected] = useState(false);
+  const [showIcon, setShowIcon] = useState(true);
+  const [overflow, setOverflow] = useState(false);
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SelectControl
+            label="State"
+            value={state}
+            options={tabItemStates}
+            onChange={setState}
+          />
+          <SegmentedControl
+            label="Tone"
+            value={tone}
+            options={tabItemTones}
+            onChange={setTone}
+          />
+          <ToggleControl label="Selected" checked={selected} onChange={setSelected} />
+          <ToggleControl label="Icon" checked={showIcon} onChange={setShowIcon} />
+          <ToggleControl label="Overflow" checked={overflow} onChange={setOverflow} />
+        </>
+      }
+    >
+      <div
+        className={cx(
+          "inline-flex p-lg",
+          tone === "overlay" ? "bg-[#041838]" : "bg-background",
+        )}
+      >
+        <TabItemHorizontal
+          icon={showIcon ? "placeholder" : undefined}
+          label="Tab label"
+          overflow={overflow}
+          selected={selected}
+          tone={tone}
+          visualState={state}
+        />
+      </div>
+    </ComponentDemoSection>
+  );
+}
+
 export function SduiButtonDemo() {
   const [variant, setVariant] = useState<NonNullable<ButtonProps["variant"]>>("primary");
   const [size, setSize] = useState<NonNullable<ButtonProps["size"]>>("medium");
@@ -2190,6 +2546,70 @@ export function SduiButtonDemo() {
   );
 }
 
+export function SduiGhostButtonDemo() {
+  const [state, setState] = useState<GhostButtonDemoState>("default");
+  const [size, setSize] = useState<NonNullable<GhostButtonProps["size"]>>("small");
+  const [emphasis, setEmphasis] = useState(false);
+  const [padded, setPadded] = useState(true);
+  const [iconPosition, setIconPosition] =
+    useState<"none" | "start" | "end">("end");
+
+  const icon = iconPosition === "none" ? undefined : "placeholder";
+  const iconAtEnd = iconPosition === "end";
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="Size"
+            value={size}
+            options={[
+              { label: "Small", value: "small" },
+              { label: "Medium", value: "medium" },
+            ]}
+            onChange={setSize}
+          />
+          <SelectControl
+            label="State"
+            value={state}
+            options={[
+              { label: "Default", value: "default" },
+              { label: "Hover", value: "hover" },
+              { label: "Active", value: "active" },
+              { label: "Focus", value: "focus-visible" },
+              { label: "Disabled", value: "disabled" },
+              { label: "Loading", value: "loading" },
+            ]}
+            onChange={setState}
+          />
+          <SegmentedControl
+            label="Icon"
+            value={iconPosition}
+            options={[
+              { label: "None", value: "none" },
+              { label: "Start", value: "start" },
+              { label: "End", value: "end" },
+            ]}
+            onChange={setIconPosition}
+          />
+          <ToggleControl label="Emphasis" checked={emphasis} onChange={setEmphasis} />
+          <ToggleControl label="Padded" checked={padded} onChange={setPadded} />
+        </>
+      }
+    >
+      {renderDemoGhostButton(
+        state,
+        size,
+        emphasis,
+        padded,
+        icon,
+        iconAtEnd,
+      )}
+    </ComponentDemoSection>
+  );
+}
+
 export function SduiButtonIconDemo() {
   const [variant, setVariant] = useState<NonNullable<ButtonIconProps["variant"]>>("primary");
   const [size, setSize] = useState<NonNullable<ButtonIconProps["size"]>>("small");
@@ -2223,6 +2643,52 @@ export function SduiButtonIconDemo() {
       }
     >
       {renderDemoButtonIcon(state, variant, size)}
+    </ComponentDemoSection>
+  );
+}
+
+export function SduiOverlayButtonIconDemo() {
+  const [color, setColor] =
+    useState<NonNullable<OverlayButtonIconProps["color"]>>("black");
+  const [size, setSize] =
+    useState<NonNullable<OverlayButtonIconProps["size"]>>("small");
+  const [state, setState] =
+    useState<OverlayButtonIconDemoState>("default");
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="Color"
+            value={color}
+            options={[
+              { label: "Black", value: "black" },
+              { label: "White", value: "white" },
+            ]}
+            onChange={setColor}
+          />
+          <SegmentedControl
+            label="Size"
+            value={size}
+            options={[
+              { label: "Small", value: "small" },
+              { label: "Medium", value: "medium" },
+            ]}
+            onChange={setSize}
+          />
+          <SelectControl
+            label="State"
+            value={state}
+            options={overlayButtonIconStates}
+            onChange={setState}
+          />
+        </>
+      }
+    >
+      <div className="flex min-h-[12rem] min-w-[16rem] items-center justify-center rounded-sm bg-background-neutral-soft p-xxxl">
+        {renderDemoOverlayButtonIcon(state, color, size)}
+      </div>
     </ComponentDemoSection>
   );
 }
@@ -2311,30 +2777,6 @@ export function SduiPillDemo() {
       >
         Pill choice
       </Pill>
-    </ComponentDemoSection>
-  );
-}
-
-export function SduiIconDemo() {
-  const [iconName, setIconName] = useState<IconName>("signal-ai");
-
-  return (
-    <ComponentDemoSection
-      controls={
-        <SelectControl
-          label="Icon"
-          value={iconName}
-          options={iconMetadata.map((icon) => ({
-            label: icon.label,
-            value: icon.name,
-          }))}
-          onChange={setIconName}
-        />
-      }
-    >
-      <span className="inline-flex size-12 items-center justify-center text-text-meta">
-        <Icon name={iconName} />
-      </span>
     </ComponentDemoSection>
   );
 }

@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 
 import Image from "next/image";
 import localFont from "next/font/local";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import {
@@ -21,11 +21,7 @@ import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog"
 import type { FlowReview } from "@/lib/conversation-flows";
 import type { HiringShellMode } from "@/lib/hiring-shell";
 
-const navItems = [
-  { href: "#products", label: "Products" },
-  { href: "#compare-products", label: "Compare Products" },
-  { href: "#resources-support", label: "Resources & Support" },
-];
+import { HiringHeader, type HiringHeaderNavHref } from "./hiring-header";
 
 type LandingPageProps = Readonly<{
   homeHref?: string;
@@ -56,6 +52,8 @@ export function LandingPage({
     useState<ChatPanelVariant>("collapsed");
   const [isReviewSidePanelOpen, setIsReviewSidePanelOpen] = useState(false);
   const [isEndChatDialogOpen, setIsEndChatDialogOpen] = useState(false);
+  const [pendingLeaveHref, setPendingLeaveHref] =
+    useState<HiringHeaderNavHref | null>(null);
   const [isChatConversationStarted, setIsChatConversationStarted] =
     useState(false);
   const [isHybridTrayVisible, setIsHybridTrayVisible] = useState(false);
@@ -65,6 +63,7 @@ export function LandingPage({
   const chatPanelId = useId();
   const resetChatPanelState = useCallback(() => {
     setIsEndChatDialogOpen(false);
+    setPendingLeaveHref(null);
     setIsChatConversationStarted(false);
     setIsReviewSidePanelOpen(false);
     setIsHybridTrayVisible(false);
@@ -257,6 +256,43 @@ export function LandingPage({
     setIsChatConversationStarted(true);
   }, []);
 
+  const requestHeaderNavigation = useCallback(
+    (event: MouseEvent<HTMLAnchorElement>, href: HiringHeaderNavHref) => {
+      if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
+        event.button !== 0
+      ) {
+        return;
+      }
+
+      if (!isChatConversationStarted) {
+        return;
+      }
+
+      event.preventDefault();
+      setPendingLeaveHref(href);
+    },
+    [isChatConversationStarted],
+  );
+
+  const cancelLeavePageDialog = useCallback(() => {
+    setPendingLeaveHref(null);
+  }, []);
+
+  const confirmLeavePage = useCallback(() => {
+    if (!pendingLeaveHref) {
+      return;
+    }
+
+    const href = pendingLeaveHref;
+
+    setPendingLeaveHref(null);
+    router.push(href);
+  }, [pendingLeaveHref, router]);
+
   useEffect(() => {
     if (!isChatPanelMounted) {
       return;
@@ -264,7 +300,7 @@ export function LandingPage({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        if (isEndChatDialogOpen) {
+        if (isEndChatDialogOpen || pendingLeaveHref) {
           return;
         }
 
@@ -277,53 +313,22 @@ export function LandingPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isChatPanelMounted, isEndChatDialogOpen, requestCloseChat]);
+  }, [
+    isChatPanelMounted,
+    isEndChatDialogOpen,
+    pendingLeaveHref,
+    requestCloseChat,
+  ]);
 
   return (
     <main className="-mt-28 min-h-dvh bg-white sm:-mt-32">
-      <header className="relative z-10 flex h-16 items-center justify-between border-b border-border-subtle bg-white px-6 sm:px-8">
-        <Link
-          href={homeHref}
-          aria-label="LinkedIn Hire home"
-          className="inline-flex shrink-0 items-center focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-        >
-          <Image
-            src="/assets/logo-lockup.svg"
-            alt="LinkedIn Hire"
-            width={162}
-            height={27}
-            className="h-[27px] w-[162px]"
-          />
-        </Link>
-
-        <div className="flex items-center gap-5 min-[920px]:gap-6">
-          <nav
-            aria-label="LinkedIn Hiring"
-            className="hidden items-center gap-5 min-[920px]:flex min-[1080px]:gap-6"
-          >
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="whitespace-nowrap text-[16px] font-semibold leading-none text-action transition-colors duration-150 ease-out hover:text-action-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-              >
-                {item.label}
-              </a>
-            ))}
-          </nav>
-
-          <Button
-            variant="secondary"
-            size="small"
-            aria-controls={isChatOpen ? chatPanelId : undefined}
-            aria-expanded={isChatOpen}
-            aria-haspopup="dialog"
-            onClick={openChat}
-          >
-            Contact sales
-          </Button>
-        </div>
-      </header>
+      <HiringHeader
+        homeHref={homeHref}
+        isChatOpen={isChatOpen}
+        chatPanelId={chatPanelId}
+        onContactSales={openChat}
+        onNavItemClick={requestHeaderNavigation}
+      />
 
       <section className="mx-auto flex w-full max-w-[1009px] flex-col items-start gap-8 px-6 pb-24 pt-12 sm:px-8 lg:flex-row lg:items-center lg:gap-12 lg:px-0">
         <div className="aspect-square w-full max-w-[447px] shrink-0 overflow-hidden rounded-[14px] bg-background-neutral-soft">
@@ -472,11 +477,9 @@ export function LandingPage({
                       scope="container"
                       onConfirm={confirmEndChat}
                       onCancel={cancelEndChatDialog}
+                      onDismiss={cancelEndChatDialog}
                     >
-                      <p className="m-0">
-                        This will end the chat and clear any messages in this
-                        conversation.
-                      </p>
+                      <p className="m-0">Ending will clear this chat.</p>
                     </ConfirmationDialog>
                   }
                 />
@@ -485,6 +488,18 @@ export function LandingPage({
           </div>
         </>
       ) : null}
+
+      <ConfirmationDialog
+        open={Boolean(pendingLeaveHref)}
+        title="Leave this page?"
+        confirmLabel="Leave page"
+        cancelLabel="Stay in chat"
+        onConfirm={confirmLeavePage}
+        onCancel={cancelLeavePageDialog}
+        onDismiss={cancelLeavePageDialog}
+      >
+        <p className="m-0">Leaving will clear this chat.</p>
+      </ConfirmationDialog>
     </main>
   );
 }

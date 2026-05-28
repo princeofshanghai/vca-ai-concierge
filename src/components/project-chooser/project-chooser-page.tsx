@@ -12,7 +12,7 @@ const conciergeOptions = [
     label: "Premium survey concierge",
   },
   {
-    href: "/premium-company-pages",
+    href: "/premium-company-pages/member",
     label: "Premium Company Pages",
   },
   {

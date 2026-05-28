@@ -194,6 +194,18 @@
   --design-typography-display-md-letter-spacing: var(
     --figma-type-display-m-bold-letter-spacing
   );
+  --design-typography-display-xl-font-size: var(
+    --figma-type-display-xl-bold-font-size
+  );
+  --design-typography-display-xl-font-weight: var(
+    --figma-type-display-xl-bold-font-weight
+  );
+  --design-typography-display-xl-line-height: var(
+    --figma-type-display-xl-bold-line-height
+  );
+  --design-typography-display-xl-letter-spacing: var(
+    --figma-type-display-xl-bold-letter-spacing
+  );
   --design-typography-heading-xl-font-size: var(
     --figma-type-heading-l-font-size
   );
@@ -769,6 +781,16 @@
   );
   --text-display-md--letter-spacing: var(
     --design-typography-display-md-letter-spacing
+  );
+  --text-display-xl: var(--design-typography-display-xl-font-size);
+  --text-display-xl--font-weight: var(
+    --design-typography-display-xl-font-weight
+  );
+  --text-display-xl--line-height: var(
+    --design-typography-display-xl-line-height
+  );
+  --text-display-xl--letter-spacing: var(
+    --design-typography-display-xl-letter-spacing
   );
   --text-heading-xl: var(--design-typography-heading-xl-font-size);
   --text-heading-xl--font-weight: var(

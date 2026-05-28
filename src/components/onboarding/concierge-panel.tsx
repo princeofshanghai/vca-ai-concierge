@@ -543,7 +543,6 @@ export function ConciergePanel({
     (result: OnboardingResult) => {
       const assistantId = createMessageId("assistant");
 
-      onConversationStart?.();
       resetIdleSession();
       setLead(result);
       setPreparingLead(null);
@@ -569,7 +568,6 @@ export function ConciergePanel({
     },
     [
       createMessageId,
-      onConversationStart,
       onSidePanelOpenChange,
       resetIdleSession,
     ],
@@ -598,16 +596,22 @@ export function ConciergePanel({
     };
   }, [preparingLead, startChat]);
 
-  const handleOnboardingSubmit = useCallback((result: OnboardingResult) => {
-    if (!supportsViewTransitions()) {
-      setPreparingLead(result);
-      return;
-    }
+  const handleOnboardingSubmit = useCallback(
+    (result: OnboardingResult) => {
+      onConversationStart?.();
+      resetIdleSession();
 
-    (document as ViewTransitionDocument).startViewTransition(() => {
-      flushSync(() => setPreparingLead(result));
-    });
-  }, []);
+      if (!supportsViewTransitions()) {
+        setPreparingLead(result);
+        return;
+      }
+
+      (document as ViewTransitionDocument).startViewTransition(() => {
+        flushSync(() => setPreparingLead(result));
+      });
+    },
+    [onConversationStart, resetIdleSession],
+  );
 
   const handleDraftChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {

@@ -1,1 +1,2 @@
-export { PremiumCompanyPagesPlaceholder } from "./premium-company-pages-placeholder";
+export { PremiumCompanyPagesMemberPage } from "./premium-company-pages-member-page";
+export { PremiumCompanyPagesPage } from "./premium-company-pages-page";

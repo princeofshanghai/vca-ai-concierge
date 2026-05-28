@@ -24,20 +24,29 @@ import {
 import {
   premiumConversationFlows,
 } from "@/components/premium";
+import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
 import { Badge } from "@/components/primitives/badge";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
+import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
-import { Icon, iconMetadata } from "@/components/primitives/icon";
+import { Icon, iconMetadata, type IconSize } from "@/components/primitives/icon";
 import { IdleSessionPrompt } from "@/components/primitives/idle-session-prompt";
 import { InterimLoadingState } from "@/components/primitives/interim-loading-state";
+import { NavLinkItemHorizontal } from "@/components/primitives/nav-link-item-horizontal";
+import {
+  OverlayButtonIcon,
+  type OverlayButtonIconColor,
+  type OverlayButtonIconSize,
+} from "@/components/primitives/overlay-button-icon";
 import { Pill } from "@/components/primitives/pill";
 import { PresenceBadge } from "@/components/primitives/presence-badge";
 import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
 import { Tag } from "@/components/primitives/tag";
+import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
 
@@ -50,15 +59,20 @@ import {
   SduiButtonDemo,
   SduiButtonIconDemo,
   SduiEntityDemo,
+  SduiGhostButtonDemo,
   SduiGhostIconButtonDemo,
-  SduiIconDemo,
+  SduiNavLinkItemHorizontalDemo,
+  SduiOverlayButtonIconDemo,
   SduiPillDemo,
   SduiPresenceBadgeDemo,
   SduiTagDemo,
+  SduiTabItemHorizontalDemo,
   SduiTextAreaDemo,
   SduiTextInputDemo,
   SharedActionCardDemo,
   SharedComposerDemo,
+  SharedConfirmationDemo,
+  SharedConfirmationVariants,
   SharedFeedbackDemo,
   SharedFeedbackVariants,
   SharedHeaderDemo,
@@ -92,6 +106,11 @@ const buttonSizes = [
   { label: "Small", size: "small" },
 ] as const;
 
+const overlayButtonIconRows = [
+  { label: "Black", color: "black" },
+  { label: "White", color: "white" },
+] as const;
+
 const entitySizes = [160, 128, 96, 80, 64, 48, 40, 32, 24, 16] as const;
 const promptStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
 const pillStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
@@ -108,19 +127,14 @@ const ghostIconButtonStates = [
   "disabled",
   "loading",
 ] as const;
-const iconExamples = [
-  "add",
-  "check",
-  "close",
-  "search",
-  "send",
-  "voice",
-  "magic-wand",
-  "signal-ai",
-  "signal-success",
-  "signal-error",
-  "link-external",
-] as const;
+const ghostButtonStates = ghostIconButtonStates;
+const navigationIconMetadata = iconMetadata.filter(
+  (icon) => "source" in icon && icon.source === "navigation",
+);
+const systemIconMetadata = iconMetadata.filter(
+  (icon) => !("source" in icon) || icon.source !== "navigation",
+);
+type IconCatalogItem = (typeof iconMetadata)[number];
 const tagSizes = [
   { label: "Small", size: "small" },
   { label: "Medium", size: "medium" },
@@ -149,6 +163,10 @@ const presenceBadgeExamples = [
   { label: "Large", size: "large" },
 ] as const;
 const progressIndicatorCircularSizes = [16, 20, 24, 32, 40, 48, 64] as const;
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
 
 const bookedMeetingPreview: BookedMeeting = {
   format: "Online meeting",
@@ -487,6 +505,48 @@ function renderButtonIconState(
   );
 }
 
+function renderOverlayButtonIconState(
+  state: (typeof buttonStates)[number],
+  color: OverlayButtonIconColor,
+  size: OverlayButtonIconSize,
+) {
+  if (state === "disabled") {
+    return (
+      <OverlayButtonIcon
+        color={color}
+        disabled
+        icon="placeholder"
+        label="Overlay action"
+        size={size}
+      />
+    );
+  }
+
+  if (state === "loading") {
+    return (
+      <OverlayButtonIcon
+        color={color}
+        icon="placeholder"
+        label="Overlay action"
+        loading
+        loadingLabel="Loading overlay action"
+        size={size}
+      />
+    );
+  }
+
+  return (
+    <OverlayButtonIcon
+      color={color}
+      icon="placeholder"
+      label="Overlay action"
+      size={size}
+      tabIndex={-1}
+      visualState={state}
+    />
+  );
+}
+
 function renderGhostIconButtonState(
   state: (typeof ghostIconButtonStates)[number],
   emphasis = false,
@@ -529,6 +589,58 @@ function renderGhostIconButtonState(
       tabIndex={-1}
       visualState={state}
     />
+  );
+}
+
+function renderGhostButtonState(
+  state: (typeof ghostButtonStates)[number],
+  emphasis = false,
+  size: "small" | "medium" = "small",
+  horizontalPadding = true,
+  iconAtEnd = false,
+) {
+  if (state === "disabled") {
+    return (
+      <GhostButton
+        disabled
+        emphasis={emphasis}
+        horizontalPadding={horizontalPadding}
+        icon="placeholder"
+        iconAtEnd={iconAtEnd}
+        size={size}
+      >
+        Button
+      </GhostButton>
+    );
+  }
+
+  if (state === "loading") {
+    return (
+      <GhostButton
+        emphasis={emphasis}
+        horizontalPadding={horizontalPadding}
+        icon="placeholder"
+        iconAtEnd={iconAtEnd}
+        loading
+        size={size}
+      >
+        Button
+      </GhostButton>
+    );
+  }
+
+  return (
+    <GhostButton
+      emphasis={emphasis}
+      horizontalPadding={horizontalPadding}
+      icon="placeholder"
+      iconAtEnd={iconAtEnd}
+      size={size}
+      tabIndex={-1}
+      visualState={state}
+    >
+      Button
+    </GhostButton>
   );
 }
 
@@ -889,6 +1001,25 @@ function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SduiConfirmationPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI">
+      <PreviewSection
+        title="Component"
+        description="The SDUI confirmation dialog supports center and top alignment, a dismiss action, primary and secondary actions, and an optional tertiary action."
+      >
+        <SharedConfirmationVariants />
+      </PreviewSection>
+      <PreviewSection
+        title="Leave page warning"
+        description="A confirmation moment for navigation that would end an active chat session."
+      >
+        <SharedConfirmationDemo />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium">
@@ -991,6 +1122,244 @@ function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SduiGhostButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiGhostButtonDemo />
+      </PreviewSection>
+      <PreviewSection title="Ghost button states">
+        <div className="grid gap-lg lg:grid-cols-2">
+          {buttonSizes.map(({ label, size }) => (
+            <section key={size} className="space-y-6">
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
+              {[
+                { label: "Label only", iconAtEnd: false, icon: false },
+                { label: "Leading icon", iconAtEnd: false, icon: true },
+                { label: "Trailing icon", iconAtEnd: true, icon: true },
+              ].map(({ label: rowLabel, iconAtEnd, icon }) => (
+                <div key={`${size}-${rowLabel}`} className="space-y-sm">
+                  <PreviewExampleHeading level="h4">
+                    {rowLabel}
+                  </PreviewExampleHeading>
+                  <div className="flex flex-wrap items-center gap-md">
+                    {ghostButtonStates.map((state) => (
+                      <div key={`${size}-${rowLabel}-${state}`} className="space-y-xs">
+                        <p className="text-body-xs text-text-meta">{state}</p>
+                        {icon ? (
+                          renderGhostButtonState(
+                            state,
+                            false,
+                            size,
+                            true,
+                            iconAtEnd,
+                          )
+                        ) : (
+                          <GhostButton
+                            disabled={state === "disabled"}
+                            horizontalPadding
+                            loading={state === "loading"}
+                            size={size}
+                            tabIndex={state === "default" ? undefined : -1}
+                            visualState={
+                              state === "disabled" || state === "loading"
+                                ? "default"
+                                : state
+                            }
+                          >
+                            Button
+                          </GhostButton>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          ))}
+        </div>
+      </PreviewSection>
+      <PreviewSection title="Emphasis and padding">
+        <div className="flex flex-wrap items-center gap-lg">
+          <GhostButton icon="arrow-right" iconAtEnd size="small">
+            Default
+          </GhostButton>
+          <GhostButton emphasis icon="arrow-right" iconAtEnd size="small">
+            Emphasis
+          </GhostButton>
+          <GhostButton horizontalPadding={false} icon="arrow-right" iconAtEnd size="small">
+            Compact
+          </GhostButton>
+          <GhostButton emphasis horizontalPadding={false} icon="arrow-right" iconAtEnd size="medium">
+            Medium compact
+          </GhostButton>
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SduiNavLinkItemHorizontalPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiNavLinkItemHorizontalDemo />
+      </PreviewSection>
+      <PreviewSection title="States">
+        <div className="grid gap-lg sm:grid-cols-3">
+          {(["default", "hover", "active"] as const).map((state) => (
+            <div
+              key={state}
+              className="flex flex-col items-start gap-sm rounded-sm border border-border-faint bg-background p-md"
+            >
+              <PreviewExampleHeading className="capitalize">
+                {state}
+              </PreviewExampleHeading>
+              <NavLinkItemHorizontal
+                badge
+                hasDropdown
+                icon="placeholder"
+                label="Nav link"
+                visualState={state}
+              />
+            </div>
+          ))}
+        </div>
+      </PreviewSection>
+      <PreviewSection title="Current indicators">
+        <div className="flex flex-wrap items-start gap-lg">
+          {(["bottom", "top", "none"] as const).map((indicator) => (
+            <div
+              key={indicator}
+              className="flex flex-col items-start gap-sm rounded-sm border border-border-faint bg-background p-md"
+            >
+              <PreviewExampleHeading className="capitalize">
+                {indicator}
+              </PreviewExampleHeading>
+              <NavLinkItemHorizontal
+                badge
+                current
+                hasDropdown
+                icon="placeholder"
+                indicator={indicator}
+                label="Nav link"
+              />
+            </div>
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SduiTabItemHorizontalPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiTabItemHorizontalDemo />
+      </PreviewSection>
+      <PreviewSection title="States">
+        <div className="grid gap-lg lg:grid-cols-2">
+          {(["default", "overlay"] as const).map((tone) => (
+            <div
+              key={tone}
+              className={cx(
+                "space-y-md rounded-sm border border-border-faint p-lg",
+                tone === "overlay" ? "bg-[#041838]" : "bg-background",
+              )}
+            >
+              <PreviewExampleHeading
+                className={tone === "overlay" ? "text-white" : undefined}
+              >
+                {tone === "overlay" ? "Overlay" : "Default"}
+              </PreviewExampleHeading>
+              <div className="flex flex-wrap items-start">
+                {(["default", "hover", "active"] as const).map((state) => (
+                  <TabItemHorizontal
+                    icon="placeholder"
+                    key={`${tone}-${state}`}
+                    label="Tab label"
+                    tone={tone}
+                    visualState={state}
+                  />
+                ))}
+              </div>
+              <div className="flex flex-wrap items-start">
+                {(["default", "hover", "active"] as const).map((state) => (
+                  <TabItemHorizontal
+                    icon="placeholder"
+                    key={`${tone}-selected-${state}`}
+                    label="Tab label"
+                    selected
+                    tone={tone}
+                    visualState={state}
+                  />
+                ))}
+              </div>
+              <div className="flex flex-wrap items-start">
+                {(["default", "hover", "active"] as const).map((state) => (
+                  <TabItemHorizontal
+                    key={`${tone}-overflow-${state}`}
+                    label="More"
+                    overflow
+                    tone={tone}
+                    visualState={state}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </PreviewSection>
+      <PreviewSection title="Tab list">
+        <div className="inline-flex border-b border-border-faint" role="tablist">
+          {["Home", "About", "Posts", "Products"].map((tab) => (
+            <TabItemHorizontal
+              key={tab}
+              label={tab}
+              selected={tab === "Home"}
+            />
+          ))}
+          <TabItemHorizontal label="More" overflow />
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SduiGlobalNavigationPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection
+        title="Default"
+        description="The default web navigation shows the LinkedIn bug, global search, primary nav links, profile, and work menu."
+      >
+        <div className="-mx-lg overflow-hidden border-y border-border-faint bg-background sm:mx-0 sm:rounded-sm sm:border">
+          <LinkedInGlobalNavigation profileSrc="/assets/premium-company-pages/member/beta-entity.png" />
+        </div>
+      </PreviewSection>
+      <PreviewSection
+        title="Extended"
+        description="Optional slots support a second search field, the Premium spotlight, and Advertise."
+      >
+        <div className="-mx-lg overflow-hidden border-y border-border-faint bg-background sm:mx-0 sm:rounded-sm sm:border">
+          <LinkedInGlobalNavigation
+            profileSrc="/assets/premium-company-pages/member/beta-entity.png"
+            searchPlaceholder="Title, skill or company"
+            secondarySearchPlaceholder="City, state, or zip..."
+            showAdvertise
+            showPremiumSpotlight
+          />
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
@@ -1024,32 +1393,37 @@ function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
-      <PreviewSection title="Demo">
-        <SduiIconDemo />
+      <PreviewSection title={`Navigation icons (${navigationIconMetadata.length})`}>
+        <IconCatalogGrid icons={navigationIconMetadata} iconSize="medium" />
       </PreviewSection>
-      <PreviewSection title="Common icons">
-        <div className="flex flex-wrap items-center gap-md text-text-meta">
-          {iconExamples.map((name) => (
-            <Icon key={name} name={name} />
-          ))}
-        </div>
-      </PreviewSection>
-      <PreviewSection title={`Catalog (${iconMetadata.length})`}>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(7.75rem,1fr))] gap-sm text-text-meta">
-          {iconMetadata.map((icon) => (
-            <div
-              key={icon.name}
-              className="flex min-h-[5rem] flex-col items-center justify-center gap-sm rounded-sm border border-border-faint bg-background px-sm py-md text-center"
-            >
-              <Icon name={icon.name} />
-              <span className="max-w-full break-words text-body-xs leading-[1.2] text-text-meta">
-                {icon.label}
-              </span>
-            </div>
-          ))}
-        </div>
+      <PreviewSection title={`System icons (${systemIconMetadata.length})`}>
+        <IconCatalogGrid icons={systemIconMetadata} />
       </PreviewSection>
     </ComponentPageShell>
+  );
+}
+
+function IconCatalogGrid({
+  icons,
+  iconSize = "small",
+}: Readonly<{
+  icons: ReadonlyArray<IconCatalogItem>;
+  iconSize?: IconSize;
+}>) {
+  return (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(7.75rem,1fr))] gap-sm">
+      {icons.map((icon) => (
+        <div
+          key={icon.name}
+          className="flex min-h-[5rem] flex-col items-center justify-center gap-sm rounded-sm border border-border-faint bg-background px-sm py-md text-center"
+        >
+          <Icon name={icon.name} size={iconSize} className="text-icon" />
+          <span className="max-w-full break-words text-body-xs leading-[1.2] text-text-meta">
+            {icon.label}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -1110,6 +1484,52 @@ function SduiButtonIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                         {renderButtonIconState(state, variant, size)}
                       </div>
                     ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SduiOverlayButtonIconPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection
+        title="Demo"
+        description="Overlay icon buttons sit on top of imagery, video, or floating surfaces where the control needs its own circular contrast layer."
+      >
+        <SduiOverlayButtonIconDemo />
+      </PreviewSection>
+      <PreviewSection title="Overlay button icon states">
+        <div className="space-y-8">
+          {buttonSizes.map(({ label, size }) => (
+            <section key={size} className="space-y-6">
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
+              {overlayButtonIconRows.map(({ label: rowLabel, color }) => (
+                <div key={`${size}-${color}`} className="space-y-sm">
+                  <PreviewExampleHeading level="h4">
+                    {rowLabel}
+                  </PreviewExampleHeading>
+                  <div className="rounded-sm bg-background-neutral-soft p-lg">
+                    <div className="flex flex-wrap items-center gap-md">
+                      {buttonStates.map((state) => (
+                        <div
+                          key={`${size}-${color}-${state}`}
+                          className="space-y-xs"
+                        >
+                          <p className="text-body-xs text-text-meta">
+                            {state}
+                          </p>
+                          {renderOverlayButtonIconState(state, color, size)}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1459,12 +1879,24 @@ export function ComponentPageContent({
       return <PremiumProductCardPage item={item} />;
     case "premium-concierge-panel":
       return <PremiumConciergePanelPage item={item} />;
+    case "sdui-nav-link-item-horizontal":
+      return <SduiNavLinkItemHorizontalPage item={item} />;
+    case "sdui-tab-item-horizontal":
+      return <SduiTabItemHorizontalPage item={item} />;
+    case "sdui-global-navigation":
+      return <SduiGlobalNavigationPage item={item} />;
     case "sdui-button":
       return <SduiButtonPage item={item} />;
+    case "sdui-ghost-button":
+      return <SduiGhostButtonPage item={item} />;
     case "sdui-button-icon":
       return <SduiButtonIconPage item={item} />;
+    case "sdui-overlay-button-icon":
+      return <SduiOverlayButtonIconPage item={item} />;
     case "sdui-ghost-icon-button":
       return <SduiGhostIconButtonPage item={item} />;
+    case "sdui-confirmation":
+      return <SduiConfirmationPage item={item} />;
     case "sdui-pill":
       return <SduiPillPage item={item} />;
     case "sdui-icon":

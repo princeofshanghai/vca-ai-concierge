@@ -40,6 +40,7 @@ export type ChatHeaderIdentity =
   | {
       type: "ai";
       title?: ReactNode;
+      icon?: ReactNode;
     }
   | {
       type: "representative";
@@ -393,9 +394,18 @@ export function ChatTray({
           </>
         ) : (
           <>
-            <span className="inline-flex shrink-0 items-center justify-center text-ai-icon">
-              <Icon name="signal-ai" size="small" label="AI Concierge" />
-            </span>
+            {identity?.type === "ai" && identity.icon ? (
+              <span
+                aria-hidden="true"
+                className="inline-flex shrink-0 items-center justify-center"
+              >
+                {identity.icon}
+              </span>
+            ) : (
+              <span className="inline-flex shrink-0 items-center justify-center text-ai-icon">
+                <Icon name="signal-ai" size="small" label="AI Concierge" />
+              </span>
+            )}
             <span className="min-w-0 inline-flex flex-1 items-center gap-sm">
               <span className="min-w-0 truncate text-heading-md text-text">
                 {identity?.type === "ai" ? (identity.title ?? title) : title}
@@ -537,7 +547,7 @@ export function ChatHeader({
   aiMarkClassName,
   ...props
 }: ChatHeaderProps) {
-  const headerIdentity =
+  const headerIdentity: ChatHeaderIdentity | null =
     identity ?? (showAiMark ? ({ type: "ai", title } as const) : null);
   const dockAction =
     onDockToggle || onMinimizeToTray ? (
@@ -572,12 +582,24 @@ export function ChatHeader({
     >
       {headerIdentity?.type === "ai" ? (
         <div className="flex min-w-0 items-center gap-xs">
-          <Icon
-            name="signal-ai"
-            size="small"
-            label="AI Concierge"
-            className={cx("shrink-0 text-ai-icon", aiMarkClassName)}
-          />
+          {headerIdentity.icon ? (
+            <span
+              aria-hidden="true"
+              className={cx(
+                "inline-flex shrink-0 items-center justify-center",
+                aiMarkClassName,
+              )}
+            >
+              {headerIdentity.icon}
+            </span>
+          ) : (
+            <Icon
+              name="signal-ai"
+              size="small"
+              label="AI Concierge"
+              className={cx("shrink-0 text-ai-icon", aiMarkClassName)}
+            />
+          )}
           {headerIdentity.title ? (
             <span className="min-w-0 truncate text-heading-md text-text">
               {headerIdentity.title}

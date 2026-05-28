@@ -19,6 +19,8 @@ import {
 
 const HIRING_PROTOTYPE_HREF = "/hiring";
 const PREMIUM_PROTOTYPE_HREF = "/premium";
+const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
+const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
@@ -52,6 +54,20 @@ const PREMIUM_SHELL_OPTIONS = [
     label: "Tray (persistent)",
   },
 ] as const;
+const PREMIUM_COMPANY_PAGES_SHELL_OPTIONS = [
+  {
+    id: "premium-company-pages-shell-hybrid",
+    label: "Tray (hybrid)",
+  },
+  {
+    id: "premium-company-pages-shell-overlay",
+    label: "Overlay drawer",
+  },
+  {
+    id: "premium-company-pages-shell-rail",
+    label: "Right rail",
+  },
+] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
   {
@@ -83,17 +99,53 @@ const premiumModeOptions = [
   ...premiumLiveModeNavItems,
   ...premiumReviewFlowNavItems,
 ] as const;
+const premiumCompanyPagesModeOptions = [
+  {
+    id: "premium-company-pages-member",
+    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+    label: "Member view",
+    description: "Customer-facing company Page",
+  },
+  {
+    id: "premium-company-pages-admin",
+    href: PREMIUM_COMPANY_PAGES_ADMIN_HREF,
+    label: "Admin view",
+    description: "Page admin dashboard",
+  },
+] as const;
+const prototypeProjectOptions = [
+  {
+    id: "project-hiring",
+    href: HIRING_PROTOTYPE_HREF,
+    label: "LTS microsite",
+    description: "Hiring concierge prototype",
+  },
+  {
+    id: "project-premium",
+    href: PREMIUM_PROTOTYPE_HREF,
+    label: "Premium survey",
+    description: "Member Premium survey prototype",
+  },
+  {
+    id: "project-premium-company-pages",
+    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+    label: "Premium Company Pages",
+    description: "Company Pages prototype",
+  },
+] as const;
 
 type ReviewDestination = Readonly<{
   href: string;
   label: string;
   matches: (pathname: string) => boolean;
   metaLabel?: string;
-  menu?: "hiring" | "premium";
+  menu?: "hiring" | "premium" | "premium-company-pages" | "projects";
 }>;
 
 type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
 type PremiumShellLabel = (typeof PREMIUM_SHELL_OPTIONS)[number]["label"];
+type PremiumCompanyPagesShellLabel =
+  (typeof PREMIUM_COMPANY_PAGES_SHELL_OPTIONS)[number]["label"];
 type ComponentProductLens = "hiring" | "premium";
 
 const HOME_DESTINATION: ReviewDestination = {
@@ -138,9 +190,19 @@ function getPrototypeMetaLabel(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
+  premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
+  }
+
+  if (pathname.startsWith("/premium-company-pages")) {
+    const activePremiumCompanyPagesMode = premiumCompanyPagesModeOptions.find(
+      (option) => option.href === pathname,
+    );
+    const modeLabel = activePremiumCompanyPagesMode?.label ?? "Member view";
+
+    return `${modeLabel} · ${premiumCompanyPagesShellLabel ?? "Tray (hybrid)"}`;
   }
 
   if (pathname.startsWith("/premium")) {
@@ -185,26 +247,48 @@ function getPrototypeDestination(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
-  componentProductLens: ComponentProductLens = "hiring",
+  premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
 ): ReviewDestination {
+  if (pathname.startsWith("/internal/components")) {
+    return {
+      href: HIRING_PROTOTYPE_HREF,
+      label: "Prototype",
+      matches: () => false,
+      menu: "projects",
+    };
+  }
+
   const isPremium =
-    pathname.startsWith("/premium") ||
-    (pathname.startsWith("/internal/components") &&
-      componentProductLens === "premium");
+    pathname.startsWith("/premium") &&
+    !pathname.startsWith("/premium-company-pages");
+  const isPremiumCompanyPages = pathname.startsWith("/premium-company-pages");
 
   return {
-    href: isPremium ? PREMIUM_PROTOTYPE_HREF : HIRING_PROTOTYPE_HREF,
+    href: isPremiumCompanyPages
+      ? PREMIUM_COMPANY_PAGES_MEMBER_HREF
+      : isPremium
+        ? PREMIUM_PROTOTYPE_HREF
+        : HIRING_PROTOTYPE_HREF,
     label: "Prototype",
-    matches: isPremium
-      ? (candidate) => candidate.startsWith("/premium")
-      : (candidate) =>
-          candidate === HIRING_PROTOTYPE_HREF ||
-          candidate.startsWith("/internal/flows"),
-    menu: isPremium ? "premium" : "hiring",
+    matches: isPremiumCompanyPages
+      ? (candidate) => candidate.startsWith("/premium-company-pages")
+      : isPremium
+        ? (candidate) =>
+            candidate.startsWith("/premium") &&
+            !candidate.startsWith("/premium-company-pages")
+        : (candidate) =>
+            candidate === HIRING_PROTOTYPE_HREF ||
+            candidate.startsWith("/internal/flows"),
+    menu: isPremiumCompanyPages
+      ? "premium-company-pages"
+      : isPremium
+        ? "premium"
+        : "hiring",
     metaLabel: getPrototypeMetaLabel(
       pathname,
       hiringShellLabel,
       premiumShellLabel,
+      premiumCompanyPagesShellLabel,
     ),
   };
 }
@@ -213,6 +297,7 @@ function getReviewDestinations(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
+  premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
   componentProductLens: ComponentProductLens = "hiring",
 ): ReadonlyArray<ReviewDestination> {
   return [
@@ -221,7 +306,7 @@ function getReviewDestinations(
       pathname,
       hiringShellLabel,
       premiumShellLabel,
-      componentProductLens,
+      premiumCompanyPagesShellLabel,
     ),
     getComponentsDestination(componentProductLens),
   ];
@@ -247,6 +332,21 @@ function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
   return href;
 }
 
+function withPremiumCompanyPagesShell(
+  href: string,
+  shellLabel: PremiumCompanyPagesShellLabel,
+) {
+  if (shellLabel === "Tray (hybrid)") {
+    return href;
+  }
+
+  if (shellLabel === "Overlay drawer") {
+    return `${href}?vcaShell=drawer`;
+  }
+
+  return `${href}?vcaShell=rail`;
+}
+
 function getHiringShellOptions(pathname: string) {
   const baseHref =
     pathname === HIRING_PROTOTYPE_HREF || pathname.startsWith("/internal/flows")
@@ -267,6 +367,17 @@ function getPremiumShellOptions(pathname: string) {
   return PREMIUM_SHELL_OPTIONS.map((option) => ({
     ...option,
     href: withPremiumShell(baseHref, option.label),
+  }));
+}
+
+function getPremiumCompanyPagesShellOptions(pathname: string) {
+  const baseHref = pathname.startsWith("/premium-company-pages")
+    ? pathname
+    : PREMIUM_COMPANY_PAGES_MEMBER_HREF;
+
+  return PREMIUM_COMPANY_PAGES_SHELL_OPTIONS.map((option) => ({
+    ...option,
+    href: withPremiumCompanyPagesShell(baseHref, option.label),
   }));
 }
 
@@ -298,8 +409,23 @@ export function ReviewShellNav() {
     activePremiumShellLabel === "Tray (persistent)"
       ? currentHref
       : pathname;
+  const activePremiumCompanyPagesShellLabel: PremiumCompanyPagesShellLabel =
+    searchParams.get("vcaShell") === "rail"
+      ? "Right rail"
+      : searchParams.get("vcaShell") === "drawer"
+        ? "Overlay drawer"
+        : "Tray (hybrid)";
+  const normalizedPremiumCompanyPagesHref =
+    activePremiumCompanyPagesShellLabel === "Right rail"
+      ? `${pathname}?vcaShell=rail`
+      : activePremiumCompanyPagesShellLabel === "Overlay drawer"
+        ? `${pathname}?vcaShell=drawer`
+        : pathname;
   const componentProductLens: ComponentProductLens =
-    pathname.startsWith("/premium") || searchParams.get("product") === "premium"
+    (pathname.startsWith("/premium") &&
+      !pathname.startsWith("/premium-company-pages")) ||
+    pathname.startsWith("/premium-company-pages") ||
+    searchParams.get("product") === "premium"
       ? "premium"
       : "hiring";
   const shellAwareHiringModeOptions = useMemo(
@@ -328,6 +454,17 @@ export function ReviewShellNav() {
         href: withPremiumShell(option.href, activePremiumShellLabel),
       })),
     [activePremiumShellLabel],
+  );
+  const shellAwarePremiumCompanyPagesModeOptions = useMemo(
+    () =>
+      premiumCompanyPagesModeOptions.map((option) => ({
+        ...option,
+        href: withPremiumCompanyPagesShell(
+          option.href,
+          activePremiumCompanyPagesShellLabel,
+        ),
+      })),
+    [activePremiumCompanyPagesShellLabel],
   );
   const premiumModeGroups = useMemo<ReadonlyArray<ReviewShellModeMenuGroup>>(
     () => [
@@ -391,17 +528,23 @@ export function ReviewShellNav() {
     () => getPremiumShellOptions(pathname),
     [pathname],
   );
+  const premiumCompanyPagesShellOptions = useMemo(
+    () => getPremiumCompanyPagesShellOptions(pathname),
+    [pathname],
+  );
   const reviewDestinations = useMemo(
     () =>
       getReviewDestinations(
         pathname,
         activeHiringShellLabel,
         activePremiumShellLabel,
+        activePremiumCompanyPagesShellLabel,
         componentProductLens,
       ),
     [
       activeHiringShellLabel,
       activePremiumShellLabel,
+      activePremiumCompanyPagesShellLabel,
       componentProductLens,
       pathname,
     ],
@@ -480,12 +623,23 @@ export function ReviewShellNav() {
             const isActive = destination.matches(pathname);
             const hasMenu = Boolean(destination.menu);
             const isPremiumMenu = destination.menu === "premium";
-            const modeOptions = isPremiumMenu
-              ? shellAwarePremiumModeOptions
-              : shellAwareHiringModeOptions;
-            const shellOptions = isPremiumMenu
-              ? premiumShellOptions
-              : hiringShellOptions;
+            const isPremiumCompanyPagesMenu =
+              destination.menu === "premium-company-pages";
+            const isProjectMenu = destination.menu === "projects";
+            const modeOptions = isProjectMenu
+              ? prototypeProjectOptions
+              : isPremiumCompanyPagesMenu
+              ? shellAwarePremiumCompanyPagesModeOptions
+              : isPremiumMenu
+                ? shellAwarePremiumModeOptions
+                : shellAwareHiringModeOptions;
+            const shellOptions = isProjectMenu
+              ? []
+              : isPremiumCompanyPagesMenu
+                ? premiumCompanyPagesShellOptions
+              : isPremiumMenu
+                ? premiumShellOptions
+                : hiringShellOptions;
 
             if (hasMenu) {
               return (
@@ -542,20 +696,34 @@ export function ReviewShellNav() {
                     isSignedIn={isSignedIn}
                     pathname={pathname}
                     currentHref={
-                      isPremiumMenu ? normalizedPremiumHref : normalizedHiringHref
+                      isProjectMenu
+                        ? pathname
+                        : isPremiumCompanyPagesMenu
+                          ? normalizedPremiumCompanyPagesHref
+                        : isPremiumMenu
+                          ? normalizedPremiumHref
+                          : normalizedHiringHref
                     }
                     onLoginSelect={
-                      isPremiumMenu ? undefined : handleLoginSelect
+                      isProjectMenu || isPremiumMenu || isPremiumCompanyPagesMenu
+                        ? undefined
+                        : handleLoginSelect
                     }
                     onClose={closeMenu}
                     triggerRef={triggerRef}
                     labelledBy={TRIGGER_ID}
                     modeOptions={modeOptions}
-                    modeGroups={isPremiumMenu ? premiumModeGroups : undefined}
-                    modeHeading="Choose flow"
+                    modeGroups={
+                      isPremiumMenu && !isPremiumCompanyPagesMenu
+                        ? premiumModeGroups
+                        : undefined
+                    }
+                    modeHeading={isProjectMenu ? "Choose project" : "Choose flow"}
                     shellHeading="UI"
                     shellOptions={shellOptions}
-                    showVisitorControls={!isPremiumMenu}
+                    showVisitorControls={
+                      !isProjectMenu && !isPremiumMenu && !isPremiumCompanyPagesMenu
+                    }
                   />
                 </li>
               );

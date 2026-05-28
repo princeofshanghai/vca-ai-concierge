@@ -125,6 +125,32 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
     title: "SDUI components",
     groups: [
       {
+        title: "Navigation",
+        items: [
+          {
+            id: "sdui-nav-link-item-horizontal",
+            title: "Nav link item horizontal",
+            description:
+              "Displays an icon, label, optional badge, optional dropdown caret, and current-state indicator inside navigation bars.",
+            href: "/internal/components/sdui/nav-link-item-horizontal",
+          },
+          {
+            id: "sdui-tab-item-horizontal",
+            title: "Tab item horizontal",
+            description:
+              "Displays a 48px horizontal tab item with selected, hover, active, icon, and overflow states.",
+            href: "/internal/components/sdui/tab-item-horizontal",
+          },
+          {
+            id: "sdui-global-navigation",
+            title: "Global navigation",
+            description:
+              "Displays LinkedIn's global web navigation with search, primary nav items, profile, and work menu.",
+            href: "/internal/components/sdui/global-navigation",
+          },
+        ],
+      },
+      {
         title: "Primitives",
         items: [
           {
@@ -135,6 +161,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/sdui/button",
           },
           {
+            id: "sdui-ghost-button",
+            title: "Ghost button",
+            description:
+              "Supports quiet text actions with optional icons, emphasis, and loading states.",
+            href: "/internal/components/sdui/ghost-button",
+          },
+          {
             id: "sdui-button-icon",
             title: "Button icon",
             description:
@@ -142,11 +175,25 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/sdui/button-icon",
           },
           {
+            id: "sdui-overlay-button-icon",
+            title: "Overlay button icon",
+            description:
+              "Supports icon-only actions on top of media, imagery, or floating surfaces.",
+            href: "/internal/components/sdui/overlay-button-icon",
+          },
+          {
             id: "sdui-ghost-icon-button",
             title: "Ghost icon button",
             description:
               "Supports quieter actions like closing, minimizing, or expanding.",
             href: "/internal/components/sdui/ghost-icon-button",
+          },
+          {
+            id: "sdui-confirmation",
+            title: "Confirmation",
+            description:
+              "Confirms navigation or actions that would clear conversation state.",
+            href: "/internal/components/sdui/confirmation",
           },
           {
             id: "sdui-pill",

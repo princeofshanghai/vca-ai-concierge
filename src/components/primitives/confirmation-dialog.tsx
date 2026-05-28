@@ -18,8 +18,12 @@ export type ConfirmationDialogProps = {
   children: ReactNode;
   confirmLabel: string;
   cancelLabel: string;
+  tertiaryLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
+  onTertiary?: () => void;
+  onDismiss?: () => void;
+  alignment?: "top" | "center";
   scope?: "viewport" | "container";
 };
 
@@ -52,8 +56,12 @@ export function ConfirmationDialog({
   children,
   confirmLabel,
   cancelLabel,
+  tertiaryLabel,
   onConfirm,
   onCancel,
+  onTertiary,
+  onDismiss,
+  alignment = "center",
   scope = "viewport",
 }: ConfirmationDialogProps) {
   const titleId = useId();
@@ -98,7 +106,11 @@ export function ConfirmationDialog({
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
-      onCancel();
+      if (onDismiss) {
+        onDismiss();
+      } else {
+        onCancel();
+      }
       return;
     }
 
@@ -131,7 +143,10 @@ export function ConfirmationDialog({
   const dialog = (
     <div
       className={cx(
-        "flex items-center justify-center p-lg motion-reduce:transition-none md:p-xxl",
+        "flex justify-center p-lg motion-reduce:transition-none md:p-xxl",
+        alignment === "top"
+          ? "items-start pt-[min(20dvh,96px)] md:pt-[min(20dvh,128px)]"
+          : "items-center",
         scope === "container" ? "absolute inset-0 z-10" : "fixed inset-0 z-50",
       )}
       style={{ backgroundColor: "var(--design-color-scrim)" }}
@@ -160,7 +175,7 @@ export function ConfirmationDialog({
             label="Dismiss confirmation"
             icon="close"
             size="medium"
-            onClick={onCancel}
+            onClick={onDismiss ?? onCancel}
           />
         </header>
 
@@ -169,6 +184,15 @@ export function ConfirmationDialog({
         </div>
 
         <footer className="flex items-center justify-end gap-sm border-t border-border-faint px-xxl py-lg">
+          {tertiaryLabel ? (
+            <Button
+              variant="tertiary"
+              size="small"
+              onClick={onTertiary ?? onCancel}
+            >
+              {tertiaryLabel}
+            </Button>
+          ) : null}
           <Button
             ref={cancelButtonRef}
             variant="secondary"

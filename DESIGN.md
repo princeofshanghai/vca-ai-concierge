@@ -109,6 +109,12 @@ colors:
   premium-indicator: "#C37D16"
   premium-text-brand: "#C37D16"
 typography:
+  display-xl:
+    fontFamily: System UI
+    fontSize: 48px
+    fontWeight: 600
+    lineHeight: 54px
+    letterSpacing: 0.36px
   display-md:
     fontFamily: System UI
     fontSize: 30px
@@ -839,10 +845,12 @@ Buttons exist in primary, secondary, and tertiary variants, with small and mediu
 
 Hover and active states should use the current action-transparent or background-transparent tokens. Focus-visible states use rings; disabled and loading states use the disabled background and disabled text color.
 
-### Confirmation Dialog
-Confirmation dialogs interrupt the flow only when the user is about to confirm a choice that changes or discards conversation state. They use the modal `scrim`, a 336px window, `rounded.sm`, `shadow-raised`, faint dividers, and compact `heading-lg` title typography.
+Ghost buttons are separate quiet text actions for module footers and low-emphasis commands. They use a 48px touch target, small or medium control typography, transparent chrome by default, optional leading or trailing 16px icons, neutral label tokens by default, and action tokens when emphasized. Hover and active state layers use the existing transparent background tokens.
 
-The dismiss X and Escape key close the confirmation only. The primary action confirms the choice, and the secondary action returns the user to the prior flow. Destructive or conversation-ending confirmation copy should be explicit about what will be cleared or ended.
+### Confirmation Dialog
+Confirmation dialogs interrupt the flow only when the user is about to confirm a choice that changes or discards conversation state. They use the modal `scrim`, a 336px window, `rounded.sm`, `shadow-raised`, faint dividers, and compact `heading-lg` title typography. The component supports center and top alignment, with center as the default for most confirmations.
+
+The dismiss X and Escape key close the confirmation only. The primary action confirms the choice, the secondary action returns the user to the prior flow, and an optional tertiary action may appear before them when the design requires a third lower-emphasis choice. Destructive or conversation-ending confirmation copy should be explicit about what will be cleared or ended.
 
 ### Pill
 Choice pills are compact toggle controls for filtering or selecting lightweight options. They use a 48px touch target around a 32px pill surface, 12px horizontal padding, 4px inner gap, `typography.control-sm`, and `rounded.md`.
