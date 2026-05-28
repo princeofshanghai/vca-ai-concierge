@@ -2000,6 +2000,13 @@ export function PremiumCompanyPagesMemberPage({
     useState<VcaBookedMeeting | null>(null);
   const [isVcaSchedulePanelOpen, setIsVcaSchedulePanelOpen] = useState(false);
   const [vcaDraft, setVcaDraft] = useState("");
+  const vcaHybridPanelPositionClass = isVcaSchedulePanelOpen
+    ? vcaPanelVariant === "expanded"
+      ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-expanded-surface-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+      : "md:inset-auto md:bottom-0 md:right-6 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-collapsed-surface-width))]"
+    : vcaPanelVariant === "expanded"
+      ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+      : "md:inset-auto md:bottom-0 md:right-6 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
 
   function resetVcaConversation() {
     setVcaConversationStage("opening");
@@ -2032,7 +2039,7 @@ export function PremiumCompanyPagesMemberPage({
 
   function handleOpenVcaBooking(entryPoint: VcaEntryPoint) {
     setVcaEntryPoint(entryPoint);
-    setVcaPanelVariant("expanded");
+    setVcaPanelVariant("collapsed");
     setVcaConversationStage("booking");
     setVcaSelectedStarterPrompt(VCA_BOOK_PROMPT);
     setVcaSelectedFollowUpPrompt(null);
@@ -2082,7 +2089,6 @@ export function PremiumCompanyPagesMemberPage({
 
   function handleOpenVcaSchedulePanel() {
     setIsVcaSchedulePanelOpen(true);
-    setVcaPanelVariant("expanded");
   }
 
   function handleBackToVcaChat() {
@@ -2092,7 +2098,6 @@ export function PremiumCompanyPagesMemberPage({
   function handleBookVcaMeeting(meeting: VcaBookedMeeting) {
     setVcaBookedMeeting(meeting);
     setIsVcaSchedulePanelOpen(false);
-    setVcaPanelVariant("expanded");
   }
 
   function handleVcaPromptSelect(prompt: string) {
@@ -2257,9 +2262,7 @@ export function PremiumCompanyPagesMemberPage({
             aria-label={`${pcpCompanyProfile.name} assistant`}
             className={cx(
               "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-slow)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
-              vcaPanelVariant === "expanded"
-                ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-                : "md:inset-auto md:bottom-0 md:right-6 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]",
+              vcaHybridPanelPositionClass,
             )}
           >
             <PremiumCompanyPagesVcaPanel
