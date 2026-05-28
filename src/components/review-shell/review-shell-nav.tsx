@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -387,6 +387,12 @@ export function ReviewShellNav() {
   const searchParams = useSearchParams();
   const { isSignedIn, setIsSignedIn } = useReviewShellState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isPremiumCompanyPagesMember = pathname.startsWith(
+    PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+  );
+  const [hasDarkOverlayBackdrop, setHasDarkOverlayBackdrop] = useState(false);
+  const usesDarkOverlayChrome =
+    isPremiumCompanyPagesMember && hasDarkOverlayBackdrop;
   const currentSearch = searchParams.toString();
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const activeHiringShellLabel: HiringShellLabel =
@@ -596,6 +602,142 @@ export function ReviewShellNav() {
     };
   }, [pathname, isSignedIn, reviewDestinations]);
 
+  useEffect(() => {
+    if (!isPremiumCompanyPagesMember) {
+      return;
+    }
+
+    function getColorLuminance(color: string) {
+      const rgbMatch = color.match(/^rgba?\((.+)\)$/);
+
+      if (!rgbMatch) {
+        return null;
+      }
+
+      const [channelValue, alphaValue] = rgbMatch[1].split("/");
+      const channels = channelValue
+        .trim()
+        .split(/[,\s]+/)
+        .filter(Boolean);
+
+      if (channels.length < 3) {
+        return null;
+      }
+
+      const alpha = alphaValue
+        ? Number.parseFloat(alphaValue)
+        : channels[3]
+          ? Number.parseFloat(channels[3])
+          : 1;
+
+      if (alpha < 0.2) {
+        return null;
+      }
+
+      const [red, green, blue] = channels.slice(0, 3).map((channel) => {
+        if (channel.endsWith("%")) {
+          return (Number.parseFloat(channel) / 100) * 255;
+        }
+
+        return Number.parseFloat(channel);
+      });
+
+      if ([red, green, blue].some((channel) => Number.isNaN(channel))) {
+        return null;
+      }
+
+      const [linearRed, linearGreen, linearBlue] = [red, green, blue].map(
+        (channel) => {
+          const normalized = channel / 255;
+
+          return normalized <= 0.03928
+            ? normalized / 12.92
+            : ((normalized + 0.055) / 1.055) ** 2.4;
+        },
+      );
+
+      return (
+        0.2126 * linearRed + 0.7152 * linearGreen + 0.0722 * linearBlue
+      );
+    }
+
+    function getElementBackdropIsDark(element: Element) {
+      let currentElement: HTMLElement | null =
+        element instanceof HTMLElement ? element : element.parentElement;
+
+      while (currentElement && currentElement !== document.documentElement) {
+        const style = window.getComputedStyle(currentElement);
+        const luminance = getColorLuminance(style.backgroundColor);
+
+        if (luminance !== null) {
+          return luminance < 0.45;
+        }
+
+        currentElement = currentElement.parentElement;
+      }
+
+      return false;
+    }
+
+    function getPointBackdropIsDark(
+      navElement: HTMLElement,
+      x: number,
+      y: number,
+    ) {
+      const elements = document.elementsFromPoint(x, y);
+      const backdropElement = elements.find(
+        (element) => !navElement.contains(element),
+      );
+
+      return backdropElement
+        ? getElementBackdropIsDark(backdropElement)
+        : false;
+    }
+
+    function updateChromeContrast() {
+      const navElement = listRef.current?.closest("nav");
+
+      if (!(navElement instanceof HTMLElement)) {
+        return;
+      }
+
+      const navRect = navElement.getBoundingClientRect();
+      const sampleY = navRect.top + navRect.height / 2;
+      const samplePoints = [
+        navRect.left + Math.min(48, navRect.width / 4),
+        navRect.left + navRect.width / 2,
+        navRect.right - Math.min(48, navRect.width / 4),
+      ];
+      const darkSampleCount = samplePoints.filter((sampleX) =>
+        getPointBackdropIsDark(navElement, sampleX, sampleY),
+      ).length;
+
+      setHasDarkOverlayBackdrop((currentValue) => {
+        const nextValue = darkSampleCount >= 2;
+
+        return currentValue === nextValue ? currentValue : nextValue;
+      });
+    }
+
+    let frame = window.requestAnimationFrame(updateChromeContrast);
+
+    function scheduleChromeContrastUpdate() {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateChromeContrast);
+    }
+
+    window.addEventListener("scroll", scheduleChromeContrastUpdate, {
+      passive: true,
+    });
+    window.addEventListener("resize", scheduleChromeContrastUpdate);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleChromeContrastUpdate);
+      window.removeEventListener("resize", scheduleChromeContrastUpdate);
+    };
+  }, [isPremiumCompanyPagesMember]);
+
   function handleLoginSelect(next: boolean) {
     setIsSignedIn(next);
     setIsMenuOpen(false);
@@ -611,7 +753,10 @@ export function ReviewShellNav() {
     <div className="pointer-events-none fixed inset-x-0 top-2 z-50 flex justify-center px-4 sm:top-3">
       <nav
         aria-label="Review surfaces"
-        className="pointer-events-auto rounded-full border border-white/75 bg-white/50 p-1.5 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/42"
+        className={[
+          "pointer-events-auto rounded-full border bg-white/50 p-1.5 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/42",
+          usesDarkOverlayChrome ? "border-white/40" : "border-white/75",
+        ].join(" ")}
       >
         <ul ref={listRef} className="relative flex items-center gap-2">
           <span
@@ -664,7 +809,9 @@ export function ReviewShellNav() {
                       "inline-flex min-h-9 min-w-0 items-center gap-4 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
                       isActive
                         ? "text-sky-900"
-                        : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
+                        : usesDarkOverlayChrome
+                          ? "text-white/90 hover:bg-white/15 hover:text-white"
+                          : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
                     ].join(" ")}
                   >
                     <span className="inline-flex min-w-0 items-baseline gap-2 leading-none">
@@ -675,7 +822,11 @@ export function ReviewShellNav() {
                         <span
                           className={[
                             "max-w-[44vw] truncate text-[10px] font-medium leading-[1.05] tracking-normal sm:max-w-none",
-                            isActive ? "text-sky-700/75" : "text-slate-500",
+                            isActive
+                              ? "text-sky-700/75"
+                              : usesDarkOverlayChrome
+                                ? "text-white/70"
+                                : "text-slate-500",
                           ].join(" ")}
                         >
                           {destination.metaLabel}
@@ -741,7 +892,9 @@ export function ReviewShellNav() {
                     "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
                     isActive
                       ? "text-sky-900"
-                      : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
+                      : usesDarkOverlayChrome
+                        ? "text-white/90 hover:bg-white/15 hover:text-white"
+                        : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
                   ].join(" ")}
                 >
                   {destination.href === HOME_DESTINATION.href ? (
