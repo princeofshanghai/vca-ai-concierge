@@ -175,7 +175,7 @@ export function EntryLixChoiceScreen({
           <EntryLixOptionCard
             icon="signal-ai"
             title="Chat with AI assistant"
-            description="Chat about your hiring needs, then connect with a sales rep."
+            description="Get answers now and connect with a sales rep when you're ready."
             badge={
               <span className="rounded-round bg-ai-background-strong px-sm py-xxs text-supportive-s-strong text-action">
                 New
