@@ -175,7 +175,7 @@ export function EntryLixChoiceScreen({
           <EntryLixOptionCard
             icon="signal-ai"
             title="Chat with AI assistant"
-            description="Get answers now and connect with a sales rep when you're ready."
+            description="Get immediate answers and connect with a sales rep when you're ready."
             badge={
               <span className="rounded-round bg-ai-background-strong px-sm py-xxs text-supportive-s-strong text-action">
                 New
@@ -387,7 +387,10 @@ export function EntryLixLeadFormScreen({
             Request a call back
           </h2>
           <p className="mt-sm text-body-md text-text-meta">
-            Share your details and a sales rep will contact you.
+            Forms submitted between 9:00 AM and 12:00 PM PST Monday-Friday will
+            receive a response within 2 hours. Forms submitted after 12:00 PM
+            PST may receive a response on the next business day (excluding
+            weekends and holidays).
           </p>
         </div>
 

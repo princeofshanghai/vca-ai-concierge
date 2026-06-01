@@ -7,6 +7,7 @@ export const iconNames = [
   "archive",
   "arrow-down",
   "arrow-left",
+  "arrow-left-large",
   "arrow-right",
   "arrow-up",
   "arrow-up-down",
@@ -294,6 +295,12 @@ export const iconMetadata = [
     "label": "Arrow Left",
     "figmaName": "Arrow Left Small",
     "figmaNodeId": "2008:2710"
+  },
+  {
+    "name": "arrow-left-large",
+    "label": "Arrow Left",
+    "figmaName": "Arrow Left",
+    "figmaNodeId": "0:626"
   },
   {
     "name": "arrow-right",
@@ -1781,6 +1788,7 @@ const iconSvgByName = {
   "archive": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M6 3H2V1H6C7.66 1 9 2.34 9 4V9H10.5L8 11.5L5.5 9H7V4C7 3.45 6.55 3 6 3ZM11 5V7H12V12C12 12.55 11.55 13 11 13H5C4.45 13 4 12.55 4 12V7H5V5H2V12C2 13.66 3.34 15 5 15H11C12.66 15 14 13.66 14 12V5H11Z\" fill=\"currentColor\"/>\n</svg>",
   "arrow-down": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M3 11.4L8 15L13 11.4V9L9 11.8V2H7V11.8L3 9V11.4Z\" fill=\"currentColor\"/>\n</svg>",
   "arrow-left": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M4.6 3L1 8L4.6 13H7L4.2 9H14V7H4.2L7 3H4.6Z\" fill=\"currentColor\"/>\n</svg>",
+  "arrow-left-large": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M6.6 4L1 12L6.6 20H9L4.1 13H22V11H4.1L9 4H6.6Z\" fill=\"currentColor\"/>\n</svg>",
   "arrow-right": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M11.4 3L15 8L11.4 13H9L11.8 9H2V7H11.8L9 3H11.4Z\" fill=\"currentColor\"/>\n</svg>",
   "arrow-up": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M13 4.6L8 1L3 4.6V7L7 4.2V14H9V4.2L13 7V4.6Z\" fill=\"currentColor\"/>\n</svg>",
   "arrow-up-down": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M8 0L12 2.85V5.29L9 3.15V7H7V3.15L4 5.29V2.85L8 0ZM12 13.15V10.71L9 12.85V9H7V12.85L4 10.71V13.15L8 16L12 13.15Z\" fill=\"currentColor\"/>\n</svg>",

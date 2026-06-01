@@ -22,7 +22,7 @@ import { Badge } from "@/components/primitives/badge";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
-import { Icon, type IconName } from "@/components/primitives/icon";
+import { Icon, type IconName, type IconSize } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
 import { PresenceBadge } from "@/components/primitives/presence-badge";
 import { TextArea } from "@/components/primitives/text-area";
@@ -78,6 +78,8 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
   backLabel?: string;
+  backIcon?: IconName;
+  backIconSize?: IconSize;
   onClose?: () => void;
   onBack?: () => void;
   onDockToggle?: () => void;
@@ -539,6 +541,8 @@ export function ChatHeader({
   title,
   className,
   backLabel = "Back",
+  backIcon = "arrow-left",
+  backIconSize,
   onClose,
   onBack,
   onDockToggle,
@@ -576,7 +580,8 @@ export function ChatHeader({
   const backAction = onBack ? (
     <GhostIconButton
       label={backLabel}
-      icon="arrow-left"
+      icon={backIcon}
+      iconSize={backIconSize}
       size="medium"
       onClick={onBack}
     />

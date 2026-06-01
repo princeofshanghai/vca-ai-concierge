@@ -3,7 +3,7 @@ import {
   type ButtonHTMLAttributes,
 } from "react";
 
-import { Icon, type IconName } from "@/components/primitives/icon";
+import { Icon, type IconName, type IconSize } from "@/components/primitives/icon";
 
 export type GhostIconButtonSize = "small" | "medium";
 export type GhostIconButtonVisualState =
@@ -17,6 +17,7 @@ export type GhostIconButtonProps = Omit<
   "children" | "aria-label"
 > & {
   icon?: IconName;
+  iconSize?: IconSize;
   label: string;
   size?: GhostIconButtonSize;
   emphasis?: boolean;
@@ -100,6 +101,7 @@ export const GhostIconButton = forwardRef<
 >(function GhostIconButton(
   {
     icon = "placeholder",
+    iconSize,
     label,
     size = "small",
     emphasis = false,
@@ -165,7 +167,11 @@ export const GhostIconButton = forwardRef<
             visualStateClasses[tone][visualState],
         )}
       >
-        {loading ? <GhostIconButtonSpinner /> : <Icon name={icon} />}
+        {loading ? (
+          <GhostIconButtonSpinner />
+        ) : (
+          <Icon name={icon} size={iconSize} />
+        )}
       </span>
     </button>
   );

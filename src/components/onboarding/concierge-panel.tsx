@@ -942,6 +942,9 @@ export function ConciergePanel({
       ) : null}
     </ChatThread>
   ) : null;
+  const showEntryLixBackAction =
+    contactSalesEntry === "lix-test" &&
+    (phase === "entry-form" || phase === "onboarding");
 
   return (
     <ChatPanel
@@ -957,13 +960,10 @@ export function ConciergePanel({
         variant={variant}
         title={phase === "chat" ? HIRING_CONCIERGE_TITLE : undefined}
         backLabel="Back to contact options"
+        backIcon={showEntryLixBackAction ? "arrow-left-large" : undefined}
+        backIconSize={showEntryLixBackAction ? "medium" : undefined}
         onClose={onClose}
-        onBack={
-          contactSalesEntry === "lix-test" &&
-          (phase === "entry-form" || phase === "onboarding")
-            ? handleEntryLixBackToChoice
-            : undefined
-        }
+        onBack={showEntryLixBackAction ? handleEntryLixBackToChoice : undefined}
         dockActionPosition={dockActionPosition}
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
