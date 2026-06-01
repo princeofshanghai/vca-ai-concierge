@@ -15,7 +15,7 @@ import {
   useChatPanelPresence,
 } from "@/components/chat";
 import { FlowReviewChatPanel } from "@/components/flow-review";
-import { ConciergePanel } from "@/components/onboarding";
+import { ConciergePanel, type ContactSalesEntry } from "@/components/onboarding";
 import { Button } from "@/components/primitives/button";
 import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog";
 import type { FlowReview } from "@/lib/conversation-flows";
@@ -24,6 +24,7 @@ import type { HiringShellMode } from "@/lib/hiring-shell";
 import { HiringHeader, type HiringHeaderNavHref } from "./hiring-header";
 
 type LandingPageProps = Readonly<{
+  contactSalesEntry?: ContactSalesEntry;
   homeHref?: string;
   reviewFlow?: FlowReview;
   shellMode?: HiringShellMode;
@@ -37,6 +38,7 @@ const communityProBold = localFont({
 });
 
 export function LandingPage({
+  contactSalesEntry = "default",
   homeHref = "/hiring",
   reviewFlow,
   shellMode = "default",
@@ -451,6 +453,7 @@ export function LandingPage({
                 />
               ) : (
                 <ConciergePanel
+                  contactSalesEntry={contactSalesEntry}
                   className={chatPanelFrameClass}
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}

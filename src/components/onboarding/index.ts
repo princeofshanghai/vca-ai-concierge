@@ -1,4 +1,4 @@
-export { ConciergePanel } from "./concierge-panel";
+export { ConciergePanel, type ContactSalesEntry } from "./concierge-panel";
 export { OnboardingScreen, type OnboardingResult } from "./onboarding-screen";
 export {
   JAMIE_CHEN,

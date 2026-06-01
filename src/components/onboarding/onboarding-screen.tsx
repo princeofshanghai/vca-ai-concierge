@@ -43,9 +43,12 @@ export type OnboardingResult = Readonly<{
 }>;
 
 type OnboardingScreenProps = Readonly<{
+  headline?: string;
   isSignedIn: boolean;
   onSubmit: (result: OnboardingResult) => void;
   persona?: LinkedInPersona;
+  showAiMark?: boolean;
+  subcopy?: string | null;
 }>;
 
 type FormState = Readonly<{
@@ -91,9 +94,12 @@ function getEmailErrorText(validation: WorkEmailValidation): string | null {
 }
 
 export function OnboardingScreen({
+  headline = HEADLINE,
   isSignedIn,
   onSubmit,
   persona = JAMIE_CHEN,
+  showAiMark = true,
+  subcopy = SUBCOPY,
 }: OnboardingScreenProps) {
   const [form, setForm] = useState<FormState>(() =>
     buildInitialFormState(isSignedIn, persona),
@@ -261,15 +267,21 @@ export function OnboardingScreen({
         className="mx-auto flex w-full max-w-[384px] flex-col px-xxl pt-xxl pb-xxxl"
       >
         <div className="flex flex-col text-left">
-          <Icon
-            name="signal-ai"
-            label="AI Concierge"
-            className="concierge-ai-mark text-ai-icon !size-7"
-          />
-          <h2 className="mt-md text-display-md text-text">{HEADLINE}</h2>
-          <p className="mt-sm text-body-md text-text-meta">
-            {SUBCOPY}
-          </p>
+          {showAiMark ? (
+            <Icon
+              name="signal-ai"
+              label="AI Concierge"
+              className="concierge-ai-mark text-ai-icon !size-7"
+            />
+          ) : null}
+          <h2 className={cx(showAiMark && "mt-md", "text-display-md text-text")}>
+            {headline}
+          </h2>
+          {subcopy ? (
+            <p className="mt-sm text-body-md text-text-meta">
+              {subcopy}
+            </p>
+          ) : null}
         </div>
 
         {visualState === "signed-out" ? (

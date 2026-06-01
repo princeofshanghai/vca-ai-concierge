@@ -122,12 +122,16 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(
             htmlFor={textareaId}
             className={cx(
               "text-body-xs text-label",
-              disabled && "text-label-disabled",
-            )}
-          >
-            {label}
-            {required ? <span aria-hidden="true">*</span> : null}
-          </label>
+            disabled && "text-label-disabled",
+          )}
+        >
+          {label}
+          {required ? (
+            <span aria-hidden="true" className="text-negative">
+              *
+            </span>
+          ) : null}
+        </label>
         ) : null}
 
         <textarea

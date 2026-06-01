@@ -18,6 +18,7 @@ import {
 } from "./review-shell-state-menu";
 
 const HIRING_PROTOTYPE_HREF = "/hiring";
+const HIRING_ENTRY_LIX_TEST_HREF = "/hiring/entry-lix-test";
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
@@ -27,6 +28,13 @@ const HIRING_LIVE_NAV_ITEM = {
   href: HIRING_PROTOTYPE_HREF,
   label: "All intents",
   description: "Interact with the prototype to see results across all intents",
+  typeLabel: "Interactive",
+} as const;
+const HIRING_ENTRY_LIX_TEST_NAV_ITEM = {
+  id: "entry-lix-test",
+  href: HIRING_ENTRY_LIX_TEST_HREF,
+  label: "Entry LIX test",
+  description: "Review the Contact sales entry choice experiment",
   typeLabel: "Interactive",
   hasDividerAfter: true,
 } as const;
@@ -70,6 +78,7 @@ const PREMIUM_COMPANY_PAGES_SHELL_OPTIONS = [
 ] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
+  HIRING_ENTRY_LIX_TEST_NAV_ITEM,
   {
     id: "high",
     href: "/internal/flows/high",
@@ -163,6 +172,14 @@ function getComponentsDestination(
   };
 }
 
+function isHiringPrototypePath(pathname: string) {
+  return (
+    pathname === HIRING_PROTOTYPE_HREF ||
+    pathname === HIRING_ENTRY_LIX_TEST_HREF ||
+    pathname.startsWith("/internal/flows")
+  );
+}
+
 function HomeNavIcon() {
   return (
     <span
@@ -215,10 +232,7 @@ function getPrototypeMetaLabel(
     return `${modeLabel} · ${premiumShellLabel}`;
   }
 
-  if (
-    pathname === HIRING_PROTOTYPE_HREF ||
-    pathname.startsWith("/internal/flows")
-  ) {
+  if (isHiringPrototypePath(pathname)) {
     let modeLabel = "All intents";
 
     for (const option of hiringModeOptions) {
@@ -277,8 +291,7 @@ function getPrototypeDestination(
             candidate.startsWith("/premium") &&
             !candidate.startsWith("/premium-company-pages")
         : (candidate) =>
-            candidate === HIRING_PROTOTYPE_HREF ||
-            candidate.startsWith("/internal/flows"),
+            isHiringPrototypePath(candidate),
     menu: isPremiumCompanyPages
       ? "premium-company-pages"
       : isPremium
@@ -349,7 +362,7 @@ function withPremiumCompanyPagesShell(
 
 function getHiringShellOptions(pathname: string) {
   const baseHref =
-    pathname === HIRING_PROTOTYPE_HREF || pathname.startsWith("/internal/flows")
+    isHiringPrototypePath(pathname)
       ? pathname
       : HIRING_PROTOTYPE_HREF;
 
@@ -741,7 +754,14 @@ export function ReviewShellNav() {
   function handleLoginSelect(next: boolean) {
     setIsSignedIn(next);
     setIsMenuOpen(false);
-    router.push(withHiringShell(HIRING_PROTOTYPE_HREF, activeHiringShellLabel));
+    router.push(
+      withHiringShell(
+        pathname === HIRING_ENTRY_LIX_TEST_HREF
+          ? HIRING_ENTRY_LIX_TEST_HREF
+          : HIRING_PROTOTYPE_HREF,
+        activeHiringShellLabel,
+      ),
+    );
   }
 
   function closeMenu() {

@@ -77,7 +77,9 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   variant?: ChatPanelVariant;
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
+  backLabel?: string;
   onClose?: () => void;
+  onBack?: () => void;
   onDockToggle?: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
@@ -536,7 +538,9 @@ export function ChatHeader({
   identity,
   title,
   className,
+  backLabel = "Back",
   onClose,
+  onBack,
   onDockToggle,
   onMinimizeToTray,
   onVariantToggle,
@@ -569,6 +573,15 @@ export function ChatHeader({
     </span>
   ) : null;
 
+  const backAction = onBack ? (
+    <GhostIconButton
+      label={backLabel}
+      icon="arrow-left"
+      size="medium"
+      onClick={onBack}
+    />
+  ) : null;
+
   return (
     <header
       {...props}
@@ -580,7 +593,9 @@ export function ChatHeader({
         className,
       )}
     >
-      {headerIdentity?.type === "ai" ? (
+      {backAction ? (
+        backAction
+      ) : headerIdentity?.type === "ai" ? (
         <div className="flex min-w-0 items-center gap-xs">
           {headerIdentity.icon ? (
             <span

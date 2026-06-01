@@ -55,9 +55,17 @@ import {
 } from "@/lib/conversation-flows";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
+import {
+  EntryLixChoiceScreen,
+  EntryLixLeadFormScreen,
+  EntryLixSuccessScreen,
+} from "./entry-lix-test-screen";
 import { OnboardingScreen, type OnboardingResult } from "./onboarding-screen";
 
+export type ContactSalesEntry = "default" | "lix-test";
+
 type ConciergePanelProps = Readonly<{
+  contactSalesEntry?: ContactSalesEntry;
   variant?: ChatPanelVariant;
   className?: string;
   onClose?: () => void;
@@ -128,6 +136,16 @@ type PendingAssistantResponse = Readonly<{
   text: string;
   surfaceAfter?: ConciergeSurface;
 }>;
+
+type EntryLixStep = "choice" | "chat" | "form" | "success";
+
+type ConciergePhase =
+  | "entry-choice"
+  | "entry-form"
+  | "entry-success"
+  | "onboarding"
+  | "preparing"
+  | "chat";
 
 const INITIAL_LIVE_SCRIPT_INDEX = 0;
 const MATCHING_DELAY_MS = 900;
@@ -304,6 +322,7 @@ function isScheduledSpecialistAvailability(step: FlowReviewAvailabilityStep) {
 }
 
 export function ConciergePanel({
+  contactSalesEntry = "default",
   variant = "collapsed",
   className,
   onClose,
@@ -318,6 +337,9 @@ export function ConciergePanel({
   confirmationDialog,
 }: ConciergePanelProps) {
   const { isSignedIn } = useReviewShellState();
+  const [entryLixStep, setEntryLixStep] = useState<EntryLixStep>(() =>
+    contactSalesEntry === "lix-test" ? "choice" : "chat",
+  );
   const [lead, setLead] = useState<OnboardingResult | null>(null);
   const [preparingLead, setPreparingLead] =
     useState<OnboardingResult | null>(null);
@@ -344,11 +366,17 @@ export function ConciergePanel({
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(0);
 
-  const phase: "onboarding" | "preparing" | "chat" = lead
+  const phase: ConciergePhase = lead
     ? "chat"
     : preparingLead
       ? "preparing"
-      : "onboarding";
+      : contactSalesEntry === "lix-test" && entryLixStep === "choice"
+        ? "entry-choice"
+        : contactSalesEntry === "lix-test" && entryLixStep === "form"
+          ? "entry-form"
+          : contactSalesEntry === "lix-test" && entryLixStep === "success"
+            ? "entry-success"
+            : "onboarding";
   const isSchedulePanelOpen = scheduledSpecialistState === "scheduling";
   const shellVariant = variant;
   const hasUserMessages = messages.some(
@@ -612,6 +640,31 @@ export function ConciergePanel({
     },
     [onConversationStart, resetIdleSession],
   );
+
+  const handleEntryLixChatWithAi = useCallback(() => {
+    setEntryLixStep("chat");
+  }, []);
+
+  const handleEntryLixFillOutForm = useCallback(() => {
+    setEntryLixStep("form");
+  }, []);
+
+  const handleEntryLixBackToChoice = useCallback(() => {
+    setEntryLixStep("choice");
+  }, []);
+
+  const handleEntryLixFormSubmit = useCallback(() => {
+    setEntryLixStep("success");
+  }, []);
+
+  const handleEntryLixSuccessDone = useCallback(() => {
+    if (onSessionEnd) {
+      onSessionEnd();
+      return;
+    }
+
+    onClose?.();
+  }, [onClose, onSessionEnd]);
 
   const handleDraftChange = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -893,7 +946,9 @@ export function ConciergePanel({
   return (
     <ChatPanel
       variant={shellVariant}
-      surface={phase === "onboarding" ? "welcome" : "default"}
+      surface={
+        phase === "chat" || phase === "preparing" ? "default" : "welcome"
+      }
       className={[isSchedulePanelOpen && "md:!w-full", className]
         .filter(Boolean)
         .join(" ")}
@@ -901,12 +956,19 @@ export function ConciergePanel({
       <ChatHeader
         variant={variant}
         title={phase === "chat" ? HIRING_CONCIERGE_TITLE : undefined}
+        backLabel="Back to contact options"
         onClose={onClose}
+        onBack={
+          contactSalesEntry === "lix-test" &&
+          (phase === "entry-form" || phase === "onboarding")
+            ? handleEntryLixBackToChoice
+            : undefined
+        }
         dockActionPosition={dockActionPosition}
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
-        transparent={phase === "onboarding"}
+        transparent={phase !== "chat" && phase !== "preparing"}
         showAiMark={phase === "chat"}
         aiMarkClassName="concierge-ai-mark"
       />
@@ -949,14 +1011,28 @@ export function ConciergePanel({
         <InterimLoadingState
           title="Your AI assistant is getting ready"
         />
+      ) : phase === "entry-choice" ? (
+        <EntryLixChoiceScreen
+          onChatWithAi={handleEntryLixChatWithAi}
+          onFillOutForm={handleEntryLixFillOutForm}
+        />
+      ) : phase === "entry-form" ? (
+        <EntryLixLeadFormScreen onSubmit={handleEntryLixFormSubmit} />
+      ) : phase === "entry-success" ? (
+        <EntryLixSuccessScreen onDone={handleEntryLixSuccessDone} />
       ) : (
         // Re-key on the demo preset so toggling between signed-in and
         // signed-out in the review shell remounts the screen with fresh
         // state instead of stacking runtime overrides.
         <OnboardingScreen
           key={isSignedIn ? "signed-in" : "signed-out"}
+          headline={
+            contactSalesEntry === "lix-test" ? "Before we begin" : undefined
+          }
           isSignedIn={isSignedIn}
           onSubmit={handleOnboardingSubmit}
+          showAiMark={contactSalesEntry !== "lix-test"}
+          subcopy={contactSalesEntry === "lix-test" ? null : undefined}
         />
       )}
       {lead && isIdlePromptOpen ? (

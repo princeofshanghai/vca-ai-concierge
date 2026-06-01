@@ -139,7 +139,11 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           )}
         >
           {label}
-          {required ? <span aria-hidden="true">*</span> : null}
+          {required ? (
+            <span aria-hidden="true" className="text-negative">
+              *
+            </span>
+          ) : null}
         </label>
 
         <div
