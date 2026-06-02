@@ -30,7 +30,7 @@ type HiringHeaderProps = Readonly<{
 
 export function HiringHeader({
   homeHref = "/hiring",
-  contactSalesHref = "/hiring",
+  contactSalesHref = "/hiring?contactSales=open",
   isChatOpen = false,
   chatPanelId,
   onContactSales,

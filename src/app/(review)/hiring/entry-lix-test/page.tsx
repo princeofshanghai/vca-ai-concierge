@@ -12,6 +12,7 @@ export const metadata: Metadata = createPageMetadata({
 
 type HiringEntryLixTestPageProps = Readonly<{
   searchParams: Promise<{
+    contactSales?: string | ReadonlyArray<string>;
     shell?: string | ReadonlyArray<string>;
   }>;
 }>;
@@ -19,13 +20,17 @@ type HiringEntryLixTestPageProps = Readonly<{
 export default async function HiringEntryLixTestPage({
   searchParams,
 }: HiringEntryLixTestPageProps) {
-  const { shell } = await searchParams;
+  const { contactSales, shell } = await searchParams;
+  const contactSalesValue = Array.isArray(contactSales)
+    ? contactSales[0]
+    : contactSales;
   const shellMode = getHiringShellMode(shell);
 
   return (
     <LandingPage
       contactSalesEntry="lix-test"
       homeHref="/hiring/entry-lix-test"
+      openContactSalesOnLoad={contactSalesValue === "open"}
       shellMode={shellMode}
     />
   );

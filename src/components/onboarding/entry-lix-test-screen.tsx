@@ -386,7 +386,7 @@ export function EntryLixLeadFormScreen({
           <h2 className="mt-md text-display-md text-text">
             Request a call back
           </h2>
-          <p className="mt-sm text-body-md text-text-meta">
+          <p className="mt-sm text-body-xs text-text-meta">
             Forms submitted between 9:00 AM and 12:00 PM PST Monday-Friday will
             receive a response within 2 hours. Forms submitted after 12:00 PM
             PST may receive a response on the next business day (excluding

@@ -2,16 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { Button, getButtonClassName } from "@/components/primitives/button";
+import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
+import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 
 import {
@@ -137,14 +138,13 @@ const vcaLeadBrief = {
   outcome: "Sent Ning a drafted message through Velora",
   sentMessage:
     "Hi Ning - I run a small creative agency with rotating contractors and I'm dealing with late client payments that cascade into late contractor payments. Velora's conditional payment scheduling sounds like exactly what I need. Would love to learn more about how it works for an agency our size.",
-  contextStrip:
-    "High-intent lead: agency founder, 8-person team, late client payments, contractor payout timing, Studio Northline case study viewed.",
-  contextItems: [
-    "Founder & Creative Director at an 8-person creative agency.",
-    "Asked VCA what happens to contractor payments when a client pays late.",
-    "Viewed the Studio Northline case study about late-payment workflows.",
-    "Showed interest in multi-project contractor payout handling.",
-    "Sent a drafted message to Ning through the normal LinkedIn message tray.",
+  intentSummary:
+    "She asked how late client payments affect contractor payouts, viewed the Studio Northline case study, and sent a drafted message to Ning.",
+  intentTags: [
+    "8-person agency",
+    "Late client payment pain",
+    "Multi-project payout interest",
+    "Evaluated just now",
   ],
   suggestedReply:
     "Hi Cheri - thanks for reaching out. I founded Velora for exactly this kind of agency payment workflow. You can tie contractor payouts to each client's payment status, so if one client pays late, only the contractors on that project move into a pending state. Happy to walk through how this would work for Brightframe.",
@@ -154,21 +154,6 @@ const vcaLeadBrief = {
     "Ask how Brightframe tracks contractor obligations across client projects today.",
   ],
 };
-
-const vcaConfiguration = [
-  {
-    label: "Voice",
-    value: "Helpful, direct, founder-led",
-  },
-  {
-    label: "Knowledge",
-    value: "Services, payment workflow FAQs, differentiators",
-  },
-  {
-    label: "Default action",
-    value: "Send high-intent messages to Ning",
-  },
-];
 
 const inboxThreads: ReadonlyArray<InboxThreadData> = [
   {
@@ -427,246 +412,6 @@ function ActionCard({
         label={`Dismiss ${title}`}
         touchTarget={false}
       />
-    </article>
-  );
-}
-
-function VcaLeadActionCard() {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const toggleLabel = isExpanded ? "Hide brief" : "Review brief";
-
-  return (
-    <article className="overflow-hidden rounded-xs border border-ai-border bg-background shadow-raised-faint">
-      <div className="flex min-h-[72px] items-start gap-sm px-lg py-md">
-        <span className="mt-xxs inline-flex size-8 shrink-0 items-center justify-center rounded-round bg-ai-background-soft text-ai-icon">
-          <Icon name="signal-ai" size="small" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-xs">
-            <PremiumMark label="Premium" />
-            <p className="text-supportive-s text-text-meta">AI assistant</p>
-          </div>
-          <h3 className="mt-xxs text-control-sm text-text">
-            Reply to Cheri Sparks
-          </h3>
-          <p className="text-body-xs text-text-meta">
-            Velora AI assistant summarized Cheri&apos;s message for Ning.{" "}
-            <button
-              aria-expanded={isExpanded}
-              className="font-semibold text-action hover:underline"
-              onClick={() => setIsExpanded((current) => !current)}
-              type="button"
-            >
-              {toggleLabel}
-            </button>
-          </p>
-        </div>
-        <GhostIconButton
-          className="-mr-xs text-text-meta"
-          horizontalPadding={false}
-          icon="close"
-          label="Dismiss message insight"
-          touchTarget={false}
-        />
-      </div>
-
-      {isExpanded ? (
-        <div className="border-t border-border-faint bg-ai-background-soft px-lg py-lg">
-          <div className="flex flex-col gap-lg lg:flex-row lg:items-start">
-            <div className="flex min-w-[220px] items-center gap-sm">
-              <Entity
-                label={vcaLeadBrief.buyer}
-                size={48}
-                src={assetSrc(vcaLeadBrief.avatar)}
-              />
-              <div className="min-w-0">
-                <p className="truncate text-control-sm text-text">
-                  {vcaLeadBrief.buyer}
-                </p>
-                <p className="text-body-xs text-text-meta">
-                  {vcaLeadBrief.role}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid min-w-0 flex-1 gap-md sm:grid-cols-2">
-              {[
-                ["Company context", vcaLeadBrief.companyContext],
-                ["Need", vcaLeadBrief.need],
-                ["Signals", vcaLeadBrief.signals],
-                ["Workflow shown", vcaLeadBrief.proofShown],
-                ["Outcome", vcaLeadBrief.outcome],
-              ].map(([label, value]) => (
-                <div key={label}>
-                  <p className="text-supportive-s-strong text-text-meta">
-                    {label}
-                  </p>
-                  <p className="mt-xxs text-body-sm text-text">{value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-lg border-t border-border-faint pt-md">
-            <p className="text-supportive-s-strong text-text-meta">
-              Suggested reply angle
-            </p>
-            <ul className="mt-sm space-y-sm">
-              {vcaLeadBrief.suggestedPrep.map((item) => (
-                <li className="flex gap-sm text-body-sm-open text-text" key={item}>
-                  <Icon className="mt-xxs shrink-0 text-positive" name="check" size="small" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ) : null}
-    </article>
-  );
-}
-
-function VcaNotificationPreview() {
-  return (
-    <article className="overflow-hidden rounded-xs border border-border-faint bg-[#111827] p-md text-white shadow-raised-faint">
-      <div className="flex items-start gap-sm">
-        <span className="mt-xxs inline-flex size-8 shrink-0 items-center justify-center rounded-xs bg-white/10 text-white">
-          <Icon name="signal-ai" size="small" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-md">
-            <p className="text-supportive-s-strong text-white">LinkedIn Pages</p>
-            <p className="text-supportive-s text-white/65">now</p>
-          </div>
-          <h3 className="mt-xs text-control-sm text-white">
-            High-intent visitor: Cheri Sparks
-          </h3>
-          <p className="mt-xxs text-body-xs text-white/75">
-            Founder at an 8-person creative agency asked about contractor
-            payment timing and sent a drafted message to Ning.
-          </p>
-          <div className="mt-md flex gap-sm">
-            <Link
-              className={getButtonClassName({
-                className: "!bg-white !text-text",
-                size: "small",
-              })}
-              href={ADMIN_INBOX_HREF}
-            >
-              View message
-            </Link>
-            <Button
-              className="!border-white/45 !bg-transparent !text-white"
-              size="small"
-              variant="tertiary"
-            >
-              Dismiss
-            </Button>
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function VcaInboxThreadCard() {
-  return (
-    <article className="overflow-hidden rounded-sm border border-border-faint bg-background">
-      <div className="flex items-center justify-between gap-lg border-b border-border-faint px-lg py-md">
-        <div className="flex min-w-0 items-center gap-sm">
-          <Entity
-            label={vcaLeadBrief.buyer}
-            size={40}
-            src={assetSrc(vcaLeadBrief.avatar)}
-          />
-          <div className="min-w-0">
-            <h3 className="truncate text-control-sm text-text">
-              {vcaLeadBrief.buyer}
-            </h3>
-            <p className="truncate text-body-xs text-text-meta">
-              {vcaLeadBrief.role}
-            </p>
-          </div>
-        </div>
-        <Link
-          className={getButtonClassName({ size: "small" })}
-          href={ADMIN_INBOX_HREF}
-        >
-          Reply as Velora
-        </Link>
-      </div>
-
-      <div className="space-y-lg p-lg">
-        <div className="rounded-xs border border-ai-border bg-ai-background-soft p-md">
-          <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
-            <Icon className="text-ai-icon" name="signal-ai" size="small" />
-            <span>AI summary</span>
-          </div>
-          <p className="mt-sm text-body-sm-open text-text">
-            {vcaLeadBrief.contextStrip}
-          </p>
-          <p className="mt-xs text-body-xs text-text-meta">
-            Summary only. The full visitor-side AI conversation is not shown.
-          </p>
-        </div>
-
-        <div className="flex items-start gap-sm">
-          <Entity
-            label={vcaLeadBrief.buyer}
-            size={32}
-            src={assetSrc(vcaLeadBrief.avatar)}
-          />
-          <div className="max-w-[34rem] rounded-md bg-background-neutral-soft px-md py-sm">
-            <p className="text-body-sm-open text-text">
-              {vcaLeadBrief.sentMessage}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-xs border border-border-faint p-md">
-          <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
-            <Icon className="text-ai-icon" name="signal-ai" size="small" />
-            <span>Suggested reply</span>
-          </div>
-          <p className="mt-sm text-body-sm-open text-text">
-            {vcaLeadBrief.suggestedReply}
-          </p>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function VcaConfigurationCard() {
-  return (
-    <article className="rounded-sm border border-border-faint bg-background p-lg">
-      <div className="flex flex-wrap items-start justify-between gap-lg">
-        <div>
-          <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
-            <PremiumMark label="Premium" />
-            <span>AI assistant setup</span>
-          </div>
-          <h3 className="mt-xs text-heading-sm text-text">
-            Velora AI assistant is configured for buyer questions
-          </h3>
-        </div>
-        <Button size="small" variant="tertiary">
-          Edit setup
-        </Button>
-      </div>
-      <div className="mt-lg grid gap-md md:grid-cols-3">
-        {vcaConfiguration.map((item) => (
-          <div
-            className="rounded-xs border border-border-faint bg-background-neutral-soft p-md"
-            key={item.label}
-          >
-            <p className="text-supportive-s-strong text-text-meta">
-              {item.label}
-            </p>
-            <p className="mt-xxs text-body-sm-open text-text">{item.value}</p>
-          </div>
-        ))}
-      </div>
     </article>
   );
 }
@@ -933,17 +678,20 @@ function InboxThreadListItem({
 
 function InboxProfileHeader() {
   return (
-    <div className="border-b border-border-faint px-lg py-xl">
+    <div className="space-y-lg border-b border-border-faint px-lg py-xl">
       <Entity
         label={vcaLeadBrief.buyer}
         size={96}
         src={assetSrc(vcaLeadBrief.avatar)}
       />
-      <h2 className="mt-lg text-heading-lg text-text">{vcaLeadBrief.buyer}</h2>
-      <p className="text-body-md text-text">
-        Founder & Creative Director at Brightframe Studio
-      </p>
-      <p className="mt-xs text-body-sm text-text-meta">Late contractor payments</p>
+      <div>
+        <h2 className="text-heading-lg text-text">{vcaLeadBrief.buyer}</h2>
+        <p className="text-body-md text-text">
+          Founder & Creative Director at Brightframe Studio
+        </p>
+        <p className="mt-xs text-body-sm text-text-meta">Late contractor payments</p>
+      </div>
+      <VcaInboxContextStrip />
     </div>
   );
 }
@@ -962,27 +710,36 @@ function TodayDivider() {
 
 function VcaInboxContextStrip() {
   return (
-    <div className="rounded-xs border border-ai-border bg-ai-background-soft p-md">
-      <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
-        <Icon className="text-ai-icon" name="signal-ai" size="small" />
-        <span>AI context</span>
+    <div className="rounded-sm border border-ai-border bg-background p-lg shadow-raised-faint">
+      <div className="flex items-start justify-between gap-md">
+        <div className="min-w-0">
+          <div className="flex items-center gap-sm">
+            <Icon className="shrink-0 text-ai-icon" name="signal-ai" size="medium" />
+            <h3 className="min-w-0 text-[16px] font-semibold leading-6 text-text">
+              Cheri is a{" "}
+              <span className="text-action">high-intent lead</span>
+            </h3>
+          </div>
+          <p className="mt-md text-[14px] font-normal leading-5 text-text">
+            {vcaLeadBrief.intentSummary}
+          </p>
+        </div>
+        <Icon
+          aria-hidden="true"
+          className="mt-xs shrink-0 text-action"
+          name="chevron-up"
+          size="medium"
+        />
       </div>
-      <p className="mt-sm text-body-sm-open text-text">
-        {vcaLeadBrief.contextStrip}
-      </p>
-      <ul className="mt-sm space-y-xs">
-        {vcaLeadBrief.contextItems.map((item) => (
-          <li className="flex gap-sm text-body-sm-open text-text" key={item}>
-            <Icon
-              className="mt-xxs shrink-0 text-ai-icon"
-              name="check"
-              size="small"
-            />
-            <span>{item}</span>
-          </li>
+
+      <div className="mt-md flex flex-wrap gap-xs">
+        {vcaLeadBrief.intentTags.map((tag) => (
+          <Tag key={tag} size="small" tone="default">
+            {tag}
+          </Tag>
         ))}
-      </ul>
-      <p className="mt-xs text-body-xs text-text-meta">
+      </div>
+      <p className="mt-sm text-body-xs text-text-meta">
         Summary only. The full visitor-side AI conversation is not shown.
       </p>
     </div>
@@ -1001,7 +758,7 @@ function InboxMessage() {
       <div className="min-w-0 flex-1">
         <p className="text-body-md text-text">
           <span className="font-semibold">{vcaLeadBrief.buyer}</span>{" "}
-          <span className="text-text-meta">&middot; 4:48 PM</span>
+          <span className="text-[12px] text-text-meta">&middot; 4:48 PM</span>
         </p>
         <div className="mt-sm max-w-[34rem] rounded-sm bg-background-neutral-soft px-md py-sm">
           <p className="text-body-sm-open text-text">
@@ -1009,20 +766,6 @@ function InboxMessage() {
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SuggestedReplyCard() {
-  return (
-    <div className="rounded-xs border border-border-faint bg-background p-md">
-      <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
-        <Icon className="text-ai-icon" name="signal-ai" size="small" />
-        <span>Suggested reply</span>
-      </div>
-      <p className="mt-sm text-body-sm-open text-text">
-        {vcaLeadBrief.suggestedReply}
-      </p>
     </div>
   );
 }
@@ -1113,9 +856,7 @@ function InboxThreadDetail() {
         <InboxProfileHeader />
         <div className="space-y-lg px-lg py-md">
           <TodayDivider />
-          <VcaInboxContextStrip />
           <InboxMessage />
-          <SuggestedReplyCard />
         </div>
       </div>
 
@@ -1172,8 +913,6 @@ function DashboardContent() {
           </p>
         </div>
         <div className="mt-xxl space-y-md">
-          <VcaNotificationPreview />
-          <VcaLeadActionCard />
           <ActionCard
             action="Enable"
             premium
@@ -1213,36 +952,6 @@ function DashboardContent() {
           <div className="mt-md flex justify-center gap-md" aria-hidden="true">
             <span className="size-[6px] rounded-round bg-text" />
             <span className="size-[6px] rounded-round border border-border-subtle" />
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-start justify-between gap-lg">
-            <div>
-              <h2 className="text-heading-sm text-text">Review admin messages</h2>
-              <p className="text-body-sm text-text-meta">
-                High-intent visitor requests arrive with a short AI summary,
-                not a full private conversation transcript.
-              </p>
-            </div>
-          </div>
-          <div className="mt-lg">
-            <VcaInboxThreadCard />
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-start justify-between gap-lg">
-            <div>
-              <h2 className="text-heading-sm text-text">Configure AI assistant</h2>
-              <p className="text-body-sm text-text-meta">
-                Keep the assistant focused on Velora&apos;s voice, knowledge,
-                and preferred next action.
-              </p>
-            </div>
-          </div>
-          <div className="mt-lg">
-            <VcaConfigurationCard />
           </div>
         </section>
 

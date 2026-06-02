@@ -26,6 +26,7 @@ import { HiringHeader, type HiringHeaderNavHref } from "./hiring-header";
 type LandingPageProps = Readonly<{
   contactSalesEntry?: ContactSalesEntry;
   homeHref?: string;
+  openContactSalesOnLoad?: boolean;
   reviewFlow?: FlowReview;
   shellMode?: HiringShellMode;
 }>;
@@ -40,6 +41,7 @@ const communityProBold = localFont({
 export function LandingPage({
   contactSalesEntry = "default",
   homeHref = "/hiring",
+  openContactSalesOnLoad = false,
   reviewFlow,
   shellMode = "default",
 }: LandingPageProps) {
@@ -63,6 +65,7 @@ export function LandingPage({
   const [trayIdentity, setTrayIdentity] =
     useState<ChatHeaderIdentity | null>(null);
   const chatPanelId = useId();
+  const hasOpenedContactSalesOnLoadRef = useRef(false);
   const resetChatPanelState = useCallback(() => {
     setIsEndChatDialogOpen(false);
     setPendingLeaveHref(null);
@@ -177,6 +180,15 @@ export function LandingPage({
     openChatPanel,
     resetChatPanelState,
   ]);
+
+  useEffect(() => {
+    if (!openContactSalesOnLoad || hasOpenedContactSalesOnLoadRef.current) {
+      return;
+    }
+
+    hasOpenedContactSalesOnLoadRef.current = true;
+    openChat();
+  }, [openChat, openContactSalesOnLoad]);
 
   const toggleChatPanelVariant = useCallback(() => {
     const toggleVariant = () => {

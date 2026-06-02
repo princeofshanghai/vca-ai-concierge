@@ -12,6 +12,7 @@ export const metadata: Metadata = createPageMetadata({
 
 type HiringPrototypePageProps = Readonly<{
   searchParams: Promise<{
+    contactSales?: string | ReadonlyArray<string>;
     shell?: string | ReadonlyArray<string>;
   }>;
 }>;
@@ -19,8 +20,16 @@ type HiringPrototypePageProps = Readonly<{
 export default async function HiringPrototypePage({
   searchParams,
 }: HiringPrototypePageProps) {
-  const { shell } = await searchParams;
+  const { contactSales, shell } = await searchParams;
+  const contactSalesValue = Array.isArray(contactSales)
+    ? contactSales[0]
+    : contactSales;
   const shellMode = getHiringShellMode(shell);
 
-  return <LandingPage shellMode={shellMode} />;
+  return (
+    <LandingPage
+      openContactSalesOnLoad={contactSalesValue === "open"}
+      shellMode={shellMode}
+    />
+  );
 }
