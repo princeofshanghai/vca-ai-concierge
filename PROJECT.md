@@ -20,6 +20,7 @@ The product-specific layer lives in dedicated briefs:
 - [LinkedIn Hiring / LTS concierge](docs/hiring-concierge.md)
 - [LinkedIn Premium concierge](docs/premium-concierge.md)
 - [Premium Company Pages](docs/premium-company-pages.md)
+- [Premium Company Pages VCA](docs/premium-company-pages-vca.md)
 
 ## Workstreams
 
@@ -27,7 +28,9 @@ The product-specific layer lives in dedicated briefs:
 
 The current built prototype is the LinkedIn Hiring solutions concierge. It starts from a fake Hiring marketing page and replaces the `Contact sales` moment with a guide-first AI conversation.
 
-Entry route: `/hiring`
+Default entry route: `/hiring/entry-lix-test`
+
+All-intents route: `/hiring`
 
 Internal review flows currently remain under `/internal/flows/*` and are contextual to Hiring only.
 
@@ -41,11 +44,11 @@ For now, Premium has a fake survey path with static question steps and a static 
 
 ### Premium Company Pages
 
-Premium Company Pages is a new visionary design prototype for communicating to executives how an AI chat experience could work for Premium Company Pages.
+Premium Company Pages is a visionary design prototype for communicating to executives how a LinkedIn-native Virtual Chat Agent could turn Page visitor interest into qualified admin action.
 
 Entry route: `/premium-company-pages`
 
-For now, this workstream is a placeholder only. Do not add conversation logic, recommendations, monetization assumptions, admin workflows, analytics claims, or branded design tokens until the Premium Company Pages brief and design direction are defined.
+The current source of truth is the PCP product overview plus the VCA prototype spec. Prototype behavior should remain scripted and workstream-owned: no real entitlement, analytics, identity, inbox, monetization, scheduling, or ads integration logic unless explicitly scoped.
 
 ## Separation Rule
 

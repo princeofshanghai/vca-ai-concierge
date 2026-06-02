@@ -30,6 +30,7 @@ export type ChatSidePanelProps = Readonly<{
   children: ReactNode;
   onBack: () => void;
   backLabel?: ReactNode;
+  headerActions?: ReactNode;
   footer?: ReactNode;
   initialScrollPosition?: ChatSidePanelInitialScrollPosition;
   className?: string;
@@ -78,6 +79,7 @@ export function ChatSidePanel({
   children,
   onBack,
   backLabel = "Back to chat",
+  headerActions,
   footer,
   initialScrollPosition = "top",
   className,
@@ -127,7 +129,7 @@ export function ChatSidePanel({
     >
       <div
         className={cx(
-          "chat-side-panel-x flex h-16 shrink-0 items-center border-b bg-background-neutral-soft transition-colors duration-150 ease-out",
+          "chat-side-panel-x flex h-16 shrink-0 items-center justify-between gap-md border-b bg-background-neutral-soft transition-colors duration-150 ease-out",
           hasScrolled ? "border-border-faint" : "border-transparent",
         )}
       >
@@ -139,6 +141,11 @@ export function ChatSidePanel({
           <Icon name="arrow-left" size="small" />
           <span>{backLabel}</span>
         </button>
+        {headerActions ? (
+          <div className="flex shrink-0 items-center gap-xs">
+            {headerActions}
+          </div>
+        ) : null}
       </div>
 
       <div

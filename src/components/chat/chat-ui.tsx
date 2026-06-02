@@ -21,7 +21,10 @@ import { Button } from "@/components/primitives/button";
 import { Badge } from "@/components/primitives/badge";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
-import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
+import {
+  GhostIconButton,
+  type GhostIconButtonSize,
+} from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName, type IconSize } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
 import { PresenceBadge } from "@/components/primitives/presence-badge";
@@ -66,6 +69,7 @@ type ChatTrayProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   title?: ReactNode;
   badge?: boolean;
   badgeLabel?: string;
+  actionSize?: GhostIconButtonSize;
   onOpen?: () => void;
   onClose?: () => void;
   onVariantToggle?: () => void;
@@ -77,6 +81,7 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   variant?: ChatPanelVariant;
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
+  actionSize?: GhostIconButtonSize;
   backLabel?: string;
   backIcon?: IconName;
   backIconSize?: IconSize;
@@ -335,6 +340,7 @@ export function ChatTray({
   title = "Contact sales",
   badge = false,
   badgeLabel = "New activity",
+  actionSize = "medium",
   className,
   onOpen,
   onClose,
@@ -354,7 +360,7 @@ export function ChatTray({
     <GhostIconButton
       label="Open chat"
       icon="chevron-up"
-      size="medium"
+      size={actionSize}
       onClick={onOpen}
     />
   );
@@ -363,7 +369,7 @@ export function ChatTray({
       <GhostIconButton
         label={headerActionLabel[variant]}
         icon={headerActionIcon[variant]}
-        size="medium"
+        size={actionSize}
         onClick={onVariantToggle}
       />
     </span>
@@ -373,7 +379,7 @@ export function ChatTray({
     <div
       {...props}
       className={cx(
-        "inline-flex min-h-16 w-[min(100%,var(--design-layout-panel-collapsed-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-xl py-md text-left text-text shadow-raised-faint-upward transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
+        "inline-flex h-[var(--design-layout-chat-tray-height)] w-[min(100%,var(--design-layout-chat-tray-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-lg py-0 text-left text-text shadow-raised-faint-upward transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
         className,
       )}
     >
@@ -419,7 +425,7 @@ export function ChatTray({
           </>
         )}
       </button>
-      <div className="flex shrink-0 items-center gap-0">
+      <div className="flex shrink-0 items-center -space-x-xs">
         {openActionPosition === "before-variant" ? openAction : null}
         {variantAction}
         {openActionPosition === "after-variant" ? openAction : null}
@@ -427,7 +433,7 @@ export function ChatTray({
           <GhostIconButton
             label="Close chat"
             icon="close"
-            size="medium"
+            size={actionSize}
             onClick={onClose}
           />
         ) : null}
@@ -539,6 +545,7 @@ export function ChatHeader({
   variant = "collapsed",
   identity,
   title,
+  actionSize = "medium",
   className,
   backLabel = "Back",
   backIcon = "arrow-left",
@@ -562,7 +569,7 @@ export function ChatHeader({
       <GhostIconButton
         label="Dock chat to tray"
         icon="chevron-down"
-        size="medium"
+        size={actionSize}
         onClick={onDockToggle ?? onMinimizeToTray}
       />
     ) : null;
@@ -571,7 +578,7 @@ export function ChatHeader({
       <GhostIconButton
         label={headerActionLabel[variant]}
         icon={headerActionIcon[variant]}
-        size="medium"
+        size={actionSize}
         onClick={onVariantToggle}
       />
     </span>
@@ -644,7 +651,7 @@ export function ChatHeader({
           <GhostIconButton
             label="Close chat"
             icon="close"
-            size="medium"
+            size={actionSize}
             onClick={onClose}
           />
         ) : null}

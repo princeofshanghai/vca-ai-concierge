@@ -398,6 +398,7 @@
   --design-layout-tablet-page-padding: 24px;
   --design-layout-desktop-page-padding: 32px;
   --design-layout-panel-collapsed-width: 400px;
+  --design-layout-chat-tray-width: 384px;
   --design-layout-panel-expanded-width: 1280px;
   --design-layout-panel-collapsed-height: 908px;
   --design-layout-panel-expanded-height: 928px;
@@ -440,6 +441,7 @@
   --design-layout-mobile-panel-height: 100dvh;
   --design-layout-mobile-panel-rounded: 0px;
   --design-layout-mobile-panel-inset: 0px;
+  --design-layout-chat-tray-height: 48px;
   --design-layout-panel-header-height: 64px;
   --design-layout-composer-height: 56px;
   --design-layout-composer-input-max-height: 144px;
@@ -1420,6 +1422,101 @@ html.chat-panel-view-transition::view-transition-new(concierge-chat-panel) {
 
 html.chat-panel-view-transition::view-transition-old(concierge-chat-panel),
 html.chat-panel-view-transition::view-transition-new(concierge-chat-panel) {
+  object-fit: none;
+  object-position: top right;
+}
+
+.pcp-ai-messaging-surface {
+  view-transition-name: pcp-ai-messaging-surface;
+  contain: layout;
+}
+
+.pcp-human-messaging-surface {
+  view-transition-name: pcp-human-messaging-surface;
+  contain: layout;
+}
+
+html.pcp-messaging-surface-transition .pcp-ai-messaging-surface,
+html.pcp-messaging-surface-transition .pcp-ai-messaging-surface *,
+html.pcp-messaging-surface-transition .pcp-human-messaging-surface,
+html.pcp-messaging-surface-transition .pcp-human-messaging-surface * {
+  transition-duration: 0ms !important;
+}
+
+html.pcp-messaging-surface-transition::view-transition-group(root),
+html.pcp-messaging-surface-transition::view-transition-old(root),
+html.pcp-messaging-surface-transition::view-transition-new(root) {
+  animation-duration: 0ms;
+}
+
+html.pcp-messaging-surface-transition::view-transition-group(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-group(
+    pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-human-messaging-surface
+  ) {
+  animation-duration: var(--design-motion-duration-moderate);
+  animation-timing-function: var(--design-motion-easing-emphasized);
+}
+
+html.pcp-messaging-surface-transition::view-transition-group(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-group(
+    pcp-human-messaging-surface
+  ) {
+  overflow: clip;
+  border-radius: var(--design-rounded-sm);
+  background: var(--color-background);
+  box-shadow: var(--shadow-raised-faint-upward);
+}
+
+html.pcp-messaging-surface-transition::view-transition-image-pair(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-image-pair(
+    pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-human-messaging-surface
+  ) {
+  isolation: isolate;
+  mix-blend-mode: normal;
+}
+
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-ai-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-human-messaging-surface
+  ) {
   object-fit: none;
   object-position: top right;
 }

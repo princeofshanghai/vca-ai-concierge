@@ -1,16 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useState, type ReactNode } from "react";
 
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { Button } from "@/components/primitives/button";
+import { Button, getButtonClassName } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
+import { TextArea } from "@/components/primitives/text-area";
 
 import {
   PCP_ASSET_ROOT,
@@ -18,6 +20,8 @@ import {
 } from "./persona";
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
+const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
+const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
 
 const primaryRailItems = [
   "Dashboard",
@@ -29,7 +33,12 @@ const primaryRailItems = [
   "Edit Page",
 ];
 
-const secondaryRailItems = ["Life", "Services"];
+const secondaryRailItems = ["Services", "Products", "Jobs"];
+
+const railItemHrefs: Partial<Record<string, string>> = {
+  Dashboard: ADMIN_DASHBOARD_HREF,
+  Inbox: ADMIN_INBOX_HREF,
+};
 
 const premiumRailItems: Array<{ label: string; icon?: IconName }> = [
   { label: "Premium features" },
@@ -45,6 +54,17 @@ type PerformanceCardData = Readonly<{
   deltaTone?: "negative" | "positive";
   label?: string;
   premium?: boolean;
+}>;
+
+type InboxThreadData = Readonly<{
+  name: string;
+  role: string;
+  topic: string;
+  snippet: string;
+  timestamp: string;
+  avatar: string;
+  selected?: boolean;
+  vca?: boolean;
 }>;
 
 const performanceCards: Array<PerformanceCardData> = [
@@ -67,7 +87,7 @@ const performanceCards: Array<PerformanceCardData> = [
     deltaTone: "positive",
   },
   {
-    title: "Consult requests",
+    title: "High-intent messages",
     value: "6",
     label: "Premium insight",
     premium: true,
@@ -76,27 +96,27 @@ const performanceCards: Array<PerformanceCardData> = [
 
 const recentPosts = [
   {
-    body: "Three signals your roadmap is hiding a positioning problem. If every customer story points to a different buyer, your product narrative may be doing too much work.",
+    body: "What happens when a client pays late but contractors still need to be paid? Conditional payment schedules can keep expectations clear before the invoice is overdue.",
     metric: "Get up to 12K more impressions by boosting",
     image: "post-building-blue.png",
     imageAlt: "",
-    linkTitle: "Three signals your roadmap is hiding a positioning problem",
+    linkTitle: "What late client payments do to contractor trust",
     linkMeta: "veloracloud.com",
     reactions: "152",
     comments: "18 Comments",
   },
   {
-    body: "Before and after: making a complex onboarding flow easier to trust. The first-run experience is often the clearest expression of your product strategy.",
+    body: "Before and after: replacing a contractor payment spreadsheet with one shared view of client invoices, approvals, and payout timing.",
     metric: "Get up to 9K more impressions by boosting",
     image: "post-kudos.png",
     imageAlt: "",
-    linkTitle: "Client win",
-    linkMeta: "LumaWorks product team",
+    linkTitle: "Agency ops win",
+    linkMeta: "Studio Northline team",
     reactions: "860",
     comments: "42 Comments",
   },
   {
-    body: "A short prompt we use before roadmap reviews: what customer truth would change the next decision if the team believed it?",
+    body: "A short operating question for agency owners: which contractor payout becomes risky if this client invoice is five days late?",
     metric: "Get up to 7K more impressions by boosting",
     image: "feed-post-content.png",
     imageAlt: "",
@@ -105,25 +125,103 @@ const recentPosts = [
   },
 ];
 
-const callPrepBrief = {
-  buyer: "Alex Morgan",
-  role: "VP Product at Northstar",
-  avatar: "avatar-2.png",
-  companyContext: "80-person B2B SaaS company",
-  need: "Product strategy support for a regulated market expansion",
+const vcaLeadBrief = {
+  buyer: "Cheri Sparks",
+  role: "Founder & Creative Director at Brightframe Studio",
+  avatar: "member/avatar-2.png",
+  companyContext: "8-person creative production agency",
+  need: "Client payment delays are creating contractor payout uncertainty",
   signals:
-    "Asked about fit, services/pricing, differentiation, and booked time",
-  proofShown: "SaaS wedge strategy client story",
-  bookedSlot: "Thursday, Jun 5 at 10:00 AM PT",
+    "Asked what happens to contractor payments when a client pays late",
+  proofShown: "Studio Northline late-payment case study",
+  outcome: "Sent Ning a drafted message through Velora",
+  sentMessage:
+    "Hi Ning - I run a small creative agency with rotating contractors and I'm dealing with late client payments that cascade into late contractor payments. Velora's conditional payment scheduling sounds like exactly what I need. Would love to learn more about how it works for an agency our size.",
+  contextStrip:
+    "High-intent lead: agency founder, 8-person team, late client payments, contractor payout timing, Studio Northline case study viewed.",
+  contextItems: [
+    "Founder & Creative Director at an 8-person creative agency.",
+    "Asked VCA what happens to contractor payments when a client pays late.",
+    "Viewed the Studio Northline case study about late-payment workflows.",
+    "Showed interest in multi-project contractor payout handling.",
+    "Sent a drafted message to Ning through the normal LinkedIn message tray.",
+  ],
+  suggestedReply:
+    "Hi Cheri - thanks for reaching out. I founded Velora for exactly this kind of agency payment workflow. You can tie contractor payouts to each client's payment status, so if one client pays late, only the contractors on that project move into a pending state. Happy to walk through how this would work for Brightframe.",
   suggestedPrep: [
-    "Lead with why a focused strategy sprint fits the market-expansion moment.",
-    "Explain the scope factors: timeline, research depth, stakeholder complexity, and senior involvement.",
-    "Reinforce that Skylar and senior practitioners stay close to the work.",
+    "Lead with how Velora keeps late client payments from making contractor payouts feel ambiguous.",
+    "Explain conditional payment scheduling in plain language.",
+    "Ask how Brightframe tracks contractor obligations across client projects today.",
   ],
 };
 
+const vcaConfiguration = [
+  {
+    label: "Voice",
+    value: "Helpful, direct, founder-led",
+  },
+  {
+    label: "Knowledge",
+    value: "Services, payment workflow FAQs, differentiators",
+  },
+  {
+    label: "Default action",
+    value: "Send high-intent messages to Ning",
+  },
+];
+
+const inboxThreads: ReadonlyArray<InboxThreadData> = [
+  {
+    name: vcaLeadBrief.buyer,
+    role: vcaLeadBrief.role,
+    topic: "Late contractor payments",
+    snippet:
+      "Cheri: Hi Ning - I run a small creative agency with rotating contractors...",
+    timestamp: "4:48 PM",
+    avatar: vcaLeadBrief.avatar,
+    selected: true,
+    vca: true,
+  },
+  {
+    name: "Maya Patel",
+    role: "Managing Partner at Studio Northline",
+    topic: "Services",
+    snippet: "Ning: Glad the approval view helped your team.",
+    timestamp: "4:44 PM",
+    avatar: "avatar-1.png",
+  },
+  {
+    name: "Priya Shah",
+    role: "Founder at North Pier Studio",
+    topic: "Other",
+    snippet: "Priya: Does Velora support QuickBooks exports?",
+    timestamp: "May 31",
+    avatar: "avatar-3.png",
+  },
+  {
+    name: "Luis Romero",
+    role: "Operations Lead at Grove Creative",
+    topic: "Service request",
+    snippet: "Luis: We need a clearer way to track client approval status...",
+    timestamp: "May 21",
+    avatar: "avatar-2.png",
+  },
+  {
+    name: "Diana Lin",
+    role: "Agency Owner at Lin Studio",
+    topic: "Careers",
+    snippet: "Diana: Are you hiring for customer operations roles?",
+    timestamp: "Mar 30",
+    avatar: "avatar-1.png",
+  },
+];
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
+}
+
+function assetSrc(path: string) {
+  return path.startsWith("/") ? path : `${ASSET_ROOT}/${path}`;
 }
 
 function PremiumMark({ label }: Readonly<{ label?: string }>) {
@@ -157,7 +255,7 @@ function RailSection({
   activeItem,
   withPremiumIcon = false,
 }: Readonly<{
-  items: Array<string> | Array<{ label: string; icon?: IconName }>;
+  items: ReadonlyArray<string | { label: string; icon?: IconName }>;
   activeItem?: string;
   withPremiumIcon?: boolean;
 }>) {
@@ -167,24 +265,44 @@ function RailSection({
         const label = typeof item === "string" ? item : item.label;
         const icon = typeof item === "string" ? undefined : item.icon;
         const active = activeItem === label;
-
-        return (
-          <button
-            key={label}
-            className={cx(
-              "flex min-h-10 w-full items-center gap-sm px-xxl py-sm text-left text-control-sm transition-colors hover:bg-background-transparent-hover",
-              active
-                ? "border-l-2 border-positive pl-[22px] text-positive"
-                : "text-label",
-            )}
-            type="button"
-          >
+        const href = railItemHrefs[label];
+        const itemClassName = cx(
+          "flex min-h-10 w-full items-center gap-sm px-xxl py-sm text-left text-control-sm transition-colors hover:bg-background-transparent-hover",
+          active
+            ? "border-l-2 border-positive pl-[22px] text-positive"
+            : "text-label",
+        );
+        const itemContent = (
+          <>
             {withPremiumIcon && label === "Premium features" ? (
               <PremiumMark label="Premium" />
             ) : icon ? (
               <Icon name={icon} size="small" />
             ) : null}
             <span>{label}</span>
+          </>
+        );
+
+        if (href) {
+          return (
+            <Link
+              aria-current={active ? "page" : undefined}
+              className={itemClassName}
+              href={href}
+              key={label}
+            >
+              {itemContent}
+            </Link>
+          );
+        }
+
+        return (
+          <button
+            key={label}
+            className={itemClassName}
+            type="button"
+          >
+            {itemContent}
           </button>
         );
       })}
@@ -192,7 +310,7 @@ function RailSection({
   );
 }
 
-function PageRail() {
+function PageRail({ activeItem }: Readonly<{ activeItem: string }>) {
   return (
     <aside className="overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="relative p-lg pt-stack">
@@ -258,7 +376,7 @@ function PageRail() {
         </div>
       </div>
 
-      <RailSection activeItem="Dashboard" items={primaryRailItems} />
+      <RailSection activeItem={activeItem} items={primaryRailItems} />
       <div className="mx-xxl my-sm h-px bg-border-faint" />
       <RailSection items={secondaryRailItems} />
       <div className="mx-xxl my-sm h-px bg-border-faint" />
@@ -313,7 +431,7 @@ function ActionCard({
   );
 }
 
-function CallPrepActionCard() {
+function VcaLeadActionCard() {
   const [isExpanded, setIsExpanded] = useState(false);
   const toggleLabel = isExpanded ? "Hide brief" : "Review brief";
 
@@ -326,13 +444,13 @@ function CallPrepActionCard() {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-xs">
             <PremiumMark label="Premium" />
-            <p className="text-supportive-s text-text-meta">Page Agent</p>
+            <p className="text-supportive-s text-text-meta">AI assistant</p>
           </div>
           <h3 className="mt-xxs text-control-sm text-text">
-            Review prep for Alex Morgan&apos;s discovery call
+            Reply to Cheri Sparks
           </h3>
           <p className="text-body-xs text-text-meta">
-            VCA captured buyer context from Northstar&apos;s evaluation of Velora.{" "}
+            Velora AI assistant summarized Cheri&apos;s message for Ning.{" "}
             <button
               aria-expanded={isExpanded}
               className="font-semibold text-action hover:underline"
@@ -347,7 +465,7 @@ function CallPrepActionCard() {
           className="-mr-xs text-text-meta"
           horizontalPadding={false}
           icon="close"
-          label="Dismiss call prep"
+          label="Dismiss message insight"
           touchTarget={false}
         />
       </div>
@@ -357,27 +475,27 @@ function CallPrepActionCard() {
           <div className="flex flex-col gap-lg lg:flex-row lg:items-start">
             <div className="flex min-w-[220px] items-center gap-sm">
               <Entity
-                label={callPrepBrief.buyer}
+                label={vcaLeadBrief.buyer}
                 size={48}
-                src={`${ASSET_ROOT}/${callPrepBrief.avatar}`}
+                src={assetSrc(vcaLeadBrief.avatar)}
               />
               <div className="min-w-0">
                 <p className="truncate text-control-sm text-text">
-                  {callPrepBrief.buyer}
+                  {vcaLeadBrief.buyer}
                 </p>
                 <p className="text-body-xs text-text-meta">
-                  {callPrepBrief.role}
+                  {vcaLeadBrief.role}
                 </p>
               </div>
             </div>
 
             <div className="grid min-w-0 flex-1 gap-md sm:grid-cols-2">
               {[
-                ["Company context", callPrepBrief.companyContext],
-                ["Need", callPrepBrief.need],
-                ["Signals", callPrepBrief.signals],
-                ["Proof shown", callPrepBrief.proofShown],
-                ["Booked slot", callPrepBrief.bookedSlot],
+                ["Company context", vcaLeadBrief.companyContext],
+                ["Need", vcaLeadBrief.need],
+                ["Signals", vcaLeadBrief.signals],
+                ["Workflow shown", vcaLeadBrief.proofShown],
+                ["Outcome", vcaLeadBrief.outcome],
               ].map(([label, value]) => (
                 <div key={label}>
                   <p className="text-supportive-s-strong text-text-meta">
@@ -391,10 +509,10 @@ function CallPrepActionCard() {
 
           <div className="mt-lg border-t border-border-faint pt-md">
             <p className="text-supportive-s-strong text-text-meta">
-              Suggested prep
+              Suggested reply angle
             </p>
             <ul className="mt-sm space-y-sm">
-              {callPrepBrief.suggestedPrep.map((item) => (
+              {vcaLeadBrief.suggestedPrep.map((item) => (
                 <li className="flex gap-sm text-body-sm-open text-text" key={item}>
                   <Icon className="mt-xxs shrink-0 text-positive" name="check" size="small" />
                   <span>{item}</span>
@@ -404,6 +522,151 @@ function CallPrepActionCard() {
           </div>
         </div>
       ) : null}
+    </article>
+  );
+}
+
+function VcaNotificationPreview() {
+  return (
+    <article className="overflow-hidden rounded-xs border border-border-faint bg-[#111827] p-md text-white shadow-raised-faint">
+      <div className="flex items-start gap-sm">
+        <span className="mt-xxs inline-flex size-8 shrink-0 items-center justify-center rounded-xs bg-white/10 text-white">
+          <Icon name="signal-ai" size="small" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-md">
+            <p className="text-supportive-s-strong text-white">LinkedIn Pages</p>
+            <p className="text-supportive-s text-white/65">now</p>
+          </div>
+          <h3 className="mt-xs text-control-sm text-white">
+            High-intent visitor: Cheri Sparks
+          </h3>
+          <p className="mt-xxs text-body-xs text-white/75">
+            Founder at an 8-person creative agency asked about contractor
+            payment timing and sent a drafted message to Ning.
+          </p>
+          <div className="mt-md flex gap-sm">
+            <Link
+              className={getButtonClassName({
+                className: "!bg-white !text-text",
+                size: "small",
+              })}
+              href={ADMIN_INBOX_HREF}
+            >
+              View message
+            </Link>
+            <Button
+              className="!border-white/45 !bg-transparent !text-white"
+              size="small"
+              variant="tertiary"
+            >
+              Dismiss
+            </Button>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function VcaInboxThreadCard() {
+  return (
+    <article className="overflow-hidden rounded-sm border border-border-faint bg-background">
+      <div className="flex items-center justify-between gap-lg border-b border-border-faint px-lg py-md">
+        <div className="flex min-w-0 items-center gap-sm">
+          <Entity
+            label={vcaLeadBrief.buyer}
+            size={40}
+            src={assetSrc(vcaLeadBrief.avatar)}
+          />
+          <div className="min-w-0">
+            <h3 className="truncate text-control-sm text-text">
+              {vcaLeadBrief.buyer}
+            </h3>
+            <p className="truncate text-body-xs text-text-meta">
+              {vcaLeadBrief.role}
+            </p>
+          </div>
+        </div>
+        <Link
+          className={getButtonClassName({ size: "small" })}
+          href={ADMIN_INBOX_HREF}
+        >
+          Reply as Velora
+        </Link>
+      </div>
+
+      <div className="space-y-lg p-lg">
+        <div className="rounded-xs border border-ai-border bg-ai-background-soft p-md">
+          <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
+            <Icon className="text-ai-icon" name="signal-ai" size="small" />
+            <span>AI summary</span>
+          </div>
+          <p className="mt-sm text-body-sm-open text-text">
+            {vcaLeadBrief.contextStrip}
+          </p>
+          <p className="mt-xs text-body-xs text-text-meta">
+            Summary only. The full visitor-side AI conversation is not shown.
+          </p>
+        </div>
+
+        <div className="flex items-start gap-sm">
+          <Entity
+            label={vcaLeadBrief.buyer}
+            size={32}
+            src={assetSrc(vcaLeadBrief.avatar)}
+          />
+          <div className="max-w-[34rem] rounded-md bg-background-neutral-soft px-md py-sm">
+            <p className="text-body-sm-open text-text">
+              {vcaLeadBrief.sentMessage}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xs border border-border-faint p-md">
+          <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
+            <Icon className="text-ai-icon" name="signal-ai" size="small" />
+            <span>Suggested reply</span>
+          </div>
+          <p className="mt-sm text-body-sm-open text-text">
+            {vcaLeadBrief.suggestedReply}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function VcaConfigurationCard() {
+  return (
+    <article className="rounded-sm border border-border-faint bg-background p-lg">
+      <div className="flex flex-wrap items-start justify-between gap-lg">
+        <div>
+          <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
+            <PremiumMark label="Premium" />
+            <span>AI assistant setup</span>
+          </div>
+          <h3 className="mt-xs text-heading-sm text-text">
+            Velora AI assistant is configured for buyer questions
+          </h3>
+        </div>
+        <Button size="small" variant="tertiary">
+          Edit setup
+        </Button>
+      </div>
+      <div className="mt-lg grid gap-md md:grid-cols-3">
+        {vcaConfiguration.map((item) => (
+          <div
+            className="rounded-xs border border-border-faint bg-background-neutral-soft p-md"
+            key={item.label}
+          >
+            <p className="text-supportive-s-strong text-text-meta">
+              {item.label}
+            </p>
+            <p className="mt-xxs text-body-sm-open text-text">{item.value}</p>
+          </div>
+        ))}
+      </div>
     </article>
   );
 }
@@ -577,6 +840,324 @@ function PostCard({
   );
 }
 
+function InboxFilterPill({
+  active = false,
+  label,
+  showChevron = true,
+}: Readonly<{
+  active?: boolean;
+  label: string;
+  showChevron?: boolean;
+}>) {
+  return (
+    <button
+      aria-pressed={active}
+      className={cx(
+        "inline-flex h-9 items-center gap-xs rounded-round border px-md text-control-sm transition-colors",
+        active
+          ? "border-positive bg-positive text-on-checked hover:bg-positive-hover"
+          : "border-border-subtle bg-background text-label hover:border-border-subtle-hover hover:bg-background-transparent-hover",
+      )}
+      type="button"
+    >
+      <span>{label}</span>
+      {showChevron ? (
+        <Icon
+          aria-hidden="true"
+          className={active ? "text-on-checked" : "text-text-meta"}
+          name="chevron-down"
+          size="small"
+        />
+      ) : null}
+    </button>
+  );
+}
+
+function InboxSearchField() {
+  return (
+    <label className="flex h-11 min-w-0 flex-1 items-center gap-sm rounded-xs bg-surface-tint px-md text-body-md text-text-meta sm:max-w-[360px]">
+      <Icon className="shrink-0 text-icon" name="search" size="medium" />
+      <span className="sr-only">Search messages</span>
+      <input
+        className="min-w-0 flex-1 bg-transparent p-0 text-body-md text-text outline-none placeholder:text-text-meta"
+        placeholder="Search messages"
+        type="search"
+      />
+    </label>
+  );
+}
+
+function InboxThreadListItem({
+  thread,
+}: Readonly<{ thread: InboxThreadData }>) {
+  return (
+    <button
+      aria-current={thread.selected ? "true" : undefined}
+      className={cx(
+        "grid min-h-[104px] w-full grid-cols-[64px_minmax(0,1fr)_auto] gap-md border-b border-border-faint px-md py-md text-left transition-colors hover:bg-background-transparent-hover",
+        thread.selected &&
+          "border-l-4 border-l-positive bg-surface-tint pl-[12px] hover:bg-surface-tint",
+      )}
+      type="button"
+    >
+      <Entity
+        className="mt-xxs shrink-0"
+        label={thread.name}
+        size={64}
+        src={assetSrc(thread.avatar)}
+      />
+      <span className="min-w-0">
+        <span className="flex min-w-0 items-center gap-xs">
+          <span className="truncate text-heading-sm text-text">
+            {thread.name}
+          </span>
+          {thread.vca ? (
+            <span className="inline-flex shrink-0 items-center text-ai-icon">
+              <Icon name="signal-ai" size="small" />
+            </span>
+          ) : null}
+        </span>
+        <span className="mt-xxs block truncate text-control-sm text-text">
+          {thread.topic}
+        </span>
+        <span className="mt-xxs block line-clamp-2 text-body-sm-open text-text-meta">
+          {thread.snippet}
+        </span>
+      </span>
+      <span className="mt-xs shrink-0 text-body-sm text-text">
+        {thread.timestamp}
+      </span>
+    </button>
+  );
+}
+
+function InboxProfileHeader() {
+  return (
+    <div className="border-b border-border-faint px-lg py-xl">
+      <Entity
+        label={vcaLeadBrief.buyer}
+        size={96}
+        src={assetSrc(vcaLeadBrief.avatar)}
+      />
+      <h2 className="mt-lg text-heading-lg text-text">{vcaLeadBrief.buyer}</h2>
+      <p className="text-body-md text-text">
+        Founder & Creative Director at Brightframe Studio
+      </p>
+      <p className="mt-xs text-body-sm text-text-meta">Late contractor payments</p>
+    </div>
+  );
+}
+
+function TodayDivider() {
+  return (
+    <div className="flex items-center gap-lg py-md">
+      <span className="h-px flex-1 bg-border-faint" />
+      <span className="text-label-xs uppercase text-text-meta">
+        Today
+      </span>
+      <span className="h-px flex-1 bg-border-faint" />
+    </div>
+  );
+}
+
+function VcaInboxContextStrip() {
+  return (
+    <div className="rounded-xs border border-ai-border bg-ai-background-soft p-md">
+      <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
+        <Icon className="text-ai-icon" name="signal-ai" size="small" />
+        <span>AI context</span>
+      </div>
+      <p className="mt-sm text-body-sm-open text-text">
+        {vcaLeadBrief.contextStrip}
+      </p>
+      <ul className="mt-sm space-y-xs">
+        {vcaLeadBrief.contextItems.map((item) => (
+          <li className="flex gap-sm text-body-sm-open text-text" key={item}>
+            <Icon
+              className="mt-xxs shrink-0 text-ai-icon"
+              name="check"
+              size="small"
+            />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-xs text-body-xs text-text-meta">
+        Summary only. The full visitor-side AI conversation is not shown.
+      </p>
+    </div>
+  );
+}
+
+function InboxMessage() {
+  return (
+    <div className="flex items-start gap-sm">
+      <Entity
+        className="mt-xxs shrink-0"
+        label={vcaLeadBrief.buyer}
+        size={40}
+        src={assetSrc(vcaLeadBrief.avatar)}
+      />
+      <div className="min-w-0 flex-1">
+        <p className="text-body-md text-text">
+          <span className="font-semibold">{vcaLeadBrief.buyer}</span>{" "}
+          <span className="text-text-meta">&middot; 4:48 PM</span>
+        </p>
+        <div className="mt-sm max-w-[34rem] rounded-sm bg-background-neutral-soft px-md py-sm">
+          <p className="text-body-sm-open text-text">
+            {vcaLeadBrief.sentMessage}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SuggestedReplyCard() {
+  return (
+    <div className="rounded-xs border border-border-faint bg-background p-md">
+      <div className="flex items-center gap-xs text-supportive-s-strong text-text-meta">
+        <Icon className="text-ai-icon" name="signal-ai" size="small" />
+        <span>Suggested reply</span>
+      </div>
+      <p className="mt-sm text-body-sm-open text-text">
+        {vcaLeadBrief.suggestedReply}
+      </p>
+    </div>
+  );
+}
+
+function InboxComposer() {
+  return (
+    <div className="border-t border-border-faint bg-background">
+      <div className="px-lg py-md">
+        <div className="relative">
+          <TextArea
+            label={<span className="sr-only">Reply message</span>}
+            placeholder={`Replying as ${pcpCompanyProfile.name}...`}
+            size="large"
+            textareaClassName="!min-h-[120px] !border-transparent !bg-background-neutral-soft !px-md !py-md !text-body-md"
+          />
+          <GhostIconButton
+            className="absolute right-xs top-xs text-icon"
+            horizontalPadding={false}
+            icon="chevron-up"
+            label="Collapse reply composer"
+            touchTarget={false}
+          />
+        </div>
+        <div className="mt-sm flex items-center gap-xs text-body-xs text-text-meta">
+          <Icon name="signal-notice" size="small" />
+          <span>Members see replies from Velora.</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-md border-t border-border-faint px-lg py-sm">
+        <div className="flex items-center gap-xs">
+          <GhostIconButton
+            horizontalPadding={false}
+            icon="attachment"
+            label="Attach file"
+          />
+          <GhostIconButton
+            horizontalPadding={false}
+            icon="gif"
+            label="Add GIF"
+          />
+          <GhostIconButton
+            horizontalPadding={false}
+            icon="emoji"
+            label="Add emoji"
+          />
+          <GhostIconButton
+            horizontalPadding={false}
+            icon="image"
+            label="Add image"
+          />
+        </div>
+        <div className="flex items-center gap-sm">
+          <Button disabled size="small">
+            Send
+          </Button>
+          <GhostIconButton
+            horizontalPadding={false}
+            icon="overflow-web-ios"
+            label="More reply actions"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InboxThreadDetail() {
+  return (
+    <section className="flex min-h-[760px] min-w-0 flex-col bg-background">
+      <div className="flex min-h-[64px] items-center justify-between gap-md border-b border-border-faint px-lg py-sm">
+        <div className="min-w-0">
+          <h2 className="truncate text-heading-sm text-text">
+            {vcaLeadBrief.buyer}
+          </h2>
+          <p className="truncate text-body-sm text-text-meta">
+            {vcaLeadBrief.role}
+          </p>
+        </div>
+        <GhostIconButton
+          horizontalPadding={false}
+          icon="overflow-web-ios"
+          label="Thread actions"
+        />
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <InboxProfileHeader />
+        <div className="space-y-lg px-lg py-md">
+          <TodayDivider />
+          <VcaInboxContextStrip />
+          <InboxMessage />
+          <SuggestedReplyCard />
+        </div>
+      </div>
+
+      <InboxComposer />
+    </section>
+  );
+}
+
+function InboxContent() {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+      <div className="flex min-h-[64px] flex-wrap items-center gap-md border-b border-border-faint px-lg py-sm">
+        <h1 className="text-heading-lg text-text">Inbox</h1>
+        <InboxSearchField />
+        <div className="ml-auto">
+          <GhostIconButton
+            horizontalPadding={false}
+            icon="overflow-web-ios"
+            label="Inbox actions"
+          />
+        </div>
+      </div>
+
+      <div className="flex min-h-[64px] flex-wrap items-center gap-sm border-b border-border-faint px-lg py-sm">
+        <InboxFilterPill active label="Inbox" />
+        <span className="hidden h-8 w-px bg-border-faint sm:block" />
+        <InboxFilterPill label="Topics" />
+        <InboxFilterPill label="Unread" showChevron={false} />
+      </div>
+
+      <div className="grid min-h-[760px] lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="min-w-0 border-b border-border-faint lg:border-b-0 lg:border-r">
+          {inboxThreads.map((thread) => (
+            <InboxThreadListItem key={thread.name} thread={thread} />
+          ))}
+        </div>
+        <InboxThreadDetail />
+      </div>
+    </section>
+  );
+}
+
 function DashboardContent() {
   return (
     <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
@@ -591,7 +1172,8 @@ function DashboardContent() {
           </p>
         </div>
         <div className="mt-xxl space-y-md">
-          <CallPrepActionCard />
+          <VcaNotificationPreview />
+          <VcaLeadActionCard />
           <ActionCard
             action="Enable"
             premium
@@ -599,9 +1181,9 @@ function DashboardContent() {
             body="Automatically invite post-engagers to follow."
           />
           <ActionCard
-            action="Follow"
-            title="Follow similar consultancies"
-            body="Join relevant conversations with product strategy, UX research, and SaaS leadership pages."
+            action="Create"
+            title="3 visitors asked about contractor payment timing"
+            body="Turn the repeated question into a post that explains conditional payment schedules."
           />
         </div>
       </div>
@@ -612,8 +1194,8 @@ function DashboardContent() {
             <div>
               <h2 className="text-heading-sm text-text">Track performance</h2>
               <p className="text-body-sm text-text-meta">
-                Turn Page interest into consult requests with weekly visitor
-                and CTA insights.
+                Turn Page interest into qualified conversations with weekly visitor
+                and intent insights.
               </p>
             </div>
             <CarouselControls
@@ -637,9 +1219,39 @@ function DashboardContent() {
         <section>
           <div className="flex items-start justify-between gap-lg">
             <div>
+              <h2 className="text-heading-sm text-text">Review admin messages</h2>
+              <p className="text-body-sm text-text-meta">
+                High-intent visitor requests arrive with a short AI summary,
+                not a full private conversation transcript.
+              </p>
+            </div>
+          </div>
+          <div className="mt-lg">
+            <VcaInboxThreadCard />
+          </div>
+        </section>
+
+        <section>
+          <div className="flex items-start justify-between gap-lg">
+            <div>
+              <h2 className="text-heading-sm text-text">Configure AI assistant</h2>
+              <p className="text-body-sm text-text-meta">
+                Keep the assistant focused on Velora&apos;s voice, knowledge,
+                and preferred next action.
+              </p>
+            </div>
+          </div>
+          <div className="mt-lg">
+            <VcaConfigurationCard />
+          </div>
+        </section>
+
+        <section>
+          <div className="flex items-start justify-between gap-lg">
+            <div>
               <h2 className="text-heading-sm text-text">Manage recent posts</h2>
               <p className="text-body-sm text-text-meta">
-                Manage thought leadership and amplify top-performing posts with
+                Manage payment education content and amplify top-performing posts with
                 boosting. <InlineAction>Learn more</InlineAction>
               </p>
             </div>
@@ -675,14 +1287,36 @@ function DashboardContent() {
   );
 }
 
-export function PremiumCompanyPagesPage() {
+function PremiumCompanyPagesAdminShell({
+  activeItem,
+  children,
+}: Readonly<{
+  activeItem: string;
+  children: ReactNode;
+}>) {
   return (
     <main className="min-h-dvh bg-background-neutral-soft text-text">
       <LinkedInGlobalNavigation profileSrc={pcpCompanyProfile.founderAvatarSrc} />
       <div className="mx-auto grid w-full max-w-[1145px] gap-lg px-lg py-xxl lg:grid-cols-[225px_minmax(0,888px)] lg:gap-[32px] lg:px-0">
-        <PageRail />
-        <DashboardContent />
+        <PageRail activeItem={activeItem} />
+        {children}
       </div>
     </main>
+  );
+}
+
+export function PremiumCompanyPagesPage() {
+  return (
+    <PremiumCompanyPagesAdminShell activeItem="Dashboard">
+      <DashboardContent />
+    </PremiumCompanyPagesAdminShell>
+  );
+}
+
+export function PremiumCompanyPagesAdminInboxPage() {
+  return (
+    <PremiumCompanyPagesAdminShell activeItem="Inbox">
+      <InboxContent />
+    </PremiumCompanyPagesAdminShell>
   );
 }

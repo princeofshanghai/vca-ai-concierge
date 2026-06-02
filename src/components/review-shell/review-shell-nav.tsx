@@ -17,15 +17,16 @@ import {
   type ReviewShellModeMenuGroup,
 } from "./review-shell-state-menu";
 
-const HIRING_PROTOTYPE_HREF = "/hiring";
+const HIRING_ALL_INTENTS_HREF = "/hiring";
 const HIRING_ENTRY_LIX_TEST_HREF = "/hiring/entry-lix-test";
+const HIRING_PROTOTYPE_HREF = HIRING_ENTRY_LIX_TEST_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
-  href: HIRING_PROTOTYPE_HREF,
+  href: HIRING_ALL_INTENTS_HREF,
   label: "All intents",
   description: "Interact with the prototype to see results across all intents",
   typeLabel: "Interactive",
@@ -174,7 +175,7 @@ function getComponentsDestination(
 
 function isHiringPrototypePath(pathname: string) {
   return (
-    pathname === HIRING_PROTOTYPE_HREF ||
+    pathname === HIRING_ALL_INTENTS_HREF ||
     pathname === HIRING_ENTRY_LIX_TEST_HREF ||
     pathname.startsWith("/internal/flows")
   );
@@ -327,11 +328,11 @@ function getReviewDestinations(
 
 function withHiringShell(href: string, shellLabel: HiringShellLabel) {
   if (shellLabel === "Tray (hidden)") {
-    return href;
+    return `${href}?shell=default`;
   }
 
   if (shellLabel === "Tray (persistent)") {
-    return `${href}?shell=tray`;
+    return href;
   }
 
   return `${href}?shell=hybrid`;
@@ -409,17 +410,18 @@ export function ReviewShellNav() {
   const currentSearch = searchParams.toString();
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const activeHiringShellLabel: HiringShellLabel =
-    searchParams.get("shell") === "tray"
-      ? "Tray (persistent)"
-      : searchParams.get("shell") === "hybrid"
-        ? "Tray (hybrid)"
-        : "Tray (hidden)";
+    searchParams.get("shell") === "hybrid"
+      ? "Tray (hybrid)"
+      : searchParams.get("shell") === "default" ||
+          searchParams.get("shell") === "dismissable-tray"
+        ? "Tray (hidden)"
+        : "Tray (persistent)";
   const normalizedHiringHref =
     activeHiringShellLabel === "Tray (hybrid)"
       ? `${pathname}?shell=hybrid`
       : activeHiringShellLabel === "Tray (hidden)"
-        ? pathname
-        : currentHref;
+        ? `${pathname}?shell=default`
+        : pathname;
   const activePremiumShellLabel: PremiumShellLabel =
     searchParams.get("shell") === "tray"
       ? "Tray (persistent)"
@@ -756,8 +758,8 @@ export function ReviewShellNav() {
     setIsMenuOpen(false);
     router.push(
       withHiringShell(
-        pathname === HIRING_ENTRY_LIX_TEST_HREF
-          ? HIRING_ENTRY_LIX_TEST_HREF
+        pathname === HIRING_ALL_INTENTS_HREF
+          ? HIRING_ALL_INTENTS_HREF
           : HIRING_PROTOTYPE_HREF,
         activeHiringShellLabel,
       ),

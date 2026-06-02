@@ -36,7 +36,8 @@ Open [http://localhost:3000](http://localhost:3000) after starting the dev serve
 ## Prototype Routes
 
 - `/` - shared concierge chooser
-- `/hiring` - LinkedIn Hiring / LTS concierge prototype
+- `/hiring/entry-lix-test` - default LinkedIn Hiring / LTS concierge prototype
+- `/hiring` - LinkedIn Hiring / LTS all-intents prototype
 - `/premium` - LinkedIn Premium survey-style landing prototype
 - `/internal/components` - internal component review surface
 - `/internal/flows/*` - Hiring-only flow review surfaces

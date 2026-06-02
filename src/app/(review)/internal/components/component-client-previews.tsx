@@ -1009,7 +1009,7 @@ function ShellDemoSurface({
   const canDockToTray = isPersistent || isHybrid;
   const showCloseAction = !isPersistent;
   const desktopShellRailClass =
-    "absolute bottom-0 right-6 z-20 w-[min(calc(100%_-_48px),var(--design-layout-panel-collapsed-width))]";
+    "absolute bottom-0 right-6 z-20 w-[min(calc(100%_-_48px),var(--design-layout-chat-tray-width))]";
   const panelClassName = isMobile
     ? "!h-full !w-full !rounded-none md:!h-full md:!w-full md:!rounded-none"
     : panelVariant === "expanded"
@@ -1683,7 +1683,11 @@ export function SharedHeaderDemo() {
               aria-label="Open AI Concierge chat"
               badge={hasLiveAgent && hasUnreadMessage}
               badgeLabel="Unread message"
-              className="absolute bottom-0 left-0 right-0 w-full max-w-none"
+              className={
+                isMobile
+                  ? "absolute bottom-0 left-0 right-0 w-full max-w-none"
+                  : "absolute bottom-0 right-0"
+              }
               identity={headerIdentity}
               title={headerTitle}
               onOpen={openHeaderDemo}

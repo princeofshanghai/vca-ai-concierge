@@ -8,7 +8,7 @@ workstreams:
     guidance: "Keep primitives product-neutral; pass product-specific labels, routes, and content from workstream-owned modules."
   hiring:
     name: "LTS Hiring Concierge"
-    route: "/hiring"
+    route: "/hiring/entry-lix-test"
     status: "Built prototype"
     guidance: "Hiring-specific marketing copy, personas, routing tiers, sales handoff logic, onboarding requirements, and conversation flows stay inside the Hiring workstream."
   premium:
@@ -19,10 +19,10 @@ workstreams:
   premium-company-pages:
     name: "Premium Company Pages"
     route: "/premium-company-pages"
-    status: "Visionary placeholder"
+    status: "Visionary prototype framing"
     audience: "Executive storytelling and design alignment"
-    intent: "Explore how an AI chat experience could communicate the value of Premium Company Pages."
-    guidance: "Keep this separate from member Premium and Hiring. Until the brief is defined, do not add conversation logic, recommendations, monetization assumptions, admin workflows, analytics claims, or branded design tokens."
+    intent: "Explore how a LinkedIn-native VCA could turn Premium Company Page visitor interest into qualified admin action."
+    guidance: "Keep this separate from member Premium and Hiring. Use the PCP overview and VCA spec as source of truth; keep behavior scripted and avoid real identity, analytics, inbox, monetization, scheduling, ads integration, or new branded design tokens unless explicitly scoped."
 colors:
   action: "#0A66C2"
   action-hover: "#004182"
@@ -893,7 +893,7 @@ The scrollable transcript should keep an 8px terminal inset before the composer 
 
 Collapsed and expanded panel widths are implemented, but expanded mode should still feel like a chat surface, not a dashboard. On desktop, expanded mode dims the page behind the panel and allows returning to the collapsed panel from the header control. On mobile, the panel already occupies the viewport, so the expanded/collapsed utility should not appear unless a distinct mobile expanded state is designed.
 
-Hiring supports three review shells: `Tray (hidden)`, `Tray (persistent)`, and `Tray (hybrid)`. `Tray (hidden)` is the default review shell and opens a bottom-attached tray-shaped panel instead of the legacy floating card; its header exposes expand/collapse and close. The legacy floating-card code path remains available internally, but it is not the current review picker option. `Tray (persistent)` starts from the persistent docked tray and should not expose a close action in the docked tray or open panel; its open panel header shows expand/collapse before dock. `Tray (hybrid)` keeps the existing hybrid UX: it starts with no tray and no panel; after `Contact sales`, it opens the same right-side tray-style bottom-attached panel. Minimizing creates the compact bottom tray, and closing removes both the panel and tray.
+Hiring supports three review shells: `Tray (hidden)`, `Tray (persistent)`, and `Tray (hybrid)`. `Tray (persistent)` is the default review shell and starts from the persistent docked tray; it should not expose a close action in the docked tray or open panel, and its open panel header shows expand/collapse before dock. `Tray (hidden)` opens a bottom-attached tray-shaped panel instead of the legacy floating card; its header exposes expand/collapse and close. The legacy floating-card code path remains available internally, but it is not the current review picker option. `Tray (hybrid)` keeps the existing hybrid UX: it starts with no tray and no panel; after `Contact sales`, it opens the same right-side tray-style bottom-attached panel. Minimizing creates the compact bottom tray, and closing removes both the panel and tray.
 
 The tray-first shell is bottom-docked on desktop. Its maximum height should preserve the 64px landing header plus an 8px gap, so the shell never covers the page header on shorter viewports. The chat panel itself should inherit the docked frame height in tray mode so the composer keeps its bottom padding inside the visible shell.
 

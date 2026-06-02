@@ -4,7 +4,7 @@ import { getButtonClassName } from "@/components/primitives/button";
 
 const conciergeOptions = [
   {
-    href: "/hiring",
+    href: "/hiring/entry-lix-test",
     label: "LTS microsite concierge",
   },
   {
