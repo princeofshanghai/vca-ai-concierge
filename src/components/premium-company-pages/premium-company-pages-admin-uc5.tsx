@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -17,7 +18,7 @@ import {
   Prompt,
   type ChatPanelVariant,
 } from "@/components/chat";
-import { Button } from "@/components/primitives/button";
+import { Button, getButtonClassName } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
@@ -48,10 +49,12 @@ import {
   type AdminUc5Tone,
 } from "./premium-company-pages-admin-uc5-data";
 
-const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#111827]";
+const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
 const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
-  backgroundColor: "#111827",
+  backgroundColor: "#ACF5B3",
 };
+const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
+const CHERI_SPARKS_AVATAR = "member/avatar-2.png";
 
 const postVisuals: ReadonlyArray<Readonly<{ image: string; alt: string }>> = [
   {
@@ -69,7 +72,7 @@ const postVisuals: ReadonlyArray<Readonly<{ image: string; alt: string }>> = [
 ];
 
 const leadAvatars: Record<string, string> = {
-  "Cheri Sparks": "avatar-2.png",
+  "Cheri Sparks": CHERI_SPARKS_AVATAR,
   "Priya Shah": "avatar-3.png",
   "Maya Patel": "avatar-1.png",
 };
@@ -159,27 +162,46 @@ export function AdminPerformanceDigestCard({
   return (
     <section
       aria-labelledby="admin-performance-digest-heading"
-      className="overflow-hidden rounded-sm border border-border-faint bg-background"
+      className="min-w-0"
     >
-      <div className="flex min-h-[72px] items-center justify-between gap-md border-b border-border-faint px-lg py-md">
-        <div className="flex min-w-0 items-center gap-sm">
-          <VeloraLogo size={40} />
-          <div className="min-w-0">
-            <h2
-              className="text-control-sm text-text"
-              id="admin-performance-digest-heading"
-            >
-              Performance digest
-            </h2>
-            <p className="mt-xxs truncate text-body-xs text-text-meta">
-              Velora AI &middot; Today &middot; 4 insights
-            </p>
-          </div>
+      <div>
+        <div className="flex items-center gap-xs text-control-sm text-text">
+          <Icon
+            aria-hidden="true"
+            className="shrink-0 text-premium-inbug"
+            name="signal-ai"
+            size="small"
+          />
+          <span>Based on your page activity</span>
         </div>
-        <Tag size="small" tone="default">AI</Tag>
+        <h2
+          className="mt-sm text-heading-lg text-text"
+          id="admin-performance-digest-heading"
+        >
+          What needs your attention today
+        </h2>
       </div>
 
-      <div className="divide-y divide-border-faint">
+      <div className="mt-xxl space-y-md">
+        <Link
+          aria-label="View Cheri Sparks message in Inbox"
+          className="group grid min-h-[78px] w-full grid-cols-[64px_minmax(0,1fr)_auto_24px] items-center gap-md rounded-xs border border-border-faint bg-background px-lg py-md text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+          href={ADMIN_INBOX_HREF}
+        >
+          <CheriAiAvatar />
+          <span className="min-w-0 py-xxs">
+            <span className="block text-control-sm text-text">
+              Cheri Sparks looks like a strong match
+            </span>
+            <span className="mt-xs block text-body-sm text-text-meta">
+              She asked about contractor payments and sent you a message · Just
+              now
+            </span>
+          </span>
+          <InsightRowCta label="View message" />
+          <InsightRowDismissIcon />
+        </Link>
+
         {adminUc5InsightOrder.map((insightId) => {
           const insight = adminUc5Insights[insightId];
           const isActive = activeInsightId === insightId;
@@ -188,10 +210,10 @@ export function AdminPerformanceDigestCard({
             <button
               aria-pressed={isActive}
               className={cx(
-                "group grid min-h-[78px] w-full grid-cols-[64px_minmax(0,1fr)_24px] items-center gap-md px-lg py-md text-left outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-action-focus-ring",
+                "group grid min-h-[78px] w-full grid-cols-[64px_minmax(0,1fr)_auto_24px] items-center gap-md rounded-xs border bg-background px-lg py-md text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring",
                 isActive
-                  ? "bg-surface-tint shadow-[inset_4px_0_0_var(--color-action)]"
-                  : "bg-background",
+                  ? "border-action bg-surface-tint shadow-[inset_4px_0_0_var(--color-action)]"
+                  : "border-border-faint",
               )}
               key={insight.id}
               onClick={() => onInsightSelect(insight.id)}
@@ -206,17 +228,68 @@ export function AdminPerformanceDigestCard({
                   {insight.value}
                 </span>
               </span>
-              <Icon
-                aria-hidden="true"
-                className="justify-self-end text-text-meta group-hover:text-icon"
-                name="chevron-right"
-                size="small"
-              />
+              <InsightRowCta icon="ai" label="Ask AI" />
+              <InsightRowDismissIcon />
             </button>
           );
         })}
       </div>
     </section>
+  );
+}
+
+function InsightRowCta({
+  icon,
+  label,
+}: Readonly<{
+  icon?: "ai";
+  label: string;
+}>) {
+  return (
+    <span
+      aria-hidden="true"
+      className={getButtonClassName({
+        className: "pointer-events-none w-fit justify-self-end",
+        size: "small",
+        variant: "tertiary",
+      })}
+    >
+      {icon === "ai" ? (
+        <Icon
+          aria-hidden="true"
+          className="text-premium-inbug"
+          name="signal-ai"
+          size="small"
+        />
+      ) : null}
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function InsightRowDismissIcon() {
+  return (
+    <Icon
+      aria-hidden="true"
+      className="justify-self-end text-text-meta group-hover:text-icon"
+      name="close"
+      size="small"
+    />
+  );
+}
+
+function CheriAiAvatar({ size = 48 }: Readonly<{ size?: 40 | 48 }>) {
+  return (
+    <span className="relative inline-flex size-12 shrink-0">
+      <Entity
+        label="Cheri Sparks"
+        size={size}
+        src={assetSrc(CHERI_SPARKS_AVATAR)}
+      />
+      <span className="absolute bottom-0 right-0 inline-flex size-5 items-center justify-center rounded-round border border-background bg-background text-premium-inbug">
+        <Icon className="[&&]:size-3" name="signal-ai" size="small" />
+      </span>
+    </span>
   );
 }
 
@@ -236,6 +309,18 @@ function VeloraLogo({ size = 40 }: Readonly<{ size?: 32 | 40 | 48 }>) {
 function DigestInsightVisual({
   insightId,
 }: Readonly<{ insightId: AdminUc5InsightId }>) {
+  if (insightId === "post-amplification") {
+    return (
+      <Image
+        alt=""
+        className="size-12 shrink-0 rounded-xs object-cover"
+        height={48}
+        src={assetSrc("post-building-blue.png")}
+        width={48}
+      />
+    );
+  }
+
   if (insightId === "follower-growth") {
     return <MiniAvatarPile compact />;
   }
@@ -269,16 +354,7 @@ function DigestInsightVisual({
   }
 
   return (
-    <span className="relative inline-flex size-12 shrink-0">
-      <Entity
-        label="Cheri Sparks"
-        size={40}
-        src={assetSrc("avatar-2.png")}
-      />
-      <span className="absolute bottom-0 right-0 inline-flex size-5 items-center justify-center rounded-xs border border-background bg-action text-on-action">
-        <Icon name="signal-ai" size="small" />
-      </span>
-    </span>
+    <CheriAiAvatar size={40} />
   );
 }
 
@@ -460,23 +536,11 @@ function InsightResponse({
   onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
 }>) {
   return (
-    <article className="chat-message-enter w-full max-w-[var(--design-layout-panel-content-max)] overflow-hidden rounded-sm border border-border-faint bg-background text-text shadow-raised-faint">
-      <header className="flex items-start gap-sm border-b border-border-faint px-lg py-md">
-        <VeloraLogo size={40} />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-xs">
-            <h3 className="min-w-0 text-control-sm text-text">
-              {getInsightCardTitle(insight.id)}
-            </h3>
-            <Tag size="small" tone="default">AI insight</Tag>
-          </div>
-          <p className="mt-xxs text-body-xs text-text-meta">
-            Velora AI &middot; Today
-          </p>
-        </div>
-      </header>
-
+    <article className="chat-message-enter w-full max-w-[var(--design-layout-panel-content-max)] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
       <div className="px-lg py-lg">
+        {insight.id === "post-amplification" ? (
+          <PostAmplificationResponse />
+        ) : null}
         {insight.id === "follower-growth" ? <FollowerGrowthResponse /> : null}
         {insight.id === "visitor-demographics" ? (
           <VisitorDemographicsResponse />
@@ -501,20 +565,81 @@ function InsightResponse({
   );
 }
 
-function getInsightCardTitle(insightId: AdminUc5InsightId) {
-  if (insightId === "follower-growth") {
-    return "Follower growth";
-  }
+function PostAmplificationResponse() {
+  return (
+    <div className="space-y-lg">
+      <div className="flex items-start gap-md">
+        <Image
+          alt=""
+          className="size-10 shrink-0 rounded-xs object-cover"
+          height={40}
+          src={assetSrc("post-building-blue.png")}
+          width={40}
+        />
+        <div className="min-w-0 space-y-md">
+          <p className="text-body-sm text-text">
+            Here&apos;s why this one is worth amplifying. It reached a 4.2%
+            engagement rate, well above your 1.1% Page average, but only 180
+            people saw it.
+          </p>
+          <div className="grid gap-sm sm:grid-cols-2">
+            <PostAmplificationMetric
+              label="Engagement rate"
+              tone="positive"
+              value="4.2%"
+              comparison="vs 1.1% avg"
+            />
+            <PostAmplificationMetric
+              label="Impressions"
+              tone="negative"
+              value="180"
+              comparison="vs 820 avg"
+            />
+          </div>
+          <p className="text-body-sm text-text">
+            The content is working. It just needs more reach.
+          </p>
+        </div>
+      </div>
 
-  if (insightId === "visitor-demographics") {
-    return "Visitor demographics";
-  }
+      <div className="rounded-sm border border-border-faint bg-background-neutral-soft p-md">
+        <p className="text-body-sm text-text">
+          This is a strong candidate for Boost. You&apos;d be putting spend
+          behind something that already has proof, not a guess.
+        </p>
+        <Button className="mt-md" size="small" variant="secondary">
+          Boost
+        </Button>
+      </div>
+    </div>
+  );
+}
 
-  if (insightId === "content-engagement") {
-    return "Content engagement";
-  }
-
-  return "Weekly summary";
+function PostAmplificationMetric({
+  comparison,
+  label,
+  tone,
+  value,
+}: Readonly<{
+  comparison: string;
+  label: string;
+  tone: "positive" | "negative";
+  value: string;
+}>) {
+  return (
+    <div className="rounded-sm border border-ai-border bg-background p-md">
+      <p className="text-label-xs uppercase text-text-meta">{label}</p>
+      <p
+        className={cx(
+          "mt-xs text-heading-md",
+          tone === "positive" ? "text-positive" : "text-negative",
+        )}
+      >
+        {value}
+      </p>
+      <p className="mt-xs text-body-xs text-text-meta">{comparison}</p>
+    </div>
+  );
 }
 
 function FollowerGrowthResponse() {
@@ -567,8 +692,9 @@ function VisitorDemographicsResponse() {
           src={pcpCompanyProfile.founderAvatarSrc}
         />
         <p className="min-w-0 text-body-sm text-text">
-          The strongest visitor segments still line up with Velora&apos;s ICP:
-          small agency owners and creative operations leads.
+          The people finding Velora look close to the teams you&apos;re built
+          for: small agency owners, creative directors, and operators managing
+          contractor payment complexity.
         </p>
       </div>
       <div>
@@ -826,7 +952,7 @@ function RecommendationAction({
         <Entity
           label="Cheri Sparks"
           size={40}
-          src={assetSrc("avatar-2.png")}
+          src={assetSrc(CHERI_SPARKS_AVATAR)}
         />
         <div className="min-w-0 flex-1">
           <h4 className="text-supportive-s-strong text-text">

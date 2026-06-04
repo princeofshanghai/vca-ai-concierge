@@ -42,7 +42,6 @@ import {
   PCP_MEMBER_ASSET_ROOT,
   pcpCompanyProfile,
 } from "./persona";
-import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_MEMBER_ASSET_ROOT;
 
@@ -325,25 +324,16 @@ const vcaJobSeekerPrompts = [
   "Is this role remote?",
 ];
 const VCA_GREETING =
-  "Hi Cheri - I can answer questions about Velora instantly, or help you reach the team directly. What's on your mind?";
-const VCA_JOB_SEEKER_GREETING =
-  "Hi Jordan - I can answer questions about Velora or help you explore open roles. What are you curious about?";
+  "Hi, I'm Velora's AI assistant. I can help explain what Velora does, answer questions about roles or recent updates, and point you to the right next step. What would you like to know?";
 const VCA_LATE_PAYMENT_RESPONSE =
-  "This is one of the core things Velora was built for. When a client payment is delayed, contractor payments go into a pending state automatically - no manual intervention, no awkward conversations. Contractors can see their payment is queued, not missing. Once the client pays, everything releases.";
-const VCA_POST_PROOF_INTRO =
-  "Here's how a similar agency handled this:";
+  "This is one of the core things Velora was built for. When a client payment is delayed, contractor payments go into a pending state automatically - no manual intervention, no awkward conversations. Contractors can see their payment is queued, not missing. Once the client pays, everything releases. Here's how a similar agency handled it:";
 const VCA_JOB_SEEKER_RESPONSE =
   "Yes - your customer operations background sounds relevant, especially if you've helped customers through setup, troubleshooting, and feedback loops. For this role, Velora is looking for someone who can connect customer conversations, payment workflow setup, and cross-functional product feedback so small agency teams get clear answers quickly.";
 const VCA_JOB_PROOF_INTRO =
   "This role looks closest to what you're describing:";
 const VCA_CASE_STUDY_RETURN_PROMPT =
-  "Studio Northline feels pretty close to your world - a small team, rotating contractors, and client payments that ripple into payout timing. I can help you turn that into a warm intro to Velora, or we can quickly check how it works across multiple projects first.";
+  "Studio Northline feels pretty close to your world - a small team, rotating contractors, and client payments that ripple into payout timing. Want me to turn what you've shared into a warm intro to Velora so the team has the right context from the start?";
 const VCA_DRAFT_INTRO_PROMPT = "Draft message";
-const VCA_MULTI_PROJECT_QUESTION =
-  "Does this work if I have different contractors on different client projects at the same time?";
-const VCA_MULTI_PROJECT_PROMPT = "Check multi-project payouts";
-const VCA_MULTI_PROJECT_RESPONSE =
-  "Yes - Velora tracks each contractor-client relationship separately. If Client A pays late, only the contractors tied to that project are in a pending state. Contractors on other clients aren't affected. You get one dashboard view across all of it.";
 const VCA_HANDOFF_OFFER =
   "Sounds like this might be a fit for your team. Want me to put together a message to Velora so they have your context before you connect?";
 const VCA_HANDOFF_MESSAGE =
@@ -360,9 +350,9 @@ function assetSrc(path: string) {
 }
 
 const VELORA_LOGO_AVATAR_RADIUS_CLASS = "rounded-sm";
-const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#111827]";
+const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
 const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
-  backgroundColor: "#111827",
+  backgroundColor: "#ACF5B3",
 };
 
 function VeloraVcaLogoMark({
@@ -371,7 +361,7 @@ function VeloraVcaLogoMark({
   return (
     <span
       className={cx(
-        "mr-xxs inline-flex shrink-0 items-center justify-center overflow-hidden border border-border-faint bg-[#111827]",
+        "mr-xxs inline-flex shrink-0 items-center justify-center overflow-hidden border border-border-faint bg-[#ACF5B3]",
         size === "medium" ? "size-8 p-[3px]" : "size-7 p-[3px]",
         VELORA_LOGO_AVATAR_RADIUS_CLASS,
       )}
@@ -569,9 +559,10 @@ function VeloraLinkedInJobPreviewCard({
       <div className="p-xl">
         <Image
           alt=""
-          className="size-14 rounded-sm object-cover"
+          className="size-14 rounded-sm bg-[#ACF5B3] object-cover"
           height={56}
           src={pcpCompanyProfile.logoSrc}
+          style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
           width={56}
         />
 
@@ -880,9 +871,7 @@ function PremiumCompanyPagesVcaPanel({
     (conversationStage === "handoffOffered" ||
       conversationStage === "handoffOpened");
   const shouldShowGreeting = conversationStage !== "profilePromptAnswered";
-  const greeting = isJobSeekerIntent
-    ? VCA_JOB_SEEKER_GREETING
-    : VCA_GREETING;
+  const greeting = VCA_GREETING;
   const starterPrompts = isJobSeekerIntent
     ? vcaJobSeekerPrompts
     : vcaStarterPrompts;
@@ -968,9 +957,6 @@ function PremiumCompanyPagesVcaPanel({
             <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
               {VCA_LATE_PAYMENT_RESPONSE}
             </VcaAssistantMessage>
-            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-              {VCA_POST_PROOF_INTRO}
-            </VcaAssistantMessage>
             <VeloraLinkedInPostProofCard
               onViewCaseStudy={onOpenCaseStudy}
             />
@@ -1008,20 +994,12 @@ function PremiumCompanyPagesVcaPanel({
               onPromptSelect={onPromptSelect}
               prompt={VCA_DRAFT_INTRO_PROMPT}
             />
-            <Prompt
-              className="w-fit max-w-full self-start"
-              onPromptSelect={onPromptSelect}
-              prompt={VCA_MULTI_PROJECT_PROMPT}
-            />
           </>
         ) : null}
         {shouldShowHandoff ? (
           <>
             {hasFollowUp ? (
               <>
-                <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-                  {VCA_MULTI_PROJECT_RESPONSE}
-                </VcaAssistantMessage>
                 <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
                   {VCA_HANDOFF_OFFER}
                 </VcaAssistantMessage>
@@ -1301,11 +1279,27 @@ function HumanMessageEntry({
   children: ReactNode;
   time: string;
 }>) {
+  const isCompanyAuthor = author === pcpCompanyProfile.name;
+
   return (
     <div className="space-y-xs">
       <div className="flex items-center justify-between gap-sm">
         <div className="flex min-w-0 items-center gap-sm">
-          <Entity label={author} size={40} src={avatarSrc} />
+          <Entity
+            className={
+              isCompanyAuthor
+                ? cx(
+                    VELORA_LOGO_TILE_BACKGROUND_CLASS,
+                    VELORA_LOGO_AVATAR_RADIUS_CLASS,
+                  )
+                : undefined
+            }
+            label={author}
+            shape={isCompanyAuthor ? "square" : "circle"}
+            size={40}
+            src={avatarSrc}
+            style={isCompanyAuthor ? VELORA_LOGO_TILE_BACKGROUND_STYLE : undefined}
+          />
           <div className="flex min-w-0 flex-wrap items-center gap-xs">
             <p className="truncate text-control-sm text-text">{author}</p>
             {author !== pcpCompanyProfile.name ? (
@@ -1573,7 +1567,7 @@ function CompanyLogo({ className }: Readonly<{ className?: string }>) {
   return (
     <span
       className={cx(
-        "relative inline-flex items-center justify-center overflow-hidden bg-[#111827]",
+        "relative inline-flex items-center justify-center overflow-hidden bg-[#ACF5B3]",
         VELORA_LOGO_AVATAR_RADIUS_CLASS,
         className,
       )}
@@ -1590,10 +1584,8 @@ function CompanyLogo({ className }: Readonly<{ className?: string }>) {
 }
 
 function Hero({
-  onMessage,
   onSendMessage,
 }: Readonly<{
-  onMessage: () => void;
   onSendMessage: () => void;
 }>) {
   const menuId = useId();
@@ -1710,13 +1702,12 @@ function Hero({
                 <Button
                   className="!border-[var(--figma-color-border-color-border-knockout)] !bg-transparent !text-[var(--figma-color-label-color-label-knockout)] hover:!border-[var(--figma-color-border-color-border-knockout-hover)] hover:!bg-[var(--figma-color-background-color-background-transparent-overlay-hover)] active:!border-[var(--figma-color-border-color-border-knockout-active)] active:!bg-[var(--figma-color-background-color-background-transparent-overlay-active)] active:!text-[var(--figma-color-label-color-label-knockout-active)]"
                   leadingIcon={
-                    <Icon className="text-white" name="signal-ai" />
+                    <Icon className="text-white" name="send" />
                   }
-                  onClick={onMessage}
                   size="medium"
                   variant="tertiary"
                 >
-                  {pcpCompanyProfile.ctaLabel}
+                  Message
                 </Button>
                 <div className="relative">
                   <ButtonIcon
@@ -2942,21 +2933,6 @@ function PremiumCompanyPagesSeparateMemberPage({
     return isFabEntryMode ? "pcp-background-trays-slide" : undefined;
   }
 
-  function handleOpenVca() {
-    runMessagingSurfaceTransition(
-      () => {
-        setVcaPanelVariant("collapsed");
-        resetVcaConversation();
-        setHumanSurfaceState((currentState) =>
-          currentState === "closed" ? "closed" : "docked",
-        );
-
-        setAiSurfaceState("open");
-      },
-      getBackgroundTrayTransitionClass(),
-    );
-  }
-
   function handleOpenVcaWithProfilePrompt(
     prompt: (typeof profileQuestionPrompts)[number],
   ) {
@@ -3160,12 +3136,6 @@ function PremiumCompanyPagesSeparateMemberPage({
       return;
     }
 
-    if (prompt === VCA_MULTI_PROJECT_PROMPT) {
-      setVcaFollowUpQuestion(VCA_MULTI_PROJECT_QUESTION);
-      setVcaConversationStage("handoffOffered");
-      return;
-    }
-
     if (vcaConversationStage === "postProof") {
       setVcaFollowUpQuestion(prompt);
       setVcaConversationStage("handoffOffered");
@@ -3246,7 +3216,6 @@ function PremiumCompanyPagesSeparateMemberPage({
         showAdvertise
       />
       <Hero
-        onMessage={handleOpenVca}
         onSendMessage={handleOpenHumanMessagePanel}
       />
 
@@ -3289,13 +3258,26 @@ function PremiumCompanyPagesSeparateMemberPage({
           className="pcp-ai-messaging-surface fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-vca-fab-bottom)]"
           style={vcaFabStyle}
         >
-          <VcaFab
-            chatPanelId={vcaPanelId}
-            isOpen={false}
-            label={`Open ${pcpCompanyProfile.name} assistant`}
+          <Button
+            aria-controls={vcaPanelId}
+            aria-expanded={false}
+            aria-haspopup="dialog"
+            aria-label={`Open ${pcpCompanyProfile.name} assistant`}
+            className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
+            leadingIcon={
+              <Icon
+                className="text-[#2AA986]"
+                name="signal-ai"
+                size="small"
+              />
+            }
             onClick={handleOpenVcaFromTray}
-            position="static"
-          />
+            size="medium"
+            style={{ borderWidth: "1.5px" }}
+            variant="tertiary"
+          >
+            Ask Velora
+          </Button>
         </div>
       ) : null}
 

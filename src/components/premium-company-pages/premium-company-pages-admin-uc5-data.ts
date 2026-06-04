@@ -1,6 +1,7 @@
 import type { IconName } from "@/components/primitives/icon";
 
 export type AdminUc5InsightId =
+  | "post-amplification"
   | "follower-growth"
   | "visitor-demographics"
   | "content-engagement"
@@ -65,13 +66,32 @@ export type AdminUc5Lead = Readonly<{
 }>;
 
 export const adminUc5InsightOrder: ReadonlyArray<AdminUc5InsightId> = [
+  "post-amplification",
   "follower-growth",
   "visitor-demographics",
-  "content-engagement",
-  "weekly-synthesis",
 ];
 
 export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
+  "post-amplification": {
+    id: "post-amplification",
+    icon: "analytics",
+    label: "One post is worth amplifying",
+    value: "4.2% engagement rate - only 180 impressions - posted 3 days ago",
+    query: "One post is worth amplifying.",
+    analyticsLabel: "View full Content analytics",
+    followUps: [
+      {
+        prompt: "Why boost this post?",
+        response:
+          "Because the early signal is strong. People who saw the post engaged with it at 4.2%, well above the Page average, but only 180 people saw it. Boosting helps give proven content a fairer chance.",
+      },
+      {
+        prompt: "What audience should I boost to?",
+        response:
+          "Start with small agency owners, creative directors, and operations leads at 1-20 person creative and marketing services firms. They are already showing up in your visitor data.",
+      },
+    ],
+  },
   "follower-growth": {
     id: "follower-growth",
     icon: "people",
@@ -95,15 +115,15 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
   "visitor-demographics": {
     id: "visitor-demographics",
     icon: "analytics",
-    label: "Your visitors are mostly agency founders",
-    value: "Top segment: 62% agency owners - 1-10 employees",
+    label: "Your page is attracting agency decision-makers",
+    value: "Top visitors include founders, creative directors, and operators",
     query: "Who is visiting Velora's Page?",
     analyticsLabel: "View full Visitors analytics",
     followUps: [
       {
         prompt: "Are these the right people for Velora?",
         response:
-          "Yes. The strongest segments line up with Velora's ICP: small agency owners, creative directors, and operations leads who manage contractor payout complexity.",
+          "Yes. The strongest visitor groups look like the people Velora is built to help: small agency owners, creative directors, and operators managing contractor payment complexity.",
       },
       {
         prompt: "How do I reach more of them?",

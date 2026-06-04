@@ -18,8 +18,8 @@ import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
+import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
-import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 
 import {
@@ -36,7 +36,6 @@ import {
   type AdminUc5FollowUp,
   type AdminUc5InsightId,
 } from "./premium-company-pages-admin-uc5-data";
-import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
 const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
@@ -70,6 +69,7 @@ type PerformanceCardData = Readonly<{
   title: string;
   value: string;
   delta?: string;
+  deltaMeta?: string;
   deltaTone?: "negative" | "positive";
   label?: string;
   premium?: boolean;
@@ -106,10 +106,11 @@ const performanceCards: Array<PerformanceCardData> = [
     deltaTone: "positive",
   },
   {
-    title: "High-intent messages",
-    value: "6",
-    label: "Premium insight",
-    premium: true,
+    title: "Post impressions",
+    value: "3,479",
+    delta: "115.6%",
+    deltaMeta: "last 7 days",
+    deltaTone: "positive",
   },
 ];
 
@@ -330,12 +331,12 @@ function PageRail({ activeItem }: Readonly<{ activeItem: string }>) {
 
         <div className="relative flex items-start justify-between">
           <Entity
-            className="border-2 border-white bg-[#111827]"
+            className="border-2 border-white bg-[#ACF5B3]"
             label={pcpCompanyProfile.name}
             shape="square"
             size={80}
             src={pcpCompanyProfile.logoSrc}
-            style={{ backgroundColor: "#111827", height: 72, width: 72 }}
+            style={{ backgroundColor: "#ACF5B3", height: 72, width: 72 }}
           />
           <ButtonIcon
             className="mt-sm"
@@ -388,52 +389,6 @@ function PageRail({ activeItem }: Readonly<{ activeItem: string }>) {
   );
 }
 
-function ActionCard({
-  title,
-  body,
-  premium,
-  action,
-}: Readonly<{
-  title: string;
-  body: string;
-  premium?: boolean;
-  action?: string;
-}>) {
-  return (
-    <article className="flex min-h-[72px] items-start gap-sm rounded-xs border border-border-faint bg-background px-lg py-md">
-      <div className="mt-[3px]">
-        {premium ? (
-          <PremiumMark label="Premium" />
-        ) : (
-          <span className="block size-3 rounded-xs bg-border-faint" />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        {premium ? (
-          <p className="text-supportive-s text-text-meta">Premium</p>
-        ) : null}
-        <h3 className="text-control-sm text-text">{title}</h3>
-        <p className="text-body-xs text-text-meta">
-          {body}
-          {action ? (
-            <>
-              {" "}
-              <InlineAction>{action}</InlineAction>
-            </>
-          ) : null}
-        </p>
-      </div>
-      <GhostIconButton
-        className="-mr-xs text-text-meta"
-        horizontalPadding={false}
-        icon="close"
-        label={`Dismiss ${title}`}
-        touchTarget={false}
-      />
-    </article>
-  );
-}
-
 function AvatarPile() {
   return (
     <div className="flex items-center">
@@ -457,23 +412,30 @@ function PerformanceCard({
   title,
   value,
   delta,
+  deltaMeta,
   deltaTone,
   label,
   premium,
 }: PerformanceCardData) {
   return (
-    <article className="min-h-[105px] rounded-xs border border-border-faint bg-background p-md">
+    <article className="min-h-[128px] rounded-xs border border-border-faint bg-background p-md">
       {title === "Who visited your Page" ? <AvatarPile /> : null}
       <p className="mt-xs text-heading-xl text-text">{value}</p>
       <h3 className="text-control-sm text-action">{title}</h3>
       {delta ? (
         <p
           className={cx(
-            "mt-xxs text-supportive-s",
+            "mt-xxs flex flex-wrap items-center gap-xxs text-supportive-s",
             deltaTone === "positive" ? "text-positive" : "text-negative",
           )}
         >
-          {deltaTone === "positive" ? "+" : "-"} {delta}
+          <span>
+            {deltaTone === "positive" ? "+ " : "- "}
+            {delta}
+          </span>
+          {deltaMeta ? (
+            <span className="text-text-meta">{deltaMeta}</span>
+          ) : null}
         </p>
       ) : null}
       {label ? (
@@ -549,23 +511,29 @@ function PostCard({
   reactions: string;
 }>) {
   return (
-    <article className="w-[365px] shrink-0 overflow-hidden rounded-sm border border-border-faint bg-background">
-      <div className="flex min-h-[62px] items-center justify-between gap-md border-b border-border-faint px-md py-sm">
-        <span className="inline-flex max-w-[190px] items-center gap-xs text-supportive-s-strong text-text">
-          {metric}
-          <Icon className="shrink-0 text-text-meta" name="question" size="small" />
+    <article className="flex h-[560px] w-[365px] shrink-0 flex-col overflow-hidden rounded-sm border border-border-faint bg-background">
+      <div className="grid min-h-[72px] grid-cols-[minmax(0,1fr)_auto] items-center gap-md border-b border-border-faint px-md py-sm">
+        <span className="inline-flex min-w-0 items-start gap-xs text-supportive-s-strong text-text">
+          <span className="line-clamp-2 min-w-0">{metric}</span>
+          <Icon
+            className="mt-xxs shrink-0 text-text-meta"
+            name="question"
+            size="small"
+          />
         </span>
         <Button size="small" variant="secondary">
           Boost
         </Button>
       </div>
-      <div className="px-md py-lg">
+      <div className="flex min-h-0 flex-1 flex-col px-md py-lg">
         <div className="flex items-start gap-sm">
           <Entity
+            className="bg-[#ACF5B3]"
             label={pcpCompanyProfile.name}
             shape="square"
             size={40}
             src={pcpCompanyProfile.logoSrc}
+            style={{ backgroundColor: "#ACF5B3" }}
           />
           <div className="min-w-0 flex-1">
             <h3 className="text-control-sm text-text">
@@ -579,24 +547,28 @@ function PostCard({
           <Icon className="text-text-meta" name="overflow-web-ios" size="medium" />
         </div>
 
-        <p className="mt-md line-clamp-2 text-body-sm text-text">{body}</p>
+        <p className="mt-md min-h-[42px] shrink-0 line-clamp-2 text-body-sm text-text">
+          {body}
+        </p>
         <Image
           alt={imageAlt}
-          className="mt-sm h-[220px] w-full object-cover"
+          className="mt-sm h-[220px] w-full shrink-0 object-cover"
           height={386}
           src={`${ASSET_ROOT}/${image}`}
           width={514}
         />
         {linkTitle ? (
-          <div className="bg-background-neutral-soft px-md py-sm">
+          <div className="min-h-[66px] bg-background-neutral-soft px-md py-sm">
             <p className="text-control-sm text-text">{linkTitle}</p>
             {linkMeta ? (
               <p className="text-body-xs text-text-meta">{linkMeta}</p>
             ) : null}
           </div>
-        ) : null}
+        ) : (
+          <div className="min-h-[66px]" />
+        )}
       </div>
-      <div className="border-t border-border-faint px-md py-sm">
+      <div className="mt-auto border-t border-border-faint px-md py-sm">
         <ReactionSummary comments={comments} reactions={reactions} />
       </div>
     </article>
@@ -750,16 +722,18 @@ function VcaInboxContextStrip() {
         />
       </div>
 
-      <div className="mt-md flex flex-wrap gap-xs">
+      <div className="mt-lg flex flex-wrap gap-sm">
         {vcaLeadBrief.intentTags.map((tag) => (
-          <Tag key={tag} size="small" tone="default">
+          <Pill
+            aria-disabled="true"
+            className="pointer-events-none !h-8 cursor-default [&>span]:!min-h-8 [&>span]:px-sm [&>span]:text-body-sm"
+            key={tag}
+            tabIndex={-1}
+          >
             {tag}
-          </Tag>
+          </Pill>
         ))}
       </div>
-      <p className="mt-sm text-body-xs text-text-meta">
-        Summary only. The full visitor-side AI conversation is not shown.
-      </p>
     </div>
   );
 }
@@ -931,37 +905,19 @@ function DashboardContent({
           Welcome back, {pcpCompanyProfile.name}
         </h1>
         <div className="mt-[40px]">
-          <h2 className="text-heading-sm text-text">Today&apos;s actions</h2>
-          <p className="mt-xxs text-body-sm text-text-meta">
-            Pages that complete these actions regularly grow 4x faster.
-          </p>
-        </div>
-        <div className="mt-xxl space-y-md">
-          <ActionCard
-            action="Enable"
-            premium
-            title="Turn on Auto-Invite to grow new followers 6.7x faster"
-            body="Automatically invite post-engagers to follow."
-          />
-          <ActionCard
-            action="Create"
-            title="3 visitors asked about contractor payment timing"
-            body="Turn the repeated question into a post that explains conditional payment schedules."
+          <AdminPerformanceDigestCard
+            activeInsightId={activeInsightId}
+            onInsightSelect={onDigestInsightSelect}
           />
         </div>
       </div>
 
       <div className="space-y-[40px] px-lg pb-xxl pt-[40px] sm:px-xxl">
-        <AdminPerformanceDigestCard
-          activeInsightId={activeInsightId}
-          onInsightSelect={onDigestInsightSelect}
-        />
-
         <section>
           <div className="flex items-start justify-between gap-lg">
             <div>
               <h2 className="text-heading-sm text-text">Track performance</h2>
-              <p className="text-body-sm text-text-meta">
+              <p className="mt-xs text-body-sm text-text-meta">
                 Turn Page interest into qualified conversations with weekly visitor
                 and intent insights.
               </p>
@@ -988,7 +944,7 @@ function DashboardContent({
           <div className="flex items-start justify-between gap-lg">
             <div>
               <h2 className="text-heading-sm text-text">Manage recent posts</h2>
-              <p className="text-body-sm text-text-meta">
+              <p className="mt-xs text-body-sm text-text-meta">
                 Manage payment education content and amplify top-performing posts with
                 boosting. <InlineAction>Learn more</InlineAction>
               </p>
@@ -1130,12 +1086,28 @@ export function PremiumCompanyPagesPage() {
       </PremiumCompanyPagesAdminShell>
 
       {!isAgentOpen ? (
-        <VcaFab
-          chatPanelId={agentPanelId}
-          isOpen={false}
-          label="Open Velora AI"
-          onClick={handleOpenAgentFromFab}
-        />
+        <div className="fixed bottom-6 right-6 z-20 md:bottom-8 md:right-10">
+          <Button
+            aria-controls={agentPanelId}
+            aria-expanded={false}
+            aria-haspopup="dialog"
+            aria-label="Open AI assistant"
+            className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
+            leadingIcon={
+              <Icon
+                className="text-[#2AA986]"
+                name="signal-ai"
+                size="small"
+              />
+            }
+            onClick={handleOpenAgentFromFab}
+            size="medium"
+            style={{ borderWidth: "1.5px" }}
+            variant="tertiary"
+          >
+            Ask AI
+          </Button>
+        </div>
       ) : null}
 
       {isAgentOpen ? (
