@@ -2,8 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { type ReactNode } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactNode,
+} from "react";
 
+import { type ChatPanelVariant } from "@/components/chat";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
@@ -19,6 +26,17 @@ import {
   PCP_ASSET_ROOT,
   pcpCompanyProfile,
 } from "./persona";
+import {
+  AdminPerformanceDigestCard,
+  AdminUc5AgentPanel,
+  buildAdminUc5PrototypeFallbackTurn,
+  type AdminUc5ThreadTurn,
+} from "./premium-company-pages-admin-uc5";
+import {
+  type AdminUc5FollowUp,
+  type AdminUc5InsightId,
+} from "./premium-company-pages-admin-uc5-data";
+import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
 const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
@@ -312,12 +330,12 @@ function PageRail({ activeItem }: Readonly<{ activeItem: string }>) {
 
         <div className="relative flex items-start justify-between">
           <Entity
-            className="border-2 border-white"
+            className="border-2 border-white bg-[#111827]"
             label={pcpCompanyProfile.name}
             shape="square"
             size={80}
             src={pcpCompanyProfile.logoSrc}
-            style={{ height: 72, width: 72 }}
+            style={{ backgroundColor: "#111827", height: 72, width: 72 }}
           />
           <ButtonIcon
             className="mt-sm"
@@ -899,7 +917,13 @@ function InboxContent() {
   );
 }
 
-function DashboardContent() {
+function DashboardContent({
+  activeInsightId,
+  onDigestInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onDigestInsightSelect: (insightId: AdminUc5InsightId) => void;
+}>) {
   return (
     <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
       <div className="bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background px-lg pb-[28px] pt-[40px] sm:px-xxl">
@@ -928,6 +952,11 @@ function DashboardContent() {
       </div>
 
       <div className="space-y-[40px] px-lg pb-xxl pt-[40px] sm:px-xxl">
+        <AdminPerformanceDigestCard
+          activeInsightId={activeInsightId}
+          onInsightSelect={onDigestInsightSelect}
+        />
+
         <section>
           <div className="flex items-start justify-between gap-lg">
             <div>
@@ -1015,10 +1044,140 @@ function PremiumCompanyPagesAdminShell({
 }
 
 export function PremiumCompanyPagesPage() {
+  const agentPanelId = useId();
+  const nextTurnIdRef = useRef(0);
+  const [isAgentOpen, setIsAgentOpen] = useState(false);
+  const [agentPanelVariant, setAgentPanelVariant] =
+    useState<ChatPanelVariant>("collapsed");
+  const [activeInsightId, setActiveInsightId] =
+    useState<AdminUc5InsightId | null>(null);
+  const [agentDraft, setAgentDraft] = useState("");
+  const [agentThreadTurns, setAgentThreadTurns] = useState<
+    ReadonlyArray<AdminUc5ThreadTurn>
+  >([]);
+
+  function createTurnId() {
+    const turnId = `admin-uc5-turn-${nextTurnIdRef.current}`;
+    nextTurnIdRef.current += 1;
+
+    return turnId;
+  }
+
+  function handleDigestInsightSelect(insightId: AdminUc5InsightId) {
+    setActiveInsightId(insightId);
+    setAgentThreadTurns([]);
+    setAgentDraft("");
+    setAgentPanelVariant("collapsed");
+    setIsAgentOpen(true);
+  }
+
+  function handleOpenAgentFromFab() {
+    setActiveInsightId(null);
+    setAgentThreadTurns([]);
+    setAgentDraft("");
+    setAgentPanelVariant("collapsed");
+    setIsAgentOpen(true);
+  }
+
+  function handleCloseAgent() {
+    setIsAgentOpen(false);
+    setAgentPanelVariant("collapsed");
+    setAgentDraft("");
+  }
+
+  function handleAgentDraftChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setAgentDraft(event.currentTarget.value);
+  }
+
+  function handleAgentFollowUpSelect(followUp: AdminUc5FollowUp) {
+    setAgentThreadTurns((currentTurns) => [
+      ...currentTurns,
+      {
+        id: createTurnId(),
+        prompt: followUp.prompt,
+        response: followUp.response,
+      },
+    ]);
+    setAgentDraft("");
+  }
+
+  function handleAgentSend() {
+    const trimmedDraft = agentDraft.trim();
+
+    if (!trimmedDraft) {
+      return;
+    }
+
+    setAgentThreadTurns((currentTurns) => [
+      ...currentTurns,
+      buildAdminUc5PrototypeFallbackTurn(trimmedDraft, createTurnId()),
+    ]);
+    setAgentDraft("");
+  }
+
+  const isAgentExpanded = agentPanelVariant === "expanded";
+  const agentPanelPositionClass = isAgentExpanded
+    ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+    : "md:inset-auto md:bottom-6 md:right-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+
   return (
-    <PremiumCompanyPagesAdminShell activeItem="Dashboard">
-      <DashboardContent />
-    </PremiumCompanyPagesAdminShell>
+    <>
+      <PremiumCompanyPagesAdminShell activeItem="Dashboard">
+        <DashboardContent
+          activeInsightId={isAgentOpen ? activeInsightId : null}
+          onDigestInsightSelect={handleDigestInsightSelect}
+        />
+      </PremiumCompanyPagesAdminShell>
+
+      {!isAgentOpen ? (
+        <VcaFab
+          chatPanelId={agentPanelId}
+          isOpen={false}
+          label="Open Velora AI"
+          onClick={handleOpenAgentFromFab}
+        />
+      ) : null}
+
+      {isAgentOpen ? (
+        <>
+          <button
+            aria-label="Collapse expanded Velora AI"
+            className={cx(
+              "fixed inset-0 z-30 hidden bg-overlay-dim md:block",
+              !isAgentExpanded && "pointer-events-none opacity-0",
+            )}
+            onClick={() => setAgentPanelVariant("collapsed")}
+            type="button"
+          />
+          <div
+            className={cx(
+              "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
+              agentPanelPositionClass,
+            )}
+            role="dialog"
+            aria-label="Velora AI"
+          >
+            <AdminUc5AgentPanel
+              activeInsightId={activeInsightId}
+              draft={agentDraft}
+              panelId={agentPanelId}
+              threadTurns={agentThreadTurns}
+              variant={agentPanelVariant}
+              onClose={handleCloseAgent}
+              onDraftChange={handleAgentDraftChange}
+              onFollowUpSelect={handleAgentFollowUpSelect}
+              onInsightSelect={handleDigestInsightSelect}
+              onSend={handleAgentSend}
+              onVariantToggle={() =>
+                setAgentPanelVariant((currentVariant) =>
+                  currentVariant === "expanded" ? "collapsed" : "expanded",
+                )
+              }
+            />
+          </div>
+        </>
+      ) : null}
+    </>
   );
 }
 

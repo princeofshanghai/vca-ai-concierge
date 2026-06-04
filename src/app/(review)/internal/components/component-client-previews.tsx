@@ -41,6 +41,10 @@ import {
   premiumConversationFlows,
   type PremiumReviewFlowId,
 } from "@/components/premium";
+import {
+  VcaFab,
+  type VcaFabVisualState,
+} from "@/components/premium-company-pages";
 import { PremiumConciergeFab } from "@/components/premium/premium-concierge-fab";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
@@ -138,6 +142,7 @@ type SpecialistActionDemoStateId =
   | "scheduling"
   | "booked-online"
   | "booked-phone";
+type VcaFabDemoState = VcaFabVisualState | "disabled";
 
 const bookedMeetingPreview: BookedMeeting = {
   format: "Online meeting",
@@ -258,6 +263,13 @@ const shellDemoDesktopPanelCollapsedHeight =
   shellDemoDesktopHeight - shellDemoDesktopHeaderGap;
 const shellDemoDesktopPanelExpandedHeight =
   shellDemoDesktopHeight - 48;
+const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
+  { label: "Default", value: "default" },
+  { label: "Hover", value: "hover" },
+  { label: "Active", value: "active" },
+  { label: "Focus", value: "focus-visible" },
+  { label: "Disabled", value: "disabled" },
+];
 
 const genericShellDemoContent: ShellDemoContent = {
   title: "AI assistant",
@@ -2258,7 +2270,72 @@ export function PremiumFabReviewPreview() {
   );
 }
 
+export function VcaFabReviewPreview() {
+  return (
+    <VcaFabPreviewFrame>
+      <VcaFab onClick={() => {}} position="static" />
+    </VcaFabPreviewFrame>
+  );
+}
+
+export function VcaFabStatesPreview() {
+  return (
+    <div className="flex flex-wrap items-start gap-xl">
+      {vcaFabStates.map(({ label, value }) => (
+        <div key={value} className="space-y-xs">
+          <p className="text-body-xs text-text-meta">{label}</p>
+          <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+            <VcaFab
+              onClick={() => {}}
+              position="static"
+              visualState={value === "disabled" ? "default" : value}
+              disabled={value === "disabled"}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function VcaFabSwappableMarkPreview() {
+  return (
+    <div className="flex flex-wrap items-start gap-xl">
+      <div className="space-y-xs">
+        <p className="text-body-xs text-text-meta">Default mark</p>
+        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+          <VcaFab onClick={() => {}} position="static" />
+        </div>
+      </div>
+      <div className="space-y-xs">
+        <p className="text-body-xs text-text-meta">Custom mark</p>
+        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+          <VcaFab label="Open assistant" onClick={() => {}} position="static">
+            <Icon
+              name="navigation-signal-ai"
+              size="medium"
+              className="text-ai-icon"
+            />
+          </VcaFab>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PremiumFabPreviewFrame({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <div className="relative h-56 w-full min-w-[20rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+      <div className="absolute bottom-xl right-xl">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function VcaFabPreviewFrame({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (

@@ -119,6 +119,18 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           },
         ],
       },
+      {
+        title: "Premium Company Page",
+        items: [
+          {
+            id: "premium-company-page-vca-fab",
+            title: "VCA FAB",
+            description:
+              "Opens the Premium Company Page VCA from page surfaces.",
+            href: "/internal/components/premium-company-page/vca-fab",
+          },
+        ],
+      },
     ],
   },
   {

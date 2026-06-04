@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useState, type ReactNode } from "react";
 
 import { usePathname } from "next/navigation";
 
@@ -13,6 +13,7 @@ type ReviewShellProps = Readonly<{
 
 export function ReviewShell({ children }: ReviewShellProps) {
   const pathname = usePathname();
+  const [isToolbarHidden, setIsToolbarHidden] = useState(false);
   const shouldOverlapPrototype =
     pathname?.startsWith("/premium-company-pages") ?? false;
 
@@ -20,7 +21,10 @@ export function ReviewShell({ children }: ReviewShellProps) {
     <ReviewShellStateProvider>
       <div className="relative min-h-dvh">
         <Suspense fallback={null}>
-          <ReviewShellNav />
+          <ReviewShellNav
+            isToolbarHidden={isToolbarHidden}
+            onToolbarHiddenChange={setIsToolbarHidden}
+          />
         </Suspense>
         <div
           className={

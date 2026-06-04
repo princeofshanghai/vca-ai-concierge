@@ -152,6 +152,12 @@ const MATCHING_DELAY_MS = 900;
 const PREPARING_CHAT_DELAY_MS = 1200;
 const IDLE_PROMPT_DELAY_MS = 45000;
 const IDLE_SESSION_SECONDS = 8 * 60 + 22;
+const ENTRY_LIX_FALLBACK_LEAD: OnboardingResult = {
+  firstName: "there",
+  lastName: "",
+  workEmail: "",
+  company: "your company",
+};
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
@@ -657,6 +663,10 @@ export function ConciergePanel({
     setEntryLixStep("success");
   }, []);
 
+  const handleEntryLixSuccessChatWithAi = useCallback(() => {
+    handleOnboardingSubmit(ENTRY_LIX_FALLBACK_LEAD);
+  }, [handleOnboardingSubmit]);
+
   const handleEntryLixSuccessDone = useCallback(() => {
     if (onSessionEnd) {
       onSessionEnd();
@@ -1019,7 +1029,10 @@ export function ConciergePanel({
       ) : phase === "entry-form" ? (
         <EntryLixLeadFormScreen onSubmit={handleEntryLixFormSubmit} />
       ) : phase === "entry-success" ? (
-        <EntryLixSuccessScreen onDone={handleEntryLixSuccessDone} />
+        <EntryLixSuccessScreen
+          onChatWithAi={handleEntryLixSuccessChatWithAi}
+          onDone={handleEntryLixSuccessDone}
+        />
       ) : (
         // Re-key on the demo preset so toggling between signed-in and
         // signed-out in the review shell remounts the screen with fresh

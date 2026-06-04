@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export const CHAT_PANEL_TRANSITION_MS = 240;
+export const CHAT_PANEL_TRAY_TRANSITION_MS = 320;
 export const CHAT_ASSISTANT_THINKING_DELAY_MS = 650;
 export const CHAT_ASSISTANT_STREAM_WORD_FADE_MS = 180;
 const CHAT_PANEL_VIEW_TRANSITION_CLASS = "chat-panel-view-transition";
@@ -11,6 +12,7 @@ export type ChatPanelPresence = "closed" | "entering" | "open" | "exiting";
 export type ChatMessageStreamStatus = "thinking" | "streaming" | "complete";
 
 type UseChatPanelPresenceOptions = Readonly<{
+  closeTransitionMs?: number;
   initialOpen?: boolean;
   onBeforeOpen?: () => void;
   onBeforeClose?: () => void;
@@ -158,6 +160,7 @@ export function useChatAssistantStream<
 }
 
 export function useChatPanelPresence({
+  closeTransitionMs = CHAT_PANEL_TRANSITION_MS,
   initialOpen = false,
   onBeforeOpen,
   onBeforeClose,
@@ -214,8 +217,8 @@ export function useChatPanelPresence({
     closeTimeoutRef.current = window.setTimeout(() => {
       closeTimeoutRef.current = null;
       setPresence("closed");
-    }, CHAT_PANEL_TRANSITION_MS);
-  }, [clearTimers, onBeforeClose, presence]);
+    }, closeTransitionMs);
+  }, [clearTimers, closeTransitionMs, onBeforeClose, presence]);
 
   useEffect(() => {
     return clearTimers;

@@ -9,6 +9,8 @@ import {
   type SelectHTMLAttributes,
 } from "react";
 
+import Link from "next/link";
+
 import { Button } from "@/components/primitives/button";
 import { Icon } from "@/components/primitives/icon";
 import { TextInput } from "@/components/primitives/text-input";
@@ -26,6 +28,7 @@ type EntryLixLeadFormScreenProps = Readonly<{
 }>;
 
 type EntryLixSuccessScreenProps = Readonly<{
+  onChatWithAi: () => void;
   onDone: () => void;
 }>;
 
@@ -102,6 +105,9 @@ const roleOptions: ReadonlyArray<SelectOption> = [
   { value: "other", label: "Other" },
 ];
 
+const HIRING_HELP_SUPPORT_HREF =
+  "https://www.linkedin.com/help/recruiter/solve?src=direct%2Fnone&veh=direct%2Fnone%7Cdirect%2Fnone&_gl=1*1x56f7h*_gcl_aw*R0NMLjE3NzY4Nzk3ODUuQ2p3S0NBanc0NkhQQmhBTUVpd0FTWnBMUkdLLXV4U2NlNVlxS3ZESm9CcWNrM0hjeVhNUjdMdE5PYmR2djM3ZEFmN0FiQzdvZmhtTWN4b0N0VFVRQXZEX0J3RQ..*_gcl_dc*R0NMLjE3NzY4Nzk3ODUuQ2p3S0NBanc0NkhQQmhBTUVpd0FTWnBMUkdLLXV4U2NlNVlxS3ZESm9CcWNrM0hjeVhNUjdMdE5PYmR2djM3ZEFmN0FiQzdvZmhtTWN4b0N0VFVRQXZEX0J3RQ..*_gcl_au*NDU2NDI0MjMzLjE3NzQ4ODgwNTYuMTE1Njg3Nzc0MS4xNzgwNTAzMjY5LjE3ODA1MDMyNjk.";
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -161,7 +167,7 @@ export function EntryLixChoiceScreen({
 }: EntryLixChoiceScreenProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[384px] flex-col px-xxl pb-xxxl pt-xxl">
+      <div className="mx-auto flex w-full max-w-[384px] flex-1 flex-col px-xxl pb-xxxl pt-xxl">
         <div className="flex flex-col text-left">
           <h2 className="text-display-md text-text">
             {HIRING_CONCIERGE_TITLE}
@@ -190,6 +196,17 @@ export function EntryLixChoiceScreen({
             onClick={onFillOutForm}
           />
         </div>
+
+        <Link
+          href={HIRING_HELP_SUPPORT_HREF}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto inline-flex h-12 shrink-0 select-none items-center justify-center border border-transparent bg-transparent text-action outline-none transition-[color,box-shadow] duration-150 ease-out hover:text-action-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring active:text-action-active"
+        >
+          <span className="inline-flex h-6 items-center justify-center gap-xs rounded-xs px-sm text-control-sm transition-[background-color,color] duration-150 ease-out hover:bg-action-background-transparent-hover active:bg-action-background-transparent-active">
+            Looking for help &amp; support?
+          </span>
+        </Link>
       </div>
     </div>
   );
@@ -538,20 +555,23 @@ export function EntryLixLeadFormScreen({
   );
 }
 
-export function EntryLixSuccessScreen({ onDone }: EntryLixSuccessScreenProps) {
+export function EntryLixSuccessScreen({
+  onChatWithAi,
+  onDone,
+}: EntryLixSuccessScreenProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="mx-auto flex w-full max-w-[384px] flex-1 flex-col px-xxl pb-xxxl pt-xxl">
         <div className="flex flex-1 flex-col justify-center text-left">
           <span className="inline-flex size-12 items-center justify-center rounded-round bg-ai-background-soft text-ai-icon">
-            <Icon name="signal-success-outline" size="medium" label="Success" />
+            <Icon name="check" size="medium" label="Success" />
           </span>
           <h2 className="mt-xl text-display-md text-text">
             You&apos;re all set
           </h2>
           <p className="mt-sm text-body-md text-text-meta">
-            Thanks for sharing your details. Someone from LinkedIn will contact
-            you soon.
+            Someone from LinkedIn will contact you soon at the phone number you
+            provided.
           </p>
         </div>
 
@@ -564,6 +584,21 @@ export function EntryLixSuccessScreen({ onDone }: EntryLixSuccessScreenProps) {
         >
           Done
         </Button>
+
+        <div className="mt-lg flex flex-col gap-sm">
+          <p className="text-center text-body-md text-text">
+            Want answers now?
+          </p>
+          <Button
+            type="button"
+            size="medium"
+            variant="secondary"
+            className="w-full"
+            onClick={onChatWithAi}
+          >
+            Chat with AI
+          </Button>
+        </div>
       </div>
     </div>
   );

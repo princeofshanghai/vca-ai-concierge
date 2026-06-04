@@ -1386,6 +1386,29 @@ body {
   contain: layout;
 }
 
+.chat-tray-enter {
+  animation: chat-tray-enter var(--design-motion-duration-fast)
+    var(--design-motion-easing-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-tray-enter {
+    animation: none;
+  }
+}
+
+@keyframes chat-tray-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--design-motion-distance-subtle-y));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 html.chat-panel-view-transition .concierge-chat-panel,
 html.chat-panel-view-transition .concierge-chat-panel * {
   transition-duration: 0ms !important;
@@ -1436,10 +1459,17 @@ html.chat-panel-view-transition::view-transition-new(concierge-chat-panel) {
   contain: layout;
 }
 
+.pcp-global-messaging-surface {
+  view-transition-name: pcp-global-messaging-surface;
+  contain: layout;
+}
+
 html.pcp-messaging-surface-transition .pcp-ai-messaging-surface,
 html.pcp-messaging-surface-transition .pcp-ai-messaging-surface *,
 html.pcp-messaging-surface-transition .pcp-human-messaging-surface,
-html.pcp-messaging-surface-transition .pcp-human-messaging-surface * {
+html.pcp-messaging-surface-transition .pcp-human-messaging-surface *,
+html.pcp-messaging-surface-transition .pcp-global-messaging-surface,
+html.pcp-messaging-surface-transition .pcp-global-messaging-surface * {
   transition-duration: 0ms !important;
 }
 
@@ -1466,6 +1496,15 @@ html.pcp-messaging-surface-transition::view-transition-old(
   ),
 html.pcp-messaging-surface-transition::view-transition-new(
     pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-group(
+    pcp-global-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-global-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-global-messaging-surface
   ) {
   animation-duration: var(--design-motion-duration-moderate);
   animation-timing-function: var(--design-motion-easing-emphasized);
@@ -1476,6 +1515,9 @@ html.pcp-messaging-surface-transition::view-transition-group(
   ),
 html.pcp-messaging-surface-transition::view-transition-group(
     pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-group(
+    pcp-global-messaging-surface
   ) {
   overflow: clip;
   border-radius: var(--design-rounded-sm);
@@ -1500,6 +1542,15 @@ html.pcp-messaging-surface-transition::view-transition-old(
   ),
 html.pcp-messaging-surface-transition::view-transition-new(
     pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-image-pair(
+    pcp-global-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-global-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-global-messaging-surface
   ) {
   isolation: isolate;
   mix-blend-mode: normal;
@@ -1516,9 +1567,57 @@ html.pcp-messaging-surface-transition::view-transition-old(
   ),
 html.pcp-messaging-surface-transition::view-transition-new(
     pcp-human-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-old(
+    pcp-global-messaging-surface
+  ),
+html.pcp-messaging-surface-transition::view-transition-new(
+    pcp-global-messaging-surface
   ) {
   object-fit: none;
   object-position: top right;
+}
+
+html.pcp-background-trays-slide::view-transition-old(
+    pcp-human-messaging-surface
+  ),
+html.pcp-background-trays-slide::view-transition-old(
+    pcp-global-messaging-surface
+  ) {
+  animation-name: pcp-background-tray-slide-down;
+}
+
+html.pcp-background-trays-slide::view-transition-new(
+    pcp-human-messaging-surface
+  ),
+html.pcp-background-trays-slide::view-transition-new(
+    pcp-global-messaging-surface
+  ) {
+  animation-name: pcp-background-tray-slide-up;
+}
+
+@keyframes pcp-background-tray-slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(calc(100% + var(--design-spacing-md)));
+  }
+}
+
+@keyframes pcp-background-tray-slide-up {
+  from {
+    opacity: 1;
+    transform: translateY(calc(100% + var(--design-spacing-md)));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 ::view-transition-group(concierge-ai-mark),

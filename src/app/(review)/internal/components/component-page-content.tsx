@@ -83,6 +83,9 @@ import {
   SharedShellHiringMicrositeDemo,
   SharedShellPremiumSurveyDemo,
   SharedSidePanelDemo,
+  VcaFabReviewPreview,
+  VcaFabStatesPreview,
+  VcaFabSwappableMarkPreview,
 } from "./component-client-previews";
 import type { ComponentNavItem } from "./component-nav";
 
@@ -1069,6 +1072,26 @@ function PremiumConciergePanelPage({ item }: Readonly<{ item: ComponentNavItem }
   );
 }
 
+function PremiumCompanyPageVcaFabPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium Company Page">
+      <PreviewSection title="Floating action button">
+        <PreviewCard title="Default">
+          <VcaFabReviewPreview />
+        </PreviewCard>
+      </PreviewSection>
+      <PreviewSection title="States">
+        <VcaFabStatesPreview />
+      </PreviewSection>
+      <PreviewSection title="Swappable mark">
+        <VcaFabSwappableMarkPreview />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
@@ -1879,6 +1902,8 @@ export function ComponentPageContent({
       return <PremiumProductCardPage item={item} />;
     case "premium-concierge-panel":
       return <PremiumConciergePanelPage item={item} />;
+    case "premium-company-page-vca-fab":
+      return <PremiumCompanyPageVcaFabPage item={item} />;
     case "sdui-nav-link-item-horizontal":
       return <SduiNavLinkItemHorizontalPage item={item} />;
     case "sdui-tab-item-horizontal":

@@ -103,16 +103,29 @@ export function ReviewShellStateMenu({
   const hasSettings = visitorOptions.length > 0 || shellOptions.length > 0;
   const optionCount =
     modeControlCount + shellOptions.length + visitorOptions.length;
+  const optionMatchesCurrentHref = (href?: string) => {
+    if (!href) {
+      return false;
+    }
+
+    const hasQuerySensitiveState = href.includes("?") || currentHref.includes("?");
+
+    if (hasQuerySensitiveState) {
+      return href === currentHref;
+    }
+
+    return href.split("?")[0] === pathname;
+  };
   const activeModeIndex = modeGroups
     ? modeGroups.findIndex((group) =>
-        group.options.some((option) => option.href?.split("?")[0] === pathname),
+        group.options.some((option) => optionMatchesCurrentHref(option.href)),
       )
     : modeOptions.findIndex((option) =>
         option.options
           ? option.options.some(
-              (childOption) => childOption.href?.split("?")[0] === pathname,
+              (childOption) => optionMatchesCurrentHref(childOption.href),
             )
-          : option.href?.split("?")[0] === pathname,
+          : optionMatchesCurrentHref(option.href),
       );
   const activeShellIndex = shellOptions.findIndex(
     (option) => option.href === currentHref,
@@ -278,7 +291,7 @@ export function ReviewShellStateMenu({
     if (modeGroups) {
       return modeGroups.map((group, groupIndex) => {
         const isGroupSelected = group.options.some(
-          (option) => option.href?.split("?")[0] === pathname,
+          (option) => optionMatchesCurrentHref(option.href),
         );
 
         const isSubmenuOpen = activeModeGroupId === group.id;
@@ -345,7 +358,7 @@ export function ReviewShellStateMenu({
             >
               {group.options.map((option) => {
                 const display = getModeOptionDisplay(option);
-                const isSelected = option.href?.split("?")[0] === pathname;
+                const isSelected = optionMatchesCurrentHref(option.href);
 
                 return (
                   <Link
@@ -401,9 +414,9 @@ export function ReviewShellStateMenu({
       const hasSubmenu = Boolean(option.options?.length);
       const isSelected = hasSubmenu
         ? option.options?.some(
-            (childOption) => childOption.href?.split("?")[0] === pathname,
+            (childOption) => optionMatchesCurrentHref(childOption.href),
           ) ?? false
-        : option.href?.split("?")[0] === pathname;
+        : optionMatchesCurrentHref(option.href);
       const display = getModeOptionDisplay(option);
 
       if (hasSubmenu) {
@@ -477,7 +490,7 @@ export function ReviewShellStateMenu({
               {option.options?.map((childOption) => {
                 const childDisplay = getModeOptionDisplay(childOption);
                 const isChildSelected =
-                  childOption.href?.split("?")[0] === pathname;
+                  optionMatchesCurrentHref(childOption.href);
 
                 return (
                   <Link

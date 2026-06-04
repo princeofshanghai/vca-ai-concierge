@@ -65,16 +65,12 @@ const PREMIUM_SHELL_OPTIONS = [
 ] as const;
 const PREMIUM_COMPANY_PAGES_SHELL_OPTIONS = [
   {
-    id: "premium-company-pages-shell-hybrid",
-    label: "Tray (hybrid)",
+    id: "premium-company-pages-shell-fab",
+    label: "FAB",
   },
   {
-    id: "premium-company-pages-shell-overlay",
-    label: "Overlay drawer",
-  },
-  {
-    id: "premium-company-pages-shell-rail",
-    label: "Right rail",
+    id: "premium-company-pages-shell-tray",
+    label: "Tray",
   },
 ] as const;
 const hiringModeOptions = [
@@ -112,15 +108,26 @@ const premiumModeOptions = [
 const premiumCompanyPagesModeOptions = [
   {
     id: "premium-company-pages-member",
-    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
     label: "Member view",
-    description: "Customer-facing company Page",
+    description: "Visitor-facing company page",
+    options: [
+      {
+        id: "premium-company-pages-member-buyer",
+        href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+        label: "Buyer intent",
+      },
+      {
+        id: "premium-company-pages-member-job-seeker",
+        href: `${PREMIUM_COMPANY_PAGES_MEMBER_HREF}?vcaIntent=job-seeker`,
+        label: "Job seeker intent",
+      },
+    ],
   },
   {
     id: "premium-company-pages-admin",
     href: PREMIUM_COMPANY_PAGES_ADMIN_HREF,
     label: "Admin view",
-    description: "Page admin dashboard",
+    description: "Admin view of PCP",
   },
 ] as const;
 const prototypeProjectOptions = [
@@ -156,6 +163,7 @@ type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
 type PremiumShellLabel = (typeof PREMIUM_SHELL_OPTIONS)[number]["label"];
 type PremiumCompanyPagesShellLabel =
   (typeof PREMIUM_COMPANY_PAGES_SHELL_OPTIONS)[number]["label"];
+type PremiumCompanyPagesIntentLabel = "Buyer intent" | "Job seeker intent";
 type ComponentProductLens = "hiring" | "premium";
 
 const HOME_DESTINATION: ReviewDestination = {
@@ -209,18 +217,18 @@ function getPrototypeMetaLabel(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
+  premiumCompanyPagesIntentLabel?: PremiumCompanyPagesIntentLabel,
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
   }
 
   if (pathname.startsWith("/premium-company-pages")) {
-    const activePremiumCompanyPagesMode = premiumCompanyPagesModeOptions.find(
-      (option) => option.href === pathname,
-    );
-    const modeLabel = activePremiumCompanyPagesMode?.label ?? "Member view";
+    if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
+      return `Admin view · ${premiumCompanyPagesShellLabel ?? "FAB"}`;
+    }
 
-    return `${modeLabel} · ${premiumCompanyPagesShellLabel ?? "Tray (hybrid)"}`;
+    return `Member view · ${premiumCompanyPagesIntentLabel ?? "Buyer intent"} · ${premiumCompanyPagesShellLabel ?? "FAB"}`;
   }
 
   if (pathname.startsWith("/premium")) {
@@ -263,6 +271,7 @@ function getPrototypeDestination(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
+  premiumCompanyPagesIntentLabel?: PremiumCompanyPagesIntentLabel,
 ): ReviewDestination {
   if (pathname.startsWith("/internal/components")) {
     return {
@@ -303,6 +312,7 @@ function getPrototypeDestination(
       hiringShellLabel,
       premiumShellLabel,
       premiumCompanyPagesShellLabel,
+      premiumCompanyPagesIntentLabel,
     ),
   };
 }
@@ -312,6 +322,7 @@ function getReviewDestinations(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
+  premiumCompanyPagesIntentLabel?: PremiumCompanyPagesIntentLabel,
   componentProductLens: ComponentProductLens = "hiring",
 ): ReadonlyArray<ReviewDestination> {
   return [
@@ -321,6 +332,7 @@ function getReviewDestinations(
       hiringShellLabel,
       premiumShellLabel,
       premiumCompanyPagesShellLabel,
+      premiumCompanyPagesIntentLabel,
     ),
     getComponentsDestination(componentProductLens),
   ];
@@ -346,19 +358,34 @@ function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
   return href;
 }
 
+function withQueryParam(
+  href: string,
+  key: string,
+  value: string | null,
+) {
+  const [path, queryString = ""] = href.split("?");
+  const params = new URLSearchParams(queryString);
+
+  if (value) {
+    params.set(key, value);
+  } else {
+    params.delete(key);
+  }
+
+  const nextQueryString = params.toString();
+
+  return nextQueryString ? `${path}?${nextQueryString}` : path;
+}
+
 function withPremiumCompanyPagesShell(
   href: string,
   shellLabel: PremiumCompanyPagesShellLabel,
 ) {
-  if (shellLabel === "Tray (hybrid)") {
-    return href;
+  if (shellLabel === "FAB") {
+    return withQueryParam(href, "vcaShell", null);
   }
 
-  if (shellLabel === "Overlay drawer") {
-    return `${href}?vcaShell=drawer`;
-  }
-
-  return `${href}?vcaShell=rail`;
+  return withQueryParam(href, "vcaShell", "tray");
 }
 
 function getHiringShellOptions(pathname: string) {
@@ -384,10 +411,18 @@ function getPremiumShellOptions(pathname: string) {
   }));
 }
 
-function getPremiumCompanyPagesShellOptions(pathname: string) {
-  const baseHref = pathname.startsWith("/premium-company-pages")
+function getPremiumCompanyPagesShellOptions(
+  pathname: string,
+  intentLabel: PremiumCompanyPagesIntentLabel,
+) {
+  const basePathname = pathname.startsWith("/premium-company-pages")
     ? pathname
     : PREMIUM_COMPANY_PAGES_MEMBER_HREF;
+  const baseHref =
+    intentLabel === "Job seeker intent" &&
+    basePathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+      ? withQueryParam(basePathname, "vcaIntent", "job-seeker")
+      : basePathname;
 
   return PREMIUM_COMPANY_PAGES_SHELL_OPTIONS.map((option) => ({
     ...option,
@@ -395,7 +430,15 @@ function getPremiumCompanyPagesShellOptions(pathname: string) {
   }));
 }
 
-export function ReviewShellNav() {
+type ReviewShellNavProps = Readonly<{
+  isToolbarHidden: boolean;
+  onToolbarHiddenChange: (isHidden: boolean) => void;
+}>;
+
+export function ReviewShellNav({
+  isToolbarHidden,
+  onToolbarHiddenChange,
+}: ReviewShellNavProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -431,17 +474,19 @@ export function ReviewShellNav() {
       ? currentHref
       : pathname;
   const activePremiumCompanyPagesShellLabel: PremiumCompanyPagesShellLabel =
-    searchParams.get("vcaShell") === "rail"
-      ? "Right rail"
-      : searchParams.get("vcaShell") === "drawer"
-        ? "Overlay drawer"
-        : "Tray (hybrid)";
+    searchParams.get("vcaShell") === "tray" ? "Tray" : "FAB";
+  const activePremiumCompanyPagesIntentLabel: PremiumCompanyPagesIntentLabel =
+    searchParams.get("vcaIntent") === "job-seeker"
+      ? "Job seeker intent"
+      : "Buyer intent";
   const normalizedPremiumCompanyPagesHref =
-    activePremiumCompanyPagesShellLabel === "Right rail"
-      ? `${pathname}?vcaShell=rail`
-      : activePremiumCompanyPagesShellLabel === "Overlay drawer"
-        ? `${pathname}?vcaShell=drawer`
-        : pathname;
+    withPremiumCompanyPagesShell(
+      activePremiumCompanyPagesIntentLabel === "Job seeker intent" &&
+        pathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+        ? withQueryParam(pathname, "vcaIntent", "job-seeker")
+        : pathname,
+      activePremiumCompanyPagesShellLabel,
+    );
   const componentProductLens: ComponentProductLens =
     (pathname.startsWith("/premium") &&
       !pathname.startsWith("/premium-company-pages")) ||
@@ -480,10 +525,23 @@ export function ReviewShellNav() {
     () =>
       premiumCompanyPagesModeOptions.map((option) => ({
         ...option,
-        href: withPremiumCompanyPagesShell(
-          option.href,
-          activePremiumCompanyPagesShellLabel,
-        ),
+        href:
+          "href" in option && option.href
+            ? withPremiumCompanyPagesShell(
+                option.href,
+                activePremiumCompanyPagesShellLabel,
+              )
+            : undefined,
+        options:
+          "options" in option
+            ? option.options.map((childOption) => ({
+                ...childOption,
+                href: withPremiumCompanyPagesShell(
+                  childOption.href,
+                  activePremiumCompanyPagesShellLabel,
+                ),
+              }))
+            : undefined,
       })),
     [activePremiumCompanyPagesShellLabel],
   );
@@ -550,8 +608,12 @@ export function ReviewShellNav() {
     [pathname],
   );
   const premiumCompanyPagesShellOptions = useMemo(
-    () => getPremiumCompanyPagesShellOptions(pathname),
-    [pathname],
+    () =>
+      getPremiumCompanyPagesShellOptions(
+        pathname,
+        activePremiumCompanyPagesIntentLabel,
+      ),
+    [activePremiumCompanyPagesIntentLabel, pathname],
   );
   const reviewDestinations = useMemo(
     () =>
@@ -560,12 +622,14 @@ export function ReviewShellNav() {
         activeHiringShellLabel,
         activePremiumShellLabel,
         activePremiumCompanyPagesShellLabel,
+        activePremiumCompanyPagesIntentLabel,
         componentProductLens,
       ),
     [
       activeHiringShellLabel,
       activePremiumShellLabel,
       activePremiumCompanyPagesShellLabel,
+      activePremiumCompanyPagesIntentLabel,
       componentProductLens,
       pathname,
     ],
@@ -615,7 +679,7 @@ export function ReviewShellNav() {
     return () => {
       window.removeEventListener("resize", updateIndicator);
     };
-  }, [pathname, isSignedIn, reviewDestinations]);
+  }, [pathname, isSignedIn, isToolbarHidden, reviewDestinations]);
 
   useEffect(() => {
     if (!isPremiumCompanyPagesMember) {
@@ -771,16 +835,40 @@ export function ReviewShellNav() {
     triggerRef.current?.focus();
   }
 
+  function hideToolbar() {
+    setIsMenuOpen(false);
+    onToolbarHiddenChange(true);
+  }
+
+  if (isToolbarHidden) {
+    return (
+      <div className="pointer-events-none fixed left-3 top-3 z-50">
+        <button
+          type="button"
+          aria-label="Reveal toolbar"
+          title="Reveal toolbar"
+          onClick={() => onToolbarHiddenChange(false)}
+          className="group pointer-events-auto inline-flex size-10 items-center justify-center rounded-full border border-white/75 bg-white/50 text-slate-700 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl transition-colors duration-200 ease-out hover:bg-white/70 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 supports-[backdrop-filter]:bg-white/42"
+        >
+          <Icon name="visibility" size="small" className="[&&]:size-4" />
+          <span className="pointer-events-none absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-white/75 bg-white/70 px-3 py-1.5 text-[11px] font-medium leading-none text-slate-700 opacity-0 shadow-[0_8px_24px_rgba(15,23,42,0.08)] ring-1 ring-black/5 backdrop-blur-2xl transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 supports-[backdrop-filter]:bg-white/58">
+            Reveal toolbar
+          </span>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="pointer-events-none fixed inset-x-0 top-2 z-50 flex justify-center px-4 sm:top-3">
       <nav
         aria-label="Review surfaces"
         className={[
-          "pointer-events-auto rounded-full border bg-white/50 p-1.5 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/42",
+          "pointer-events-auto rounded-full border bg-white/50 p-1 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/42",
           usesDarkOverlayChrome ? "border-white/40" : "border-white/75",
         ].join(" ")}
       >
-        <ul ref={listRef} className="relative flex items-center gap-2">
+        <ul ref={listRef} className="relative flex items-center gap-1">
           <span
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-sky-50 ring-1 ring-sky-100 transition-[transform,width,opacity] duration-200 ease-out motion-reduce:transition-none"
@@ -828,7 +916,7 @@ export function ReviewShellNav() {
                       triggerRef.current = element;
                     }}
                     className={[
-                      "inline-flex min-h-9 min-w-0 items-center gap-4 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
+                      "inline-flex min-h-8 min-w-0 items-center gap-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
                       isActive
                         ? "text-sky-900"
                         : usesDarkOverlayChrome
@@ -911,7 +999,7 @@ export function ReviewShellNav() {
                     itemRefs.current[destination.href] = element;
                   }}
                   className={[
-                    "inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-5",
+                    "inline-flex min-h-8 items-center justify-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
                     isActive
                       ? "text-sky-900"
                       : usesDarkOverlayChrome
@@ -927,6 +1015,34 @@ export function ReviewShellNav() {
               </li>
             );
           })}
+          <li
+            aria-hidden="true"
+            className={[
+              "relative z-10 mx-1 h-5 w-px shrink-0",
+              usesDarkOverlayChrome ? "bg-white/30" : "bg-slate-200/90",
+            ].join(" ")}
+          />
+          <li className="relative z-10">
+            <button
+              type="button"
+              aria-label="Hide toolbar"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                hideToolbar();
+              }}
+              onClick={hideToolbar}
+              className={[
+                "inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
+                usesDarkOverlayChrome
+                  ? "text-white/90 hover:bg-white/15 hover:text-white"
+                  : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
+              ].join(" ")}
+            >
+              <Icon name="visibility-off" size="small" className="[&&]:size-4" />
+              Hide
+            </button>
+          </li>
         </ul>
       </nav>
     </div>

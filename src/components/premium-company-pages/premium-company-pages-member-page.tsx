@@ -32,6 +32,7 @@ import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { OverlayButtonIcon } from "@/components/primitives/overlay-button-icon";
+import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
@@ -41,6 +42,7 @@ import {
   PCP_MEMBER_ASSET_ROOT,
   pcpCompanyProfile,
 } from "./persona";
+import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_MEMBER_ASSET_ROOT;
 
@@ -266,7 +268,8 @@ const globalInboxThreads = [
   },
 ];
 
-type VcaShellMode = "drawer" | "rail" | "hybrid";
+export type VcaShellMode = "tray" | "fab";
+export type VcaMemberIntent = "buyer" | "job-seeker";
 type MessagingSurfaceState = "closed" | "docked" | "open";
 
 type ViewTransitionDocument = Document & {
@@ -276,8 +279,10 @@ type ViewTransitionDocument = Document & {
 };
 type VcaConversationStage =
   | "opening"
+  | "profilePromptAnswered"
   | "postProof"
   | "caseStudyReturned"
+  | "jobProof"
   | "handoffOffered"
   | "handoffOpened";
 
@@ -289,12 +294,48 @@ const vcaStarterPrompts = [
   VCA_LATE_PAYMENT_CHIP,
   "How does pricing work?",
 ];
+const profileQuestionPrompts = [
+  "How does contractor payment work?",
+  "What happens when a client pays late?",
+  "How does pricing work?",
+  "Can I track contractors by client?",
+  "Can I manage several projects at once?",
+] as const;
+const profileQuestionResponses: Record<
+  (typeof profileQuestionPrompts)[number],
+  string
+> = {
+  "How does contractor payment work?":
+    "Velora lets you connect contractor payouts to the client project, approval milestone, or payment condition behind them. You can queue payouts, show contractors when a payment is pending, and release the right payments once the client-side dependency clears.",
+  "What happens when a client pays late?":
+    "Velora moves only the affected contractor payments into a pending state automatically. Contractors can see that their payment is queued, not missing, and once the client payment clears, the scheduled payouts release without your team chasing spreadsheets.",
+  "How does pricing work?":
+    "Velora pricing is based on agency size and the complexity of your payout workflow, including active projects, contractor volume, and client payment rules. For a small agency, the goal is to keep the plan predictable while still covering conditional payment scheduling and contractor visibility.",
+  "Can I track contractors by client?":
+    "Yes. Velora tracks each contractor-client relationship separately, so you can see which contractors are tied to each client, project, invoice, and approval status. That makes it easier to answer who is ready to be paid and who is waiting on a client dependency.",
+  "Can I manage several projects at once?":
+    "Yes. Velora gives you one dashboard across active client projects, with payment status, contractor payout timing, and approval blockers grouped by project. If one project is delayed, the rest of your contractor payments can keep moving.",
+};
+const VCA_JOB_SEEKER_QUESTION =
+  "Would my customer operations background be a fit for the Customer Operations Lead role?";
+const VCA_JOB_SEEKER_CHIP = "Would my customer ops background be a fit?";
+const vcaJobSeekerPrompts = [
+  VCA_JOB_SEEKER_CHIP,
+  "What does this role own?",
+  "Is this role remote?",
+];
 const VCA_GREETING =
   "Hi Cheri - I can answer questions about Velora instantly, or help you reach the team directly. What's on your mind?";
+const VCA_JOB_SEEKER_GREETING =
+  "Hi Jordan - I can answer questions about Velora or help you explore open roles. What are you curious about?";
 const VCA_LATE_PAYMENT_RESPONSE =
   "This is one of the core things Velora was built for. When a client payment is delayed, contractor payments go into a pending state automatically - no manual intervention, no awkward conversations. Contractors can see their payment is queued, not missing. Once the client pays, everything releases.";
 const VCA_POST_PROOF_INTRO =
   "Here's how a similar agency handled this:";
+const VCA_JOB_SEEKER_RESPONSE =
+  "Yes - your customer operations background sounds relevant, especially if you've helped customers through setup, troubleshooting, and feedback loops. For this role, Velora is looking for someone who can connect customer conversations, payment workflow setup, and cross-functional product feedback so small agency teams get clear answers quickly.";
+const VCA_JOB_PROOF_INTRO =
+  "This role looks closest to what you're describing:";
 const VCA_CASE_STUDY_RETURN_PROMPT =
   "Studio Northline feels pretty close to your world - a small team, rotating contractors, and client payments that ripple into payout timing. I can help you turn that into a warm intro to Velora, or we can quickly check how it works across multiple projects first.";
 const VCA_DRAFT_INTRO_PROMPT = "Draft message";
@@ -520,6 +561,160 @@ function VeloraCaseStudySidePanel({
   );
 }
 
+function VeloraLinkedInJobPreviewCard({
+  onViewJob,
+}: Readonly<{ onViewJob: () => void }>) {
+  return (
+    <article className="chat-message-enter w-full max-w-[24rem] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
+      <div className="p-xl">
+        <Image
+          alt=""
+          className="size-14 rounded-sm object-cover"
+          height={56}
+          src={pcpCompanyProfile.logoSrc}
+          width={56}
+        />
+
+        <div className="mt-sm">
+          <h3 className="flex items-center gap-xxs text-heading-md text-text">
+            Customer Operations Lead
+            <Icon className="shrink-0 text-icon" name="verified" size="small" />
+          </h3>
+          <div className="mt-sm">
+            <p className="text-control-sm text-text">
+              {pcpCompanyProfile.name}
+            </p>
+            <p className="text-body-sm text-text-meta">
+              {pcpCompanyProfile.location}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-xl flex items-center gap-sm text-body-xs text-text-meta">
+          <Image
+            alt=""
+            className="size-8 rounded-xs object-cover"
+            height={32}
+            src={assetSrc("school-alumni-spartan.png")}
+            width={32}
+          />
+          <span>1,412 school alumni work here</span>
+        </div>
+
+        <p className="mt-xl text-body-xs text-text-meta">2 days ago</p>
+      </div>
+      <div className="flex justify-start border-t border-border-faint px-lg py-md">
+        <Button onClick={onViewJob} size="small" variant="secondary">
+          View job
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+function VeloraJobSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
+  return (
+    <ChatSidePanel
+      className="bg-background"
+      contentClassName="mx-auto w-full max-w-[760px] pb-xl"
+      headerActions={
+        <>
+          <GhostIconButton
+            icon="bookmark-outline"
+            label="Save job"
+            size="medium"
+          />
+          <GhostIconButton
+            icon="overflow-web-ios"
+            label="More job actions"
+            size="medium"
+          />
+        </>
+      }
+      onBack={onBack}
+    >
+      <article className="text-text">
+        <div className="flex items-center gap-md">
+          <Entity
+            className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+            label={pcpCompanyProfile.name}
+            shape="square"
+            size={48}
+            style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+            src={pcpCompanyProfile.logoSrc}
+          />
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-heading-md text-text">
+              {pcpCompanyProfile.name}
+            </h2>
+          </div>
+        </div>
+
+        <h1 className="mt-xl flex items-center gap-sm text-heading-xl text-text">
+          Customer Operations Lead
+          <Icon className="shrink-0 text-icon" name="verified" size="medium" />
+        </h1>
+
+        <div className="mt-md space-y-xxs text-body-sm-open text-text-meta">
+          <p>
+            {pcpCompanyProfile.location} &middot; 2 days ago &middot;{" "}
+            <span className="font-semibold text-positive">
+              20 people clicked apply
+            </span>
+          </p>
+        </div>
+
+        <div className="mt-xl flex flex-wrap gap-sm">
+          {[pcpCompanyProfile.location, "Full-time"].map((detail) => (
+            <Pill
+              aria-disabled="true"
+              key={detail}
+              tabIndex={-1}
+            >
+              {detail}
+            </Pill>
+          ))}
+        </div>
+
+        <section className="mt-xxl border-t border-border-faint pt-xxl text-text">
+          <h3 className="text-heading-lg text-text">About the job</h3>
+          <h4 className="mt-lg text-heading-sm text-text">About The Team</h4>
+          <p className="mt-xl text-body-md-open text-text">
+            Velora helps small agency teams manage contractor payments, client
+            invoice timing, and project approvals in one workflow. The Customer
+            Operations team works closely with customers, product, and payments
+            partners to make complex payout questions feel clear and
+            actionable....{" "}
+            <button
+              className="font-semibold text-text-meta hover:text-text"
+              type="button"
+            >
+              more
+            </button>
+          </p>
+        </section>
+
+        <footer className="mt-xxl flex justify-end gap-sm border-t border-border-faint pt-lg">
+          <Button
+            className="px-pill-padding-inline"
+            size="medium"
+            variant="secondary"
+          >
+            Save
+          </Button>
+          <Button
+            className="px-pill-padding-inline"
+            size="medium"
+            trailingIcon={<Icon name="link-external" size="small" />}
+          >
+            Apply
+          </Button>
+        </footer>
+      </article>
+    </ChatSidePanel>
+  );
+}
+
 function VcaHandoffCard({
   onOpenMessage,
 }: Readonly<{ onOpenMessage: () => void }>) {
@@ -617,34 +812,42 @@ function VeloraAiHeader({
 }
 
 function PremiumCompanyPagesVcaPanel({
-  shellMode,
   variant,
+  surfaceMode,
+  memberIntent,
   draft,
   conversationStage,
   isCaseStudyOpen,
+  isJobOpen,
   visitorQuestion,
   followUpQuestion,
   onClose,
   onCloseCaseStudy,
+  onCloseJob,
   onDraftChange,
   onOpenCaseStudy,
+  onOpenJob,
   onOpenMessage,
   onMinimizeToTray,
   onVariantToggle,
   onPromptSelect,
   onSend,
 }: Readonly<{
-  shellMode: VcaShellMode;
   variant?: ChatPanelVariant;
+  surfaceMode: VcaShellMode;
+  memberIntent: VcaMemberIntent;
   draft: string;
   conversationStage: VcaConversationStage;
   isCaseStudyOpen: boolean;
+  isJobOpen: boolean;
   visitorQuestion: string | null;
   followUpQuestion: string | null;
   onClose: () => void;
   onCloseCaseStudy: () => void;
+  onCloseJob: () => void;
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onOpenCaseStudy: () => void;
+  onOpenJob: () => void;
   onOpenMessage: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
@@ -653,18 +856,36 @@ function PremiumCompanyPagesVcaPanel({
 }>) {
   const headerActionSize = variant === "expanded" ? "medium" : "small";
   const showHeaderResponseTime = true;
+  const isJobSeekerIntent = memberIntent === "job-seeker";
+  const isDetailPanelOpen = isCaseStudyOpen || isJobOpen;
   const hasStartedConversation = Boolean(visitorQuestion);
   const hasFollowUp = Boolean(followUpQuestion);
   const shouldShowProof =
-    conversationStage === "postProof" ||
-    conversationStage === "caseStudyReturned" ||
-    conversationStage === "handoffOffered" ||
-    conversationStage === "handoffOpened";
+    !isJobSeekerIntent &&
+    (conversationStage === "postProof" ||
+      conversationStage === "caseStudyReturned" ||
+      conversationStage === "handoffOffered" ||
+      conversationStage === "handoffOpened");
+  const shouldShowJobProof =
+    isJobSeekerIntent && conversationStage === "jobProof";
+  const profilePromptAnswer = visitorQuestion
+    ? profileQuestionResponses[
+        visitorQuestion as keyof typeof profileQuestionResponses
+      ]
+    : undefined;
   const shouldShowCaseStudyReturnPrompt =
-    conversationStage === "caseStudyReturned";
+    !isJobSeekerIntent && conversationStage === "caseStudyReturned";
   const shouldShowHandoff =
-    conversationStage === "handoffOffered" ||
-    conversationStage === "handoffOpened";
+    !isJobSeekerIntent &&
+    (conversationStage === "handoffOffered" ||
+      conversationStage === "handoffOpened");
+  const shouldShowGreeting = conversationStage !== "profilePromptAnswered";
+  const greeting = isJobSeekerIntent
+    ? VCA_JOB_SEEKER_GREETING
+    : VCA_GREETING;
+  const starterPrompts = isJobSeekerIntent
+    ? vcaJobSeekerPrompts
+    : vcaStarterPrompts;
   const composerPlaceholder = "Ask Velora...";
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const sidePanelHistoryRef = useRef<HTMLDivElement | null>(null);
@@ -673,7 +894,7 @@ function PremiumCompanyPagesVcaPanel({
     getPrototypeMessageTimestamp(messageTimestampIndex++);
 
   useEffect(() => {
-    if (!isCaseStudyOpen || shellMode !== "hybrid") {
+    if (!isDetailPanelOpen) {
       return;
     }
 
@@ -693,13 +914,12 @@ function PremiumCompanyPagesVcaPanel({
   }, [
     conversationStage,
     followUpQuestion,
-    isCaseStudyOpen,
-    shellMode,
+    isDetailPanelOpen,
     visitorQuestion,
   ]);
 
   useEffect(() => {
-    if (isCaseStudyOpen || conversationStage !== "caseStudyReturned") {
+    if (isDetailPanelOpen || conversationStage !== "caseStudyReturned") {
       return;
     }
 
@@ -716,27 +936,21 @@ function PremiumCompanyPagesVcaPanel({
     return () => {
       window.cancelAnimationFrame(scrollFrame);
     };
-  }, [conversationStage, isCaseStudyOpen]);
+  }, [conversationStage, isDetailPanelOpen]);
 
   const thread = (
-    <ChatThread
-      className={cx(
-        shellMode === "rail" && "px-lg",
-      )}
-      aiDisclaimerHref="#"
-    >
+    <ChatThread aiDisclaimerHref="#">
       <div className="flex flex-col gap-lg">
-        <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-          {VCA_GREETING}
-        </VcaAssistantMessage>
+        {shouldShowGreeting ? (
+          <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
+            {greeting}
+          </VcaAssistantMessage>
+        ) : null}
         {conversationStage === "opening" && !hasStartedConversation ? (
           <div className="flex flex-col gap-sm">
-            {vcaStarterPrompts.map((prompt) => (
+            {starterPrompts.map((prompt) => (
               <Prompt
-                className={cx(
-                  "w-fit max-w-full self-start",
-                  shellMode === "rail" && "md:max-w-full",
-                )}
+                className="w-fit max-w-full self-start"
                 key={prompt}
                 onPromptSelect={onPromptSelect}
                 prompt={prompt}
@@ -762,7 +976,24 @@ function PremiumCompanyPagesVcaPanel({
             />
           </>
         ) : null}
-        {hasFollowUp ? (
+        {shouldShowJobProof ? (
+          <>
+            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
+              {VCA_JOB_SEEKER_RESPONSE}
+            </VcaAssistantMessage>
+            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
+              {VCA_JOB_PROOF_INTRO}
+            </VcaAssistantMessage>
+            <VeloraLinkedInJobPreviewCard onViewJob={onOpenJob} />
+          </>
+        ) : null}
+        {conversationStage === "profilePromptAnswered" &&
+        profilePromptAnswer ? (
+          <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
+            {profilePromptAnswer}
+          </VcaAssistantMessage>
+        ) : null}
+        {hasFollowUp && !isJobSeekerIntent ? (
           <VcaUserMessage timestamp={getNextMessageTimestamp()}>
             {followUpQuestion}
           </VcaUserMessage>
@@ -773,18 +1004,12 @@ function PremiumCompanyPagesVcaPanel({
               {VCA_CASE_STUDY_RETURN_PROMPT}
             </VcaAssistantMessage>
             <Prompt
-              className={cx(
-                "w-fit max-w-full self-start",
-                shellMode === "rail" && "md:max-w-full",
-              )}
+              className="w-fit max-w-full self-start"
               onPromptSelect={onPromptSelect}
               prompt={VCA_DRAFT_INTRO_PROMPT}
             />
             <Prompt
-              className={cx(
-                "w-fit max-w-full self-start",
-                shellMode === "rail" && "md:max-w-full",
-              )}
+              className="w-fit max-w-full self-start"
               onPromptSelect={onPromptSelect}
               prompt={VCA_MULTI_PROJECT_PROMPT}
             />
@@ -813,17 +1038,11 @@ function PremiumCompanyPagesVcaPanel({
     <ChatPanel
       aria-label={`${pcpCompanyProfile.name} assistant`}
       className={cx(
-        shellMode === "rail"
-          ? "!h-full !w-full !rounded-sm shadow-raised-faint md:!h-full md:!w-full"
-          : shellMode === "hybrid"
-            ? cx(
-                "!h-full !w-full shadow-raised-faint md:!h-full md:!w-full",
-                variant === "expanded"
-                  ? "!rounded-none md:!rounded-sm"
-                  : "!rounded-none md:!rounded-t-sm md:!rounded-b-none",
-                isCaseStudyOpen && "md:!w-full",
-              )
-            : "!h-full !w-full !rounded-none border-l border-border-faint shadow-raised-faint md:!h-full md:!w-full md:!rounded-l-panel md:!rounded-r-none",
+        "!h-full !w-full shadow-raised-faint md:!h-full md:!w-full",
+        surfaceMode === "fab" || variant === "expanded"
+          ? "!rounded-none md:!rounded-sm"
+          : "!rounded-none md:!rounded-t-sm md:!rounded-b-none",
+        isDetailPanelOpen && "md:!w-full",
       )}
       variant={variant}
     >
@@ -835,18 +1054,20 @@ function PremiumCompanyPagesVcaPanel({
         showResponseTime={showHeaderResponseTime}
         variant={variant}
       />
-      {isCaseStudyOpen ? (
-        shellMode === "hybrid" ? (
-          <ChatSidePanelLayout
-            chatBodyClassName="pb-[96px]"
-            chatBodyRef={sidePanelHistoryRef}
-            history={thread}
-            sidePanel={<VeloraCaseStudySidePanel onBack={onCloseCaseStudy} />}
-            variant={variant}
-          />
-        ) : (
-          <VeloraCaseStudySidePanel onBack={onCloseCaseStudy} />
-        )
+      {isDetailPanelOpen ? (
+        <ChatSidePanelLayout
+          chatBodyClassName="pb-[96px]"
+          chatBodyRef={sidePanelHistoryRef}
+          history={thread}
+          sidePanel={
+            isJobOpen ? (
+              <VeloraJobSidePanel onBack={onCloseJob} />
+            ) : (
+              <VeloraCaseStudySidePanel onBack={onCloseCaseStudy} />
+            )
+          }
+          variant={variant}
+        />
       ) : (
         <>
           <ChatBody ref={chatBodyRef}>{thread}</ChatBody>
@@ -921,7 +1142,7 @@ function GlobalInboxTray({
     <aside
       aria-label="Messaging inbox"
       className={cx(
-        "fixed bottom-0 right-6 z-50 hidden w-[288px] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint-upward transition-[height] duration-[var(--design-motion-duration-moderate)] ease-emphasized md:flex",
+        "pcp-global-messaging-surface fixed bottom-0 right-6 z-50 hidden w-[288px] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint-upward transition-[height] duration-[var(--design-motion-duration-moderate)] ease-emphasized md:flex",
         isExpanded
           ? "h-[min(calc(100dvh_-_96px),690px)]"
           : "h-[var(--design-layout-chat-tray-height,48px)]",
@@ -1121,7 +1342,7 @@ function HumanMessageComposer({
       <div className="flex items-start gap-sm px-lg py-md">
         <textarea
           aria-label={`Write a message to ${pcpCompanyProfile.name}`}
-          className="min-h-[112px] flex-1 resize-none rounded-sm border-0 bg-background-neutral-soft px-md py-md text-body-md text-text outline-none placeholder:text-text-meta disabled:text-text-disabled"
+          className="min-h-[112px] flex-1 resize-none rounded-sm border-0 bg-background-neutral-soft px-md py-md text-body-sm text-text outline-none placeholder:text-text-meta disabled:text-text-disabled"
           disabled={isSent}
           onChange={onDraftChange}
           placeholder={isSent ? "Message sent" : "Write a message..."}
@@ -1684,17 +1905,11 @@ function CarouselButton({ label }: Readonly<{ label: string }>) {
   );
 }
 
-const profileQuestionPrompts = [
-  "How does contractor payment work?",
-  "What happens when a client pays late?",
-  "How does pricing work?",
-  "Can I track contractors by client?",
-  "Can I manage several projects at once?",
-];
-
 function ProfileQuestionNudgeCard({
-  onOpenVca,
-}: Readonly<{ onOpenVca: () => void }>) {
+  onPromptSelect,
+}: Readonly<{
+  onPromptSelect: (prompt: (typeof profileQuestionPrompts)[number]) => void;
+}>) {
   const promptScrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollPromptsLeft, setCanScrollPromptsLeft] = useState(false);
   const [canScrollPromptsRight, setCanScrollPromptsRight] = useState(false);
@@ -1758,7 +1973,7 @@ function ProfileQuestionNudgeCard({
               <Prompt
                 className="h-14 w-fit shrink-0 rounded-sm px-lg py-0 text-body-md"
                 key={prompt}
-                onClick={onOpenVca}
+                onPromptSelect={() => onPromptSelect(prompt)}
                 prompt={prompt}
               >
                 <span className="inline-flex min-w-0 items-center gap-xs">
@@ -2243,7 +2458,7 @@ function JobLockup({ title }: Readonly<{ title: string }>) {
           <Icon className="shrink-0 text-icon" name="verified" size="small" />
         </p>
         <p className="text-supportive-s text-text">
-          Remote &middot; U.S. West Coast
+          {pcpCompanyProfile.location}
         </p>
       </div>
     </div>
@@ -2519,7 +2734,7 @@ function PromotedCard() {
             <div>
               <p className="text-control-sm text-text">{job}</p>
               <p className="text-supportive-s text-text-meta">
-                Remote &middot; U.S. West Coast
+                {pcpCompanyProfile.location}
               </p>
             </div>
           </div>
@@ -2559,7 +2774,7 @@ function SideListCard({
                 <p className="text-control-sm text-text">{item}</p>
                 <p className="text-supportive-s text-text-meta">
                   {type === "role"
-                    ? "Remote - U.S. West Coast"
+                    ? pcpCompanyProfile.location
                     : "Financial services software"}
                 </p>
                 <Button className="mt-sm" size="small" variant="tertiary">
@@ -2580,12 +2795,31 @@ function SideListCard({
 }
 
 export function PremiumCompanyPagesMemberPage({
-  shellMode = "drawer",
-}: Readonly<{ shellMode?: VcaShellMode }>) {
+  memberIntent = "buyer",
+  shellMode = "fab",
+}: Readonly<{
+  memberIntent?: VcaMemberIntent;
+  shellMode?: VcaShellMode;
+}>) {
+  return (
+    <PremiumCompanyPagesSeparateMemberPage
+      entryMode={shellMode}
+      memberIntent={memberIntent}
+    />
+  );
+}
+
+function PremiumCompanyPagesSeparateMemberPage({
+  entryMode,
+  memberIntent,
+}: Readonly<{ entryMode: VcaShellMode; memberIntent: VcaMemberIntent }>) {
+  const isFabEntryMode = entryMode === "fab";
+  const isJobSeekerIntent = memberIntent === "job-seeker";
   const vcaPanelId = useId();
-  const isHybridShell = shellMode === "hybrid";
   const [aiSurfaceState, setAiSurfaceState] =
-    useState<MessagingSurfaceState>("closed");
+    useState<MessagingSurfaceState>(() =>
+      isFabEntryMode ? "docked" : "closed",
+    );
   const [humanSurfaceState, setHumanSurfaceState] =
     useState<MessagingSurfaceState>("closed");
   const [vcaPanelVariant, setVcaPanelVariant] =
@@ -2600,13 +2834,14 @@ export function PremiumCompanyPagesMemberPage({
   const [humanDraft, setHumanDraft] = useState("");
   const [humanSentMessage, setHumanSentMessage] = useState<string | null>(null);
   const [isCaseStudyOpen, setIsCaseStudyOpen] = useState(false);
+  const [isJobOpen, setIsJobOpen] = useState(false);
   const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
   const isVcaOpen = aiSurfaceState === "open";
-  const isHybridTrayVisible = isHybridShell && aiSurfaceState === "docked";
-  const isHumanMessagePanelOpen =
-    isHybridShell && humanSurfaceState === "open";
-  const isHumanMessageTrayVisible =
-    isHybridShell && humanSurfaceState === "docked";
+  const isVcaEntryVisible = aiSurfaceState === "docked";
+  const isHumanMessagePanelOpen = humanSurfaceState === "open";
+  const isHumanMessageTrayVisible = humanSurfaceState === "docked";
+  const shouldShowHumanMessageTray =
+    isHumanMessageTrayVisible && !(isFabEntryMode && isVcaOpen);
   const stackedTrayBaseRightExpression =
     "calc(var(--design-spacing-xxl) + 288px + var(--design-spacing-lg))";
   const trayGapExpression = "var(--design-spacing-lg)";
@@ -2625,25 +2860,40 @@ export function PremiumCompanyPagesMemberPage({
   const aiTrayStyle = {
     "--pcp-ai-tray-right": aiTrayRightExpression,
   } as CSSProperties;
+  const globalInboxHeightExpression = isGlobalInboxExpanded
+    ? "min(calc(100dvh - 96px), 690px)"
+    : "var(--design-layout-chat-tray-height, 48px)";
+  const vcaFabStyle = {
+    "--pcp-vca-fab-bottom": `calc(${globalInboxHeightExpression} + var(--design-spacing-md))`,
+  } as CSSProperties;
   const humanPanelDesktopRightClass =
     "md:right-[calc(var(--design-spacing-xxl)+288px+var(--design-spacing-lg))]";
-  const vcaHybridDesktopRightClass =
+  const vcaSeparateDesktopRightClass =
     "md:right-[var(--pcp-ai-tray-right)]";
+  const vcaFloatingDesktopRightClass = "md:right-6";
   const isExpandedVcaSurface =
-    vcaPanelVariant === "expanded" || isCaseStudyOpen;
-  const shouldShowGlobalInboxTray = isHybridShell && !isExpandedVcaSurface;
-  const vcaHybridPanelPositionClass =
+    vcaPanelVariant === "expanded" || isCaseStudyOpen || isJobOpen;
+  const shouldShowGlobalInboxTray =
+    !isExpandedVcaSurface && !(isFabEntryMode && isVcaOpen);
+  const vcaSurfacePanelPositionClass =
     isExpandedVcaSurface
       ? cx(
-          "md:inset-auto md:bottom-0 md:left-1/2 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))] md:-translate-x-1/2",
-          isCaseStudyOpen
+          "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),860px)] md:-translate-x-1/2 md:-translate-y-1/2",
+          isCaseStudyOpen || isJobOpen
             ? "md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-expanded-surface-width))]"
             : "md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))]",
         )
       : cx(
-          "md:inset-auto md:bottom-0 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))]",
-          "md:w-[min(calc(100vw_-_var(--pcp-ai-tray-right)_-_var(--design-spacing-xxl)),var(--design-layout-panel-collapsed-width))]",
-          vcaHybridDesktopRightClass,
+          "md:inset-auto",
+          isFabEntryMode
+            ? "md:bottom-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))]"
+            : "md:bottom-0 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))]",
+          isFabEntryMode
+            ? "md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
+            : "md:w-[min(calc(100vw_-_var(--pcp-ai-tray-right)_-_var(--design-spacing-xxl)),var(--design-layout-panel-collapsed-width))]",
+          isFabEntryMode
+            ? vcaFloatingDesktopRightClass
+            : vcaSeparateDesktopRightClass,
         );
 
   function resetVcaConversation() {
@@ -2652,69 +2902,127 @@ export function PremiumCompanyPagesMemberPage({
     setVcaFollowUpQuestion(null);
     setVcaDraft("");
     setIsCaseStudyOpen(false);
+    setIsJobOpen(false);
   }
 
-  function runMessagingSurfaceTransition(updateSurfaceState: () => void) {
+  function runMessagingSurfaceTransition(
+    updateSurfaceState: () => void,
+    transitionClassName?: string,
+  ) {
     const viewTransitionDocument = document as ViewTransitionDocument;
 
     if (
-      !isHybridShell ||
       typeof viewTransitionDocument.startViewTransition !== "function"
     ) {
       updateSurfaceState();
       return;
     }
 
+    const transitionClassNames = ["pcp-messaging-surface-transition"];
+
+    if (transitionClassName) {
+      transitionClassNames.push(transitionClassName);
+    }
+
     document.documentElement.classList.add("pcp-messaging-surface-transition");
+    if (transitionClassName) {
+      document.documentElement.classList.add(transitionClassName);
+    }
 
     const transition = viewTransitionDocument.startViewTransition(() => {
       flushSync(updateSurfaceState);
     });
 
     void transition.finished.finally(() => {
-      document.documentElement.classList.remove(
-        "pcp-messaging-surface-transition",
-      );
+      document.documentElement.classList.remove(...transitionClassNames);
     });
+  }
+
+  function getBackgroundTrayTransitionClass() {
+    return isFabEntryMode ? "pcp-background-trays-slide" : undefined;
   }
 
   function handleOpenVca() {
-    runMessagingSurfaceTransition(() => {
-      setVcaPanelVariant("collapsed");
-      resetVcaConversation();
-      if (isHybridShell) {
+    runMessagingSurfaceTransition(
+      () => {
+        setVcaPanelVariant("collapsed");
+        resetVcaConversation();
         setHumanSurfaceState((currentState) =>
           currentState === "closed" ? "closed" : "docked",
         );
-      }
 
-      setAiSurfaceState("open");
-    });
+        setAiSurfaceState("open");
+      },
+      getBackgroundTrayTransitionClass(),
+    );
+  }
+
+  function handleOpenVcaWithProfilePrompt(
+    prompt: (typeof profileQuestionPrompts)[number],
+  ) {
+    runMessagingSurfaceTransition(
+      () => {
+        resetVcaConversation();
+        setVcaPanelVariant("collapsed");
+        if (!isJobSeekerIntent && prompt === VCA_LATE_PAYMENT_CHIP) {
+          setVcaVisitorQuestion(VCA_HERO_QUESTION);
+          setVcaConversationStage("postProof");
+        } else {
+          setVcaVisitorQuestion(prompt);
+          setVcaConversationStage("profilePromptAnswered");
+        }
+        setHumanSurfaceState((currentState) =>
+          currentState === "closed" ? "closed" : "docked",
+        );
+        setAiSurfaceState("open");
+      },
+      getBackgroundTrayTransitionClass(),
+    );
   }
 
   function handleCloseVca() {
-    runMessagingSurfaceTransition(() => {
-      setAiSurfaceState("closed");
-      setVcaPanelVariant("collapsed");
-      resetVcaConversation();
-    });
+    runMessagingSurfaceTransition(
+      () => {
+        setAiSurfaceState(isFabEntryMode ? "docked" : "closed");
+        setVcaPanelVariant("collapsed");
+        resetVcaConversation();
+      },
+      getBackgroundTrayTransitionClass(),
+    );
   }
 
   function handleOpenVcaFromTray() {
-    runMessagingSurfaceTransition(() => {
-      setVcaPanelVariant("collapsed");
-      setIsCaseStudyOpen(false);
-      setHumanSurfaceState((currentState) =>
-        currentState === "closed" ? "closed" : "docked",
-      );
-      setAiSurfaceState("open");
-    });
+    runMessagingSurfaceTransition(
+      () => {
+        setVcaPanelVariant("collapsed");
+        setIsCaseStudyOpen(false);
+        setIsJobOpen(false);
+        setHumanSurfaceState((currentState) =>
+          currentState === "closed" ? "closed" : "docked",
+        );
+        setAiSurfaceState("open");
+      },
+      getBackgroundTrayTransitionClass(),
+    );
+  }
+
+  function handleMinimizeVcaToTray() {
+    runMessagingSurfaceTransition(
+      () => {
+        setVcaPanelVariant("collapsed");
+        setIsCaseStudyOpen(false);
+        setIsJobOpen(false);
+        setAiSurfaceState("docked");
+      },
+      getBackgroundTrayTransitionClass(),
+    );
   }
 
   function handleExpandVcaFromTray() {
     runMessagingSurfaceTransition(() => {
       setVcaPanelVariant("expanded");
       setIsCaseStudyOpen(false);
+      setIsJobOpen(false);
       setHumanSurfaceState((currentState) =>
         currentState === "closed" ? "closed" : "docked",
       );
@@ -2722,16 +3030,9 @@ export function PremiumCompanyPagesMemberPage({
     });
   }
 
-  function handleMinimizeVcaToTray() {
-    runMessagingSurfaceTransition(() => {
-      setVcaPanelVariant("collapsed");
-      setIsCaseStudyOpen(false);
-      setAiSurfaceState("docked");
-    });
-  }
-
   function handleToggleVcaPanelVariant() {
     setIsCaseStudyOpen(false);
+    setIsJobOpen(false);
     setVcaPanelVariant((currentVariant) =>
       currentVariant === "expanded" ? "collapsed" : "expanded",
     );
@@ -2740,6 +3041,7 @@ export function PremiumCompanyPagesMemberPage({
   function handleOpenVcaCaseStudy() {
     runMessagingSurfaceTransition(() => {
       setIsCaseStudyOpen(true);
+      setIsJobOpen(false);
       setVcaPanelVariant("expanded");
     });
   }
@@ -2747,10 +3049,26 @@ export function PremiumCompanyPagesMemberPage({
   function handleCloseVcaCaseStudy() {
     runMessagingSurfaceTransition(() => {
       setIsCaseStudyOpen(false);
+      setIsJobOpen(false);
       setVcaPanelVariant("collapsed");
       setVcaConversationStage((currentStage) =>
         currentStage === "postProof" ? "caseStudyReturned" : currentStage,
       );
+    });
+  }
+
+  function handleOpenVcaJob() {
+    runMessagingSurfaceTransition(() => {
+      setIsCaseStudyOpen(false);
+      setIsJobOpen(true);
+      setVcaPanelVariant("expanded");
+    });
+  }
+
+  function handleCloseVcaJob() {
+    runMessagingSurfaceTransition(() => {
+      setIsJobOpen(false);
+      setVcaPanelVariant("collapsed");
     });
   }
 
@@ -2769,6 +3087,7 @@ export function PremiumCompanyPagesMemberPage({
       );
       setVcaPanelVariant("collapsed");
       setIsCaseStudyOpen(false);
+      setIsJobOpen(false);
       resetVcaConversation();
       if (!humanSentMessage) {
         setHumanDraft("");
@@ -2782,10 +3101,11 @@ export function PremiumCompanyPagesMemberPage({
       setVcaConversationStage("handoffOpened");
       setVcaPanelVariant("collapsed");
       setIsCaseStudyOpen(false);
+      setIsJobOpen(false);
       if (!humanSentMessage) {
         setHumanDraft(VCA_HANDOFF_MESSAGE);
       }
-      setAiSurfaceState(isHybridShell ? "docked" : "closed");
+      setAiSurfaceState("docked");
       setHumanSurfaceState("open");
     });
   }
@@ -2814,6 +3134,7 @@ export function PremiumCompanyPagesMemberPage({
       setHumanDraft("");
       setVcaPanelVariant("collapsed");
       setIsCaseStudyOpen(false);
+      setIsJobOpen(false);
       setVcaConversationStage("handoffOpened");
       setAiSurfaceState((currentState) =>
         currentState === "closed" ? "closed" : "docked",
@@ -2824,6 +3145,15 @@ export function PremiumCompanyPagesMemberPage({
 
   function handleVcaPromptSelect(prompt: string) {
     setVcaDraft("");
+
+    if (isJobSeekerIntent) {
+      setVcaVisitorQuestion(
+        prompt === VCA_JOB_SEEKER_CHIP ? VCA_JOB_SEEKER_QUESTION : prompt,
+      );
+      setVcaFollowUpQuestion(null);
+      setVcaConversationStage("jobProof");
+      return;
+    }
 
     if (prompt === VCA_DRAFT_INTRO_PROMPT) {
       setVcaConversationStage("handoffOffered");
@@ -2843,6 +3173,15 @@ export function PremiumCompanyPagesMemberPage({
     }
 
     if (vcaConversationStage === "opening") {
+      if (
+        prompt !== VCA_LATE_PAYMENT_CHIP &&
+        prompt in profileQuestionResponses
+      ) {
+        setVcaVisitorQuestion(prompt);
+        setVcaConversationStage("profilePromptAnswered");
+        return;
+      }
+
       setVcaVisitorQuestion(
         prompt === VCA_LATE_PAYMENT_CHIP ? VCA_HERO_QUESTION : prompt,
       );
@@ -2867,7 +3206,18 @@ export function PremiumCompanyPagesMemberPage({
       return;
     }
 
-    if (vcaConversationStage === "opening") {
+    if (isJobSeekerIntent) {
+      setVcaVisitorQuestion(trimmedDraft);
+      setVcaFollowUpQuestion(null);
+      setVcaConversationStage("jobProof");
+      setVcaDraft("");
+      return;
+    }
+
+    if (
+      vcaConversationStage === "opening" ||
+      vcaConversationStage === "profilePromptAnswered"
+    ) {
       setVcaVisitorQuestion(trimmedDraft);
       setVcaFollowUpQuestion(null);
       setVcaConversationStage("postProof");
@@ -2910,7 +3260,7 @@ export function PremiumCompanyPagesMemberPage({
         />
       ) : null}
 
-      {isHybridShell && isHumanMessagePanelOpen ? (
+      {isHumanMessagePanelOpen ? (
         <HumanCompanyMessagePanel
           className={cx(
             "md:w-[640px]",
@@ -2925,7 +3275,7 @@ export function PremiumCompanyPagesMemberPage({
         />
       ) : null}
 
-      {isHumanMessageTrayVisible ? (
+      {shouldShowHumanMessageTray ? (
         <HumanCompanyMessageTray
           className="!hidden md:!inline-flex md:!right-[var(--pcp-human-tray-right)]"
           onClose={handleCloseHumanMessagePanel}
@@ -2934,7 +3284,22 @@ export function PremiumCompanyPagesMemberPage({
         />
       ) : null}
 
-      {isHybridShell && isHybridTrayVisible ? (
+      {isVcaEntryVisible && isFabEntryMode ? (
+        <div
+          className="pcp-ai-messaging-surface fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-vca-fab-bottom)]"
+          style={vcaFabStyle}
+        >
+          <VcaFab
+            chatPanelId={vcaPanelId}
+            isOpen={false}
+            label={`Open ${pcpCompanyProfile.name} assistant`}
+            onClick={handleOpenVcaFromTray}
+            position="static"
+          />
+        </div>
+      ) : null}
+
+      {isVcaEntryVisible && !isFabEntryMode ? (
         <ChatTray
           actionSize="small"
           aria-controls={vcaPanelId}
@@ -2943,13 +3308,13 @@ export function PremiumCompanyPagesMemberPage({
           aria-label={`Open ${pcpCompanyProfile.name} assistant`}
           className={cx(
             "pcp-ai-messaging-surface fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-chat-tray-width,384px)] !rounded-t-sm !transition-[height,width,right,bottom,transform,background-color,border-color,box-shadow] !duration-[var(--design-motion-duration-moderate)] !ease-emphasized md:left-auto md:mx-0 md:!w-[336px] md:!max-w-[336px]",
-            "md:!right-[var(--pcp-ai-tray-right)]",
+            vcaSeparateDesktopRightClass,
           )}
           identity={{
             type: "ai",
             title: (
               <span className="inline-flex min-w-0 items-center gap-xs">
-                <span className="truncate">Velora</span>
+                <span className="truncate">{pcpCompanyProfile.name}</span>
                 <VeloraAiTag />
               </span>
             ),
@@ -2964,44 +3329,7 @@ export function PremiumCompanyPagesMemberPage({
         />
       ) : null}
 
-      {isVcaOpen && shellMode !== "hybrid" ? (
-        <div
-          id={vcaPanelId}
-          role="dialog"
-          aria-label={`${pcpCompanyProfile.name} assistant`}
-          className={cx(
-            "fixed inset-0 z-40",
-            shellMode === "rail" && "lg:hidden",
-          )}
-        >
-          <button
-            aria-label={`Close ${pcpCompanyProfile.name} assistant`}
-            className="absolute inset-0 bg-black/35"
-            onClick={handleCloseVca}
-            type="button"
-          />
-          <div className="absolute inset-y-0 right-0 w-full max-w-[440px]">
-            <PremiumCompanyPagesVcaPanel
-              conversationStage={vcaConversationStage}
-              draft={vcaDraft}
-              followUpQuestion={vcaFollowUpQuestion}
-              isCaseStudyOpen={isCaseStudyOpen}
-              onCloseCaseStudy={handleCloseVcaCaseStudy}
-              onClose={handleCloseVca}
-              onDraftChange={handleVcaDraftChange}
-              onOpenCaseStudy={handleOpenVcaCaseStudy}
-              onOpenMessage={handleOpenVcaHandoffMessage}
-              onPromptSelect={handleVcaPromptSelect}
-              onSend={handleVcaSend}
-              shellMode="drawer"
-              visitorQuestion={vcaVisitorQuestion}
-              variant="collapsed"
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {isHybridShell && isVcaOpen ? (
+      {isVcaOpen ? (
         <>
           <button
             aria-label={`Collapse expanded ${pcpCompanyProfile.name} assistant`}
@@ -3011,6 +3339,7 @@ export function PremiumCompanyPagesMemberPage({
             )}
             onClick={() => {
               setIsCaseStudyOpen(false);
+              setIsJobOpen(false);
               setVcaPanelVariant("collapsed");
             }}
             type="button"
@@ -3021,7 +3350,7 @@ export function PremiumCompanyPagesMemberPage({
             aria-label={`${pcpCompanyProfile.name} assistant`}
             className={cx(
               "pcp-ai-messaging-surface fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
-              vcaHybridPanelPositionClass,
+              vcaSurfacePanelPositionClass,
             )}
             style={aiTrayStyle}
           >
@@ -3030,16 +3359,20 @@ export function PremiumCompanyPagesMemberPage({
               draft={vcaDraft}
               followUpQuestion={vcaFollowUpQuestion}
               isCaseStudyOpen={isCaseStudyOpen}
+              isJobOpen={isJobOpen}
+              memberIntent={memberIntent}
+              surfaceMode={entryMode}
               onCloseCaseStudy={handleCloseVcaCaseStudy}
+              onCloseJob={handleCloseVcaJob}
               onClose={handleCloseVca}
               onDraftChange={handleVcaDraftChange}
               onMinimizeToTray={handleMinimizeVcaToTray}
               onOpenCaseStudy={handleOpenVcaCaseStudy}
+              onOpenJob={handleOpenVcaJob}
               onOpenMessage={handleOpenVcaHandoffMessage}
               onVariantToggle={handleToggleVcaPanelVariant}
               onPromptSelect={handleVcaPromptSelect}
               onSend={handleVcaSend}
-              shellMode="hybrid"
               visitorQuestion={vcaVisitorQuestion}
               variant={vcaPanelVariant}
             />
@@ -3049,7 +3382,9 @@ export function PremiumCompanyPagesMemberPage({
 
       <div className="mx-auto grid max-w-[1128px] gap-xxl px-lg py-md lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-md">
-          <ProfileQuestionNudgeCard onOpenVca={handleOpenVca} />
+          <ProfileQuestionNudgeCard
+            onPromptSelect={handleOpenVcaWithProfilePrompt}
+          />
           <OverviewCard />
           <FeaturedCard />
           <Card>
@@ -3078,41 +3413,18 @@ export function PremiumCompanyPagesMemberPage({
         </div>
 
         <aside className="space-y-md">
-          {shellMode === "rail" && isVcaOpen ? (
-            <div className="sticky top-20 hidden h-[calc(100dvh-96px)] lg:block">
-              <PremiumCompanyPagesVcaPanel
-                conversationStage={vcaConversationStage}
-                draft={vcaDraft}
-                followUpQuestion={vcaFollowUpQuestion}
-                isCaseStudyOpen={isCaseStudyOpen}
-                onCloseCaseStudy={handleCloseVcaCaseStudy}
-                onClose={handleCloseVca}
-                onDraftChange={handleVcaDraftChange}
-                onOpenCaseStudy={handleOpenVcaCaseStudy}
-                onOpenMessage={handleOpenVcaHandoffMessage}
-                onPromptSelect={handleVcaPromptSelect}
-                onSend={handleVcaSend}
-                shellMode="rail"
-                visitorQuestion={vcaVisitorQuestion}
-                variant="collapsed"
-              />
-            </div>
-          ) : (
-            <>
-              <PromotedCard />
-              <SideListCard
-                actionLabel="Show all"
-                items={affiliatedPages}
-                title="Affiliated pages"
-              />
-              <SideListCard
-                actionLabel="Show more"
-                items={sideJobs}
-                title="Recent job openings"
-                type="role"
-              />
-            </>
-          )}
+          <PromotedCard />
+          <SideListCard
+            actionLabel="Show all"
+            items={affiliatedPages}
+            title="Affiliated pages"
+          />
+          <SideListCard
+            actionLabel="Show more"
+            items={sideJobs}
+            title="Recent job openings"
+            type="role"
+          />
         </aside>
       </div>
     </main>

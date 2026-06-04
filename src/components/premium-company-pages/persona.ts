@@ -8,7 +8,7 @@ export const pcpCompanyProfile = {
   tagline:
     "Invoicing and payments built for agencies managing rotating contractor teams.",
   industry: "Financial services software",
-  location: "San Francisco Bay Area",
+  location: "San Francisco, CA",
   followers: "6,842 followers",
   employees: "25 employees",
   clientReach: "Built for small agencies and contractor teams",
