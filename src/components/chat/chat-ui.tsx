@@ -608,7 +608,7 @@ export function ChatHeader({
       {backAction ? (
         backAction
       ) : headerIdentity?.type === "ai" ? (
-        <div className="flex min-w-0 items-center gap-xs">
+        <div className="flex min-w-0 items-center gap-sm">
           {headerIdentity.icon ? (
             <span
               aria-hidden="true"

@@ -361,7 +361,7 @@ function VeloraVcaLogoMark({
   return (
     <span
       className={cx(
-        "mr-xxs inline-flex shrink-0 items-center justify-center overflow-hidden border border-border-faint bg-[#ACF5B3]",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden border border-border-faint bg-[#ACF5B3]",
         size === "medium" ? "size-8 p-[3px]" : "size-7 p-[3px]",
         VELORA_LOGO_AVATAR_RADIUS_CLASS,
       )}

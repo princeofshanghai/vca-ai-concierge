@@ -101,7 +101,6 @@ type AdminUc5AgentPanelProps = Readonly<{
   onClose: () => void;
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
   onSend: () => void;
   onVariantToggle: () => void;
 }>;
@@ -286,7 +285,7 @@ function CheriAiAvatar({ size = 48 }: Readonly<{ size?: 40 | 48 }>) {
         size={size}
         src={assetSrc(CHERI_SPARKS_AVATAR)}
       />
-      <span className="absolute bottom-0 right-0 inline-flex size-5 items-center justify-center rounded-round border border-background bg-background text-premium-inbug">
+      <span className="absolute -bottom-xxs -right-xxs inline-flex size-5 items-center justify-center rounded-round border border-background bg-background text-premium-inbug">
         <Icon className="[&&]:size-3" name="signal-ai" size="small" />
       </span>
     </span>
@@ -389,7 +388,6 @@ export function AdminUc5AgentPanel({
   onClose,
   onDraftChange,
   onFollowUpSelect,
-  onInsightSelect,
   onSend,
   onVariantToggle,
 }: AdminUc5AgentPanelProps) {
@@ -426,7 +424,7 @@ export function AdminUc5AgentPanel({
                 onFollowUpSelect={onFollowUpSelect}
               />
             ) : (
-              <WelcomeThread onInsightSelect={onInsightSelect} />
+              <WelcomeThread />
             )}
 
             {threadTurns.map((turn) => (
@@ -453,39 +451,28 @@ export function AdminUc5AgentPanel({
   );
 }
 
-function WelcomeThread({
-  onInsightSelect,
-}: Readonly<{
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
-}>) {
+const adminSelfInitiatedPrompts = [
+  "How is my page performing this month?",
+  "What are my competitors doing?",
+  "Who's been visiting my page?",
+] as const;
+
+function WelcomeThread() {
   return (
     <>
       <ChatMessage>
-        Hi Ning - I can summarize Velora&apos;s Page performance across
-        followers, visitors, content, and this week&apos;s top actions.
+        Hi, I&apos;m your AI assistant. I can help make sense of what&apos;s
+        happening on your Page, from who&apos;s visiting to which posts are
+        working and what to do next. What would you like to explore?
       </ChatMessage>
       <div className="flex flex-col gap-sm">
-        {adminUc5InsightOrder.map((insightId) => {
-          const insight = adminUc5Insights[insightId];
-
-          return (
-            <Prompt
-              className="w-fit max-w-full self-start"
-              key={insight.id}
-              onPromptSelect={() => onInsightSelect(insight.id)}
-              prompt={insight.query}
-            >
-              <span className="inline-flex min-w-0 items-center gap-xs">
-                <Icon
-                  className="shrink-0 text-icon"
-                  name={insight.icon}
-                  size="small"
-                />
-                <span className="min-w-0">{insight.label}</span>
-              </span>
-            </Prompt>
-          );
-        })}
+        {adminSelfInitiatedPrompts.map((prompt) => (
+          <Prompt
+            className="w-fit max-w-full self-start"
+            key={prompt}
+            prompt={prompt}
+          />
+        ))}
       </div>
     </>
   );
@@ -501,7 +488,10 @@ function ActiveInsightThread({
   return (
     <>
       <ChatMessage role="user">{insight.query}</ChatMessage>
-      <ChatResponseAttachment gap="sm">
+      <ChatResponseAttachment
+        className={insight.id === "post-amplification" && "!block !opacity-100"}
+        gap="sm"
+      >
         <InsightResponse
           insight={insight}
           onFollowUpSelect={onFollowUpSelect}
@@ -568,41 +558,41 @@ function InsightResponse({
 function PostAmplificationResponse() {
   return (
     <div className="space-y-lg">
-      <div className="flex items-start gap-md">
-        <Image
-          alt=""
-          className="size-10 shrink-0 rounded-xs object-cover"
-          height={40}
-          src={assetSrc("post-building-blue.png")}
-          width={40}
-        />
-        <div className="min-w-0 space-y-md">
+      <BoostCandidatePostPreview />
+
+      <div className="space-y-md">
+        <p className="text-body-sm text-text">
+          This post connected: 4.2% engagement rate vs your 1.1% average. The
+          gap is reach: only 180 people saw it.
+        </p>
+        <div className="grid gap-sm sm:grid-cols-2">
+          <PostAmplificationMetric
+            label="Engagement rate"
+            tone="positive"
+            value="4.2%"
+            comparison="vs 1.1% avg"
+          />
+          <PostAmplificationMetric
+            label="Impressions"
+            tone="negative"
+            value="180"
+            comparison="vs 820 avg"
+          />
+        </div>
+        <div className="flex items-start gap-sm rounded-sm bg-background-neutral-soft p-md">
+          <Icon
+            className="mt-xxs shrink-0 text-action"
+            name="question"
+            size="small"
+          />
           <p className="text-body-sm text-text">
-            Here&apos;s why this one is worth amplifying. It reached a 4.2%
-            engagement rate, well above your 1.1% Page average, but only 180
-            people saw it.
-          </p>
-          <div className="grid gap-sm sm:grid-cols-2">
-            <PostAmplificationMetric
-              label="Engagement rate"
-              tone="positive"
-              value="4.2%"
-              comparison="vs 1.1% avg"
-            />
-            <PostAmplificationMetric
-              label="Impressions"
-              tone="negative"
-              value="180"
-              comparison="vs 820 avg"
-            />
-          </div>
-          <p className="text-body-sm text-text">
-            The content is working. It just needs more reach.
+            High-engagement posts that get Boosted average 3-4x more
+            impressions than lower-performing ones.
           </p>
         </div>
       </div>
 
-      <div className="rounded-sm border border-border-faint bg-background-neutral-soft p-md">
+      <div className="border-t border-border-faint pt-md">
         <p className="text-body-sm text-text">
           This is a strong candidate for Boost. You&apos;d be putting spend
           behind something that already has proof, not a guess.
@@ -612,6 +602,36 @@ function PostAmplificationResponse() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function BoostCandidatePostPreview() {
+  return (
+    <article className="rounded-sm border border-border-faint bg-background p-md">
+      <div className="flex items-start gap-md">
+        <Image
+          alt=""
+          className="size-16 shrink-0 rounded-xs object-cover"
+          height={64}
+          src={assetSrc("post-building-blue.png")}
+          width={64}
+        />
+        <div className="min-w-0">
+          <p className="text-label-xs text-text-meta">
+            {pcpCompanyProfile.name} post
+          </p>
+          <h4 className="mt-xxs line-clamp-2 text-control-sm text-text">
+            What happens when a client pays late but contractors still need to
+            be paid?
+          </h4>
+          <p className="mt-xxs text-body-xs text-text-meta">Posted 3 days ago</p>
+        </div>
+      </div>
+      <div className="mt-md flex items-center justify-between border-t border-border-faint pt-sm text-supportive-s text-text-meta">
+        <span>180 impressions</span>
+        <span>1 comment</span>
+      </div>
+    </article>
   );
 }
 

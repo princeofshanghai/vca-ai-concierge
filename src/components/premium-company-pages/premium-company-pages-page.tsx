@@ -1138,7 +1138,6 @@ export function PremiumCompanyPagesPage() {
               onClose={handleCloseAgent}
               onDraftChange={handleAgentDraftChange}
               onFollowUpSelect={handleAgentFollowUpSelect}
-              onInsightSelect={handleDigestInsightSelect}
               onSend={handleAgentSend}
               onVariantToggle={() =>
                 setAgentPanelVariant((currentVariant) =>
