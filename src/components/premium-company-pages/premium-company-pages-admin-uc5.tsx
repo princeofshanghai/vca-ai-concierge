@@ -489,7 +489,11 @@ function ActiveInsightThread({
     <>
       <ChatMessage role="user">{insight.query}</ChatMessage>
       <ChatResponseAttachment
-        className={insight.id === "post-amplification" && "!block !opacity-100"}
+        className={
+          insight.id === "post-amplification"
+            ? "!block !opacity-100"
+            : undefined
+        }
         gap="sm"
       >
         <InsightResponse
