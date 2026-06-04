@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   type ChangeEvent,
   type MouseEvent,
+  useState,
 } from "react";
 
 import {
@@ -391,6 +392,8 @@ export function AdminUc5AgentPanel({
   onSend,
   onVariantToggle,
 }: AdminUc5AgentPanelProps) {
+  const [selfInitiatedView, setSelfInitiatedView] =
+    useState<"page-performance" | null>(null);
   const activeInsight = activeInsightId
     ? adminUc5Insights[activeInsightId]
     : null;
@@ -423,8 +426,16 @@ export function AdminUc5AgentPanel({
                 insight={activeInsight}
                 onFollowUpSelect={onFollowUpSelect}
               />
+            ) : selfInitiatedView === "page-performance" ? (
+              <SelfInitiatedPerformanceThread
+                onFollowUpSelect={onFollowUpSelect}
+              />
             ) : (
-              <WelcomeThread />
+              <WelcomeThread
+                onPagePerformanceSelect={() =>
+                  setSelfInitiatedView("page-performance")
+                }
+              />
             )}
 
             {threadTurns.map((turn) => (
@@ -457,7 +468,11 @@ const adminSelfInitiatedPrompts = [
   "Who's been visiting my page?",
 ] as const;
 
-function WelcomeThread() {
+function WelcomeThread({
+  onPagePerformanceSelect,
+}: Readonly<{
+  onPagePerformanceSelect: () => void;
+}>) {
   return (
     <>
       <ChatMessage>
@@ -470,11 +485,104 @@ function WelcomeThread() {
           <Prompt
             className="w-fit max-w-full self-start"
             key={prompt}
+            onPromptSelect={
+              prompt === "How is my page performing this month?"
+                ? onPagePerformanceSelect
+                : undefined
+            }
             prompt={prompt}
           />
         ))}
       </div>
     </>
+  );
+}
+
+function SelfInitiatedPerformanceThread({
+  onFollowUpSelect,
+}: Readonly<{
+  onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+}>) {
+  return (
+    <>
+      <ChatMessage role="user">How is my page performing this month?</ChatMessage>
+      <ChatMessage>
+        Three things stand out: reach is up, follower growth is improving, and
+        agency decision-makers are showing interest.
+      </ChatMessage>
+      <ChatResponseAttachment className="!block !opacity-100" gap="sm">
+        <article className="chat-message-enter w-full max-w-[var(--design-layout-panel-content-max)] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
+          <div className="grid gap-sm px-lg py-lg">
+            <SelfInitiatedMetricCard
+              label="Visitors"
+              value="312"
+              meta="+18 ppt vs last month"
+            />
+            <SelfInitiatedMetricCard
+              label="Post impressions"
+              value="3,479"
+              meta="+115.6% last 7 days"
+            />
+            <SelfInitiatedMetricCard
+              label="New followers"
+              value="37"
+              meta="+8% last 7 days"
+            />
+          </div>
+        </article>
+      </ChatResponseAttachment>
+      <ChatMessage>
+        The biggest opportunity is reach: one post is getting strong engagement,
+        but only 180 people saw it.
+      </ChatMessage>
+      <ChatResponseAttachment className="!block !opacity-100" gap="sm">
+        <InsightResponse
+          insight={adminUc5Insights["post-amplification"]}
+          onFollowUpSelect={onFollowUpSelect}
+        />
+      </ChatResponseAttachment>
+      <FollowUpActions
+        followUps={selfInitiatedBoostFollowUps}
+        onFollowUpSelect={onFollowUpSelect}
+      />
+    </>
+  );
+}
+
+const selfInitiatedBoostFollowUps: ReadonlyArray<AdminUc5FollowUp> =
+  [
+    {
+      prompt: "Why this post?",
+      response:
+        "Because it has a strong early signal: 4.2% engagement, well above your 1.1% average. The content is working; it just needs more reach.",
+    },
+    {
+      prompt: "Who should I boost it to?",
+      response:
+        "Start with small agency owners, creative directors, and operations leads at 1-20 person creative and marketing services firms. They are already showing up in your visitor data.",
+    },
+    {
+      prompt: "Show visitor breakdown",
+      response:
+        "Your strongest visitor pattern is small agency teams: 62% are from 1-10 employee companies, and founders or creative directors make up the largest role segment.",
+    },
+  ];
+
+function SelfInitiatedMetricCard({
+  label,
+  meta,
+  value,
+}: Readonly<{
+  label: string;
+  meta: string;
+  value: string;
+}>) {
+  return (
+    <div className="min-w-0 rounded-sm border border-border-faint bg-background p-sm">
+      <p className="text-label-xs text-text-meta">{label}</p>
+      <p className="mt-xxs text-heading-sm text-text">{value}</p>
+      <p className="mt-xxs text-body-xs text-positive">{meta}</p>
+    </div>
   );
 }
 
@@ -488,6 +596,12 @@ function ActiveInsightThread({
   return (
     <>
       <ChatMessage role="user">{insight.query}</ChatMessage>
+      {insight.id === "post-amplification" ? (
+        <ChatMessage>
+          This post is standing out because people who saw it responded, but
+          reach stayed low.
+        </ChatMessage>
+      ) : null}
       <ChatResponseAttachment
         className={
           insight.id === "post-amplification"
@@ -552,73 +666,36 @@ function InsightResponse({
         ) : null}
       </div>
 
-      <footer className="border-t border-border-faint px-lg py-md">
-        <FakeAnalyticsLink label={insight.analyticsLabel} />
-      </footer>
+      {insight.id === "post-amplification" ? null : (
+        <footer className="border-t border-border-faint px-lg py-md">
+          <FakeAnalyticsLink label={insight.analyticsLabel} />
+        </footer>
+      )}
     </article>
   );
 }
 
 function PostAmplificationResponse() {
   return (
-    <div className="space-y-lg">
+    <div className="space-y-md">
       <BoostCandidatePostPreview />
-
-      <div className="space-y-md">
-        <p className="text-body-sm text-text">
-          This post connected: 4.2% engagement rate vs your 1.1% average. The
-          gap is reach: only 180 people saw it.
-        </p>
-        <div className="grid gap-sm sm:grid-cols-2">
-          <PostAmplificationMetric
-            label="Engagement rate"
-            tone="positive"
-            value="4.2%"
-            comparison="vs 1.1% avg"
-          />
-          <PostAmplificationMetric
-            label="Impressions"
-            tone="negative"
-            value="180"
-            comparison="vs 820 avg"
-          />
-        </div>
-        <div className="flex items-start gap-sm rounded-sm bg-background-neutral-soft p-md">
-          <Icon
-            className="mt-xxs shrink-0 text-action"
-            name="question"
-            size="small"
-          />
-          <p className="text-body-sm text-text">
-            High-engagement posts that get Boosted average 3-4x more
-            impressions than lower-performing ones.
-          </p>
-        </div>
-      </div>
-
-      <div className="border-t border-border-faint pt-md">
-        <p className="text-body-sm text-text">
-          This is a strong candidate for Boost. You&apos;d be putting spend
-          behind something that already has proof, not a guess.
-        </p>
-        <Button className="mt-md" size="small" variant="secondary">
-          Boost
-        </Button>
-      </div>
+      <Button size="small" variant="secondary">
+        Boost
+      </Button>
     </div>
   );
 }
 
 function BoostCandidatePostPreview() {
   return (
-    <article className="rounded-sm border border-border-faint bg-background p-md">
-      <div className="flex items-start gap-md">
+    <article className="space-y-sm">
+      <div className="flex items-start gap-sm">
         <Image
           alt=""
-          className="size-16 shrink-0 rounded-xs object-cover"
-          height={64}
+          className="size-12 shrink-0 rounded-xs object-cover"
+          height={48}
           src={assetSrc("post-building-blue.png")}
-          width={64}
+          width={48}
         />
         <div className="min-w-0">
           <p className="text-label-xs text-text-meta">
@@ -631,38 +708,16 @@ function BoostCandidatePostPreview() {
           <p className="mt-xxs text-body-xs text-text-meta">Posted 3 days ago</p>
         </div>
       </div>
-      <div className="mt-md flex items-center justify-between border-t border-border-faint pt-sm text-supportive-s text-text-meta">
-        <span>180 impressions</span>
-        <span>1 comment</span>
+      <div className="flex flex-wrap items-center gap-x-md gap-y-xxs text-body-xs text-text-meta">
+        <span>
+          <strong className="font-semibold text-text">4.2%</strong> engagement
+        </span>
+        <span aria-hidden="true">·</span>
+        <span>
+          <strong className="font-semibold text-text">180</strong> impressions
+        </span>
       </div>
     </article>
-  );
-}
-
-function PostAmplificationMetric({
-  comparison,
-  label,
-  tone,
-  value,
-}: Readonly<{
-  comparison: string;
-  label: string;
-  tone: "positive" | "negative";
-  value: string;
-}>) {
-  return (
-    <div className="rounded-sm border border-ai-border bg-background p-md">
-      <p className="text-label-xs uppercase text-text-meta">{label}</p>
-      <p
-        className={cx(
-          "mt-xs text-heading-md",
-          tone === "positive" ? "text-positive" : "text-negative",
-        )}
-      >
-        {value}
-      </p>
-      <p className="mt-xs text-body-xs text-text-meta">{comparison}</p>
-    </div>
   );
 }
 

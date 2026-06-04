@@ -77,16 +77,16 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     icon: "analytics",
     label: "One post is worth amplifying",
     value: "4.2% engagement rate - only 180 impressions - posted 3 days ago",
-    query: "One post is worth amplifying.",
+    query: "Tell me more about this post.",
     analyticsLabel: "View full Content analytics",
     followUps: [
       {
-        prompt: "Why boost this post?",
+        prompt: "Why this post?",
         response:
           "Because the early signal is strong. People who saw the post engaged with it at 4.2%, well above the Page average, but only 180 people saw it. Boosting helps give proven content a fairer chance.",
       },
       {
-        prompt: "What audience should I boost to?",
+        prompt: "Who should I boost it to?",
         response:
           "Start with small agency owners, creative directors, and operations leads at 1-20 person creative and marketing services firms. They are already showing up in your visitor data.",
       },
