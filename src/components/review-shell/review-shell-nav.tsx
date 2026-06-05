@@ -65,8 +65,12 @@ const PREMIUM_SHELL_OPTIONS = [
 ] as const;
 const PREMIUM_COMPANY_PAGES_SHELL_OPTIONS = [
   {
-    id: "premium-company-pages-shell-fab",
-    label: "FAB",
+    id: "premium-company-pages-shell-fab-icon",
+    label: "FAB icon",
+  },
+  {
+    id: "premium-company-pages-shell-fab-pill",
+    label: "FAB pill",
   },
   {
     id: "premium-company-pages-shell-tray",
@@ -225,10 +229,10 @@ function getPrototypeMetaLabel(
 
   if (pathname.startsWith("/premium-company-pages")) {
     if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
-      return `Admin view · ${premiumCompanyPagesShellLabel ?? "FAB"}`;
+      return `Admin view · ${premiumCompanyPagesShellLabel ?? "FAB icon"}`;
     }
 
-    return `Member view · ${premiumCompanyPagesIntentLabel ?? "Buyer intent"} · ${premiumCompanyPagesShellLabel ?? "FAB"}`;
+    return `Member view · ${premiumCompanyPagesIntentLabel ?? "Buyer intent"} · ${premiumCompanyPagesShellLabel ?? "FAB icon"}`;
   }
 
   if (pathname.startsWith("/premium")) {
@@ -381,8 +385,12 @@ function withPremiumCompanyPagesShell(
   href: string,
   shellLabel: PremiumCompanyPagesShellLabel,
 ) {
-  if (shellLabel === "FAB") {
+  if (shellLabel === "FAB icon") {
     return withQueryParam(href, "vcaShell", null);
+  }
+
+  if (shellLabel === "FAB pill") {
+    return withQueryParam(href, "vcaShell", "fab-pill");
   }
 
   return withQueryParam(href, "vcaShell", "tray");
@@ -424,7 +432,13 @@ function getPremiumCompanyPagesShellOptions(
       ? withQueryParam(basePathname, "vcaIntent", "job-seeker")
       : basePathname;
 
-  return PREMIUM_COMPANY_PAGES_SHELL_OPTIONS.map((option) => ({
+  const shellOptions = basePathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+    ? PREMIUM_COMPANY_PAGES_SHELL_OPTIONS
+    : PREMIUM_COMPANY_PAGES_SHELL_OPTIONS.filter(
+        (option) => option.label !== "FAB icon",
+      );
+
+  return shellOptions.map((option) => ({
     ...option,
     href: withPremiumCompanyPagesShell(baseHref, option.label),
   }));
@@ -474,7 +488,13 @@ export function ReviewShellNav({
       ? currentHref
       : pathname;
   const activePremiumCompanyPagesShellLabel: PremiumCompanyPagesShellLabel =
-    searchParams.get("vcaShell") === "tray" ? "Tray" : "FAB";
+    searchParams.get("vcaShell") === "tray"
+      ? "Tray"
+      : !isPremiumCompanyPagesMember ||
+          searchParams.get("vcaShell") === "fab-pill" ||
+          searchParams.get("vcaShell") === "fab"
+        ? "FAB pill"
+        : "FAB icon";
   const activePremiumCompanyPagesIntentLabel: PremiumCompanyPagesIntentLabel =
     searchParams.get("vcaIntent") === "job-seeker"
       ? "Job seeker intent"

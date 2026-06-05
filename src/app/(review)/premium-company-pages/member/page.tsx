@@ -29,7 +29,15 @@ function getVcaShellMode(
     return "tray";
   }
 
-  return "fab";
+  if (shellMode === "fab-icon") {
+    return "fab-icon";
+  }
+
+  if (shellMode === "fab-pill" || shellMode === "fab") {
+    return "fab";
+  }
+
+  return "fab-icon";
 }
 
 function getVcaMemberIntent(

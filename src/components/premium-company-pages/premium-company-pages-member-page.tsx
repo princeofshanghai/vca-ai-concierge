@@ -267,7 +267,7 @@ const globalInboxThreads = [
   },
 ];
 
-export type VcaShellMode = "tray" | "fab";
+export type VcaShellMode = "tray" | "fab" | "fab-icon";
 export type VcaMemberIntent = "buyer" | "job-seeker";
 type MessagingSurfaceState = "closed" | "docked" | "open";
 
@@ -356,36 +356,64 @@ const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
 };
 
 function VeloraVcaLogoMark({
+  showAiBadge = false,
   size = "small",
-}: Readonly<{ size?: "small" | "medium" }>) {
+}: Readonly<{
+  showAiBadge?: boolean;
+  size?: "small" | "medium" | "large";
+}>) {
+  const markSizeClass =
+    size === "large" ? "size-10" : size === "medium" ? "size-8" : "size-7";
+  const badgeSizeClass = size === "large" ? "size-5" : "size-4";
+
   return (
     <span
       className={cx(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden border border-border-faint bg-[#ACF5B3]",
-        size === "medium" ? "size-8 p-[3px]" : "size-7 p-[3px]",
-        VELORA_LOGO_AVATAR_RADIUS_CLASS,
+        "relative inline-flex shrink-0",
+        markSizeClass,
       )}
     >
-      <Image
-        alt=""
-        className="size-full max-w-none object-contain"
-        height={35}
-        src={assetSrc("velora-vca-logo.png")}
-        width={39}
-      />
+      <span
+        className={cx(
+          "inline-flex size-full items-center justify-center overflow-hidden border border-border-faint bg-[#ACF5B3] p-[3px]",
+          VELORA_LOGO_AVATAR_RADIUS_CLASS,
+        )}
+      >
+        <Image
+          alt=""
+          className="size-full max-w-none object-contain"
+          height={35}
+          src={assetSrc("velora-vca-logo.png")}
+          width={39}
+        />
+      </span>
+      {showAiBadge ? (
+        <span
+          className={cx(
+            "absolute -bottom-xxs -right-xxs inline-flex items-center justify-center rounded-round border-2 border-background bg-background text-ai-icon",
+            badgeSizeClass,
+          )}
+        >
+          <Icon className="[&&]:size-3" name="signal-ai" size="small" />
+        </span>
+      ) : null}
     </span>
   );
 }
 
-function VeloraAiTag() {
+function VeloraVcaBareLogoMarkWithBadge() {
   return (
-    <span className="inline-flex h-[var(--design-layout-tag-small-height)] max-w-full shrink-0 select-none items-center justify-center gap-xxs rounded-xs bg-ai-background-soft px-sm font-sans text-body-sm text-action-active whitespace-nowrap">
-      <Icon
-        className="[&&]:size-3 shrink-0 text-ai-icon"
-        name="signal-ai"
-        size="small"
+    <span className="relative inline-flex size-10 shrink-0 items-center justify-center">
+      <Image
+        alt=""
+        className="h-auto w-10 max-w-none object-contain"
+        height={35}
+        src={assetSrc("velora-vca-logo.png")}
+        width={39}
       />
-      <span>AI</span>
+      <span className="absolute -bottom-xxs -right-xxs inline-flex size-5 items-center justify-center rounded-round border-2 border-background bg-background text-ai-icon">
+        <Icon className="[&&]:size-3" name="signal-ai" size="small" />
+      </span>
     </span>
   );
 }
@@ -766,14 +794,11 @@ function VeloraAiHeader({
       className="flex min-h-[var(--design-layout-panel-header-height)] shrink-0 items-center justify-between border-b border-border-faint bg-background pl-[calc(var(--design-spacing-xxl)+env(safe-area-inset-left))] pr-[calc(var(--design-spacing-lg)+env(safe-area-inset-right))] transition-[background-color,border-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pl-xxl md:pr-lg"
     >
       <div className="flex min-w-0 items-center gap-sm py-sm">
-        <VeloraVcaLogoMark size="medium" />
+        <VeloraVcaLogoMark showAiBadge size="medium" />
         <div className="min-w-0">
-          <div className="flex min-w-0 items-center gap-xs">
-            <h2 className="min-w-0 truncate text-heading-md text-text">
-              Velora
-            </h2>
-            <VeloraAiTag />
-          </div>
+          <h2 className="min-w-0 truncate text-heading-md text-text">
+            Velora
+          </h2>
           {showResponseTime ? (
             <p className="mt-xxs truncate text-body-xs text-text-meta">
               Replies instantly
@@ -2787,7 +2812,7 @@ function SideListCard({
 
 export function PremiumCompanyPagesMemberPage({
   memberIntent = "buyer",
-  shellMode = "fab",
+  shellMode = "fab-icon",
 }: Readonly<{
   memberIntent?: VcaMemberIntent;
   shellMode?: VcaShellMode;
@@ -2804,7 +2829,8 @@ function PremiumCompanyPagesSeparateMemberPage({
   entryMode,
   memberIntent,
 }: Readonly<{ entryMode: VcaShellMode; memberIntent: VcaMemberIntent }>) {
-  const isFabEntryMode = entryMode === "fab";
+  const isFabEntryMode = entryMode !== "tray";
+  const isFabIconEntryMode = entryMode === "fab-icon";
   const isJobSeekerIntent = memberIntent === "job-seeker";
   const vcaPanelId = useId();
   const [aiSurfaceState, setAiSurfaceState] =
@@ -3258,26 +3284,40 @@ function PremiumCompanyPagesSeparateMemberPage({
           className="pcp-ai-messaging-surface fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-vca-fab-bottom)]"
           style={vcaFabStyle}
         >
-          <Button
-            aria-controls={vcaPanelId}
-            aria-expanded={false}
-            aria-haspopup="dialog"
-            aria-label={`Open ${pcpCompanyProfile.name} assistant`}
-            className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
-            leadingIcon={
-              <Icon
-                className="text-[#2AA986]"
-                name="signal-ai"
-                size="small"
-              />
-            }
-            onClick={handleOpenVcaFromTray}
-            size="medium"
-            style={{ borderWidth: "1.5px" }}
-            variant="tertiary"
-          >
-            Ask Velora
-          </Button>
+          {isFabIconEntryMode ? (
+            <button
+              aria-controls={vcaPanelId}
+              aria-expanded={false}
+              aria-haspopup="dialog"
+              aria-label={`Open ${pcpCompanyProfile.name} assistant`}
+              className="inline-flex size-14 items-center justify-center rounded-[20px] border border-[#8FE8B1] bg-background text-text shadow-raised-active transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:border-[#5DDC91] hover:bg-background hover:shadow-raised-active focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring active:border-[#5DDC91] active:bg-background active:shadow-raised-faint"
+              onClick={handleOpenVcaFromTray}
+              type="button"
+            >
+              <VeloraVcaBareLogoMarkWithBadge />
+            </button>
+          ) : (
+            <Button
+              aria-controls={vcaPanelId}
+              aria-expanded={false}
+              aria-haspopup="dialog"
+              aria-label={`Open ${pcpCompanyProfile.name} assistant`}
+              className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
+              leadingIcon={
+                <Icon
+                  className="text-[#2AA986]"
+                  name="signal-ai"
+                  size="small"
+                />
+              }
+              onClick={handleOpenVcaFromTray}
+              size="medium"
+              style={{ borderWidth: "1.5px" }}
+              variant="tertiary"
+            >
+              Ask Velora
+            </Button>
+          )}
         </div>
       ) : null}
 
@@ -3294,13 +3334,8 @@ function PremiumCompanyPagesSeparateMemberPage({
           )}
           identity={{
             type: "ai",
-            title: (
-              <span className="inline-flex min-w-0 items-center gap-xs">
-                <span className="truncate">{pcpCompanyProfile.name}</span>
-                <VeloraAiTag />
-              </span>
-            ),
-            icon: <VeloraVcaLogoMark />,
+            title: pcpCompanyProfile.name,
+            icon: <VeloraVcaLogoMark showAiBadge />,
           }}
           onClose={handleCloseVca}
           onOpen={handleOpenVcaFromTray}
@@ -3343,7 +3378,7 @@ function PremiumCompanyPagesSeparateMemberPage({
               isCaseStudyOpen={isCaseStudyOpen}
               isJobOpen={isJobOpen}
               memberIntent={memberIntent}
-              surfaceMode={entryMode}
+              surfaceMode={isFabEntryMode ? "fab" : "tray"}
               onCloseCaseStudy={handleCloseVcaCaseStudy}
               onCloseJob={handleCloseVcaJob}
               onClose={handleCloseVca}
