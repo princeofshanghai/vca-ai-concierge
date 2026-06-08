@@ -141,7 +141,7 @@ function EntryLixOptionCard({
 }: Readonly<{
   badge?: ReactNode;
   description: string;
-  icon: "phone-handset" | "signal-ai";
+  icon: "person" | "signal-ai";
   onClick: () => void;
   title: string;
 }>) {
@@ -190,8 +190,8 @@ export function EntryLixChoiceScreen({
             onClick={onChatWithAi}
           />
           <EntryLixOptionCard
-            icon="phone-handset"
-            title="Request a call back"
+            icon="person"
+            title="Have someone contact me"
             description="Share your details and a sales rep will contact you."
             onClick={onFillOutForm}
           />
@@ -396,12 +396,12 @@ export function EntryLixLeadFormScreen({
       >
         <div className="flex flex-col text-left">
           <Icon
-            name="phone-handset"
-            label="Request a call back"
+            name="person"
+            label="Have someone contact me"
             className="!size-7 text-ai-icon"
           />
           <h2 className="mt-md text-display-md text-text">
-            Request a call back
+            Have someone contact me
           </h2>
           <p className="mt-sm text-body-xs text-text-meta">
             Forms submitted between 9:00 AM and 12:00 PM PST Monday-Friday will
@@ -548,7 +548,7 @@ export function EntryLixLeadFormScreen({
           variant="primary"
           className="mt-stack w-full"
         >
-          Request call back
+          Have someone contact me
         </Button>
       </form>
     </div>
@@ -570,8 +570,7 @@ export function EntryLixSuccessScreen({
             You&apos;re all set
           </h2>
           <p className="mt-sm text-body-md text-text-meta">
-            Someone from LinkedIn will contact you soon at the phone number you
-            provided.
+            Someone from LinkedIn will contact you soon by email or phone.
           </p>
         </div>
 
