@@ -24,7 +24,7 @@ export function PremiumProductRecommendationCard({
     premiumBusinessSuitePlan;
 
   return (
-    <article className="chat-recommendation-enter flex w-full flex-col rounded-md border border-premium-brand bg-background py-xl pl-xl pr-md">
+    <article className="chat-recommendation-enter flex w-full flex-col rounded-md border border-premium-brand bg-background py-xl pl-xl pr-xl">
       <div className="flex flex-col gap-xxl">
         <div className="flex flex-col gap-lg">
           {showAvatar ? (

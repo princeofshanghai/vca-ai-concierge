@@ -688,7 +688,7 @@ components:
     rounded: "{rounded.md}"
     borderColor: "{colors.ai-border}"
     maxWidth: 344px
-    padding: "20px 12px 20px 20px"
+    padding: "20px"
   prompt:
     backgroundColor: "{colors.background}"
     textColor: "{colors.text}"
