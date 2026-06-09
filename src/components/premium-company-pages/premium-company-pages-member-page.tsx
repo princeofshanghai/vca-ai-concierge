@@ -42,6 +42,7 @@ import {
   PCP_MEMBER_ASSET_ROOT,
   pcpCompanyProfile,
 } from "./persona";
+import { GlobalInboxTray } from "./global-inbox-tray";
 
 const ASSET_ROOT = PCP_MEMBER_ASSET_ROOT;
 
@@ -64,25 +65,25 @@ const companyMetadata = [
 ];
 
 const sideJobs = [
-  "Senior Payments Engineer",
+  "Senior Integrations Engineer",
   "Customer Operations Lead",
-  "Product Designer, Payments",
+  "Product Designer, Growth",
 ];
 
 const affiliatedPages = [
-  "FreshBooks",
-  "QuickBooks",
-  "Wave",
+  "Toast",
+  "Popmenu",
+  "Owner.com",
 ];
 
 const overviewHighlights = [
   {
-    title: "Verified small business payments provider",
+    title: "Verified restaurant technology provider",
     date: "January 2025",
     image: pcpCompanyProfile.logoSrc,
   },
   {
-    title: "Built for agencies with rotating contractor teams",
+    title: "Built for restaurant groups managing delivery channels",
     date: "June 2024",
     image: pcpCompanyProfile.logoSrc,
   },
@@ -90,45 +91,45 @@ const overviewHighlights = [
 
 const posts = [
   {
-    title: "What happens when a client pays late but contractors still need to be paid?",
-    body: "The agencies that stay trusted have a clear payment plan before the invoice is overdue. Conditional schedules can keep the work moving without a spreadsheet chase.",
-    image: "../post-building-blue.png",
+    title: "How restaurant teams keep delivery menus consistent across locations.",
+    body: "The teams that grow repeat orders have a clear launch plan before a promo goes live. Shared campaign workflows can keep menus, channels, and local teams aligned.",
+    image: "../restaurant-post-menu-ops.png",
     stats: "4,238 impressions",
   },
   {
-    title: "Three signs your contractor payment workflow has outgrown spreadsheets.",
-    body: "If every project has a different payment dependency, your team needs a system that can track client approvals, contractor obligations, and payout timing together.",
-    image: "../post-kudos.png",
+    title: "Three signs your restaurant marketing workflow has outgrown spreadsheets.",
+    body: "If every location has a different offer, channel, and menu update, your team needs a system that tracks approvals, campaign timing, and performance together.",
+    image: "../restaurant-post-campaign-calendar.png",
     stats: "42 comments",
   },
 ];
 
 const products = [
   {
-    title: "Conditional payment schedules",
-    type: "Payment workflow",
-    body: "Connect contractor payouts to client payment status, approval milestones, or project rules so late client invoices do not create manual tracking work.",
-    image: "hero-cover-1.png",
+    title: "Delivery promotion planning",
+    type: "Campaign workflow",
+    body: "Coordinate delivery app promotions, owned-channel offers, and location rules so campaign launches do not create manual tracking work.",
+    image: "restaurant-delivery-dashboard.png",
   },
   {
-    title: "Contractor payout tracking",
+    title: "Menu rollout tracking",
     type: "Operations workflow",
-    body: "See which contractors are waiting on approvals, which invoices are blocked by clients, and which payouts are ready to release.",
-    image: "media-2.png",
+    body: "See which locations have approved updates, which menus are waiting on changes, and which channels are ready to launch.",
+    image: "restaurant-menu-rollout.png",
   },
   {
-    title: "Client payment visibility",
-    type: "Client operations",
-    body: "Give agency owners a simple view of client invoice timing, payment dependencies, and the contractor impact of late payments.",
-    image: "media-1.png",
+    title: "Location performance visibility",
+    type: "Growth operations",
+    body: "Give restaurant teams a simple view of order trends, promotion lift, and repeat-order impact by location.",
+    image: "restaurant-delivery-dashboard.png",
   },
 ];
 
 const serviceKeywords = [
-  "Financial Services",
-  "Payment Processing",
-  "Invoice Processing",
-  "Bookkeeping",
+  "Restaurant Technology",
+  "Online Ordering",
+  "Menu Management",
+  "Delivery Marketing",
   "Operations",
 ];
 
@@ -141,7 +142,7 @@ const leaders = [
   },
   {
     name: "Avery Chen",
-    role: "Head of Payments",
+    role: "Head of Integrations",
     followers: "3,284 followers",
     image: `${PCP_ASSET_ROOT}/avatar-2.png`,
   },
@@ -163,45 +164,45 @@ const leaderPosts = [
   {
     author: pcpCompanyProfile.founderName,
     avatar: pcpCompanyProfile.founderAvatarSrc,
-    body: "Agency payment chaos usually starts with one invisible dependency: the client is late, but the contractor still expects a clear answer.",
+    body: "Restaurant growth usually breaks down in one invisible place: the promo goes live, but the menu and reporting do not match across locations.",
     image: null,
   },
   {
     author: "Avery Chen",
     avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
-    body: "Conditional payout rules are not about delaying contractors. They are about making payment timing explicit before a project gets messy.",
-    image: "media-1.png",
+    body: "Good campaign workflows are not about adding process. They are about making menu changes and local offers clear before launch day gets messy.",
+    image: "restaurant-menu-rollout.png",
   },
   {
     author: "Marcus Lee",
     avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
-    body: "The best agency operators can answer three questions fast: who has paid, who is waiting, and which contractor payout is affected.",
-    image: "media-2.png",
-    linkTitle: "How agency teams reduce late contractor payment surprises",
+    body: "The best restaurant operators can answer three questions fast: which locations launched, which channels are live, and which promo brought guests back.",
+    image: "restaurant-delivery-dashboard.png",
+    linkTitle: "How restaurant teams reduce delivery promotion surprises",
     linkMeta: "Velora on LinkedIn - 7min...",
   },
 ];
 
 const mainJobOpenings = [
-  "Senior Payments Engineer",
+  "Senior Integrations Engineer",
   "Customer Operations Lead",
 ];
 
 const newsletters = [
   {
-    title: "The Contractor Payment Brief",
+    title: "The Delivery Growth Brief",
     meta: "Weekly - 2,674 subscribers",
-    body: "Weekly notes for agency founders managing client invoices, contractor payouts, and payment timing without spreadsheet sprawl.",
+    body: "Weekly notes for restaurant marketers managing delivery channels, menu updates, and local campaign performance.",
   },
   {
-    title: "Agency Ops Field Notes",
+    title: "Restaurant Ops Field Notes",
     meta: "Monthly - 1,204 subscribers",
-    body: "Practical lessons from small agencies coordinating client approvals, rotating teams, and contractor payment expectations.",
+    body: "Practical lessons from growing restaurant groups coordinating menu rollouts, local offers, and online ordering.",
   },
   {
-    title: "Payment Signals",
+    title: "Restaurant Growth Signals",
     meta: "Monthly - 894 subscribers",
-    body: "A concise readout of invoice timing patterns, payout dependencies, and questions agency owners are asking.",
+    body: "A concise readout of ordering trends, campaign patterns, and questions restaurant operators are asking.",
   },
 ];
 
@@ -209,62 +210,6 @@ const footerLinkColumns = [
   ["About", "Community Guidelines", "Privacy & Terms", "Sales Solution", "Safety Center"],
   ["Accessibility", "Careers", "Ad Choices", "Mobile"],
   ["Talent Solutions", "Marketing Solutions", "Advertising", "Small Business"],
-];
-
-const globalInboxThreads = [
-  {
-    id: "velora",
-    name: pcpCompanyProfile.name,
-    detail: "You: Hi Velora, I found your...",
-    time: "Jun 1",
-    avatar: "velora-logo.png",
-    selected: true,
-  },
-  {
-    id: "maya",
-    name: "Maya Patel",
-    detail: "Lorem ipsum dolor sit amet, consectetur...",
-    time: "4:48 PM",
-    avatar: `${PCP_ASSET_ROOT}/avatar-1.png`,
-    active: true,
-  },
-  {
-    id: "jordan",
-    name: "Jordan Lee",
-    detail: "Praesent commodo cursus magna...",
-    time: "May 29",
-    avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
-  },
-  {
-    id: "nicole",
-    name: "Nicole Zhang",
-    detail: "Etiam porta sem malesuada magna...",
-    time: "May 27",
-    avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
-    active: true,
-  },
-  {
-    id: "james",
-    name: "James Yu",
-    detail: "Donec ullamcorper nulla non metus...",
-    time: "May 27",
-    avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
-  },
-  {
-    id: "steven",
-    name: "Steven Ji",
-    detail: "Nullam id dolor id nibh ultricies...",
-    time: "May 25",
-    avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
-  },
-  {
-    id: "amanda",
-    name: "Amanda Liu",
-    detail: "Aenean lacinia bibendum nulla sed...",
-    time: "May 13",
-    avatar: `${PCP_ASSET_ROOT}/avatar-1.png`,
-    active: true,
-  },
 ];
 
 export type VcaShellMode = "tray" | "fab" | "fab-icon";
@@ -286,34 +231,34 @@ type VcaConversationStage =
   | "handoffOpened";
 
 const VCA_HERO_QUESTION =
-  "If a client pays late, what happens to my contractor payments?";
-const VCA_LATE_PAYMENT_CHIP = "What happens when a client pays late?";
+  "How do I know which delivery promotions are working?";
+const VCA_DELIVERY_PROMOTION_CHIP = "How do I know which promos are working?";
 const vcaStarterPrompts = [
-  "How does contractor payment work?",
-  VCA_LATE_PAYMENT_CHIP,
+  "How does delivery promotion tracking work?",
+  VCA_DELIVERY_PROMOTION_CHIP,
   "How does pricing work?",
 ];
 const profileQuestionPrompts = [
-  "How does contractor payment work?",
-  "What happens when a client pays late?",
+  "How does delivery promotion tracking work?",
+  "How do I know which promos are working?",
   "How does pricing work?",
-  "Can I track contractors by client?",
-  "Can I manage several projects at once?",
+  "Can I track performance by location?",
+  "Can I manage several campaigns at once?",
 ] as const;
 const profileQuestionResponses: Record<
   (typeof profileQuestionPrompts)[number],
   string
 > = {
-  "How does contractor payment work?":
-    "Velora lets you connect contractor payouts to the client project, approval milestone, or payment condition behind them. You can queue payouts, show contractors when a payment is pending, and release the right payments once the client-side dependency clears.",
-  "What happens when a client pays late?":
-    "Velora moves only the affected contractor payments into a pending state automatically. Contractors can see that their payment is queued, not missing, and once the client payment clears, the scheduled payouts release without your team chasing spreadsheets.",
+  "How does delivery promotion tracking work?":
+    "Velora connects each promotion to the locations, menus, delivery channels, and launch dates behind it. You can see what is live, what is waiting on an update, and how each promo performs once orders start coming in.",
+  "How do I know which promos are working?":
+    "Velora compares promotion performance by location and channel, then highlights repeat-order impact after the offer ends. That makes it easier to see which promotions are driving durable demand instead of one-time discount spikes.",
   "How does pricing work?":
-    "Velora pricing is based on agency size and the complexity of your payout workflow, including active projects, contractor volume, and client payment rules. For a small agency, the goal is to keep the plan predictable while still covering conditional payment scheduling and contractor visibility.",
-  "Can I track contractors by client?":
-    "Yes. Velora tracks each contractor-client relationship separately, so you can see which contractors are tied to each client, project, invoice, and approval status. That makes it easier to answer who is ready to be paid and who is waiting on a client dependency.",
-  "Can I manage several projects at once?":
-    "Yes. Velora gives you one dashboard across active client projects, with payment status, contractor payout timing, and approval blockers grouped by project. If one project is delayed, the rest of your contractor payments can keep moving.",
+    "Velora pricing is based on team size and the complexity of your growth workflow, including active locations, delivery channels, and campaign volume. For a 20-50 employee restaurant team, the goal is to keep the plan predictable while still covering campaign reporting and menu workflow visibility.",
+  "Can I track performance by location?":
+    "Yes. Velora tracks each location separately, so you can see which restaurants launched a promo, which menu updates are live, and which locations drove the strongest order and repeat-order lift.",
+  "Can I manage several campaigns at once?":
+    "Yes. Velora gives you one dashboard across active campaigns, with launch status, menu updates, delivery channel readiness, and performance grouped by location. If one promo slips, the rest of your campaigns can keep moving.",
 };
 const VCA_JOB_SEEKER_QUESTION =
   "Would my customer operations background be a fit for the Customer Operations Lead role?";
@@ -325,19 +270,19 @@ const vcaJobSeekerPrompts = [
 ];
 const VCA_GREETING =
   "Hi, I'm Velora's AI assistant. I can help explain what Velora does, answer questions about roles or recent updates, and point you to the right next step. What would you like to know?";
-const VCA_LATE_PAYMENT_RESPONSE =
-  "This is one of the core things Velora was built for. When a client payment is delayed, contractor payments go into a pending state automatically - no manual intervention, no awkward conversations. Contractors can see their payment is queued, not missing. Once the client pays, everything releases. Here's how a similar agency handled it:";
+const VCA_DELIVERY_PROMOTION_RESPONSE =
+  "This is one of the core things Velora was built for. When a delivery promotion launches, Velora shows performance by location and channel - no manual spreadsheet cleanup, no guessing which offer worked. Teams can see what is live, what changed, and which promos brought guests back. Here's how a similar restaurant group handled it:";
 const VCA_JOB_SEEKER_RESPONSE =
-  "Yes - your customer operations background sounds relevant, especially if you've helped customers through setup, troubleshooting, and feedback loops. For this role, Velora is looking for someone who can connect customer conversations, payment workflow setup, and cross-functional product feedback so small agency teams get clear answers quickly.";
+  "Yes - your customer operations background sounds relevant, especially if you've helped customers through setup, troubleshooting, and feedback loops. For this role, Velora is looking for someone who can connect customer conversations, menu and campaign workflow setup, and cross-functional product feedback so restaurant teams get clear answers quickly.";
 const VCA_JOB_PROOF_INTRO =
   "This role looks closest to what you're describing:";
 const VCA_CASE_STUDY_RETURN_PROMPT =
-  "Studio Northline feels pretty close to your world - a small team, rotating contractors, and client payments that ripple into payout timing. Want me to turn what you've shared into a warm intro to Velora so the team has the right context from the start?";
+  "Northline Kitchen Group feels pretty close to your world - a multi-location team, delivery channels, and menu updates that ripple into campaign performance. Want me to turn what you've shared into a warm intro to Velora so the team has the right context from the start?";
 const VCA_DRAFT_INTRO_PROMPT = "Draft message";
 const VCA_HANDOFF_OFFER =
   "Sounds like this might be a fit for your team. Want me to put together a message to Velora so they have your context before you connect?";
 const VCA_HANDOFF_MESSAGE =
-  "Hi - I run a small creative agency with rotating contractors and I'm dealing with late client payments that cascade into late contractor payments. Your conditional payment scheduling sounds like exactly what I need. Would love to learn more about how it works for an agency our size.";
+  "Hi - I manage marketing operations for a growing restaurant group and I'm trying to understand which delivery promotions actually bring guests back after the offer ends. Your location-level campaign reporting sounds like exactly what we need. Would love to learn more about how it works for a team our size.";
 const VCA_AI_CARD_CLASS =
   "chat-message-enter flex w-full max-w-[24rem] flex-col gap-lg rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text shadow-raised-faint";
 
@@ -463,14 +408,15 @@ function VeloraLinkedInPostProofCard({
         </div>
 
         <p className="mt-md text-control-sm text-text">
-          Studio Northline: how a 10-person creative agency stopped chasing late payments
+          Northline Kitchen Group: how a six-location restaurant group improved
+          delivery promo launches
         </p>
       </div>
       <Image
         alt=""
         className="aspect-[16/9] w-full object-cover"
         height={272}
-        src={assetSrc("post-image-1.png")}
+        src={assetSrc("restaurant-case-study-northline.png")}
         width={484}
       />
       <div className="flex items-center justify-between border-t border-border-faint px-lg py-sm text-body-sm text-text-meta">
@@ -517,13 +463,13 @@ function VeloraCaseStudySidePanel({
           alt=""
           className="aspect-[16/7] w-full object-cover"
           height={332}
-          src={assetSrc("post-image-1.png")}
+          src={assetSrc("restaurant-case-study-northline.png")}
           width={760}
         />
 
         <h1 className="mt-xl text-heading-lg text-text">
-          Studio Northline: how a 10-person creative agency stopped chasing
-          late payments
+          Northline Kitchen Group: how a six-location restaurant group improved
+          delivery promo launches
         </h1>
 
         <div className="mt-lg flex items-start gap-md">
@@ -549,20 +495,19 @@ function VeloraCaseStudySidePanel({
 
         <div className="mt-xl space-y-md text-body-sm-open text-text">
           <p>
-            Studio Northline was juggling five active client retainers and
-            14 rotating contractors across brand, motion, and production work.
-            One late client invoice used to send the whole team into a
-            spreadsheet scramble.
+            Northline Kitchen Group was coordinating six locations, three
+            delivery channels, and weekly menu updates. One local offer used to
+            send the whole team into a spreadsheet scramble.
           </p>
           <p>
-            With Velora, Maya&apos;s team mapped every contractor payout to the
-            client project and payment condition behind it. When one client paid
-            late, only the affected contractor payments moved into pending.
+            With Velora, Maya&apos;s team mapped every promotion to the
+            locations, menu changes, and delivery channels behind it. When one
+            channel changed, only the affected launch tasks moved into review.
             Everyone else stayed on schedule.
           </p>
           <p>
-            Contractors could see that payments were queued, not missing. Once
-            the invoice cleared, Velora released the right payouts
+            Local teams could see what was approved, queued, or live. Once the
+            promo ended, Velora showed which locations drove repeat orders
             automatically.
           </p>
         </div>
@@ -699,10 +644,10 @@ function VeloraJobSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
           <h3 className="text-heading-lg text-text">About the job</h3>
           <h4 className="mt-lg text-heading-sm text-text">About The Team</h4>
           <p className="mt-xl text-body-md-open text-text">
-            Velora helps small agency teams manage contractor payments, client
-            invoice timing, and project approvals in one workflow. The Customer
-            Operations team works closely with customers, product, and payments
-            partners to make complex payout questions feel clear and
+            Velora helps restaurant teams manage delivery promotions, menu
+            updates, and location-level campaign reporting in one workflow. The
+            Customer Operations team works closely with customers, product, and
+            integration partners to make complex launch questions feel clear and
             actionable....{" "}
             <button
               className="font-semibold text-text-meta hover:text-text"
@@ -760,6 +705,18 @@ function VcaHandoffCard({
       </Button>
     </article>
   );
+}
+
+export function PremiumCompanyPagesVcaPostProofCardPreview() {
+  return <VeloraLinkedInPostProofCard onViewCaseStudy={() => {}} />;
+}
+
+export function PremiumCompanyPagesVcaJobPreviewCardPreview() {
+  return <VeloraLinkedInJobPreviewCard onViewJob={() => {}} />;
+}
+
+export function PremiumCompanyPagesVcaHandoffCardPreview() {
+  return <VcaHandoffCard onOpenMessage={() => {}} />;
 }
 
 function VeloraAiHeader({
@@ -980,7 +937,7 @@ function PremiumCompanyPagesVcaPanel({
         {shouldShowProof ? (
           <>
             <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-              {VCA_LATE_PAYMENT_RESPONSE}
+              {VCA_DELIVERY_PROMOTION_RESPONSE}
             </VcaAssistantMessage>
             <VeloraLinkedInPostProofCard
               onViewCaseStudy={onOpenCaseStudy}
@@ -1091,193 +1048,6 @@ function PremiumCompanyPagesVcaPanel({
         </>
       )}
     </ChatPanel>
-  );
-}
-
-function GlobalInboxAvatar({
-  active = false,
-  className,
-  label,
-  shape = "circle",
-  size = 40,
-  src,
-  style,
-}: Readonly<{
-  active?: boolean;
-  className?: string;
-  label: string;
-  shape?: "circle" | "square";
-  size?: 32 | 40;
-  src: string;
-  style?: CSSProperties;
-}>) {
-  return (
-    <span className="relative inline-flex shrink-0">
-      <Entity
-        className={className}
-        label={label}
-        shape={shape}
-        size={size}
-        src={src}
-        style={style}
-      />
-      {active ? (
-        <span
-          aria-label="Active"
-          className="absolute -bottom-xxs -right-xxs size-3 rounded-round border-2 border-background bg-positive"
-          role="status"
-        />
-      ) : null}
-    </span>
-  );
-}
-
-function GlobalInboxTray({
-  isExpanded,
-  onOpenVeloraThread,
-  onToggle,
-}: Readonly<{
-  isExpanded: boolean;
-  onOpenVeloraThread: () => void;
-  onToggle: () => void;
-}>) {
-  return (
-    <aside
-      aria-label="Messaging inbox"
-      className={cx(
-        "pcp-global-messaging-surface fixed bottom-0 right-6 z-50 hidden w-[288px] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint-upward transition-[height] duration-[var(--design-motion-duration-moderate)] ease-emphasized md:flex",
-        isExpanded
-          ? "h-[min(calc(100dvh_-_96px),690px)]"
-          : "h-[var(--design-layout-chat-tray-height,48px)]",
-      )}
-    >
-      <div className="flex min-h-[var(--design-layout-chat-tray-height,48px)] items-center gap-sm border-b border-border-faint px-lg">
-        <button
-          aria-expanded={isExpanded}
-          className="group flex min-w-0 flex-1 items-center gap-sm rounded-xs text-left outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-          onClick={onToggle}
-          type="button"
-        >
-          <GlobalInboxAvatar
-            active
-            label="Cheri Sparks"
-            size={32}
-            src={assetSrc("avatar-2.png")}
-          />
-          <span className="min-w-0 truncate text-heading-md text-text">
-            Messaging
-          </span>
-        </button>
-        <div className="flex shrink-0 items-center -space-x-xs">
-          <GhostIconButton
-            icon="overflow-web-ios"
-            label="More messaging actions"
-            size="small"
-          />
-          <GhostIconButton
-            icon="compose"
-            label="Compose message"
-            size="small"
-          />
-          <GhostIconButton
-            icon={isExpanded ? "chevron-down" : "chevron-up"}
-            label={isExpanded ? "Collapse messaging" : "Expand messaging"}
-            onClick={onToggle}
-            size="small"
-          />
-        </div>
-      </div>
-
-      {isExpanded ? (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <button
-            className="flex min-h-[48px] items-center justify-between border-b border-border-faint px-lg text-left text-control-md text-text outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-            type="button"
-          >
-            <span>More inboxes</span>
-            <Icon className="text-icon" name="caret" size="small" />
-          </button>
-
-          <div className="border-b border-border-faint px-lg py-sm">
-            <div className="flex h-10 items-center gap-sm rounded-xs bg-background-neutral-soft px-md text-text-meta">
-              <Icon name="search" size="small" />
-              <span className="min-w-0 flex-1 truncate text-body-sm">
-                Search messages
-              </span>
-              <Icon name="overflow-android" size="small" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 border-b border-border-faint text-center text-control-sm">
-            <button
-              aria-selected="true"
-              className="border-b-2 border-positive px-md py-md text-positive outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-              role="tab"
-              type="button"
-            >
-              Focused
-            </button>
-            <button
-              aria-selected="false"
-              className="border-b-2 border-transparent px-md py-md text-text-meta outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
-              role="tab"
-              type="button"
-            >
-              Other
-            </button>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto">
-            {globalInboxThreads.map((thread) => (
-              <button
-                className={cx(
-                  "flex w-full items-start gap-sm border-b border-border-faint px-md py-sm text-left outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring",
-                  thread.selected && "bg-action-background-transparent-hover",
-                )}
-                onClick={
-                  thread.id === "velora" ? onOpenVeloraThread : undefined
-                }
-                key={thread.name}
-                type="button"
-              >
-                <GlobalInboxAvatar
-                  active={thread.active}
-                  className={
-                    thread.id === "velora"
-                      ? cx(
-                          VELORA_LOGO_TILE_BACKGROUND_CLASS,
-                          VELORA_LOGO_AVATAR_RADIUS_CLASS,
-                        )
-                      : undefined
-                  }
-                  label={thread.name}
-                  shape={thread.id === "velora" ? "square" : "circle"}
-                  src={assetSrc(thread.avatar)}
-                  style={
-                    thread.id === "velora"
-                      ? VELORA_LOGO_TILE_BACKGROUND_STYLE
-                      : undefined
-                  }
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="flex min-w-0 items-baseline justify-between gap-sm">
-                    <span className="truncate text-control-sm text-text">
-                      {thread.name}
-                    </span>
-                    <span className="shrink-0 text-body-xs text-text-meta">
-                      {thread.time}
-                    </span>
-                  </span>
-                  <span className="mt-xxs block truncate text-body-sm text-text-meta">
-                    {thread.detail}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </aside>
   );
 }
 
@@ -1483,8 +1253,8 @@ function HumanCompanyMessagePanel({
               <p>Hi Velora,</p>
               <p>
                 I found your Premium Company Page and I am interested in
-                learning whether Velora could help my agency manage client
-                payments and contractor payouts.
+                learning whether Velora could help my restaurant group manage
+                delivery promotions and menu updates.
               </p>
             </HumanMessageEntry>
             <HumanMessageEntry
@@ -1977,7 +1747,7 @@ function ProfileQuestionNudgeCard({
           <span>Based on your profile</span>
         </div>
         <h2 className="mt-sm text-heading-lg text-text">
-          Top questions from agency founders
+          Top questions from restaurant marketers
         </h2>
         <div className="relative mt-lg">
           <div
@@ -2036,10 +1806,11 @@ function OverviewCard() {
       <div className="flex flex-col gap-lg px-xxl pb-xl pt-lg">
         <div className="relative overflow-hidden">
           <p className="line-clamp-3 pr-stack text-body-sm-open text-text">
-            {pcpCompanyProfile.name} helps small agencies manage client
-            payments, contractor payout timing, and approval dependencies in
-            one place. It is built for owners whose payment operations have
-            outgrown spreadsheets but not their team size.
+            {pcpCompanyProfile.name} helps restaurant teams manage delivery
+            promotions, menu updates, and location-level campaign performance in
+            one place. It is built for marketing and operations teams whose
+            growth workflows have outgrown spreadsheets but not their team
+            size.
           </p>
           <span className="absolute bottom-0 right-0 bg-background pl-xs text-body-sm text-text-meta">
             more
@@ -2102,7 +1873,7 @@ function FeaturedCard() {
             alt="Featured customer video"
             className="aspect-[16/9] w-full object-cover"
             height={410}
-        src={assetSrc("hero-cover-1.png")}
+            src={assetSrc("restaurant-case-study-northline.png")}
             width={720}
           />
           <span className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
@@ -2116,13 +1887,13 @@ function FeaturedCard() {
         </p>
         <div className="mt-md grid gap-lg sm:grid-cols-2">
           <MiniContentCard
-            image="media-2.png"
-            title="When client payments slip, contractor trust is what customers remember."
+            image="restaurant-delivery-dashboard.png"
+            title="When delivery promos end, repeat orders are what teams remember."
             meta="9,430 - 115 comments"
           />
           <MiniContentCard
-            image="video-2.png"
-            title="How a creative agency stopped tracking contractor payouts in spreadsheets."
+            image="restaurant-menu-rollout.png"
+            title="How a restaurant group stopped tracking menu rollouts in spreadsheets."
             meta="12,430 - 713 comments"
           />
         </div>
@@ -2260,10 +2031,10 @@ function ProductsCard() {
 
         <div className="mt-xl max-w-[960px]">
           <p className="text-body-sm text-text">
-            Velora helps agency teams coordinate client payment timing,
-            contractor obligations, and project approvals in one workflow.
-            Teams can understand what is ready, blocked, or waiting on follow-up
-            before payouts turn into spreadsheet work.
+            Velora helps restaurant teams coordinate delivery promotion timing,
+            menu updates, and location approvals in one workflow. Teams can
+            understand what is live, blocked, or waiting on follow-up before
+            campaigns turn into spreadsheet work.
           </p>
 
           <div className="mt-lg">
@@ -2418,7 +2189,7 @@ function EventCard() {
             alt=""
             className="aspect-video min-w-0 flex-1 rounded-xs object-cover"
             height={220}
-            src={assetSrc("event-launch.png")}
+            src={assetSrc("restaurant-workshop-event.png")}
             width={360}
           />
           <div className="flex min-w-0 flex-1 flex-col gap-lg">
@@ -2430,7 +2201,7 @@ function EventCard() {
                 Wed, 06/18/2025, 5:00 PM
               </p>
               <h3 className="text-control-md text-text">
-                Live workshop: keeping contractor payments clear when clients pay late
+                Live workshop: keeping delivery promotions aligned across locations
               </h3>
               <p className="text-body-sm text-text">
                 Hosted by {pcpCompanyProfile.name}
@@ -2508,21 +2279,21 @@ function LifeAtVeloraCard() {
           alt=""
           className="aspect-video w-full rounded-xs object-cover"
           height={260}
-          src={assetSrc("life-at-sierra.png")}
+          src={assetSrc("restaurant-team-ops.png")}
           width={460}
         />
         <div>
           <h3 className="text-control-md text-text">
-            Built around agency payment complexity
+            Built around restaurant growth complexity
           </h3>
           <p className="mt-xs text-body-sm-open text-text">
-            {pcpCompanyProfile.name} helps agency teams connect client invoice
-            timing, contractor obligations, and project approvals in one place.
+            {pcpCompanyProfile.name} helps restaurant teams connect menu
+            updates, delivery channels, and campaign reporting in one place.
           </p>
           <p className="text-body-sm-open text-text">
-            {pcpCompanyProfile.founderName} founded the company for small teams
-            that need payment clarity without adding another spreadsheet or
-            finance operations layer.
+            {pcpCompanyProfile.founderName} founded the company for growing
+            teams that need campaign clarity without adding another spreadsheet
+            or operations layer.
           </p>
         </div>
       </div>
@@ -2567,7 +2338,8 @@ function PremiumInsightsCard() {
             </span>
           </div>
           <p className="mt-lg text-supportive-s text-text-meta">
-            Including agency founders and operations leads from target accounts
+            Including restaurant marketers and operations leads from target
+            accounts
           </p>
         </div>
       </div>
@@ -2791,7 +2563,7 @@ function SideListCard({
                 <p className="text-supportive-s text-text-meta">
                   {type === "role"
                     ? pcpCompanyProfile.location
-                    : "Financial services software"}
+                    : "Restaurant technology software"}
                 </p>
                 <Button className="mt-sm" size="small" variant="tertiary">
                   {type === "role" ? "View role" : "Follow"}
@@ -2966,7 +2738,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       () => {
         resetVcaConversation();
         setVcaPanelVariant("collapsed");
-        if (!isJobSeekerIntent && prompt === VCA_LATE_PAYMENT_CHIP) {
+        if (!isJobSeekerIntent && prompt === VCA_DELIVERY_PROMOTION_CHIP) {
           setVcaVisitorQuestion(VCA_HERO_QUESTION);
           setVcaConversationStage("postProof");
         } else {
@@ -3170,7 +2942,7 @@ function PremiumCompanyPagesSeparateMemberPage({
 
     if (vcaConversationStage === "opening") {
       if (
-        prompt !== VCA_LATE_PAYMENT_CHIP &&
+        prompt !== VCA_DELIVERY_PROMOTION_CHIP &&
         prompt in profileQuestionResponses
       ) {
         setVcaVisitorQuestion(prompt);
@@ -3179,7 +2951,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       }
 
       setVcaVisitorQuestion(
-        prompt === VCA_LATE_PAYMENT_CHIP ? VCA_HERO_QUESTION : prompt,
+        prompt === VCA_DELIVERY_PROMOTION_CHIP ? VCA_HERO_QUESTION : prompt,
       );
       setVcaConversationStage("postProof");
       return;

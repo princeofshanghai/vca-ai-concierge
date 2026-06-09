@@ -6,12 +6,12 @@ export const pcpCompanyProfile = {
   founderName: "Ning Hu",
   founderTitle: "Founder & CEO",
   tagline:
-    "Invoicing and payments built for agencies managing rotating contractor teams.",
-  industry: "Financial services software",
+    "Restaurant growth software for managing online orders, delivery promotions, and local campaigns.",
+  industry: "Restaurant technology software",
   location: "San Francisco, CA",
   followers: "6,842 followers",
-  employees: "25 employees",
-  clientReach: "Built for small agencies and contractor teams",
+  employees: "32 employees",
+  clientReach: "Built for restaurant groups and franchise marketing teams",
   ctaLabel: "Ask Velora",
   socialProof: "Tia & 3 other connections follow this",
   logoSrc: `${PCP_MEMBER_ASSET_ROOT}/velora-logo.png`,
@@ -20,9 +20,9 @@ export const pcpCompanyProfile = {
   founderAvatarSrc: `${PCP_MEMBER_ASSET_ROOT}/ning-hu.png`,
   testimonial: {
     quote:
-      "Velora gave us one place to track client payments, contractor schedules, and what still needed approval. The late-payment chaos finally stopped running the business.",
+      "Velora gave us one place to manage menu updates, delivery promotions, and campaign reporting across locations. We finally stopped rebuilding the same launch plan every week.",
     author: "Maya Patel",
-    role: "Managing Partner at Studio Northline",
+    role: "Managing Partner at Northline Kitchen Group",
     avatarSrc: `${PCP_ASSET_ROOT}/avatar-1.png`,
   },
 } as const;

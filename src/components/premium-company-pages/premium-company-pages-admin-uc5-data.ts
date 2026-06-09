@@ -21,14 +21,14 @@ export type AdminUc5Insight = Readonly<{
   label: string;
   value: string;
   query: string;
-  analyticsLabel: string;
   followUps: ReadonlyArray<AdminUc5FollowUp>;
 }>;
 
 export type AdminUc5Metric = Readonly<{
   label: string;
   value: string;
-  change: string;
+  changeValue: string;
+  changeContext: string;
   tone: AdminUc5Tone;
 }>;
 
@@ -76,19 +76,23 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "post-amplification",
     icon: "analytics",
     label: "One post is worth amplifying",
-    value: "4.2% engagement rate - only 180 impressions - posted 3 days ago",
+    value: "4.2% engagement rate - only 180 impressions",
     query: "Tell me more about this post.",
-    analyticsLabel: "View full Content analytics",
     followUps: [
       {
         prompt: "Why this post?",
         response:
-          "Because the early signal is strong. People who saw the post engaged with it at 4.2%, well above the Page average, but only 180 people saw it. Boosting helps give proven content a fairer chance.",
+          "Because the early signal is strong. People who saw the post engaged with it at 4.2%, well above the Page average, but only 180 people saw it. That makes it a good candidate to review for more reach.",
       },
       {
-        prompt: "Who should I boost it to?",
+        prompt: "Who would this reach?",
         response:
-          "Start with small agency owners, creative directors, and operations leads at 1-20 person creative and marketing services firms. They are already showing up in your visitor data.",
+          "The strongest audience fit is restaurant group marketers, digital ordering leads, and operators at 20-50 employee restaurant teams. They are already showing up in your visitor data.",
+      },
+      {
+        prompt: "Explore boost options",
+        response:
+          "You could review a small boost for this post, but I would start by checking the audience, budget, and duration before launching anything. The safer first step is to preview who it would reach.",
       },
     ],
   },
@@ -96,9 +100,8 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "follower-growth",
     icon: "people",
     label: "Follower growth is up this month",
-    value: "312 visitors - +18 ppt vs last month",
+    value: "312 visitors - 18 points vs last month",
     query: "Show me follower growth this month.",
-    analyticsLabel: "View full Followers analytics",
     followUps: [
       {
         prompt: "How does this compare to last quarter?",
@@ -108,47 +111,45 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
       {
         prompt: "Which posts drove the most follows?",
         response:
-          "The late-payment case study drove the most follows, followed by the contractor payout spreadsheet post. Both converted because they named an agency-owner pain point directly.",
+          "The delivery promotion checklist drove the most follows, followed by the menu rollout post. Both converted because they named a restaurant marketing ops pain point directly.",
       },
     ],
   },
   "visitor-demographics": {
     id: "visitor-demographics",
     icon: "analytics",
-    label: "Your page is attracting agency decision-makers",
-    value: "Top visitors include founders, creative directors, and operators",
+    label: "Delivery promo content is pulling the right audience",
+    value: "64% of engaged visitors match multi-location restaurant teams",
     query: "Who is visiting Velora's Page?",
-    analyticsLabel: "View full Visitors analytics",
     followUps: [
       {
         prompt: "Are these the right people for Velora?",
         response:
-          "Yes. The strongest visitor groups look like the people Velora is built to help: small agency owners, creative directors, and operators managing contractor payment complexity.",
+          "Yes. The strongest visitor groups look like the people Velora is built to help: restaurant group marketers, digital ordering leads, and operators managing menu, delivery, and local campaign complexity.",
       },
       {
         prompt: "How do I reach more of them?",
         response:
-          "Post more founder-facing payment scenarios and boost the Studio Northline story to agency owners at 1-20 person creative and marketing services firms.",
+          "Post more operator-facing online ordering scenarios and boost the Northline Kitchen Group story to marketing and operations leads at 20-50 employee restaurant teams.",
       },
     ],
   },
   "content-engagement": {
     id: "content-engagement",
     icon: "popular-content",
-    label: "See how viewers engage with your content",
-    value: "Top post: 1,688 impressions - mostly mobile",
-    query: "Which posts are performing best this week?",
-    analyticsLabel: "View full Content analytics",
+    label: "One post is outperforming its reach",
+    value: "Northline story: strong engagement - modest impressions",
+    query: "What should I do with this high-engagement post?",
     followUps: [
       {
         prompt: "Why did the top post perform better?",
         response:
-          "It led with a concrete operational risk: late clients creating late contractor payouts. That makes the problem obvious before readers need to understand Velora.",
+          "It led with a concrete operational risk: delivery app promotions creating inconsistent menus and hard-to-read performance. That makes the problem obvious before readers need to understand Velora.",
       },
       {
         prompt: "What should I post next?",
         response:
-          "Turn Cheri's question into a short post: 'If one client pays late, should every contractor payout pause?' Pair it with a simple before-and-after workflow.",
+          "Turn Cheri's question into a short post: 'Which locations are losing repeat orders after a delivery promo ends?' Pair it with a simple before-and-after workflow.",
       },
     ],
   },
@@ -158,18 +159,17 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     label: "Your weekly summary is ready",
     value: "3 things to act on this week",
     query: "Summarize the top things I should act on this week.",
-    analyticsLabel: "View full Leads analytics",
     followUps: [
       {
         prompt: "Draft the Cheri Sparks customer story",
         primary: true,
         response:
-          "Draft angle: 'How an 8-person creative agency keeps contractor payouts clear when clients pay late.' Lead with Cheri's late-payment question, then explain conditional payment schedules in one visual example.",
+          "Draft angle: 'How Northline Kitchen Group kept delivery menus consistent across six locations.' Lead with Cheri's delivery promotion question, then explain location-level campaign reporting in one visual example.",
       },
       {
         prompt: "Which leads need a reply?",
         response:
-          "Cheri Sparks needs the fastest reply because she is high intent and unreplied. Priya Shah is next because QuickBooks exports are a concrete buying question.",
+          "Cheri Sparks needs the fastest reply because she is high intent and unreplied. Priya Shah is next because POS and menu exports are a concrete buying question.",
       },
     ],
   },
@@ -179,19 +179,22 @@ export const adminUc5FollowerMetrics: ReadonlyArray<AdminUc5Metric> = [
   {
     label: "Visitors",
     value: "312",
-    change: "+18 ppt MoM",
+    changeValue: "18 points",
+    changeContext: "vs last month",
     tone: "positive",
   },
   {
     label: "New followers",
     value: "37",
-    change: "+8% WoW",
+    changeValue: "8%",
+    changeContext: "vs last week",
     tone: "positive",
   },
   {
     label: "Follower total",
     value: "6,842",
-    change: "+37 this week",
+    changeValue: "37",
+    changeContext: "this week",
     tone: "positive",
   },
 ];
@@ -200,22 +203,22 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
   {
     label: "Company size",
     rows: [
-      { label: "1-10 employees", percentage: 62 },
-      { label: "11-50 employees", percentage: 24 },
+      { label: "20-50 employees", percentage: 62 },
+      { label: "51-200 employees", percentage: 24 },
     ],
   },
   {
     label: "Job function",
     rows: [
-      { label: "Founders and creative directors", percentage: 65 },
-      { label: "Operations", percentage: 18 },
+      { label: "Marketing and operations", percentage: 65 },
+      { label: "Digital ordering", percentage: 18 },
     ],
   },
   {
     label: "Industry",
     rows: [
-      { label: "Creative and marketing services", percentage: 58 },
-      { label: "Financial services software", percentage: 16 },
+      { label: "Restaurants", percentage: 58 },
+      { label: "Hospitality technology", percentage: 16 },
     ],
   },
   {
@@ -228,27 +231,27 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
   {
     label: "Seniority",
     rows: [
-      { label: "Owner / C-suite", percentage: 55 },
-      { label: "Director", percentage: 21 },
+      { label: "Manager / Director", percentage: 55 },
+      { label: "Owner / Operator", percentage: 21 },
     ],
   },
 ];
 
 export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
-    title: "What late client payments do to contractor trust",
+    title: "How restaurant teams keep delivery menus consistent across locations",
     impressions: "1,688",
     desktop: 32,
     mobile: 68,
   },
   {
-    title: "Agency ops win: replacing the payment spreadsheet",
+    title: "Restaurant ops win: one launch calendar for every location",
     impressions: "1,204",
     desktop: 41,
     mobile: 59,
   },
   {
-    title: "Which payout becomes risky if this client invoice is late?",
+    title: "Which location loses repeat orders after a delivery promo ends?",
     impressions: "936",
     desktop: 27,
     mobile: 73,
@@ -257,13 +260,13 @@ export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
 
 export const adminUc5LowPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
-    title: "Velora product update: payout settings",
+    title: "Velora product update: menu rules",
     impressions: "214",
     desktop: 52,
     mobile: 48,
   },
   {
-    title: "June release notes for payment workflow admins",
+    title: "June release notes for campaign workflow admins",
     impressions: "168",
     desktop: 61,
     mobile: 39,
@@ -279,19 +282,19 @@ export const adminUc5CompetitorRows: ReadonlyArray<AdminUc5CompetitorRow> = [
     highlight: true,
   },
   {
-    company: "FreshBooks",
+    company: "Toast",
     postsPerWeek: "5",
     newFollowers: "82",
     commentsPerDay: "18",
   },
   {
-    company: "QuickBooks",
+    company: "Popmenu",
     postsPerWeek: "4",
     newFollowers: "64",
     commentsPerDay: "14",
   },
   {
-    company: "Wave",
+    company: "Owner.com",
     postsPerWeek: "3",
     newFollowers: "29",
     commentsPerDay: "7",
@@ -301,28 +304,28 @@ export const adminUc5CompetitorRows: ReadonlyArray<AdminUc5CompetitorRow> = [
 export const adminUc5Leads: ReadonlyArray<AdminUc5Lead> = [
   {
     name: "Cheri Sparks",
-    company: "Brightframe Studio",
-    summary: "Asked how late client payments affect contractor payouts.",
+    company: "Brightframe Kitchen Group",
+    summary: "Asked how to measure delivery promotions across locations.",
     status: "High intent",
     replyNeeded: true,
   },
   {
     name: "Priya Shah",
-    company: "North Pier Studio",
-    summary: "Asked whether Velora supports QuickBooks exports.",
+    company: "North Pier Restaurants",
+    summary: "Asked whether Velora supports POS and menu exports.",
     status: "Awaiting reply",
     replyNeeded: true,
   },
   {
     name: "Maya Patel",
-    company: "Studio Northline",
-    summary: "Shared a positive agency ops workflow story.",
+    company: "Northline Kitchen Group",
+    summary: "Shared a positive multi-location campaign workflow story.",
     status: "Replied",
   },
 ];
 
 export const adminUc5SynthesisRecommendation =
-  "FreshBooks is posting customer stories 3x a week. You have a strong one in your inbox from Cheri Sparks. Want me to draft it?";
+  "Popmenu is posting customer stories 3x a week. You have a strong one in your inbox from Cheri Sparks. Want me to draft it?";
 
 export const adminUc5PrototypeFallback =
   "This prototype is scripted for the four performance reporting prompts. Choose a digest item or prompt chip to see the compact report.";

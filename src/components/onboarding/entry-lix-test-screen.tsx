@@ -548,7 +548,7 @@ export function EntryLixLeadFormScreen({
           variant="primary"
           className="mt-stack w-full"
         >
-          Have someone contact me
+          Submit
         </Button>
       </form>
     </div>

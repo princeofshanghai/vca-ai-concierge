@@ -42,7 +42,16 @@ import {
   type PremiumReviewFlowId,
 } from "@/components/premium";
 import {
+  AdminPerformanceDigestCard,
+  AdminUc5InsightResponseCardPreview,
+  AdminUc5SelfInitiatedMetricsCardPreview,
+  AdminUc5VisitorAudienceCardPreview,
+  PremiumCompanyPagesInboxContextStripPreview,
+  PremiumCompanyPagesVcaHandoffCardPreview,
+  PremiumCompanyPagesVcaJobPreviewCardPreview,
+  PremiumCompanyPagesVcaPostProofCardPreview,
   VcaFab,
+  type AdminUc5InsightId,
   type VcaFabVisualState,
 } from "@/components/premium-company-pages";
 import { PremiumConciergeFab } from "@/components/premium/premium-concierge-fab";
@@ -143,6 +152,19 @@ type SpecialistActionDemoStateId =
   | "booked-online"
   | "booked-phone";
 type VcaFabDemoState = VcaFabVisualState | "disabled";
+type PcpAiCardDemoId =
+  | "vca-case-study"
+  | "vca-job"
+  | "vca-handoff"
+  | "admin-attention"
+  | "admin-metrics"
+  | "admin-visitor-audience"
+  | "admin-post-amplification"
+  | "admin-follower-growth"
+  | "admin-visitor-demographics"
+  | "admin-content-engagement"
+  | "admin-weekly-synthesis"
+  | "admin-inbox-context";
 
 const bookedMeetingPreview: BookedMeeting = {
   format: "Online meeting",
@@ -269,6 +291,20 @@ const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
   { label: "Active", value: "active" },
   { label: "Focus", value: "focus-visible" },
   { label: "Disabled", value: "disabled" },
+];
+const pcpAiCardDemoOptions: ReadonlyArray<DemoOption<PcpAiCardDemoId>> = [
+  { label: "Case study proof", value: "vca-case-study" },
+  { label: "Job preview", value: "vca-job" },
+  { label: "Drafted message", value: "vca-handoff" },
+  { label: "Attention digest", value: "admin-attention" },
+  { label: "Metrics summary", value: "admin-metrics" },
+  { label: "Visitor audience", value: "admin-visitor-audience" },
+  { label: "Post amplification", value: "admin-post-amplification" },
+  { label: "Follower growth", value: "admin-follower-growth" },
+  { label: "Visitor demographics", value: "admin-visitor-demographics" },
+  { label: "Content engagement", value: "admin-content-engagement" },
+  { label: "Weekly synthesis", value: "admin-weekly-synthesis" },
+  { label: "Inbox context", value: "admin-inbox-context" },
 ];
 
 const genericShellDemoContent: ShellDemoContent = {
@@ -2320,6 +2356,179 @@ export function VcaFabSwappableMarkPreview() {
         </div>
       </div>
     </div>
+  );
+}
+
+function PcpAiCardFrame({
+  children,
+  wide = false,
+}: Readonly<{ children: ReactNode; wide?: boolean }>) {
+  return (
+    <div
+      className={cx(
+        "w-full min-w-0",
+        wide ? "max-w-[680px]" : "max-w-[24rem]",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function PcpAdminAttentionFrame({ children }: Readonly<{ children: ReactNode }>) {
+  return (
+    <div className="w-full max-w-[720px] rounded-sm bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background p-xxl">
+      {children}
+    </div>
+  );
+}
+
+function renderPcpAiCardDemo(cardId: PcpAiCardDemoId) {
+  if (cardId === "vca-case-study") {
+    return <PcpVcaCaseStudyCardPreview />;
+  }
+
+  if (cardId === "vca-job") {
+    return <PcpVcaJobCardPreview />;
+  }
+
+  if (cardId === "vca-handoff") {
+    return <PcpVcaHandoffCardPreview />;
+  }
+
+  if (cardId === "admin-attention") {
+    return <PcpAdminAttentionCardsPreview />;
+  }
+
+  if (cardId === "admin-metrics") {
+    return <PcpAdminSelfInitiatedMetricsCardPreview />;
+  }
+
+  if (cardId === "admin-visitor-audience") {
+    return <PcpAdminVisitorAudienceCardPreview />;
+  }
+
+  if (cardId === "admin-inbox-context") {
+    return <PcpInboxAiContextStripPreview />;
+  }
+
+  const insightIdByCardId: Record<
+    Exclude<
+      PcpAiCardDemoId,
+      | "vca-case-study"
+      | "vca-job"
+      | "vca-handoff"
+      | "admin-attention"
+      | "admin-metrics"
+      | "admin-visitor-audience"
+      | "admin-inbox-context"
+    >,
+    AdminUc5InsightId
+  > = {
+    "admin-post-amplification": "post-amplification",
+    "admin-follower-growth": "follower-growth",
+    "admin-visitor-demographics": "visitor-demographics",
+    "admin-content-engagement": "content-engagement",
+    "admin-weekly-synthesis": "weekly-synthesis",
+  };
+
+  return (
+    <PcpAdminInsightResponseCardPreview insightId={insightIdByCardId[cardId]} />
+  );
+}
+
+export function PcpAiCardsDemo() {
+  const [cardId, setCardId] =
+    useState<PcpAiCardDemoId>("vca-case-study");
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <SelectControl
+          label="Card"
+          value={cardId}
+          options={pcpAiCardDemoOptions}
+          onChange={setCardId}
+        />
+      }
+      previewClassName="w-full"
+    >
+      <div className="flex w-full justify-center">
+        {renderPcpAiCardDemo(cardId)}
+      </div>
+    </ComponentDemoSection>
+  );
+}
+
+export function PcpVcaCaseStudyCardPreview() {
+  return (
+    <PcpAiCardFrame>
+      <PremiumCompanyPagesVcaPostProofCardPreview />
+    </PcpAiCardFrame>
+  );
+}
+
+export function PcpVcaJobCardPreview() {
+  return (
+    <PcpAiCardFrame>
+      <PremiumCompanyPagesVcaJobPreviewCardPreview />
+    </PcpAiCardFrame>
+  );
+}
+
+export function PcpVcaHandoffCardPreview() {
+  return (
+    <PcpAiCardFrame>
+      <PremiumCompanyPagesVcaHandoffCardPreview />
+    </PcpAiCardFrame>
+  );
+}
+
+export function PcpAdminAttentionCardsPreview() {
+  const [activeInsightId, setActiveInsightId] =
+    useState<AdminUc5InsightId | null>("post-amplification");
+
+  return (
+    <PcpAdminAttentionFrame>
+      <AdminPerformanceDigestCard
+        activeInsightId={activeInsightId}
+        onInsightSelect={setActiveInsightId}
+      />
+    </PcpAdminAttentionFrame>
+  );
+}
+
+export function PcpAdminSelfInitiatedMetricsCardPreview() {
+  return (
+    <PcpAiCardFrame wide>
+      <AdminUc5SelfInitiatedMetricsCardPreview />
+    </PcpAiCardFrame>
+  );
+}
+
+export function PcpAdminVisitorAudienceCardPreview() {
+  return (
+    <PcpAiCardFrame wide>
+      <AdminUc5VisitorAudienceCardPreview />
+    </PcpAiCardFrame>
+  );
+}
+
+export function PcpAdminInsightResponseCardPreview({
+  insightId,
+}: Readonly<{ insightId: AdminUc5InsightId }>) {
+  return (
+    <PcpAiCardFrame wide>
+      <AdminUc5InsightResponseCardPreview insightId={insightId} />
+    </PcpAiCardFrame>
+  );
+}
+
+export function PcpInboxAiContextStripPreview() {
+  return (
+    <PcpAiCardFrame wide>
+      <PremiumCompanyPagesInboxContextStripPreview />
+    </PcpAiCardFrame>
   );
 }
 

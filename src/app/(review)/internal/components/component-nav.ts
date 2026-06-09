@@ -129,6 +129,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
               "Opens the Premium Company Page VCA from page surfaces.",
             href: "/internal/components/premium-company-page/vca-fab",
           },
+          {
+            id: "premium-company-page-ai-cards",
+            title: "AI cards",
+            description:
+              "Collects PCP AI cards from VCA conversation, admin attention, AI insight, and inbox context moments.",
+            href: "/internal/components/premium-company-page/ai-cards",
+          },
         ],
       },
     ],

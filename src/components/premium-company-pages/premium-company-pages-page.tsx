@@ -6,13 +6,14 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type ChangeEvent,
   type ReactNode,
 } from "react";
 
 import { type ChatPanelVariant } from "@/components/chat";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { Button } from "@/components/primitives/button";
+import { Button, getButtonClassName } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
@@ -26,6 +27,7 @@ import {
   PCP_ASSET_ROOT,
   pcpCompanyProfile,
 } from "./persona";
+import { GlobalInboxTray } from "./global-inbox-tray";
 import {
   AdminPerformanceDigestCard,
   AdminUc5AgentPanel,
@@ -39,6 +41,7 @@ import {
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
 const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
+const ADMIN_ANALYTICS_HREF = "/premium-company-pages/admin/analytics";
 const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
 
 const primaryRailItems = [
@@ -54,6 +57,7 @@ const primaryRailItems = [
 const secondaryRailItems = ["Services", "Products", "Jobs"];
 
 const railItemHrefs: Partial<Record<string, string>> = {
+  Analytics: ADMIN_ANALYTICS_HREF,
   Dashboard: ADMIN_DASHBOARD_HREF,
   Inbox: ADMIN_INBOX_HREF,
 };
@@ -86,6 +90,39 @@ type InboxThreadData = Readonly<{
   vca?: boolean;
 }>;
 
+type AnalyticsTabId =
+  | "content"
+  | "visitors"
+  | "followers"
+  | "search-appearances"
+  | "competitors"
+  | "leads"
+  | "newsletters";
+
+type AnalyticsHighlightData = Readonly<{
+  label: string;
+  value: string;
+  delta: string;
+}>;
+
+type ContentEngagementRowData = Readonly<{
+  title: string;
+  postedBy: string;
+  date: string;
+  type: string;
+  audience: string;
+  impressions: string;
+  views: string;
+  clicks: string;
+}>;
+
+type AnalyticsInsightCardData = Readonly<{
+  insightId: AdminUc5InsightId;
+  icon: IconName;
+  title: string;
+  detail: string;
+}>;
+
 const performanceCards: Array<PerformanceCardData> = [
   {
     title: "Who visited your Page",
@@ -116,30 +153,30 @@ const performanceCards: Array<PerformanceCardData> = [
 
 const recentPosts = [
   {
-    body: "What happens when a client pays late but contractors still need to be paid? Conditional payment schedules can keep expectations clear before the invoice is overdue.",
+    body: "How do restaurant teams keep delivery menus consistent across locations? A shared campaign workflow can keep online ordering and delivery updates aligned before launch.",
     metric: "Get up to 12K more impressions by boosting",
-    image: "post-building-blue.png",
-    imageAlt: "",
-    linkTitle: "What late client payments do to contractor trust",
+    image: "restaurant-post-menu-ops.png",
+    imageAlt: "Restaurant manager using a menu workflow on a tablet",
+    linkTitle: "How restaurant teams keep delivery menus consistent",
     linkMeta: "veloracloud.com",
     reactions: "152",
     comments: "18 Comments",
   },
   {
-    body: "Before and after: replacing a contractor payment spreadsheet with one shared view of client invoices, approvals, and payout timing.",
+    body: "Before and after: replacing a location-by-location promotion spreadsheet with one shared view of menu updates, local offers, and delivery channel performance.",
     metric: "Get up to 9K more impressions by boosting",
-    image: "post-kudos.png",
-    imageAlt: "",
-    linkTitle: "Agency ops win",
-    linkMeta: "Studio Northline team",
+    image: "restaurant-post-campaign-calendar.png",
+    imageAlt: "Restaurant team reviewing a campaign calendar",
+    linkTitle: "Restaurant ops win",
+    linkMeta: "Northline Kitchen Group",
     reactions: "860",
     comments: "42 Comments",
   },
   {
-    body: "A short operating question for agency owners: which contractor payout becomes risky if this client invoice is five days late?",
+    body: "A short operating question for restaurant marketers: which location loses repeat orders after this delivery promo ends?",
     metric: "Get up to 7K more impressions by boosting",
-    image: "feed-post-content.png",
-    imageAlt: "",
+    image: "restaurant-post-delivery-performance.png",
+    imageAlt: "Restaurant pickup shelf with delivery performance dashboard",
     reactions: "240",
     comments: "12 Comments",
   },
@@ -147,30 +184,29 @@ const recentPosts = [
 
 const vcaLeadBrief = {
   buyer: "Cheri Sparks",
-  role: "Founder & Creative Director at Brightframe Studio",
+  role: "Marketing Operations Lead at Brightframe Kitchen Group",
   avatar: "member/avatar-2.png",
-  companyContext: "8-person creative production agency",
-  need: "Client payment delays are creating contractor payout uncertainty",
-  signals:
-    "Asked what happens to contractor payments when a client pays late",
-  proofShown: "Studio Northline late-payment case study",
+  companyContext: "32-person restaurant group with six locations",
+  need: "Delivery promotions are hard to measure across locations",
+  signals: "Asked how Velora measures delivery app promotions by location",
+  proofShown: "Northline Kitchen Group delivery promotion case study",
   outcome: "Sent Ning a drafted message through Velora",
   sentMessage:
-    "Hi Ning - I run a small creative agency with rotating contractors and I'm dealing with late client payments that cascade into late contractor payments. Velora's conditional payment scheduling sounds like exactly what I need. Would love to learn more about how it works for an agency our size.",
+    "Hi Ning - I manage marketing operations for a growing restaurant group and I'm trying to understand which delivery promotions actually bring guests back after the offer ends. Velora's location-level campaign reporting sounds like exactly what we need. Would love to learn more about how it works for a team our size.",
   intentSummary:
-    "She asked how late client payments affect contractor payouts, viewed the Studio Northline case study, and sent a drafted message to Ning.",
+    "She asked how to measure delivery promotions across locations, viewed the Northline Kitchen Group case study, and sent a drafted message to Ning.",
   intentTags: [
-    "8-person agency",
-    "Late client payment pain",
-    "Multi-project payout interest",
+    "32-person restaurant group",
+    "Delivery promotion measurement",
+    "Multi-location campaign interest",
     "Evaluated just now",
   ],
   suggestedReply:
-    "Hi Cheri - thanks for reaching out. I founded Velora for exactly this kind of agency payment workflow. You can tie contractor payouts to each client's payment status, so if one client pays late, only the contractors on that project move into a pending state. Happy to walk through how this would work for Brightframe.",
+    "Hi Cheri - thanks for reaching out. I founded Velora for exactly this kind of restaurant growth workflow. You can see campaign performance by location, delivery channel, and repeat-order behavior, so your team knows which promos are actually bringing guests back. Happy to walk through how this would work for Brightframe.",
   suggestedPrep: [
-    "Lead with how Velora keeps late client payments from making contractor payouts feel ambiguous.",
-    "Explain conditional payment scheduling in plain language.",
-    "Ask how Brightframe tracks contractor obligations across client projects today.",
+    "Lead with how Velora shows which delivery promotions drive repeat orders.",
+    "Explain location-level campaign reporting in plain language.",
+    "Ask how Brightframe tracks offers across delivery channels today.",
   ],
 };
 
@@ -178,9 +214,9 @@ const inboxThreads: ReadonlyArray<InboxThreadData> = [
   {
     name: vcaLeadBrief.buyer,
     role: vcaLeadBrief.role,
-    topic: "Late contractor payments",
+    topic: "Delivery promotion measurement",
     snippet:
-      "Cheri: Hi Ning - I run a small creative agency with rotating contractors...",
+      "Cheri: Hi Ning - I manage marketing operations for a growing restaurant group...",
     timestamp: "4:48 PM",
     avatar: vcaLeadBrief.avatar,
     selected: true,
@@ -188,35 +224,129 @@ const inboxThreads: ReadonlyArray<InboxThreadData> = [
   },
   {
     name: "Maya Patel",
-    role: "Managing Partner at Studio Northline",
+    role: "Managing Partner at Northline Kitchen Group",
     topic: "Services",
-    snippet: "Ning: Glad the approval view helped your team.",
+    snippet: "Ning: Glad the campaign view helped your team.",
     timestamp: "4:44 PM",
     avatar: "avatar-1.png",
   },
   {
     name: "Priya Shah",
-    role: "Founder at North Pier Studio",
+    role: "Founder at North Pier Restaurants",
     topic: "Other",
-    snippet: "Priya: Does Velora support QuickBooks exports?",
+    snippet: "Priya: Does Velora support POS and menu exports?",
     timestamp: "May 31",
     avatar: "avatar-3.png",
   },
   {
     name: "Luis Romero",
-    role: "Operations Lead at Grove Creative",
+    role: "Operations Lead at Grove Hospitality",
     topic: "Service request",
-    snippet: "Luis: We need a clearer way to track client approval status...",
+    snippet: "Luis: We need a clearer way to track menu approval status...",
     timestamp: "May 21",
     avatar: "avatar-2.png",
   },
   {
     name: "Diana Lin",
-    role: "Agency Owner at Lin Studio",
+    role: "Marketing Manager at Lin Kitchen Group",
     topic: "Careers",
     snippet: "Diana: Are you hiring for customer operations roles?",
     timestamp: "Mar 30",
     avatar: "avatar-1.png",
+  },
+];
+
+const analyticsTabs: ReadonlyArray<Readonly<{
+  id: AnalyticsTabId;
+  label: string;
+}>> = [
+  { id: "content", label: "Content" },
+  { id: "visitors", label: "Visitors" },
+  { id: "followers", label: "Followers" },
+  { id: "search-appearances", label: "Search appearances" },
+  { id: "competitors", label: "Competitors" },
+  { id: "leads", label: "Leads" },
+  { id: "newsletters", label: "Newsletters" },
+];
+
+const analyticsHighlights: ReadonlyArray<AnalyticsHighlightData> = [
+  {
+    label: "Impressions",
+    value: "8,920",
+    delta: "18.4%",
+  },
+  {
+    label: "Reactions",
+    value: "486",
+    delta: "12.7%",
+  },
+  {
+    label: "Comments",
+    value: "128",
+    delta: "9.3%",
+  },
+  {
+    label: "Reposts",
+    value: "42",
+    delta: "15.6%",
+  },
+];
+
+const contentEngagementRows: ReadonlyArray<ContentEngagementRowData> = [
+  {
+    title: "How Northline aligned delivery promos across six locations",
+    postedBy: "Ning Hu",
+    date: "6/8/2026",
+    type: "Article",
+    audience: "Restaurant operators",
+    impressions: "1,284",
+    views: "184",
+    clicks: "46",
+  },
+  {
+    title: "Menu rollout checklist for multi-location restaurant teams",
+    postedBy: "Velora",
+    date: "6/6/2026",
+    type: "Document",
+    audience: "Franchise marketers",
+    impressions: "986",
+    views: "132",
+    clicks: "31",
+  },
+  {
+    title: "Which delivery offer brings guests back after the promo ends?",
+    postedBy: "Ning Hu",
+    date: "6/3/2026",
+    type: "Image",
+    audience: "Growth leaders",
+    impressions: "812",
+    views: "-",
+    clicks: "34",
+  },
+  {
+    title: "Friday menu updates should not require five spreadsheets",
+    postedBy: "Velora",
+    date: "5/30/2026",
+    type: "Text",
+    audience: "Restaurant ops",
+    impressions: "654",
+    views: "-",
+    clicks: "18",
+  },
+];
+
+const analyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
+  {
+    insightId: "visitor-demographics",
+    icon: "people",
+    title: "Right audience is engaging",
+    detail: "64% of engaged visitors match multi-location restaurant teams.",
+  },
+  {
+    insightId: "content-engagement",
+    icon: "popular-content",
+    title: "High-engagement post needs reach",
+    detail: "The Northline story is working, but impressions are modest.",
   },
 ];
 
@@ -677,9 +807,11 @@ function InboxProfileHeader() {
       <div>
         <h2 className="text-heading-lg text-text">{vcaLeadBrief.buyer}</h2>
         <p className="text-body-md text-text">
-          Founder & Creative Director at Brightframe Studio
+          Marketing Operations Lead at Brightframe Kitchen Group
         </p>
-        <p className="mt-xs text-body-sm text-text-meta">Late contractor payments</p>
+        <p className="mt-xs text-body-sm text-text-meta">
+          Delivery promotion measurement
+        </p>
       </div>
       <VcaInboxContextStrip />
     </div>
@@ -736,6 +868,10 @@ function VcaInboxContextStrip() {
       </div>
     </div>
   );
+}
+
+export function PremiumCompanyPagesInboxContextStripPreview() {
+  return <VcaInboxContextStrip />;
 }
 
 function InboxMessage() {
@@ -945,8 +1081,8 @@ function DashboardContent({
             <div>
               <h2 className="text-heading-sm text-text">Manage recent posts</h2>
               <p className="mt-xs text-body-sm text-text-meta">
-                Manage payment education content and amplify top-performing posts with
-                boosting. <InlineAction>Learn more</InlineAction>
+                Manage restaurant growth content and amplify top-performing
+                posts with boosting. <InlineAction>Learn more</InlineAction>
               </p>
             </div>
             <CarouselControls
@@ -981,6 +1117,507 @@ function DashboardContent({
   );
 }
 
+function AnalyticsTabButton({
+  active,
+  tab,
+  onSelect,
+}: Readonly<{
+  active: boolean;
+  tab: (typeof analyticsTabs)[number];
+  onSelect: (tabId: AnalyticsTabId) => void;
+}>) {
+  return (
+    <button
+      aria-controls={`premium-company-pages-analytics-${tab.id}-panel`}
+      aria-selected={active}
+      className={cx(
+        "flex h-12 shrink-0 items-center border-b-2 px-md text-control-sm outline-none transition-colors focus-visible:ring-4 focus-visible:ring-action-focus-ring",
+        active
+          ? "border-positive text-positive"
+          : "border-transparent text-label hover:text-text",
+      )}
+      id={`premium-company-pages-analytics-${tab.id}-tab`}
+      onClick={() => onSelect(tab.id)}
+      role="tab"
+      type="button"
+    >
+      {tab.label}
+    </button>
+  );
+}
+
+function AnalyticsTrend({ value }: Readonly<{ value: string }>) {
+  return (
+    <span className="mt-xs inline-flex items-center gap-xxs text-supportive-s-strong text-positive">
+      <Icon aria-hidden="true" name="caret-up" size="small" />
+      <span>{value}</span>
+    </span>
+  );
+}
+
+function AnalyticsCard({
+  children,
+  className,
+}: Readonly<{
+  children: ReactNode;
+  className?: string;
+}>) {
+  return (
+    <div
+      className={cx(
+        "rounded-sm border border-border-faint bg-background shadow-raised-faint",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function AnalyticsControlsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="flex min-h-[64px] flex-wrap items-center justify-between gap-md px-lg py-md">
+        <button
+          className="inline-flex min-h-9 max-w-full items-center gap-xs rounded-round border border-border-subtle bg-background px-md py-xs text-control-sm text-label outline-none transition-colors hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          type="button"
+        >
+          <Icon
+            aria-hidden="true"
+            className="shrink-0 text-text-meta"
+            name="calendar"
+            size="small"
+          />
+          <span className="min-w-0 truncate">
+            May 10, 2026 - Jun 8, 2026
+          </span>
+          <Icon
+            aria-hidden="true"
+            className="shrink-0 text-text-meta"
+            name="chevron-down"
+            size="small"
+          />
+        </button>
+        <Button leadingIcon={<Icon name="download" />} size="small">
+          Export
+        </Button>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function HighlightsCard({
+  activeInsightId,
+  onInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+}>) {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div>
+          <h2 className="text-heading-sm text-text">Highlights</h2>
+          <p className="mt-xxs text-body-sm text-text-meta">
+            Data for 5/10/2026 - 6/8/2026
+          </p>
+        </div>
+        <div className="mt-lg grid gap-lg sm:grid-cols-2 lg:grid-cols-4">
+          {analyticsHighlights.map((highlight) => (
+            <article key={highlight.label}>
+              <p className="text-heading-xl text-text">{highlight.value}</p>
+              <h3 className="mt-xxs text-body-sm text-text-meta">
+                {highlight.label}
+              </h3>
+              <AnalyticsTrend value={highlight.delta} />
+            </article>
+          ))}
+        </div>
+        <AnalyticsInsightsSection
+          activeInsightId={activeInsightId}
+          onInsightSelect={onInsightSelect}
+        />
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function AnalyticsInsightCard({
+  active,
+  insight,
+  onSelect,
+}: Readonly<{
+  active: boolean;
+  insight: AnalyticsInsightCardData;
+  onSelect: (insightId: AdminUc5InsightId) => void;
+}>) {
+  return (
+    <button
+      aria-pressed={active}
+      className={cx(
+        "group grid min-h-[78px] w-full grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-md rounded-xs border bg-background px-lg py-md text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring",
+        active
+          ? "border-action bg-surface-tint shadow-[inset_4px_0_0_var(--color-action)]"
+          : "border-border-faint",
+      )}
+      onClick={() => onSelect(insight.insightId)}
+      type="button"
+    >
+      <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-round bg-ai-background-soft text-ai-icon">
+        <Icon aria-hidden="true" name={insight.icon} size="medium" />
+      </span>
+      <span className="min-w-0 py-xxs">
+        <span className="block text-control-sm text-text">
+          {insight.title}
+        </span>
+        <span className="mt-xs block text-body-sm text-text-meta">
+          {insight.detail}
+        </span>
+      </span>
+      <span
+        aria-hidden="true"
+        className={getButtonClassName({
+          className: "pointer-events-none justify-self-end",
+          size: "small",
+          variant: "tertiary",
+        })}
+      >
+        <Icon
+          aria-hidden="true"
+          className="text-premium-inbug"
+          name="signal-ai"
+          size="small"
+        />
+        <span>Ask AI</span>
+      </span>
+    </button>
+  );
+}
+
+function AnalyticsInsightsSection({
+  activeInsightId,
+  onInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+}>) {
+  return (
+    <section
+      aria-labelledby="analytics-ai-insights-heading"
+      className="mt-xxl border-t border-border-faint pt-lg"
+    >
+      <div className="flex items-center gap-xs text-control-sm text-text">
+        <Icon
+          aria-hidden="true"
+          className="shrink-0 text-premium-inbug"
+          name="signal-ai"
+          size="small"
+        />
+        <h2 id="analytics-ai-insights-heading">Key insights</h2>
+      </div>
+      <div className="mt-lg grid gap-md">
+        {analyticsInsightCards.map((insight) => (
+          <AnalyticsInsightCard
+            active={activeInsightId === insight.insightId}
+            insight={insight}
+            key={insight.insightId}
+            onSelect={onInsightSelect}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ChartLegendRow({
+  dashed = false,
+  label,
+  value,
+}: Readonly<{
+  dashed?: boolean;
+  label: string;
+  value: string;
+}>) {
+  return (
+    <div className="grid min-h-10 grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-sm border-t border-border-faint py-sm">
+      <span
+        aria-hidden="true"
+        className={cx(
+          "inline-flex size-5 items-center justify-center rounded-xs",
+          dashed ? "border border-dashed border-positive" : "bg-positive text-on-checked",
+        )}
+      >
+        {dashed ? null : <Icon name="check" size="small" />}
+      </span>
+      <span className="min-w-0 truncate text-body-sm text-text-meta">
+        {label}
+      </span>
+      <span className="text-control-sm text-text">{value}</span>
+    </div>
+  );
+}
+
+function ImpressionsChart() {
+  return (
+    <div className="mt-lg overflow-x-auto pb-xs">
+      <svg
+        aria-labelledby="velora-impressions-chart-title"
+        className="min-w-[620px]"
+        role="img"
+        viewBox="0 0 720 280"
+      >
+        <title id="velora-impressions-chart-title">
+          Velora impressions trend from May 10, 2026 to Jun 8, 2026
+        </title>
+        {[52, 94, 136, 178, 220].map((y, index) => (
+          <g key={y}>
+            <line
+              stroke="var(--color-border-faint)"
+              strokeWidth="1"
+              x1="72"
+              x2="690"
+              y1={y}
+              y2={y}
+            />
+            <text
+              fill="var(--color-text-meta)"
+              fontSize="12"
+              textAnchor="end"
+              x="58"
+              y={y + 4}
+            >
+              {[2000, 1500, 1000, 500, 0][index]}
+            </text>
+          </g>
+        ))}
+        <path
+          d="M72 218 C112 214 132 204 156 190 C184 174 204 176 230 184 C258 194 280 180 306 166 C334 150 358 148 386 136 C416 122 440 118 466 108 C498 96 520 78 548 68 C578 58 604 72 630 84 C652 94 672 96 690 90"
+          fill="none"
+          stroke="var(--color-action)"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="3"
+          vectorEffect="non-scaling-stroke"
+        />
+        <path
+          d="M72 220 C112 220 150 219 188 219 C230 218 270 219 310 218 C350 218 390 217 430 218 C470 217 510 218 550 218 C590 218 640 219 690 218"
+          fill="none"
+          stroke="var(--color-positive)"
+          strokeDasharray="6 6"
+          strokeLinecap="round"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+        {[
+          ["May 10", 72],
+          ["May 15", 178],
+          ["May 20", 284],
+          ["May 25", 390],
+          ["May 30", 496],
+          ["Jun 4", 602],
+          ["Jun 8", 690],
+        ].map(([label, x]) => (
+          <text
+            fill="var(--color-text-meta)"
+            fontSize="12"
+            key={label}
+            textAnchor="middle"
+            x={x}
+            y="250"
+          >
+            {label}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function MetricsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div className="flex flex-wrap items-start justify-between gap-md">
+          <div>
+            <h2 className="text-heading-sm text-text">Metrics</h2>
+            <p className="mt-xs text-body-sm text-text-meta">
+              Smoother reach growth from restaurant operators and multi-location
+              marketing teams.
+            </p>
+          </div>
+          <button
+            className="inline-flex min-h-8 items-center gap-xs rounded-round bg-positive px-md text-control-sm text-on-checked outline-none transition-colors hover:bg-positive-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+            type="button"
+          >
+            <span>Impressions</span>
+            <Icon aria-hidden="true" name="chevron-down" size="small" />
+          </button>
+        </div>
+
+        <ImpressionsChart />
+
+        <div className="mt-lg">
+          <ChartLegendRow label="Organic" value="8,920" />
+          <ChartLegendRow dashed label="Sponsored" value="0" />
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function ContentEngagementTable() {
+  return (
+    <AnalyticsCard>
+      <div className="flex flex-wrap items-center justify-between gap-md px-lg py-md">
+        <div>
+          <h2 className="text-heading-sm text-text">Content engagement</h2>
+          <p className="mt-xs text-body-sm text-text-meta">
+            Time range: May 26, 2026 - Jun 8, 2026
+          </p>
+        </div>
+        <button
+          className="inline-flex h-8 items-center gap-xs rounded-xs border border-border-subtle px-sm text-body-sm text-label outline-none transition-colors hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          type="button"
+        >
+          <span>Show: 4</span>
+          <Icon aria-hidden="true" name="chevron-down" size="small" />
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] border-collapse text-left">
+          <thead>
+            <tr className="border-y border-border-faint bg-background-neutral-soft text-label-xs text-text-meta">
+              <th className="px-lg py-sm font-semibold">Post title</th>
+              <th className="px-md py-sm font-semibold">Post type</th>
+              <th className="px-md py-sm font-semibold">Audience</th>
+              <th className="px-md py-sm text-right font-semibold">
+                Impressions
+              </th>
+              <th className="px-md py-sm text-right font-semibold">Views</th>
+              <th className="px-lg py-sm text-right font-semibold">Clicks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {contentEngagementRows.map((row) => (
+              <tr
+                className="border-b border-border-faint align-top text-body-sm text-text"
+                key={row.title}
+              >
+                <td className="max-w-[340px] px-lg py-md">
+                  <button
+                    className="line-clamp-2 text-left text-control-sm text-action hover:underline"
+                    type="button"
+                  >
+                    {row.title}
+                  </button>
+                  <p className="mt-xs text-body-xs text-text-meta">
+                    Posted by {row.postedBy} &middot; {row.date}
+                  </p>
+                </td>
+                <td className="px-md py-md">{row.type}</td>
+                <td className="max-w-[180px] px-md py-md text-text-meta">
+                  {row.audience}
+                </td>
+                <td className="px-md py-md text-right">{row.impressions}</td>
+                <td className="px-md py-md text-right">{row.views}</td>
+                <td className="px-lg py-md text-right">{row.clicks}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function ContentAnalyticsPanel({
+  activeInsightId,
+  onInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+}>) {
+  return (
+    <div
+      aria-labelledby="premium-company-pages-analytics-content-tab"
+      className="space-y-md"
+      id="premium-company-pages-analytics-content-panel"
+      role="tabpanel"
+    >
+      <AnalyticsControlsCard />
+      <HighlightsCard
+        activeInsightId={activeInsightId}
+        onInsightSelect={onInsightSelect}
+      />
+      <MetricsCard />
+      <ContentEngagementTable />
+    </div>
+  );
+}
+
+function EmptyAnalyticsPanel({
+  tab,
+}: Readonly<{
+  tab: (typeof analyticsTabs)[number];
+}>) {
+  return (
+    <section
+      aria-labelledby={`premium-company-pages-analytics-${tab.id}-tab`}
+      className="min-h-[520px] rounded-sm border border-border-faint bg-background shadow-raised-faint"
+      id={`premium-company-pages-analytics-${tab.id}-panel`}
+      role="tabpanel"
+    >
+      <h2 className="sr-only">{tab.label} analytics</h2>
+    </section>
+  );
+}
+
+function AnalyticsContent({
+  activeInsightId,
+  onInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+}>) {
+  const [activeTabId, setActiveTabId] = useState<AnalyticsTabId>("content");
+  const activeTab =
+    analyticsTabs.find((tab) => tab.id === activeTabId) ?? analyticsTabs[0];
+
+  return (
+    <div className="min-w-0 space-y-md">
+      <section className="overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+        <div className="px-lg pt-lg">
+          <h1 className="text-heading-lg text-text">Analytics</h1>
+        </div>
+        <div
+          aria-label="Analytics sections"
+          className="mt-sm flex overflow-x-auto px-sm"
+          role="tablist"
+        >
+          {analyticsTabs.map((tab) => (
+            <AnalyticsTabButton
+              active={activeTabId === tab.id}
+              key={tab.id}
+              onSelect={setActiveTabId}
+              tab={tab}
+            />
+          ))}
+        </div>
+      </section>
+
+      {activeTabId === "content" ? (
+        <ContentAnalyticsPanel
+          activeInsightId={activeInsightId}
+          onInsightSelect={onInsightSelect}
+        />
+      ) : (
+        <EmptyAnalyticsPanel tab={activeTab} />
+      )}
+    </div>
+  );
+}
+
 function PremiumCompanyPagesAdminShell({
   activeItem,
   children,
@@ -1011,6 +1648,7 @@ export function PremiumCompanyPagesPage() {
   const [agentThreadTurns, setAgentThreadTurns] = useState<
     ReadonlyArray<AdminUc5ThreadTurn>
   >([]);
+  const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
 
   function createTurnId() {
     const turnId = `admin-uc5-turn-${nextTurnIdRef.current}`;
@@ -1072,6 +1710,12 @@ export function PremiumCompanyPagesPage() {
   }
 
   const isAgentExpanded = agentPanelVariant === "expanded";
+  const globalInboxHeightExpression = isGlobalInboxExpanded
+    ? "min(calc(100dvh - 96px), 690px)"
+    : "var(--design-layout-chat-tray-height, 48px)";
+  const agentFabStyle = {
+    "--pcp-admin-ai-fab-bottom": `calc(${globalInboxHeightExpression} + var(--design-spacing-md))`,
+  } as CSSProperties;
   const agentPanelPositionClass = isAgentExpanded
     ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
     : "md:inset-auto md:bottom-6 md:right-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
@@ -1086,7 +1730,19 @@ export function PremiumCompanyPagesPage() {
       </PremiumCompanyPagesAdminShell>
 
       {!isAgentOpen ? (
-        <div className="fixed bottom-6 right-6 z-20 md:bottom-8 md:right-10">
+        <GlobalInboxTray
+          isExpanded={isGlobalInboxExpanded}
+          onToggle={() =>
+            setIsGlobalInboxExpanded((currentValue) => !currentValue)
+          }
+        />
+      ) : null}
+
+      {!isAgentOpen ? (
+        <div
+          className="fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
+          style={agentFabStyle}
+        >
           <Button
             aria-controls={agentPanelId}
             aria-expanded={false}
@@ -1157,5 +1813,177 @@ export function PremiumCompanyPagesAdminInboxPage() {
     <PremiumCompanyPagesAdminShell activeItem="Inbox">
       <InboxContent />
     </PremiumCompanyPagesAdminShell>
+  );
+}
+
+export function PremiumCompanyPagesAdminAnalyticsPage() {
+  const agentPanelId = useId();
+  const nextTurnIdRef = useRef(0);
+  const [isAgentOpen, setIsAgentOpen] = useState(false);
+  const [agentPanelVariant, setAgentPanelVariant] =
+    useState<ChatPanelVariant>("collapsed");
+  const [activeInsightId, setActiveInsightId] =
+    useState<AdminUc5InsightId | null>(null);
+  const [agentDraft, setAgentDraft] = useState("");
+  const [agentThreadTurns, setAgentThreadTurns] = useState<
+    ReadonlyArray<AdminUc5ThreadTurn>
+  >([]);
+  const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
+
+  function createTurnId() {
+    const turnId = `admin-analytics-turn-${nextTurnIdRef.current}`;
+    nextTurnIdRef.current += 1;
+
+    return turnId;
+  }
+
+  function handleAnalyticsInsightSelect(insightId: AdminUc5InsightId) {
+    setActiveInsightId(insightId);
+    setAgentThreadTurns([]);
+    setAgentDraft("");
+    setAgentPanelVariant("collapsed");
+    setIsAgentOpen(true);
+  }
+
+  function handleOpenAgentFromFab() {
+    setActiveInsightId(null);
+    setAgentThreadTurns([]);
+    setAgentDraft("");
+    setAgentPanelVariant("collapsed");
+    setIsAgentOpen(true);
+  }
+
+  function handleCloseAgent() {
+    setIsAgentOpen(false);
+    setAgentPanelVariant("collapsed");
+    setAgentDraft("");
+  }
+
+  function handleAgentDraftChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    setAgentDraft(event.currentTarget.value);
+  }
+
+  function handleAgentFollowUpSelect(followUp: AdminUc5FollowUp) {
+    setAgentThreadTurns((currentTurns) => [
+      ...currentTurns,
+      {
+        id: createTurnId(),
+        prompt: followUp.prompt,
+        response: followUp.response,
+      },
+    ]);
+    setAgentDraft("");
+  }
+
+  function handleAgentSend() {
+    const trimmedDraft = agentDraft.trim();
+
+    if (!trimmedDraft) {
+      return;
+    }
+
+    setAgentThreadTurns((currentTurns) => [
+      ...currentTurns,
+      buildAdminUc5PrototypeFallbackTurn(trimmedDraft, createTurnId()),
+    ]);
+    setAgentDraft("");
+  }
+
+  const isAgentExpanded = agentPanelVariant === "expanded";
+  const globalInboxHeightExpression = isGlobalInboxExpanded
+    ? "min(calc(100dvh - 96px), 690px)"
+    : "var(--design-layout-chat-tray-height, 48px)";
+  const agentFabStyle = {
+    "--pcp-admin-ai-fab-bottom": `calc(${globalInboxHeightExpression} + var(--design-spacing-md))`,
+  } as CSSProperties;
+  const agentPanelPositionClass = isAgentExpanded
+    ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
+    : "md:inset-auto md:bottom-6 md:right-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+
+  return (
+    <>
+      <PremiumCompanyPagesAdminShell activeItem="Analytics">
+        <AnalyticsContent
+          activeInsightId={isAgentOpen ? activeInsightId : null}
+          onInsightSelect={handleAnalyticsInsightSelect}
+        />
+      </PremiumCompanyPagesAdminShell>
+
+      {!isAgentOpen ? (
+        <GlobalInboxTray
+          isExpanded={isGlobalInboxExpanded}
+          onToggle={() =>
+            setIsGlobalInboxExpanded((currentValue) => !currentValue)
+          }
+        />
+      ) : null}
+
+      {!isAgentOpen ? (
+        <div
+          className="fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
+          style={agentFabStyle}
+        >
+          <Button
+            aria-controls={agentPanelId}
+            aria-expanded={false}
+            aria-haspopup="dialog"
+            aria-label="Open AI assistant"
+            className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
+            leadingIcon={
+              <Icon
+                className="text-[#2AA986]"
+                name="signal-ai"
+                size="small"
+              />
+            }
+            onClick={handleOpenAgentFromFab}
+            size="medium"
+            style={{ borderWidth: "1.5px" }}
+            variant="tertiary"
+          >
+            Ask AI
+          </Button>
+        </div>
+      ) : null}
+
+      {isAgentOpen ? (
+        <>
+          <button
+            aria-label="Collapse expanded Velora AI"
+            className={cx(
+              "fixed inset-0 z-30 hidden bg-overlay-dim md:block",
+              !isAgentExpanded && "pointer-events-none opacity-0",
+            )}
+            onClick={() => setAgentPanelVariant("collapsed")}
+            type="button"
+          />
+          <div
+            aria-label="Velora AI"
+            className={cx(
+              "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
+              agentPanelPositionClass,
+            )}
+            role="dialog"
+          >
+            <AdminUc5AgentPanel
+              activeInsightId={activeInsightId}
+              draft={agentDraft}
+              panelId={agentPanelId}
+              threadTurns={agentThreadTurns}
+              variant={agentPanelVariant}
+              onClose={handleCloseAgent}
+              onDraftChange={handleAgentDraftChange}
+              onFollowUpSelect={handleAgentFollowUpSelect}
+              onSend={handleAgentSend}
+              onVariantToggle={() =>
+                setAgentPanelVariant((currentVariant) =>
+                  currentVariant === "expanded" ? "collapsed" : "expanded",
+                )
+              }
+            />
+          </div>
+        </>
+      ) : null}
+    </>
   );
 }

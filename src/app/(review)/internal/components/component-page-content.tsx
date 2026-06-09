@@ -55,6 +55,15 @@ import {
   PremiumFabDemo,
   PremiumFabReviewPreview,
   PremiumPlanCardDemo,
+  PcpAdminAttentionCardsPreview,
+  PcpAdminInsightResponseCardPreview,
+  PcpAdminSelfInitiatedMetricsCardPreview,
+  PcpAdminVisitorAudienceCardPreview,
+  PcpAiCardsDemo,
+  PcpInboxAiContextStripPreview,
+  PcpVcaCaseStudyCardPreview,
+  PcpVcaHandoffCardPreview,
+  PcpVcaJobCardPreview,
   SduiBadgeDemo,
   SduiButtonDemo,
   SduiButtonIconDemo,
@@ -1092,6 +1101,98 @@ function PremiumCompanyPageVcaFabPage({
   );
 }
 
+const pcpAdminInsightResponseExamples = [
+  {
+    title: "Post amplification",
+    insightId: "post-amplification",
+  },
+  {
+    title: "Follower growth",
+    insightId: "follower-growth",
+  },
+  {
+    title: "Visitor demographics",
+    insightId: "visitor-demographics",
+  },
+  {
+    title: "Content engagement",
+    insightId: "content-engagement",
+  },
+  {
+    title: "Weekly synthesis",
+    insightId: "weekly-synthesis",
+  },
+] as const;
+
+function PremiumCompanyPageAiCardsPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium Company Page">
+      <PreviewSection
+        title="Demo"
+        description="Picker for the AI-related PCP cards shown in visitor VCA, admin attention, admin AI response, and inbox context moments."
+      >
+        <PcpAiCardsDemo />
+      </PreviewSection>
+
+      <PreviewSection title="Visitor VCA conversation cards">
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Case study proof</PreviewExampleHeading>
+            <PcpVcaCaseStudyCardPreview />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Job preview</PreviewExampleHeading>
+            <PcpVcaJobCardPreview />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Drafted message handoff</PreviewExampleHeading>
+            <PcpVcaHandoffCardPreview />
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Admin attention cards"
+        description="The cards and rows from the dashboard's What needs your attention today section."
+      >
+        <PcpAdminAttentionCardsPreview />
+      </PreviewSection>
+
+      <PreviewSection title="Admin AI response cards">
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>
+              Self-initiated metrics summary
+            </PreviewExampleHeading>
+            <PcpAdminSelfInitiatedMetricsCardPreview />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>
+              Visitor audience insight
+            </PreviewExampleHeading>
+            <PcpAdminVisitorAudienceCardPreview />
+          </PreviewMoment>
+          {pcpAdminInsightResponseExamples.map(({ insightId, title }) => (
+            <PreviewMoment key={insightId}>
+              <PreviewExampleHeading>{title}</PreviewExampleHeading>
+              <PcpAdminInsightResponseCardPreview insightId={insightId} />
+            </PreviewMoment>
+          ))}
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Admin inbox AI context"
+        description="Recommended inclusion: this is the downstream context card that explains the Cheri high-intent signal after the dashboard attention card."
+      >
+        <PcpInboxAiContextStripPreview />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
@@ -1904,6 +2005,8 @@ export function ComponentPageContent({
       return <PremiumConciergePanelPage item={item} />;
     case "premium-company-page-vca-fab":
       return <PremiumCompanyPageVcaFabPage item={item} />;
+    case "premium-company-page-ai-cards":
+      return <PremiumCompanyPageAiCardsPage item={item} />;
     case "sdui-nav-link-item-horizontal":
       return <SduiNavLinkItemHorizontalPage item={item} />;
     case "sdui-tab-item-horizontal":

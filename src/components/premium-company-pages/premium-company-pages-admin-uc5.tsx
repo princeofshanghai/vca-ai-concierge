@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   type ChangeEvent,
-  type MouseEvent,
   useState,
 } from "react";
 
@@ -54,21 +53,22 @@ const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
 const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
   backgroundColor: "#ACF5B3",
 };
+const ADMIN_ANALYTICS_HREF = "/premium-company-pages/admin/analytics";
 const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
 const CHERI_SPARKS_AVATAR = "member/avatar-2.png";
 
 const postVisuals: ReadonlyArray<Readonly<{ image: string; alt: string }>> = [
   {
-    image: "post-building-blue.png",
-    alt: "Velora office building post preview",
+    image: "restaurant-post-menu-ops.png",
+    alt: "Restaurant menu workflow post preview",
   },
   {
-    image: "post-kudos.png",
-    alt: "Velora kudos post preview",
+    image: "restaurant-post-campaign-calendar.png",
+    alt: "Restaurant campaign calendar post preview",
   },
   {
-    image: "feed-post-content.png",
-    alt: "Velora content post preview",
+    image: "restaurant-post-delivery-performance.png",
+    alt: "Restaurant delivery performance post preview",
   },
 ];
 
@@ -106,6 +106,13 @@ type AdminUc5AgentPanelProps = Readonly<{
   onVariantToggle: () => void;
 }>;
 
+type AdminUc5SelfInitiatedView =
+  | "page-performance"
+  | "visitor-audience";
+
+const ADMIN_PAGE_PERFORMANCE_PROMPT = "How is my page performing this month?";
+const ADMIN_VISITOR_AUDIENCE_PROMPT = "Who's been visiting my Page?";
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -138,20 +145,49 @@ function getTagTone(label: string): TagTone {
   return "default";
 }
 
-function FakeAnalyticsLink({ label }: Readonly<{ label: string }>) {
-  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    event.preventDefault();
-  }
+function MetricTrend({
+  className,
+  context,
+  tone,
+  value,
+}: Readonly<{
+  className?: string;
+  context: string;
+  tone: AdminUc5Tone;
+  value: string;
+}>) {
+  const isDirectional = tone !== "neutral";
 
   return (
-    <a
-      className="inline-flex w-fit items-center gap-xs text-control-sm text-action hover:text-action-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-      href="#"
-      onClick={handleClick}
+    <span
+      className={cx(
+        "inline-flex min-w-0 flex-wrap items-center gap-xxs",
+        getToneClass(tone),
+        className,
+      )}
     >
-      <span>{label}</span>
-      <Icon name="link-external" size="small" />
-    </a>
+      {isDirectional ? (
+        <Icon
+          aria-hidden="true"
+          className="shrink-0"
+          name={tone === "negative" ? "caret-down" : "caret-up"}
+          size="small"
+        />
+      ) : null}
+      <strong className="font-semibold">{value}</strong>
+      <span className="text-text-meta">{context}</span>
+    </span>
+  );
+}
+
+function AnalyticsPageButton() {
+  return (
+    <Link
+      className={getButtonClassName({ size: "small", variant: "secondary" })}
+      href={ADMIN_ANALYTICS_HREF}
+    >
+      View in Analytics page
+    </Link>
   );
 }
 
@@ -194,8 +230,7 @@ export function AdminPerformanceDigestCard({
               Cheri Sparks looks like a strong match
             </span>
             <span className="mt-xs block text-body-sm text-text-meta">
-              She asked about contractor payments and sent you a message · Just
-              now
+              She asked about delivery promotions and sent you a message
             </span>
           </span>
           <InsightRowCta label="View message" />
@@ -224,9 +259,7 @@ export function AdminPerformanceDigestCard({
                 <span className="block text-control-sm text-text">
                   {insight.label}
                 </span>
-                <span className="mt-xs block text-body-sm text-text-meta">
-                  {insight.value}
-                </span>
+                <DigestInsightValue insight={insight} />
               </span>
               <InsightRowCta icon="ai" label="Ask AI" />
               <InsightRowDismissIcon />
@@ -235,6 +268,43 @@ export function AdminPerformanceDigestCard({
         })}
       </div>
     </section>
+  );
+}
+
+function DigestInsightValue({
+  insight,
+}: Readonly<{ insight: AdminUc5Insight }>) {
+  if (insight.id === "post-amplification") {
+    return (
+      <span className="mt-xs flex flex-wrap items-center gap-x-xs gap-y-xxs text-body-sm text-text-meta">
+        <span>
+          <strong className="font-semibold text-text">4.2%</strong> engagement
+          rate
+        </span>
+        <span aria-hidden="true">&middot;</span>
+        <span>only 180 impressions</span>
+      </span>
+    );
+  }
+
+  if (insight.id === "follower-growth") {
+    return (
+      <span className="mt-xs flex flex-wrap items-center gap-x-xs gap-y-xxs text-body-sm text-text-meta">
+        <span>312 visitors</span>
+        <span aria-hidden="true">&middot;</span>
+        <MetricTrend
+          context="vs last month"
+          tone="positive"
+          value="18 points"
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span className="mt-xs block text-body-sm text-text-meta">
+      {insight.value}
+    </span>
   );
 }
 
@@ -315,7 +385,7 @@ function DigestInsightVisual({
         alt=""
         className="size-12 shrink-0 rounded-xs object-cover"
         height={48}
-        src={assetSrc("post-building-blue.png")}
+        src={assetSrc("restaurant-post-menu-ops.png")}
         width={48}
       />
     );
@@ -347,7 +417,7 @@ function DigestInsightVisual({
         alt=""
         className="size-12 shrink-0 rounded-xs object-cover"
         height={48}
-        src={assetSrc("post-building-blue.png")}
+        src={assetSrc("restaurant-post-menu-ops.png")}
         width={48}
       />
     );
@@ -393,7 +463,7 @@ export function AdminUc5AgentPanel({
   onVariantToggle,
 }: AdminUc5AgentPanelProps) {
   const [selfInitiatedView, setSelfInitiatedView] =
-    useState<"page-performance" | null>(null);
+    useState<AdminUc5SelfInitiatedView | null>(null);
   const activeInsight = activeInsightId
     ? adminUc5Insights[activeInsightId]
     : null;
@@ -430,10 +500,17 @@ export function AdminUc5AgentPanel({
               <SelfInitiatedPerformanceThread
                 onFollowUpSelect={onFollowUpSelect}
               />
+            ) : selfInitiatedView === "visitor-audience" ? (
+              <SelfInitiatedVisitorAudienceThread
+                onFollowUpSelect={onFollowUpSelect}
+              />
             ) : (
               <WelcomeThread
                 onPagePerformanceSelect={() =>
                   setSelfInitiatedView("page-performance")
+                }
+                onVisitorAudienceSelect={() =>
+                  setSelfInitiatedView("visitor-audience")
                 }
               />
             )}
@@ -463,16 +540,30 @@ export function AdminUc5AgentPanel({
 }
 
 const adminSelfInitiatedPrompts = [
-  "How is my page performing this month?",
+  ADMIN_PAGE_PERFORMANCE_PROMPT,
   "What are my competitors doing?",
-  "Who's been visiting my page?",
+  ADMIN_VISITOR_AUDIENCE_PROMPT,
 ] as const;
 
 function WelcomeThread({
   onPagePerformanceSelect,
+  onVisitorAudienceSelect,
 }: Readonly<{
   onPagePerformanceSelect: () => void;
+  onVisitorAudienceSelect: () => void;
 }>) {
+  function getPromptSelectHandler(prompt: (typeof adminSelfInitiatedPrompts)[number]) {
+    if (prompt === ADMIN_PAGE_PERFORMANCE_PROMPT) {
+      return onPagePerformanceSelect;
+    }
+
+    if (prompt === ADMIN_VISITOR_AUDIENCE_PROMPT) {
+      return onVisitorAudienceSelect;
+    }
+
+    return undefined;
+  }
+
   return (
     <>
       <ChatMessage>
@@ -485,11 +576,7 @@ function WelcomeThread({
           <Prompt
             className="w-fit max-w-full self-start"
             key={prompt}
-            onPromptSelect={
-              prompt === "How is my page performing this month?"
-                ? onPagePerformanceSelect
-                : undefined
-            }
+            onPromptSelect={getPromptSelectHandler(prompt)}
             prompt={prompt}
           />
         ))}
@@ -508,28 +595,10 @@ function SelfInitiatedPerformanceThread({
       <ChatMessage role="user">How is my page performing this month?</ChatMessage>
       <ChatMessage>
         Three things stand out: reach is up, follower growth is improving, and
-        agency decision-makers are showing interest.
+        restaurant operators are showing interest.
       </ChatMessage>
       <ChatResponseAttachment className="!block !opacity-100" gap="sm">
-        <article className="chat-message-enter w-full max-w-[var(--design-layout-panel-content-max)] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
-          <div className="grid gap-sm px-lg py-lg">
-            <SelfInitiatedMetricCard
-              label="Visitors"
-              value="312"
-              meta="+18 ppt vs last month"
-            />
-            <SelfInitiatedMetricCard
-              label="Post impressions"
-              value="3,479"
-              meta="+115.6% last 7 days"
-            />
-            <SelfInitiatedMetricCard
-              label="New followers"
-              value="37"
-              meta="+8% last 7 days"
-            />
-          </div>
-        </article>
+        <SelfInitiatedMetricsSummaryCard />
       </ChatResponseAttachment>
       <ChatMessage>
         The biggest opportunity is reach: one post is getting strong engagement,
@@ -549,39 +618,210 @@ function SelfInitiatedPerformanceThread({
   );
 }
 
+function SelfInitiatedVisitorAudienceThread({
+  onFollowUpSelect,
+}: Readonly<{
+  onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+}>) {
+  return (
+    <>
+      <ChatMessage role="user">{ADMIN_VISITOR_AUDIENCE_PROMPT}</ChatMessage>
+      <ChatMessage>
+        Your recent visitors cluster around a clear audience: multi-location
+        restaurant decision-makers who are likely evaluating menu and campaign
+        workflows.
+      </ChatMessage>
+      <ChatResponseAttachment className="!block !opacity-100" gap="sm">
+        <VisitorAudienceInsightCard />
+      </ChatResponseAttachment>
+      <FollowUpActions
+        followUps={selfInitiatedVisitorAudienceFollowUps}
+        onFollowUpSelect={onFollowUpSelect}
+      />
+    </>
+  );
+}
+
+const selfInitiatedVisitorAudienceFollowUps: ReadonlyArray<AdminUc5FollowUp> =
+  [
+    {
+      prompt: "Show matching visitors",
+      response:
+        "I would filter the visitor list to marketing ops leads, digital ordering managers, and operators at 20-50 employee restaurant teams. The strongest matches are people engaging with delivery promotion and menu rollout content.",
+    },
+    {
+      prompt: "Save this audience",
+      response:
+        "Audience draft: restaurant group marketers and operators. Use marketing ops, digital ordering, operations leads, 20-50 employee companies, and restaurants or hospitality as the starting criteria.",
+    },
+    {
+      prompt: "What content brought them here?",
+      response:
+        "The Northline Kitchen Group menu rollout story is the strongest pull. It connects directly to the visitor pattern: growing restaurant teams trying to keep delivery promotions aligned across locations.",
+    },
+    {
+      prompt: "Draft a post for this audience",
+      response:
+        "Draft angle: 'Which locations lose repeat orders after a delivery promo ends?' Lead with the restaurant operator problem, then show how location-level campaign reporting keeps teams aligned.",
+    },
+  ];
+
 const selfInitiatedBoostFollowUps: ReadonlyArray<AdminUc5FollowUp> =
   [
     {
       prompt: "Why this post?",
       response:
-        "Because it has a strong early signal: 4.2% engagement, well above your 1.1% average. The content is working; it just needs more reach.",
+        "Because it has a strong early signal: 4.2% engagement, well above your 1.1% average. The content is working, but only a small audience has seen it.",
     },
     {
-      prompt: "Who should I boost it to?",
+      prompt: "Who would this reach?",
       response:
-        "Start with small agency owners, creative directors, and operations leads at 1-20 person creative and marketing services firms. They are already showing up in your visitor data.",
+        "The strongest audience fit is restaurant group marketers, digital ordering leads, and operators at 20-50 employee restaurant teams. They are already showing up in your visitor data.",
     },
     {
-      prompt: "Show visitor breakdown",
+      prompt: "Explore boost options",
       response:
-        "Your strongest visitor pattern is small agency teams: 62% are from 1-10 employee companies, and founders or creative directors make up the largest role segment.",
+        "You could review a small boost for this post, but I would start by checking the audience, budget, and duration before launching anything. The safer first step is to preview who it would reach.",
     },
   ];
 
-function SelfInitiatedMetricCard({
+function SelfInitiatedMetricsSummaryCard() {
+  return (
+    <article className="chat-message-enter w-full max-w-[var(--design-layout-panel-content-max)] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
+      <div className="divide-y divide-border-faint px-lg py-lg">
+        <SelfInitiatedMetricRow
+          label="Visitors"
+          trendContext="vs last month"
+          trendValue="18 points"
+          value="312"
+        />
+        <SelfInitiatedMetricRow
+          label="Post impressions"
+          trendContext="vs last 7 days"
+          trendValue="115.6%"
+          value="3,479"
+        />
+        <SelfInitiatedMetricRow
+          label="New followers"
+          trendContext="vs last 7 days"
+          trendValue="8%"
+          value="37"
+        />
+      </div>
+    </article>
+  );
+}
+
+export function AdminUc5SelfInitiatedMetricsCardPreview() {
+  return <SelfInitiatedMetricsSummaryCard />;
+}
+
+export function AdminUc5VisitorAudienceCardPreview() {
+  return <VisitorAudienceInsightCard />;
+}
+
+function VisitorAudienceInsightCard() {
+  return (
+    <article className="chat-message-enter w-full max-w-[var(--design-layout-panel-content-max)] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
+      <div className="px-lg py-lg">
+        <div className="flex items-start gap-md">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-round bg-ai-background-soft text-ai-icon">
+            <Icon name="visibility" size="medium" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-label-xs text-text-meta">
+              Visitor audience insight
+            </p>
+            <h3 className="mt-xxs text-heading-sm text-text">
+              Your Page is attracting restaurant operators
+            </h3>
+            <p className="mt-sm text-body-sm text-text">
+              <strong className="font-semibold">37 recent visitors</strong>{" "}
+              match restaurant group marketers and operators who care about
+              delivery promotions and menu updates.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-lg divide-y divide-border-faint">
+          <VisitorAudienceMetricRow label="Matching visitors" value="37" />
+          <VisitorAudienceMetricRow label="20-50 employees" value="62%" />
+          <VisitorAudienceMetricRow label="Marketing roles" value="65%" />
+        </div>
+
+        <section className="mt-lg border-t border-border-faint pt-md">
+          <h4 className="text-supportive-s-strong text-text">
+            Top visitor signals
+          </h4>
+          <div className="mt-sm flex flex-wrap gap-xs">
+            <Tag size="small" tone="supportive-4">
+              Marketing ops
+            </Tag>
+            <Tag size="small" tone="supportive-4">
+              20-50 employees
+            </Tag>
+            <Tag size="small" tone="supportive-4">
+              Restaurants
+            </Tag>
+            <Tag size="small" tone="supportive-4">
+              Delivery promotion interest
+            </Tag>
+          </div>
+        </section>
+
+        <section className="mt-lg border-t border-border-faint pt-md">
+          <p className="text-label-xs text-text-meta">Suggested audience</p>
+          <p className="mt-xxs text-control-sm text-text">
+            Restaurant group marketers and operators
+          </p>
+          <p className="mt-xs text-body-xs text-text-meta">
+            Use this audience to review matching visitors or guide your next
+            boosted post.
+          </p>
+        </section>
+      </div>
+    </article>
+  );
+}
+
+function VisitorAudienceMetricRow({
   label,
-  meta,
   value,
 }: Readonly<{
   label: string;
-  meta: string;
   value: string;
 }>) {
   return (
-    <div className="min-w-0 rounded-sm border border-border-faint bg-background p-sm">
+    <div className="flex min-w-0 items-baseline justify-between gap-md py-md first:pt-0 last:pb-0">
       <p className="text-label-xs text-text-meta">{label}</p>
-      <p className="mt-xxs text-heading-sm text-text">{value}</p>
-      <p className="mt-xxs text-body-xs text-positive">{meta}</p>
+      <p className="shrink-0 text-control-md text-text">{value}</p>
+    </div>
+  );
+}
+
+function SelfInitiatedMetricRow({
+  label,
+  trendContext,
+  trendTone = "positive",
+  trendValue,
+  value,
+}: Readonly<{
+  label: string;
+  trendContext: string;
+  trendTone?: AdminUc5Tone;
+  trendValue: string;
+  value: string;
+}>) {
+  return (
+    <div className="min-w-0 py-md first:pt-0 last:pb-0">
+      <p className="text-label-xs text-text-meta">{label}</p>
+      <p className="mt-xxs text-control-md text-text">{value}</p>
+      <MetricTrend
+        className="mt-xxs text-body-xs"
+        context={trendContext}
+        tone={trendTone}
+        value={trendValue}
+      />
     </div>
   );
 }
@@ -600,6 +840,31 @@ function ActiveInsightThread({
         <ChatMessage>
           This post is standing out because people who saw it responded, but
           reach stayed low.
+        </ChatMessage>
+      ) : null}
+      {insight.id === "follower-growth" ? (
+        <ChatMessage>
+          Visitor interest is turning into follower growth this month, with new
+          follows pacing ahead of last week.
+        </ChatMessage>
+      ) : null}
+      {insight.id === "visitor-demographics" ? (
+        <ChatMessage>
+          The people finding Velora look close to the teams you&apos;re built
+          for: multi-location restaurant marketers, digital ordering leads, and
+          operators managing menu and campaign complexity.
+        </ChatMessage>
+      ) : null}
+      {insight.id === "content-engagement" ? (
+        <ChatMessage>
+          The Northline story is getting efficient engagement. I would treat it
+          as a reach opportunity: the message is working, but distribution is
+          still modest.
+        </ChatMessage>
+      ) : null}
+      {insight.id === "weekly-synthesis" ? (
+        <ChatMessage>
+          {adminUc5SynthesisRecommendation}
         </ChatMessage>
       ) : null}
       <ChatResponseAttachment
@@ -668,119 +933,118 @@ function InsightResponse({
 
       {insight.id === "post-amplification" ? null : (
         <footer className="border-t border-border-faint px-lg py-md">
-          <FakeAnalyticsLink label={insight.analyticsLabel} />
+          <AnalyticsPageButton />
         </footer>
       )}
     </article>
   );
 }
 
+export function AdminUc5InsightResponseCardPreview({
+  insightId,
+}: Readonly<{ insightId: AdminUc5InsightId }>) {
+  return (
+    <InsightResponse
+      insight={adminUc5Insights[insightId]}
+      onFollowUpSelect={() => {}}
+    />
+  );
+}
+
 function PostAmplificationResponse() {
   return (
-    <div className="space-y-md">
+    <div className="space-y-lg">
       <BoostCandidatePostPreview />
-      <Button size="small" variant="secondary">
-        Boost
-      </Button>
+      <div className="flex flex-wrap gap-sm">
+        <Button size="small" variant="secondary">
+          View post
+        </Button>
+        <Button size="small" variant="secondary">
+          Boost post
+        </Button>
+      </div>
     </div>
   );
 }
 
 function BoostCandidatePostPreview() {
   return (
-    <article className="space-y-sm">
-      <div className="flex items-start gap-sm">
+    <article>
+      <div className="flex min-w-0 items-center gap-sm">
         <Image
           alt=""
-          className="size-12 shrink-0 rounded-xs object-cover"
-          height={48}
-          src={assetSrc("post-building-blue.png")}
-          width={48}
+          className="size-10 shrink-0 rounded-xs object-cover"
+          height={40}
+          src={assetSrc("restaurant-post-menu-ops.png")}
+          width={40}
         />
         <div className="min-w-0">
-          <p className="text-label-xs text-text-meta">
-            {pcpCompanyProfile.name} post
-          </p>
-          <h4 className="mt-xxs line-clamp-2 text-control-sm text-text">
-            What happens when a client pays late but contractors still need to
-            be paid?
+          <h4 className="truncate text-control-sm text-text">
+            How restaurant teams keep delivery menus consistent across
+            locations
           </h4>
-          <p className="mt-xxs text-body-xs text-text-meta">Posted 3 days ago</p>
+          <p className="mt-xxs text-body-xs text-text-meta">2d</p>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-x-md gap-y-xxs text-body-xs text-text-meta">
-        <span>
-          <strong className="font-semibold text-text">4.2%</strong> engagement
-        </span>
-        <span aria-hidden="true">·</span>
-        <span>
-          <strong className="font-semibold text-text">180</strong> impressions
-        </span>
+      <div className="mt-lg divide-y divide-border-faint">
+        <PostMetricRow label="Engagement rate" value="4.2%" />
+        <PostMetricRow label="Impressions" value="180" />
       </div>
     </article>
   );
 }
 
+function PostMetricRow({
+  label,
+  value,
+}: Readonly<{
+  label: string;
+  value: string;
+}>) {
+  return (
+    <div className="flex min-w-0 items-baseline justify-between gap-md py-md first:pt-0 last:pb-0">
+      <p className="text-body-sm text-text-meta">{label}</p>
+      <p className="shrink-0 text-control-sm text-text">{value}</p>
+    </div>
+  );
+}
+
 function FollowerGrowthResponse() {
   return (
-    <div className="space-y-lg">
-      <div className="flex items-start gap-md">
+    <div className="space-y-md">
+      <div>
         <MiniAvatarPile />
-        <p className="min-w-0 text-body-sm text-text">
-          Visitor interest is turning into follower growth this month, with
-          new follows pacing ahead of last week.
-        </p>
       </div>
-      <div className="grid overflow-hidden rounded-sm border border-border-faint sm:grid-cols-3">
+      <div className="divide-y divide-border-faint">
         {adminUc5FollowerMetrics.map((metric) => (
-          <MetricTile key={metric.label} metric={metric} />
+          <MetricRow key={metric.label} metric={metric} />
         ))}
       </div>
     </div>
   );
 }
 
-function MetricTile({ metric }: Readonly<{ metric: AdminUc5Metric }>) {
+function MetricRow({ metric }: Readonly<{ metric: AdminUc5Metric }>) {
   return (
-    <div className="min-w-0 border-t border-border-faint p-md first:border-t-0 sm:border-l sm:border-t-0 sm:first:border-l-0">
+    <div className="min-w-0 py-md first:pt-0 last:pb-0">
       <p className="text-body-xs text-text-meta">{metric.label}</p>
-      <p className="mt-xs text-heading-lg text-text">{metric.value}</p>
-      <p
-        className={cx(
-          "mt-xs inline-flex items-center gap-xxs text-supportive-s-strong",
-          getToneClass(metric.tone),
-        )}
-      >
-        <Icon
-          name={metric.tone === "negative" ? "arrow-down" : "arrow-up"}
-          size="small"
-        />
-        <span>{metric.change}</span>
-      </p>
+      <p className="mt-xs text-control-md text-text">{metric.value}</p>
+      <MetricTrend
+        className="mt-xs text-supportive-s-strong"
+        context={metric.changeContext}
+        tone={metric.tone}
+        value={metric.changeValue}
+      />
     </div>
   );
 }
 
 function VisitorDemographicsResponse() {
   return (
-    <div className="space-y-lg">
-      <div className="flex items-start gap-md">
-        <Entity
-          label={pcpCompanyProfile.founderName}
-          size={40}
-          src={pcpCompanyProfile.founderAvatarSrc}
-        />
-        <p className="min-w-0 text-body-sm text-text">
-          The people finding Velora look close to the teams you&apos;re built
-          for: small agency owners, creative directors, and operators managing
-          contractor payment complexity.
-        </p>
-      </div>
-      <div>
-        {adminUc5DemographicGroups.map((group) => (
-          <BarGroup group={group} key={group.label} />
-        ))}
-      </div>
+    <div>
+      {adminUc5DemographicGroups.map((group) => (
+        <BarGroup group={group} key={group.label} />
+      ))}
     </div>
   );
 }
@@ -819,12 +1083,6 @@ function ContentEngagementResponse() {
     <div className="space-y-lg">
       <PostPerformanceGroup label="Top posts" posts={adminUc5TopPosts} />
       <PostPerformanceGroup label="Needs attention" posts={adminUc5LowPosts} />
-      <div className="border-t border-border-faint pt-md">
-        <p className="text-body-sm text-text">
-          Mobile accounts for 68% of top-post views. Keep captions short and
-          lead with the agency payment problem in the first line.
-        </p>
-      </div>
     </div>
   );
 }
@@ -925,7 +1183,7 @@ function CompetitorRow({ row }: Readonly<{ row: AdminUc5CompetitorRow }>) {
     <div
       className={cx(
         "grid gap-sm py-sm first:pt-0 last:pb-0",
-        row.highlight && "rounded-xs bg-surface-tint px-sm",
+        row.highlight && "border-l-2 border-action pl-sm",
       )}
     >
       <div className="flex min-w-0 items-center gap-sm">
@@ -1037,14 +1295,12 @@ function RecommendationAction({
           <h4 className="text-supportive-s-strong text-text">
             Recommended action
           </h4>
-          <p className="mt-xs text-body-sm text-text">
-            {adminUc5SynthesisRecommendation}
-          </p>
           {primaryFollowUp ? (
             <Button
               className="mt-md h-auto max-w-full whitespace-normal px-pill-padding-inline py-xs text-left"
               onClick={() => onFollowUpSelect(primaryFollowUp)}
               size="small"
+              variant="secondary"
             >
               {primaryFollowUp.prompt}
             </Button>

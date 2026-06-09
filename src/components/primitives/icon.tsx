@@ -25,6 +25,7 @@ export const iconNames = [
   "calendar",
   "camera",
   "caret",
+  "caret-down",
   "caret-right",
   "caret-up",
   "certificate",
@@ -400,8 +401,14 @@ export const iconMetadata = [
   {
     "name": "caret",
     "label": "Caret",
-    "figmaName": "Caret Small",
-    "figmaNodeId": "2008:2762"
+    "figmaName": "Caret",
+    "figmaNodeId": "0:391"
+  },
+  {
+    "name": "caret-down",
+    "label": "Caret Down",
+    "figmaName": "Caret",
+    "figmaNodeId": "0:391"
   },
   {
     "name": "caret-right",
@@ -412,8 +419,8 @@ export const iconMetadata = [
   {
     "name": "caret-up",
     "label": "Caret Up",
-    "figmaName": "Caret Up Small",
-    "figmaNodeId": "2008:2739"
+    "figmaName": "Caret Up",
+    "figmaNodeId": "66937:7473"
   },
   {
     "name": "certificate",
@@ -1805,9 +1812,10 @@ const iconSvgByName = {
   "bookmark-outline": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M11 10.509L8 7.809L5 10.509V3H10C10.552 3 11 3.448 11 4V10.509ZM3 1V15L8 10.5L13 15V4C13 2.343 11.657 1 10 1H3Z\" fill=\"currentColor\"/>\n</svg>",
   "calendar": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M2 2V11C2 12.7 3.3 14 5 14H11C12.7 14 14 12.7 14 11V2H2ZM10.5 3.5C11.1 3.5 11.5 3.9 11.5 4.5C11.5 5.1 11.1 5.5 10.5 5.5C9.9 5.5 9.5 5.1 9.5 4.5C9.5 3.9 9.9 3.5 10.5 3.5ZM5.5 3.5C6.1 3.5 6.5 3.9 6.5 4.5C6.5 5.1 6.1 5.5 5.5 5.5C4.9 5.5 4.5 5.1 4.5 4.5C4.5 3.9 4.9 3.5 5.5 3.5ZM12 11C12 11.6 11.6 12 11 12H5C4.4 12 4 11.6 4 11V7H12V11Z\" fill=\"currentColor\"/>\n</svg>",
   "camera": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M10 9C10 10.1 9.1 11 8 11C6.9 11 6 10.1 6 9C6 7.9 6.9 7 8 7C9.1 7 10 7.9 10 9ZM15 6.5V14H1V6.5C1 5.1 2.1 4 3.5 4H4.3L5 2H11L11.7 4H12.5C13.9 4 15 5.1 15 6.5ZM11 9C11 7.3 9.7 6 8 6C6.3 6 5 7.3 5 9C5 10.7 6.3 12 8 12C9.7 12 11 10.7 11 9Z\" fill=\"currentColor\"/>\n</svg>",
-  "caret": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M8 11L3 6H13L8 11Z\" fill=\"currentColor\"/>\n</svg>",
+  "caret": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12 16L5 9H19L12 16Z\" fill=\"currentColor\"/>\n</svg>",
+  "caret-down": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12 16L5 9H19L12 16Z\" fill=\"currentColor\"/>\n</svg>",
   "caret-right": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M11 8L6 13V3L11 8Z\" fill=\"currentColor\"/>\n</svg>",
-  "caret-up": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M8.5 5.5L13.5 10.5H3.5L8.5 5.5Z\" fill=\"currentColor\"/>\n</svg>",
+  "caret-up": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M12.5 8.5L19.5 15.5H5.5L12.5 8.5Z\" fill=\"currentColor\"/>\n</svg>",
   "certificate": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M1 14V2H15V14H1ZM3 12V4H13V12H3ZM4 5H12V6H4V5ZM6 7H10V8H6V7ZM7 10H4V11H7V10ZM12.38 10C12.38 10.76 11.76 11.38 11 11.38C10.24 11.38 9.62 10.76 9.62 10C9.62 9.24 10.24 8.62 11 8.62C11.76 8.62 12.38 9.24 12.38 10Z\" fill=\"currentColor\"/>\n</svg>",
   "check": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M5.7 11.9L2.4 8.6L1 10L6 15L15 2H12.6L5.7 11.9Z\" fill=\"currentColor\"/>\n</svg>",
   "checklist": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M15 6H8V4H15V6ZM15 10H8V12H15V10ZM7 1L2.5 7L0 4.5L1.43 3.07L2.32 3.96L4.53 1H7ZM7 7L2.5 13L0 10.5L1.43 9.07L2.32 9.96L4.54 7H7.01H7Z\" fill=\"currentColor\"/>\n</svg>",
