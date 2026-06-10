@@ -9,6 +9,26 @@ export const metadata: Metadata = createPageMetadata({
     "Admin-facing Premium Company Page dashboard prototype for the Premium Company Pages AI chat experience.",
 });
 
-export default function PremiumCompanyPagesAdminRoute() {
-  return <PremiumCompanyPagesPage />;
+type PremiumCompanyPagesAdminRouteProps = Readonly<{
+  searchParams: Promise<{
+    story?: string | ReadonlyArray<string>;
+  }>;
+}>;
+
+function getStoryParam(value: string | ReadonlyArray<string> | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function PremiumCompanyPagesAdminRoute({
+  searchParams,
+}: PremiumCompanyPagesAdminRouteProps) {
+  const { story } = await searchParams;
+  const initialAgentOpen = getStoryParam(story) === "cold-start";
+
+  return (
+    <PremiumCompanyPagesPage
+      key={initialAgentOpen ? "cold-start" : "dashboard"}
+      initialAgentOpen={initialAgentOpen}
+    />
+  );
 }

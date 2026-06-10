@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Empathy Small">
+<path id="Oval" d="M12 0.5C18.3513 0.5 23.5 5.64873 23.5 12C23.5 18.3513 18.3513 23.5 12 23.5C5.64873 23.5 0.5 18.3513 0.5 12C0.5 5.64873 5.64873 0.5 12 0.5Z" fill="var(--fill-0, #DF704D)" stroke="var(--stroke-0, white)"/>
+<path id="Path" fill-rule="evenodd" clip-rule="evenodd" d="M11.54 7.3C10.7712 6.51885 9.72102 6.07895 8.625 6.07895C7.52897 6.07895 6.47881 6.51885 5.71 7.3C4.09844 8.92873 4.09844 11.5513 5.71 13.18L12 19.5L18.29 13.18C19.9016 11.5513 19.9016 8.92873 18.29 7.3C17.5192 6.51895 16.4674 6.0795 15.37 6.08C14.276 6.08676 13.2307 6.53369 12.47 7.32L12 7.76L11.54 7.3Z" fill="var(--fill-0, #FFF3F0)" stroke="var(--stroke-0, #77280C)"/>
+<g id="Path_2" opacity="0.6">
+</g>
+<g id="Path_3" opacity="0.4">
+</g>
+<path id="Path_4" fill-rule="evenodd" clip-rule="evenodd" d="M11.54 7.22C10.7712 6.43885 9.72102 5.99895 8.625 5.99895C7.52897 5.99895 6.47881 6.43885 5.71 7.22C4.09844 8.84873 4.09844 11.4713 5.71 13.1L12 19.42L18.29 13.1C19.9016 11.4713 19.9016 8.84873 18.29 7.22C17.5192 6.43894 16.4674 5.9995 15.37 6C14.2772 6.003 13.2317 6.44642 12.47 7.23L12 7.68L11.54 7.22Z" stroke="var(--stroke-0, #77280C)" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

@@ -1,7 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useState,
+  type CSSProperties,
+  type MouseEventHandler,
+  type ReactNode,
+} from "react";
 import {
   Maximize2,
   Monitor,
@@ -44,14 +49,15 @@ import {
 import {
   AdminPerformanceDigestCard,
   AdminUc5InsightResponseCardPreview,
-  AdminUc5SelfInitiatedMetricsCardPreview,
-  AdminUc5VisitorAudienceCardPreview,
+  InsightCard,
   PremiumCompanyPagesInboxContextStripPreview,
   PremiumCompanyPagesVcaHandoffCardPreview,
   PremiumCompanyPagesVcaJobPreviewCardPreview,
   PremiumCompanyPagesVcaPostProofCardPreview,
+  TodayActionCard,
   VcaFab,
   type AdminUc5InsightId,
+  type InsightCardAction,
   type VcaFabVisualState,
 } from "@/components/premium-company-pages";
 import { PremiumConciergeFab } from "@/components/premium/premium-concierge-fab";
@@ -151,14 +157,12 @@ type SpecialistActionDemoStateId =
   | "scheduling"
   | "booked-online"
   | "booked-phone";
-type VcaFabDemoState = VcaFabVisualState | "disabled";
+type VcaFabDemoState = VcaFabVisualState | "selected" | "disabled";
 type PcpAiCardDemoId =
   | "vca-case-study"
   | "vca-job"
   | "vca-handoff"
   | "admin-attention"
-  | "admin-metrics"
-  | "admin-visitor-audience"
   | "admin-post-amplification"
   | "admin-follower-growth"
   | "admin-visitor-demographics"
@@ -289,6 +293,7 @@ const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
   { label: "Default", value: "default" },
   { label: "Hover", value: "hover" },
   { label: "Active", value: "active" },
+  { label: "Selected", value: "selected" },
   { label: "Focus", value: "focus-visible" },
   { label: "Disabled", value: "disabled" },
 ];
@@ -297,8 +302,6 @@ const pcpAiCardDemoOptions: ReadonlyArray<DemoOption<PcpAiCardDemoId>> = [
   { label: "Job preview", value: "vca-job" },
   { label: "Drafted message", value: "vca-handoff" },
   { label: "Attention digest", value: "admin-attention" },
-  { label: "Metrics summary", value: "admin-metrics" },
-  { label: "Visitor audience", value: "admin-visitor-audience" },
   { label: "Post amplification", value: "admin-post-amplification" },
   { label: "Follower growth", value: "admin-follower-growth" },
   { label: "Visitor demographics", value: "admin-visitor-demographics" },
@@ -2324,7 +2327,12 @@ export function VcaFabStatesPreview() {
             <VcaFab
               onClick={() => {}}
               position="static"
-              visualState={value === "disabled" ? "default" : value}
+              selected={value === "selected"}
+              visualState={
+                value === "disabled" || value === "selected"
+                  ? "default"
+                  : value
+              }
               disabled={value === "disabled"}
             />
           </div>
@@ -2338,21 +2346,34 @@ export function VcaFabSwappableMarkPreview() {
   return (
     <div className="flex flex-wrap items-start gap-xl">
       <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Default mark</p>
+        <p className="text-body-xs text-text-meta">Visitor mark</p>
         <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
           <VcaFab onClick={() => {}} position="static" />
         </div>
       </div>
       <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Custom mark</p>
+        <p className="text-body-xs text-text-meta">Admin mark</p>
         <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
-          <VcaFab label="Open assistant" onClick={() => {}} position="static">
-            <Icon
-              name="navigation-signal-ai"
-              size="medium"
-              className="text-ai-icon"
-            />
-          </VcaFab>
+          <VcaFab
+            accentColor="#2AA986"
+            label="Open assistant"
+            onClick={() => {}}
+            position="static"
+            variant="admin"
+          />
+        </div>
+      </div>
+      <div className="space-y-xs">
+        <p className="text-body-xs text-text-meta">Selected admin mark</p>
+        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+          <VcaFab
+            accentColor="#2AA986"
+            label="Open assistant"
+            onClick={() => {}}
+            position="static"
+            selected
+            variant="admin"
+          />
         </div>
       </div>
     </div>
@@ -2400,14 +2421,6 @@ function renderPcpAiCardDemo(cardId: PcpAiCardDemoId) {
     return <PcpAdminAttentionCardsPreview />;
   }
 
-  if (cardId === "admin-metrics") {
-    return <PcpAdminSelfInitiatedMetricsCardPreview />;
-  }
-
-  if (cardId === "admin-visitor-audience") {
-    return <PcpAdminVisitorAudienceCardPreview />;
-  }
-
   if (cardId === "admin-inbox-context") {
     return <PcpInboxAiContextStripPreview />;
   }
@@ -2419,8 +2432,6 @@ function renderPcpAiCardDemo(cardId: PcpAiCardDemoId) {
       | "vca-job"
       | "vca-handoff"
       | "admin-attention"
-      | "admin-metrics"
-      | "admin-visitor-audience"
       | "admin-inbox-context"
     >,
     AdminUc5InsightId
@@ -2460,6 +2471,161 @@ export function PcpAiCardsDemo() {
   );
 }
 
+export function PcpTodayActionCardsPreview() {
+  const preventPreviewNavigation: MouseEventHandler<HTMLElement> = (event) => {
+    event.preventDefault();
+  };
+
+  return (
+    <div className="flex w-full flex-col gap-md">
+      <TodayActionCard
+        badge={{ label: "Premium", tone: "premium" }}
+        description="Automatically invite post-engagers to follow."
+        dismissLabel="Dismiss Auto-Invite action"
+        headline="Turn on Auto-Invite to grow new followers 6.7x faster"
+        inlineAction={{
+          label: "Enable",
+          onSelect: preventPreviewNavigation,
+        }}
+        onDismiss={() => {}}
+      />
+      <TodayActionCard
+        description="Follow other Pages to stay connected to your industry and easily join relevant conversations."
+        dismissLabel="Dismiss follow other Pages action"
+        headline="Follow other Pages"
+        inlineAction={{
+          label: "Follow",
+          onSelect: preventPreviewNavigation,
+        }}
+        onDismiss={() => {}}
+      />
+    </div>
+  );
+}
+
+export function PcpInsightCardSystemPreview() {
+  const askAiAction = (id: string): InsightCardAction => ({
+    id,
+    kind: "ask-ai",
+    label: "Ask",
+    onSelect: () => {},
+  });
+
+  return (
+    <div className="flex w-full flex-col gap-md">
+      <section className="space-y-sm">
+        <p className="text-body-xs font-semibold text-text-meta">Lead · Tier 1</p>
+        <InsightCard
+          action={{
+            id: "view-message",
+            kind: "link",
+            label: "View message",
+            onSelect: () => {},
+          }}
+          dismissLabel="Dismiss lead insight"
+          evidence="She asked about a mid-year benefits migration and sent Rose a message."
+          headline="A VP of HR sent you a message"
+          onDismiss={() => {}}
+          type="lead-tier-1"
+          visual={{
+            kind: "avatar",
+            label: "Cheri Sparks",
+            src: "/assets/premium-company-pages/member/cheri-sparks.png",
+          }}
+        />
+      </section>
+
+      <section className="space-y-sm">
+        <p className="text-body-xs font-semibold text-text-meta">
+          Anomaly
+        </p>
+        <InsightCard
+          action={askAiAction("ask-ai-anomaly")}
+          dismissLabel="Dismiss follower growth insight"
+          evidence="Posting slowed from 3x a week to once."
+          headline="Follower growth down 18% this month"
+          onDismiss={() => {}}
+          type="anomaly"
+        />
+      </section>
+
+      <section className="space-y-sm">
+        <p className="text-body-xs font-semibold text-text-meta">
+          Opportunity
+        </p>
+        <InsightCard
+          action={askAiAction("ask-ai-opportunity")}
+          dismissLabel="Dismiss opportunity insight"
+          evidence="Only 240 impressions so far."
+          headline="Open enrollment post has 4.8% engagement"
+          onDismiss={() => {}}
+          type="opportunity"
+          visual={{
+            alt: "Benefits migration readiness post preview",
+            kind: "post-thumbnail",
+            src: "/assets/premium-company-pages/member/post-image-1.png",
+          }}
+        />
+      </section>
+
+      <section className="space-y-sm">
+        <p className="text-body-xs font-semibold text-text-meta">
+          Strong-fit visitor · Tier 2
+        </p>
+        <InsightCard
+          action={askAiAction("ask-ai-strong-fit")}
+          dismissLabel="Dismiss strong-fit visitor insight"
+          evidence="Marcus viewed two migration posts and matches your benefits leader audience."
+          headline="A benefits director matches your ICP"
+          onDismiss={() => {}}
+          signal={{
+            tone: "profile",
+            text: "Viewed your pricing post twice this week",
+          }}
+          type="strong-fit-tier-2"
+          visual={{
+            kind: "avatar",
+            label: "Marcus Tran",
+            src: "/assets/premium-company-pages/avatar-3.png",
+          }}
+        />
+      </section>
+
+      <section className="space-y-sm">
+        <p className="text-body-xs font-semibold text-text-meta">
+          Competitive
+        </p>
+        <InsightCard
+          action={askAiAction("ask-ai-competitive")}
+          dismissLabel="Dismiss competitive insight"
+          evidence="They posted benefits migration stories 3x this week."
+          headline="BenefitHub follower growth is up 24%"
+          onDismiss={() => {}}
+          type="competitive"
+          visual={{
+            kind: "company-logo",
+            label: "BenefitHub",
+          }}
+        />
+      </section>
+
+      <section className="space-y-sm">
+        <p className="text-body-xs font-semibold text-text-meta">
+          Audience fit
+        </p>
+        <InsightCard
+          action={askAiAction("ask-ai-audience-fit")}
+          dismissLabel="Dismiss audience fit insight"
+          evidence="Visitors cluster around HR, benefits, and people operations leaders."
+          headline="68% of engaged visitors are HR Director+"
+          onDismiss={() => {}}
+          type="audience-fit"
+        />
+      </section>
+    </div>
+  );
+}
+
 export function PcpVcaCaseStudyCardPreview() {
   return (
     <PcpAiCardFrame>
@@ -2495,22 +2661,6 @@ export function PcpAdminAttentionCardsPreview() {
         onInsightSelect={setActiveInsightId}
       />
     </PcpAdminAttentionFrame>
-  );
-}
-
-export function PcpAdminSelfInitiatedMetricsCardPreview() {
-  return (
-    <PcpAiCardFrame wide>
-      <AdminUc5SelfInitiatedMetricsCardPreview />
-    </PcpAiCardFrame>
-  );
-}
-
-export function PcpAdminVisitorAudienceCardPreview() {
-  return (
-    <PcpAiCardFrame wide>
-      <AdminUc5VisitorAudienceCardPreview />
-    </PcpAiCardFrame>
   );
 }
 

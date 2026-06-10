@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Interest XSmall">
+<path id="Oval" d="M7 14C10.866 14 14 10.866 14 7C14 3.13401 10.866 0 7 0C3.13401 0 0 3.13401 0 7C0 10.866 3.13401 14 7 14Z" fill="var(--fill-0, #F5BB5C)"/>
+<path id="Path" fill-rule="evenodd" clip-rule="evenodd" d="M7.81999 12.4H6.21999C5.92176 12.4 5.67999 12.1582 5.67999 11.86V10.53H8.35999V11.86C8.35999 12.1582 8.11823 12.4 7.81999 12.4Z" fill="var(--fill-0, #FFE1B2)"/>
+<path id="Path_2" fill-rule="evenodd" clip-rule="evenodd" d="M5.69 10.79V10.53C5.68941 10.1903 5.63542 9.85289 5.53 9.53C5.38987 9.24697 5.21153 8.98452 5 8.75C4.25425 8.13711 3.81846 7.22525 3.81 6.26C3.81 4.48717 5.24716 3.05 7.02 3.05C8.79283 3.05 10.23 4.48717 10.23 6.26C10.2127 7.24616 9.76293 8.1749 9 8.8C9.07 8.75 8.92 8.86 8.82 9C8.72157 9.14505 8.64413 9.30328 8.59 9.47C8.48813 9.79347 8.43752 10.1309 8.44 10.47V10.73" fill="var(--fill-0, #FCF0DE)"/>
+<path id="Path_3" d="M6.46 3.78C5.99359 3.85858 5.56538 4.08672 5.24 4.43C4.89883 4.76136 4.66239 5.18555 4.56 5.65" stroke="var(--stroke-0, white)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_4" fill-rule="evenodd" clip-rule="evenodd" d="M7.81999 12.4H6.21999C5.92176 12.4 5.67999 12.1582 5.67999 11.86V10.53H8.35999V11.86C8.35999 12.1582 8.11823 12.4 7.81999 12.4Z" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_5" d="M5.68 10.79V10.53C5.68264 10.1909 5.63203 9.85343 5.53 9.53C5.46486 9.36235 5.3774 9.20426 5.27 9.06C5.16311 8.9033 5.039 8.75907 4.9 8.63C4.76659 8.50994 4.64288 8.37953 4.53 8.24C4.06697 7.67606 3.81267 6.96966 3.81 6.24C3.81 4.46716 5.24716 3.03 7.02 3.03C8.79283 3.03 10.23 4.46716 10.23 6.24C10.2181 6.96972 9.96099 7.67421 9.5 8.24C9.33052 8.44947 9.13947 8.64052 8.93 8.81C8.85834 8.87507 8.79149 8.94525 8.73 9.02C8.63459 9.16535 8.5605 9.32363 8.51 9.49C8.40813 9.81346 8.35752 10.1509 8.36 10.49V10.75" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_6" d="M3.59927 1.63622L4.21072 2.4275" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_7" d="M10.4155 1.63185L9.80971 2.42749" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_8" d="M7 0.5V1.75955" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

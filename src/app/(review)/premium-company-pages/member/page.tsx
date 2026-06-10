@@ -40,19 +40,15 @@ function getVcaShellMode(
   return "fab-icon";
 }
 
-function getVcaMemberIntent(
-  value?: string | ReadonlyArray<string>,
-): VcaMemberIntent {
-  const intent = Array.isArray(value) ? value[0] : value;
-
-  return intent === "job-seeker" ? "job-seeker" : "buyer";
+function getVcaMemberIntent(): VcaMemberIntent {
+  return "buyer";
 }
 
 export default async function PremiumCompanyPagesMemberRoute({
   searchParams,
 }: PremiumCompanyPagesMemberRouteProps) {
-  const { vcaIntent, vcaShell } = await searchParams;
-  const memberIntent = getVcaMemberIntent(vcaIntent);
+  const { vcaShell } = await searchParams;
+  const memberIntent = getVcaMemberIntent();
   const shellMode = getVcaShellMode(vcaShell);
 
   return (

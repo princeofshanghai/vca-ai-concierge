@@ -1,0 +1,17 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Interest Small">
+<path id="Oval" d="M12 0.5C18.3513 0.5 23.5 5.64873 23.5 12C23.5 18.3513 18.3513 23.5 12 23.5C5.64873 23.5 0.5 18.3513 0.5 12C0.5 5.64873 5.64873 0.5 12 0.5Z" fill="var(--fill-0, #F5BB5C)" stroke="var(--stroke-0, white)"/>
+<path id="Path" fill-rule="evenodd" clip-rule="evenodd" d="M13.29 20.48H10.77C10.3083 20.4746 9.93539 20.1017 9.92999 19.64V17.54H14.13V19.64C14.1246 20.1017 13.7517 20.4746 13.29 20.48Z" fill="var(--fill-0, #FFE1B2)"/>
+<path id="Path_2" fill-rule="evenodd" clip-rule="evenodd" d="M9.93 18V17.58C9.93629 17.0438 9.85522 16.5102 9.69 16C9.4848 15.5417 9.21174 15.1169 8.88 14.74C7.70969 13.7802 7.0219 12.3534 7 10.84C7 8.05649 9.25648 5.8 12.04 5.8C14.8235 5.8 17.08 8.05649 17.08 10.84C17.0416 12.4045 16.3085 13.8706 15.08 14.84L15.02 14.89C14.9121 14.9859 14.8148 15.0932 14.73 15.21C14.5746 15.4342 14.4533 15.6802 14.37 15.94C14.2058 16.4607 14.1248 17.0041 14.13 17.55V18" fill="var(--fill-0, #FCF0DE)"/>
+<path id="Path_3" d="M6.99001 3.67999L8.05001 5.06999" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_4" d="M17.49 3.67999L16.43 5.06999" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_5" d="M12.03 2V4.1" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_6" d="M11.15 6.92999C10.412 7.0719 9.73894 7.44697 9.23 7.99999C8.70426 8.52201 8.33383 9.17979 8.16 9.89999" stroke="var(--stroke-0, white)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<g id="Path_7">
+</g>
+<g id="Path_8">
+</g>
+<path id="Path_9" fill-rule="evenodd" clip-rule="evenodd" d="M13.29 20.48H10.77C10.3083 20.4746 9.93539 20.1017 9.92999 19.64V17.54H14.13V19.64C14.1246 20.1017 13.7517 20.4746 13.29 20.48Z" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Path_10" d="M9.93001 18V17.58C9.93629 17.0438 9.85523 16.5102 9.69 16C9.59549 15.7322 9.45692 15.4821 9.28 15.26C9.11102 15.0167 8.91659 14.7921 8.70001 14.59C8.49019 14.4103 8.29614 14.2129 8.12001 14C7.76379 13.5631 7.48324 13.0696 7.29001 12.54C7.09235 11.9953 6.99412 11.4195 7.00001 10.84C7.03031 8.65926 8.47061 6.74976 10.5591 6.12146C12.6476 5.49316 14.9024 6.29105 16.1309 8.0931C17.3593 9.89515 17.2781 12.2856 15.93 14C15.661 14.3325 15.3595 14.6373 15.03 14.91C14.9119 15.0051 14.8076 15.1162 14.72 15.24C14.5677 15.4646 14.4497 15.7106 14.37 15.97C14.201 16.4896 14.1199 17.0337 14.13 17.58V18" stroke="var(--stroke-0, #5D3B01)" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

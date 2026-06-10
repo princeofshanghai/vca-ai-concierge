@@ -4,126 +4,193 @@ Product and design spec for **VCA (Virtual Chat Agent)**, a proposed AI-powered 
 
 Shared PCP context lives in [premium-company-pages.md](./premium-company-pages.md).
 
+Detailed source docs:
+
+- [Framing and personas](./premium-company-pages-vca/framing-personas.md)
+- [Admin agent FAB](./premium-company-pages-vca/admin-agent-fab.md)
+- [Admin demo stories](./premium-company-pages-vca/admin-demo-stories.md)
+- [Visitor loop](./premium-company-pages-vca/visitor-loop.md)
+- [Design decisions](./premium-company-pages-vca/design-decisions.md)
+
 ## What This Is
 
-VCA is a proposed net-new feature inside Premium Company Pages. It adds an AI-assisted conversation layer to a Company Page for both:
+VCA is a proposed net-new feature inside Premium Company Pages. It adds an AI-assisted conversation and intelligence layer to a Company Page for both:
 
 - **Visitors** browsing the Page,
 - **Admins** managing the Page.
 
-VCA is not a generic chatbot. It is a LinkedIn-native intent layer that can use member identity, profile context, company data, and behavioral signals in ways an external website chat tool cannot.
+VCA is not a generic website chatbot. It is a LinkedIn-native intent layer that can use professional context, Page activity, company data, and conversation signals in ways an external website chat tool cannot.
 
 ## Core Insight
 
-Most chat agents know nothing about who is talking to them.
+The enterprise Page owner and the enterprise buyer are stuck on opposite sides of the same visibility gap.
 
-LinkedIn's VCA can know useful context before the visitor types a single word: role, company size, industry, seniority, and likely fit for the Page admin's target customer.
+> Rose cannot see who is there. Cheri will not identify herself.
 
-This enables VCA to:
+Rose can see impressions, reactions, comments, follower growth, and website clicks, but she cannot easily tell whether the right people are paying attention or what questions they leave with unanswered.
 
-- pre-qualify visitors automatically,
-- personalize the entry message,
-- recommend the right next action based on intent,
-- give the admin a context-rich signal instead of anonymous traffic.
+Cheri can see polished vendor messaging, but she does not want to fill out a form before she knows whether Velora can handle her actual open enrollment complexity.
+
+VCA resolves both sides:
+
+- Cheri gets a low-friction way to self-qualify before entering a sales funnel.
+- Rose gets pre-contextualized signal about who is engaging, what they care about, and what the Page should do next.
 
 ## Prototype Thesis
 
-PCP helps SMBs stand out and build credibility. VCA closes the gap between visitor interest and real action.
+PCP helps the Page stand out. VCA explains who is paying attention, what they need, and what the Page owner should do next.
 
 The prototype should prove:
 
-- Cheri almost left the Page.
-- VCA recognized that she matched Velora's ideal customer profile.
-- VCA spoke to her specific situation.
-- VCA answered her hardest evaluation question.
-- VCA helped her send Ning a useful message.
-- Ning received a warm, pre-qualified lead with enough context to reply quickly.
+- Cheri can get a specific answer without filling out a generic contact form.
+- VCA can recognize that Cheri matches Velora's target enterprise audience.
+- Cheri controls whether she identifies herself or sends a message.
+- Rose can see that target buyers are engaging with the Page.
+- Rose receives recommendations that turn analytics into action.
+- The enterprise trust tension is visible: VCA is powerful, but admins need guardrails, approved topics, and brand-safe configuration before it goes live.
+
+## Scenario Company
+
+**Velora** is a benefits administration platform. It helps HR teams manage open enrollment, health plans, employee benefits, and carrier complexity in one place. It replaces spreadsheets, disconnected carrier portals, and brittle HRIS workarounds.
+
+Prototype context:
+
+- serves mid-size and large companies,
+- target buyers are senior HR and benefits leaders,
+- strongest story is enterprise open enrollment complexity,
+- target PCP tier is Plus / Pro, skewing MM/ENT and Enterprise 10K+.
+
+Detailed source: [Framing and personas](./premium-company-pages-vca/framing-personas.md).
 
 ## Personas
 
-### Admin: Ning Hu
+### Admin: Rose Reynolds
 
-Ning is the Founder and CEO of **Velora**, an invoicing and payments platform built for contractor teams and small agencies.
+Rose is the Social Media & Communications Manager at **Velora**.
 
-Company context:
+Role context:
 
-- 25 employees,
-- target customer is small agencies and contractor teams with 3-20 people,
-- crowded competitive space including FreshBooks, QuickBooks, and Wave.
+- fully owns Velora's LinkedIn Page content, strategy, and performance,
+- reports through brand and communications leadership,
+- separate from demand generation, paid media, and sales development,
+- not directly responsible for delivering leads to sales.
 
-Ning is doing LinkedIn himself. He has no dedicated marketing coordinator. He checks the Page between customer calls and needs signal in seconds, not a dashboard that requires analysis.
+KPIs:
+
+- follower growth,
+- post engagement,
+- reactions, comments, and reshares,
+- social sentiment,
+- website visits from LinkedIn.
+
+Rose is putting real effort into the Page. She publishes content, tracks metrics, grows the following, and tries to make the Page feel credible. But when leadership asks what LinkedIn is actually doing for Velora, she has numbers without a clear story.
 
 Root JTBD:
 
-> Build trust and credibility quickly with the right buyers, and convert Page interest into real conversations without spending hours doing it.
+> Prove that Velora's organic LinkedIn presence is reaching the right enterprise audience, understand what that audience cares about, and know what to do next.
+
+Rose's pain points:
+
+- She can see impressions and engagement, but not whether the right people are paying attention.
+- She does not know what target buyers wanted to understand but could not find on the Page.
+- She manually pieces together fragmented analytics into leadership updates.
+- Metrics tell her what happened, but not what to do.
+- She needs recommendations that help her act without pretending she owns sales follow-up.
+
+Detailed source: [Framing and personas](./premium-company-pages-vca/framing-personas.md#admin-persona-rose-reynolds).
 
 ### Visitor: Cheri Sparks
 
-Cheri is the Founder and Creative Director of a small creative production agency with roughly 8 people, mixing full-time teammates and rotating contractors.
+Cheri is the VP of HR at a 12,000-person retail company.
 
-Her reality:
+Her situation:
 
-- She runs creative and ops at the same time.
-- Invoicing and contractor payment tracking happens late at night.
-- Her old mix of Wave and spreadsheets worked when the company was smaller.
-- With a rotating team, payments are late, contractors are frustrated, and clients are confused.
+- She manages open enrollment across three carriers.
+- Her team uses a mix of spreadsheets and an outdated HRIS.
+- The process breaks every October.
+- She is quietly evaluating modern benefits administration platforms before the next enrollment season.
 
-Cheri is skeptical but tired. She does not want a sales pitch. She wants to know in about 60 seconds whether Velora is actually built for her situation.
+Cheri is in research mode. She is a strong potential buyer, but she is not ready to enter a sales funnel.
 
 Root JTBD:
 
-> Quickly evaluate whether Velora solves my specific contractor payment complexity without having to sit through a demo or talk to a salesperson.
+> Quickly understand whether Velora can handle multi-carrier benefits complexity at enterprise scale before I spend political capital or invite a sales process.
+
+Cheri's pain points:
+
+- Generic vendor pages do not answer her specific questions.
+- She wants to know whether Velora supports multi-carrier complexity at scale, not read broad marketing copy.
+- Filling out a contact form feels like inviting a sequence of SDR calls before she is ready.
+- She needs enough specifics to build an internal business case.
+- She wants to self-qualify on her terms.
+
+Detailed source: [Framing and personas](./premium-company-pages-vca/framing-personas.md#visitor-persona-cheri-sparks).
 
 ## Two-Act Story
 
+Detailed visitor/admin handoff source: [Visitor loop](./premium-company-pages-vca/visitor-loop.md).
+
 ### Act 1: Visitor Experience
 
-Cheri lands on Velora's LinkedIn Page from a post in her feed. She scans the Page, notices the premium credibility signals, and is about to leave.
+Cheri lands on Velora's LinkedIn Page from a post about open enrollment deadlines. She scans the Page, notices the premium credibility signals, and is evaluating whether Velora is credible enough to keep researching.
 
 A subtle inline nudge appears near the Page CTA:
 
-> See how Velora helps agencies manage payments across contractor teams.
+> See how Velora supports multi-carrier open enrollment at scale.
 
-This is not a popup or a floating widget. It is a contextual on-page nudge. It speaks directly to Cheri because VCA has inferred that she matches Velora's target customer profile.
+This is not a popup or a floating widget. It is a contextual Page nudge. It speaks directly to Cheri because VCA has inferred that she likely matches Velora's target audience: senior HR leadership at a large company.
 
-Cheri opens the existing Message tray in VCA mode and asks:
+Cheri opens the existing Message tray in VCA mode and asks a specific enterprise evaluation question, such as:
 
-> If a client pays late, what happens to my contractor payments?
+> What happens to our benefits enrollment if we switch platforms mid-year?
 
-VCA gives a direct, specific answer in Velora's voice. It explains how Velora handles gaps between client payment timing and contractor payment obligations, including conditional payment schedules and less manual dependency tracking.
+VCA gives a direct, specific answer in Velora's configured voice. It explains, within approved content boundaries, how Velora supports mid-year migration, multi-carrier setup, employee eligibility changes, seasonal workers, and enrollment status visibility.
 
-VCA then offers a contextual next step:
+VCA then offers a contextual next step without forcing a funnel:
 
-> Want to see how this would work for your team? I can send Ning a message on your behalf. I'll include the context from our conversation so he has everything he needs.
+> Want to connect with Velora's team? I can send them a message with the context from our conversation, so you will not have to explain this again.
 
-Cheri sees a pre-filled message drafted from the conversation:
+Cheri can leave with the answer, save a summary, or choose to send a message. If she chooses to send, she sees a pre-filled draft:
 
-> Hi Ning - I run a small creative agency with rotating contractors and I'm dealing with late client payments that cascade into late contractor payments. Sounds like Velora might solve this. Would love to learn more about how the conditional payment scheduling works.
+> Hi - I'm VP of HR at a 12,000-person retail company, currently managing benefits across 3 carriers. I have questions about mid-year platform migration and how Velora handles seasonal workers with variable enrollment windows. Would love to connect.
 
 She edits it lightly and sends.
 
-The visitor outcome should feel fast, specific, and low-friction: no form fill, no calendar pressure, no cold sales pitch.
+The visitor outcome should feel fast, specific, and low-friction: no generic form, no calendar pressure, no cold sales pitch, and no loss of control.
 
 ### Act 2: Admin Experience
 
-Later that day, Ning receives a mobile notification:
+Later, Rose checks the Page admin experience. Instead of only seeing impressions, clicks, and engagement rates, she sees VCA intelligence layered onto Page activity.
 
-> High-intent visitor: Cheri Sparks, Founder at an 8-person creative agency, asked about contractor payment timing. She sent you a message.
+The insight is not just "Cheri sent a message." The stronger admin payoff is:
 
-When Ning taps in, he sees:
+- target-audience visitors are engaging with Velora's Page,
+- senior HR leaders are asking about multi-carrier open enrollment,
+- this question is not sufficiently answered on the Page,
+- Rose has a recommended content or Page action.
 
-- Cheri's LinkedIn profile context,
-- a VCA context strip summarizing who she is, why she matches Velora's ICP, and what she asked about,
-- the message Cheri chose to send,
-- a suggested reply drafted by AI.
+Example VCA insights:
 
-Ning can edit and send in roughly 45 seconds.
+- "A VP of HR at a 10K+ retail company asked about multi-carrier open enrollment."
+- "Most common visitor question this week: 'Do you support multi-carrier setups?' This is not answered clearly on your Page."
+- "Your open enrollment deadline post drove 3 high-intent Page visits from HR leaders. Consider a follow-up post on multi-carrier readiness."
+- "Follower growth slowed this week. Your last 2 posts had below-average engagement compared with benefits administration topics."
+
+If Cheri sent a message, Rose can see the sent message and a concise context strip. If Cheri did not identify herself, Rose should still receive aggregated, privacy-safe pattern intelligence.
+
+Rose's outcome should be:
+
+> I can tell leadership LinkedIn is reaching the right audience, I know what that audience is trying to understand, and I have a recommended next action.
+
+Detailed admin story source: [Admin demo stories](./premium-company-pages-vca/admin-demo-stories.md).
 
 ## Feature Architecture
 
-### Principle: No New Surfaces
+Detailed architecture source: [Admin agent FAB](./premium-company-pages-vca/admin-agent-fab.md). Design positions live in [Design decisions](./premium-company-pages-vca/design-decisions.md).
 
-VCA does not introduce a third tray or a new UI pattern.
+### Principle: No New Visitor Surface
+
+VCA does not introduce a third tray or a foreign chatbot pattern.
 
 The architecture is:
 
@@ -136,7 +203,7 @@ VCA is the on-ramp. The Message tray is the destination. On Premium Pages, the e
 Visitor and admin surfaces do not need to look visually identical. Each should match its context:
 
 - visitor: public-facing Company Page and Message tray,
-- admin: private notification, dashboard, and inbox surfaces.
+- admin: Page admin dashboard, analytics, recommendations, inbox, and setup/configuration.
 
 The copy and signal should remain consistent across both sides, but the UI should not force visual parity.
 
@@ -146,12 +213,32 @@ The admin should not receive a verbatim transcript of Cheri's private VCA conver
 
 The safer prototype stance is:
 
-- Cheri controls the message that is actually sent.
-- Ning sees that sent message.
-- Ning receives a concise VCA context strip summarizing fit, topic, and intent.
-- The prototype avoids exposing the full visitor-side transcript to the admin.
+- Cheri controls whether she sends a message or identifies herself.
+- Rose sees a sent message only when Cheri chooses to send it.
+- Rose can see aggregate or summarized VCA intelligence when privacy constraints allow it.
+- Rose receives concise context such as audience fit, topic, unanswered question, and recommended action.
+- The prototype avoids exposing full visitor-side transcripts to the admin.
 
 This keeps the story useful while respecting privacy concerns around member conversations and identity signals.
+
+Detailed decision: [Transcript and privacy stance](./premium-company-pages-vca/design-decisions.md#decision-transcript-and-privacy-stance).
+
+### Enterprise Control Stance
+
+Research context indicates that MM/ENT admins may be uncomfortable with unfettered AI generating messages on their brand's behalf. They may prefer controlled, structured conversation paths that feel closer to approved messaging or conversation ads than a fully open-ended agent.
+
+This tension is intentional in the prototype. VCA should spark the discussion rather than hide it.
+
+The admin setup/configuration flow should show how Rose can define:
+
+- approved topics,
+- off-limits topics,
+- source knowledge,
+- tone and voice,
+- escalation or routing rules,
+- what VCA can answer versus when it should suggest contacting Velora.
+
+Detailed decision: [Open-ended AI vs controlled messaging](./premium-company-pages-vca/design-decisions.md#decision-open-ended-ai-vs-controlled-messaging).
 
 ## Visitor Entry Points
 
@@ -159,29 +246,30 @@ All entry points open the existing Message tray in VCA mode.
 
 ### Entry Point 1: Message Button
 
-- The existing Message button in the Page CTA row gets a subtle sparkle signal.
-- No new CTA button is added.
+- The existing Message button in the Page CTA row gets a subtle AI signal.
+- No new primary CTA button is added.
 - Clicking Message opens the tray in VCA mode by default.
 - Visitor can skip VCA and message directly from inside the tray.
 
 ### Entry Point 2: Inline Nudge
 
-- Triggered by scroll depth, dwell time, or identity/ICP match.
+- Triggered by scroll depth, dwell time, or likely audience fit.
 - Appears inline below the CTA row.
 - Dismissable for the session.
-- Personalized based on LinkedIn profile context when available.
+- Personalized based on LinkedIn profile context when available and appropriate.
 
 Example copy:
 
 - Generic visitor: "Questions about what Velora offers?"
-- ICP-matched visitor: "See how Velora helps agencies manage payments across contractor teams."
+- HR leader: "See how Velora supports multi-carrier open enrollment at scale."
+- Benefits operator: "Explore how Velora reduces benefits spreadsheet reconciliation."
 
-This is the hero LinkedIn-native moment.
+This remains the hero LinkedIn-native moment.
 
 ### Entry Point 3: Direct Visitor Intent
 
 - Visitor proactively clicks Message before any nudge appears.
-- The sparkle remains a passive signal that VCA is active.
+- The AI signal remains a passive cue that VCA is active.
 - The tray opens in VCA mode.
 
 ## Message Tray States
@@ -196,27 +284,29 @@ This is the hero LinkedIn-native moment.
 ### State 2: Conversation
 
 - Visitor asks questions.
-- VCA responds using admin-configured knowledge: services, pricing, FAQs, differentiators.
-- VCA monitors conversation depth, language signals, and ICP fit.
+- VCA responds using admin-configured knowledge such as services, proof points, FAQs, implementation details, and differentiators.
+- VCA stays within approved topics and explains uncertainty when needed.
+- VCA monitors conversation depth, language signals, and audience fit.
 - Conversation should feel like messaging, not a chatbot form.
 
-### State 3: Handoff
+### State 3: Visitor-Controlled Next Step
 
-VCA chooses the most appropriate next step based on intent:
+VCA chooses the most appropriate next step based on intent and configured guardrails:
 
-- Low intent: follow the Page or visit website.
-- Medium intent: connect with Ning or follow the Page.
-- High intent: send a pre-filled message to the Page.
+- Low intent: visit website, follow the Page, or read a relevant Page section.
+- Medium intent: save a summary, view a case study, or explore a relevant FAQ.
+- High intent: send a pre-filled message to the Page or configured owner.
 
-For the hero story, Cheri is high intent. VCA drafts a message in the existing compose input with a label such as:
+For the hero story, Cheri is high fit and high specificity, but the next step should still feel optional. VCA can draft a message in the existing compose input with a label such as:
 
 > Drafted from your conversation
 
-The message lands in the existing Page inbox with attached context.
+The message lands in the existing Page inbox or configured routing destination with attached context.
 
-### State 4: Post-Send
+### State 4: Post-Send Or Exit
 
-- VCA confirms the message was sent.
+- If Cheri sends a message, VCA confirms it was sent.
+- If Cheri leaves without sending, VCA should still allow the session to end naturally.
 - The tray returns to a natural resting state.
 - The experience should not abruptly close.
 
@@ -226,104 +316,112 @@ VCA should not always push toward the same outcome. It should make the next acti
 
 | Visitor intent | Signal | VCA action |
 |---|---|---|
-| Low | One or two surface questions, no specifics | Follow the Page or visit website |
-| Medium | Multiple questions, product specifics, comparison language | Connect with Ning or follow the Page |
-| High | Deep specific questions, pain point articulation, fit language | Pre-filled message to the Page |
+| Low | Surface-level question, no clear fit | Follow the Page, visit website, or view a Page section |
+| Medium | Specific question, some fit, no urgency | Offer a summary, FAQ, case study, or saved takeaway |
+| High | Deep enterprise question, clear fit, evaluation language | Offer a pre-filled message or configured follow-up path |
 
 VCA decision inputs:
 
 - conversation depth,
 - specificity of questions,
-- visitor role, company size, and ICP match,
-- urgency, pain-point language, and comparison language.
+- visitor role, company size, industry, and audience fit,
+- urgency and evaluation language,
+- Page content gaps,
+- admin-configured allowed actions.
 
-Admin configuration sets a default preferred action. VCA may upgrade or downgrade from that default based on the conversation.
+Admin configuration sets the default preferred action. VCA may upgrade or downgrade from that default based on the conversation and guardrails.
 
 ## Admin Surfaces
 
-VCA enriches existing admin surfaces instead of introducing a new admin tool.
+VCA enriches existing admin surfaces instead of introducing a separate admin product.
 
-### Surface 1: Mobile Notification
+Detailed demo source: [Admin demo stories](./premium-company-pages-vca/admin-demo-stories.md).
 
-Ning's first touchpoint is a notification that earns attention by surfacing identity and intent context.
+### Surface 1: Attention Digest
 
-Format:
+Rose's first admin touchpoint should earn attention by translating Page activity into a clear story.
 
-- visitor name,
-- role,
-- company size,
-- what they asked about,
-- direct link to the message.
+The digest should separate:
 
-Primary actions:
+- audience quality: who is engaging and whether they match Velora's target audience,
+- unanswered questions: what visitors asked that the Page does not clearly answer,
+- content recommendations: what Rose should post, update, or clarify next,
+- optional direct messages: visitors who chose to identify themselves or reach out.
 
-- View message,
-- Dismiss.
+Example insight formats:
 
-### Surface 2: Dashboard Card
-
-A VCA insights card slots into the existing Page admin dashboard.
-
-It should separate:
-
-- individual leads: urgent and actionable,
-- aggregated patterns: periodic and strategic.
-
-Example insights:
-
-- "Cheri Sparks asked about contractor payment timing and sent a message."
-- "3 visitors asked about contractor payment timing this week. Draft a post on this topic."
-- "Most common unanswered question: 'Do you integrate with QuickBooks?' Add it to your Page FAQ."
+- "Your open enrollment deadline post drove 3 high-intent Page visits from HR leaders."
+- "Most common visitor question: 'Do you support multi-carrier setups?' Add this to your Page or next post."
+- "Benefits leaders from 10K+ companies are engaging, but your Page does not explain implementation timelines."
 
 Every signal should include a suggested next action.
 
+### Surface 2: Analytics Recommendation Layer
+
+VCA does not replace Page analytics. It adds an interpretation and recommendation layer on top of them.
+
+> Analytics tell Rose what happened. VCA tells Rose what to do.
+
+VCA can synthesize across follower growth, post performance, visitor attributes, conversation topics, and competitor signals to recommend:
+
+- a follow-up post,
+- a Page FAQ update,
+- a testimonial or proof point to feature,
+- a topic to clarify,
+- a leadership-ready summary of organic Page value.
+
 ### Surface 3: Inbox Thread
 
-VCA-initiated messages land in the existing Page inbox.
+VCA-initiated messages land in the existing Page inbox or configured destination when a visitor chooses to send one.
 
 The thread includes:
 
-- a VCA context strip with ICP match, company size, topic, and intent signal,
 - Cheri's sent message as a normal inbox message,
-- an AI-suggested reply pre-filled in the compose area.
+- a VCA context strip with audience fit, company size, topic, and intent signal,
+- optional suggested reply or routing guidance, depending on Rose's role and configuration.
 
 Direct messages that bypass VCA should arrive as normal messages without enrichment.
 
-## VCA Configuration
+### Surface 4: Setup And Guardrails
 
-Configuration should feel like a lightweight setup wizard, not a dense settings panel.
+VCA configuration should feel like a lightweight setup flow, not a dense settings panel.
 
-Ning can configure:
+Rose can configure or review:
 
 - voice and tone,
-- source knowledge such as services, pricing, FAQs, and differentiators,
-- primary default action such as message, follow, or connect.
+- approved topics,
+- topics VCA should not answer,
+- source knowledge such as services, FAQs, proof points, implementation details, and differentiators,
+- default next action such as show FAQ, suggest message, visit website, or route to a configured owner,
+- review and approval expectations before VCA goes live.
 
-For the first prototype, configuration can be represented lightly and does not need to be fully interactive.
+For the first prototype, configuration can be represented lightly, but it should be visible enough to pressure-test enterprise trust.
 
 ## LinkedIn-Native Differentiators
 
 | Capability | What it enables |
 |---|---|
-| Member identity at visit time | VCA can understand role, company, seniority, and industry before the first message |
-| ICP matching | VCA can adjust tone and nudge copy based on likely customer fit |
-| Pre-qualified lead delivery | Admin gets a LinkedIn profile-backed signal without a form fill |
-| Opt-in intent signals | Aggregated patterns can be shown subject to member opt-in and privacy constraints |
-| Ecosystem continuity | VCA-initiated messages flow into LinkedIn's existing inbox |
+| Member identity at visit time | VCA can understand role, company, seniority, industry, and likely audience fit before the first message |
+| Audience fit signal | Rose can tell whether Velora is reaching target HR and benefits leaders, not just getting traffic |
+| Conversation intelligence | VCA can reveal visitor questions, objections, and content gaps that standard Page metrics miss |
+| Recommendation layer | Rose gets suggested content and Page actions instead of raw analytics alone |
+| Visitor-controlled outreach | Cheri can get answers first and choose whether to identify herself or send a message |
+| Ecosystem continuity | VCA-initiated messages and insights flow into existing LinkedIn Page admin and inbox contexts |
 
 ## Prototype Scope
 
 The prototype should tell the full two-act story:
 
-1. Scenario framing with Ning, Cheri, and Velora.
-2. Premium Company Page credibility state.
+1. Scenario framing with Rose, Cheri, and Velora.
+2. Premium Company Page credibility state for an enterprise benefits platform.
 3. Visitor-side VCA dormant signal and personalized inline nudge.
 4. Existing Message tray in VCA mode.
-5. Handoff through a pre-filled message.
-6. Admin notification.
-7. Admin dashboard signal.
-8. Inbox thread with context strip and suggested reply.
-9. Lightweight VCA configuration representation.
+5. Cheri asks a mid-year benefits platform migration question.
+6. VCA gives a specific, approved answer.
+7. Cheri can leave, save a summary, or send a pre-filled message.
+8. Rose sees audience-quality and unanswered-question intelligence.
+9. Rose receives a recommended content, Page, or follow-up action.
+10. Lightweight VCA configuration/guardrails representation.
 
 Defer:
 
@@ -333,7 +431,9 @@ Defer:
 - real knowledge base ingestion,
 - real inbox integration,
 - real entitlement or billing,
-- support use cases,
+- real enterprise approval workflow,
+- exact legal/privacy language,
+- full sales routing logic,
 - monetization details beyond PCP inclusion.
 
 ## UX Notes
@@ -342,17 +442,22 @@ Defer:
 - The inline nudge is the hero visitor moment.
 - The Message tray should remain structurally familiar.
 - The conversation should give a real answer, not deflect to sales.
-- The handoff should use the existing compose input, not a modal or special card.
-- The admin payoff should make Ning feel like he did not have to work for the signal.
+- The handoff should be optional and visitor-controlled.
+- The admin payoff should help Rose tell a leadership-ready story about organic LinkedIn value.
+- Recommendations should feel operational, not magical: explain the signal and the suggested action.
+- VCA should not make Rose feel responsible for a sales process she does not own.
+- Enterprise trust requires visible guardrails around topics, tone, source knowledge, and escalation.
 - LinkedIn Blue should remain the primary interactive color. Premium gold can signal PCP status but should not take over the interface.
 
 ## Open Questions
 
 - What exact member data can be used for nudge personalization and admin context?
 - How should member opt-in visibility be represented?
-- What is the safest wording for "I will include context from our conversation"?
+- What does Rose see when Cheri asks a question but does not send a message?
+- What is the safest wording for "I can help draft a message with context"?
 - Where should the "Message directly" escape hatch live?
-- How should VCA explain uncertainty or inability to answer?
-- How should intent signals be weighted across identity, behavior, and conversation language?
-- What should Cheri see after sending the message?
+- How structured should the VCA conversation be for enterprise admins to trust it?
+- Which topics must be admin-approved before VCA can answer?
+- How should recommendations distinguish between Page updates, content ideas, and sales follow-up?
+- What should Cheri see after saving a summary or sending a message?
 - How much dashboard aggregation should appear in the first prototype?

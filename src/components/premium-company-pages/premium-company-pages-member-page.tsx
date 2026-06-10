@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { flushSync } from "react-dom";
 import {
+  useCallback,
   useEffect,
   useId,
   useRef,
   useState,
   type ChangeEvent,
+  type ComponentProps,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -22,6 +24,7 @@ import {
   ChatTray,
   ChatThread,
   Prompt,
+  type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
@@ -40,9 +43,16 @@ import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 import {
   PCP_ASSET_ROOT,
   PCP_MEMBER_ASSET_ROOT,
+  pcpAdminPersona,
   pcpCompanyProfile,
+  pcpCompetitorNames,
+  pcpProofSnippets,
+  pcpVcaScenario,
+  pcpVisitorPersona,
 } from "./persona";
 import { GlobalInboxTray } from "./global-inbox-tray";
+import { ScriptedResponseTurn } from "./scripted-response-turn";
+import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_MEMBER_ASSET_ROOT;
 
@@ -65,25 +75,21 @@ const companyMetadata = [
 ];
 
 const sideJobs = [
-  "Senior Integrations Engineer",
-  "Customer Operations Lead",
-  "Product Designer, Growth",
+  "Benefits Implementation Consultant",
+  "Carrier Integrations Lead",
+  "Product Designer, Admin Experience",
 ];
 
-const affiliatedPages = [
-  "Toast",
-  "Popmenu",
-  "Owner.com",
-];
+const affiliatedPages = [...pcpCompetitorNames];
 
 const overviewHighlights = [
   {
-    title: "Verified restaurant technology provider",
+    title: "Verified benefits administration platform",
     date: "January 2025",
     image: pcpCompanyProfile.logoSrc,
   },
   {
-    title: "Built for restaurant groups managing delivery channels",
+    title: "Built for enterprise HR teams managing carrier complexity",
     date: "June 2024",
     image: pcpCompanyProfile.logoSrc,
   },
@@ -91,64 +97,64 @@ const overviewHighlights = [
 
 const posts = [
   {
-    title: "How restaurant teams keep delivery menus consistent across locations.",
-    body: "The teams that grow repeat orders have a clear launch plan before a promo goes live. Shared campaign workflows can keep menus, channels, and local teams aligned.",
-    image: "../restaurant-post-menu-ops.png",
+    title: "What benefits teams should validate before a mid-year migration.",
+    body: "The teams that make open enrollment feel calm have a clear readiness plan before data moves. Shared workflows can keep eligibility, carrier files, and employee communications aligned.",
+    image: "post-image-1.png",
     stats: "4,238 impressions",
   },
   {
-    title: "Three signs your restaurant marketing workflow has outgrown spreadsheets.",
-    body: "If every location has a different offer, channel, and menu update, your team needs a system that tracks approvals, campaign timing, and performance together.",
-    image: "../restaurant-post-campaign-calendar.png",
+    title: "Three signs your benefits workflow has outgrown spreadsheets.",
+    body: "If every carrier, plan, and employee population has a different tracker, your team needs a system that keeps decisions, files, and communications in one place.",
+    image: "post-image-2.png",
     stats: "42 comments",
   },
 ];
 
 const products = [
   {
-    title: "Delivery promotion planning",
-    type: "Campaign workflow",
-    body: "Coordinate delivery app promotions, owned-channel offers, and location rules so campaign launches do not create manual tracking work.",
-    image: "restaurant-delivery-dashboard.png",
+    title: "Open enrollment command center",
+    type: "Benefits workflow",
+    body: "Coordinate plan changes, employee communications, carrier readiness, and enrollment progress without recreating the same tracker every week.",
+    image: "product-image-1.png",
   },
   {
-    title: "Menu rollout tracking",
-    type: "Operations workflow",
-    body: "See which locations have approved updates, which menus are waiting on changes, and which channels are ready to launch.",
-    image: "restaurant-menu-rollout.png",
+    title: "Carrier connection management",
+    type: "Integrations workflow",
+    body: "See which carrier files are validated, which exceptions need review, and which plan updates are ready before enrollment opens.",
+    image: "product-image-2.png",
   },
   {
-    title: "Location performance visibility",
-    type: "Growth operations",
-    body: "Give restaurant teams a simple view of order trends, promotion lift, and repeat-order impact by location.",
-    image: "restaurant-delivery-dashboard.png",
+    title: "Eligibility change tracking",
+    type: "HR operations",
+    body: "Give HR teams a shared view of population changes, seasonal workers, dependent updates, and exceptions by plan and location.",
+    image: "hero-cover-1.png",
   },
 ];
 
 const serviceKeywords = [
-  "Restaurant Technology",
-  "Online Ordering",
-  "Menu Management",
-  "Delivery Marketing",
-  "Operations",
+  "Benefits Administration",
+  "Open Enrollment",
+  "Carrier Integrations",
+  "HR Operations",
+  "Employee Benefits",
 ];
 
 const leaders = [
   {
-    name: pcpCompanyProfile.founderName,
-    role: pcpCompanyProfile.founderTitle,
+    name: pcpAdminPersona.name,
+    role: pcpAdminPersona.title,
     followers: "8,412 followers",
-    image: pcpCompanyProfile.founderAvatarSrc,
+    image: pcpAdminPersona.avatarSrc,
   },
   {
     name: "Avery Chen",
-    role: "Head of Integrations",
+    role: "Head of Carrier Integrations",
     followers: "3,284 followers",
     image: `${PCP_ASSET_ROOT}/avatar-2.png`,
   },
   {
     name: "Marcus Lee",
-    role: "Customer Operations Lead",
+    role: "Benefits Implementation Lead",
     followers: "2,981 followers",
     image: `${PCP_ASSET_ROOT}/avatar-3.png`,
   },
@@ -162,47 +168,47 @@ const leaders = [
 
 const leaderPosts = [
   {
-    author: pcpCompanyProfile.founderName,
-    avatar: pcpCompanyProfile.founderAvatarSrc,
-    body: "Restaurant growth usually breaks down in one invisible place: the promo goes live, but the menu and reporting do not match across locations.",
+    author: pcpAdminPersona.name,
+    avatar: pcpAdminPersona.avatarSrc,
+    body: "Benefits operations usually break down in one invisible place: enrollment starts, but eligibility data, carrier files, and employee communications do not match.",
     image: null,
   },
   {
     author: "Avery Chen",
     avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
-    body: "Good campaign workflows are not about adding process. They are about making menu changes and local offers clear before launch day gets messy.",
-    image: "restaurant-menu-rollout.png",
+    body: "Good benefits integrations are not about adding process. They are about making file readiness, exceptions, and carrier decisions clear before enrollment gets messy.",
+    image: "product-image-2.png",
   },
   {
     author: "Marcus Lee",
     avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
-    body: "The best restaurant operators can answer three questions fast: which locations launched, which channels are live, and which promo brought guests back.",
-    image: "restaurant-delivery-dashboard.png",
-    linkTitle: "How restaurant teams reduce delivery promotion surprises",
+    body: "The best HR teams can answer three questions fast: which plans changed, which carrier files are ready, and which employee populations need attention.",
+    image: "product-image-1.png",
+    linkTitle: "How benefits teams reduce open enrollment surprises",
     linkMeta: "Velora on LinkedIn - 7min...",
   },
 ];
 
 const mainJobOpenings = [
-  "Senior Integrations Engineer",
-  "Customer Operations Lead",
+  "Benefits Implementation Consultant",
+  "Carrier Integrations Lead",
 ];
 
 const newsletters = [
   {
-    title: "The Delivery Growth Brief",
+    title: "The Benefits Operations Brief",
     meta: "Weekly - 2,674 subscribers",
-    body: "Weekly notes for restaurant marketers managing delivery channels, menu updates, and local campaign performance.",
+    body: "Weekly notes for HR and benefits leaders managing open enrollment, carrier readiness, and employee communications.",
   },
   {
-    title: "Restaurant Ops Field Notes",
+    title: "Open Enrollment Field Notes",
     meta: "Monthly - 1,204 subscribers",
-    body: "Practical lessons from growing restaurant groups coordinating menu rollouts, local offers, and online ordering.",
+    body: "Practical lessons from enterprise benefits teams coordinating plan changes, eligibility exceptions, and carrier partners.",
   },
   {
-    title: "Restaurant Growth Signals",
+    title: "Benefits Leader Signals",
     meta: "Monthly - 894 subscribers",
-    body: "A concise readout of ordering trends, campaign patterns, and questions restaurant operators are asking.",
+    body: "A concise readout of enrollment patterns, migration risks, and questions HR leaders are asking.",
   },
 ];
 
@@ -231,58 +237,32 @@ type VcaConversationStage =
   | "handoffOpened";
 
 const VCA_HERO_QUESTION =
-  "How do I know which delivery promotions are working?";
-const VCA_DELIVERY_PROMOTION_CHIP = "How do I know which promos are working?";
-const vcaStarterPrompts = [
-  "How does delivery promotion tracking work?",
-  VCA_DELIVERY_PROMOTION_CHIP,
-  "How does pricing work?",
-];
-const profileQuestionPrompts = [
-  "How does delivery promotion tracking work?",
-  "How do I know which promos are working?",
-  "How does pricing work?",
-  "Can I track performance by location?",
-  "Can I manage several campaigns at once?",
-] as const;
+  pcpVcaScenario.heroQuestion;
+const VCA_BENEFITS_MIGRATION_CHIP = pcpVcaScenario.primaryChip;
+const vcaStarterPrompts = pcpVcaScenario.starterPrompts;
+const profileQuestionPrompts = pcpVcaScenario.profilePrompts;
 const profileQuestionResponses: Record<
   (typeof profileQuestionPrompts)[number],
   string
-> = {
-  "How does delivery promotion tracking work?":
-    "Velora connects each promotion to the locations, menus, delivery channels, and launch dates behind it. You can see what is live, what is waiting on an update, and how each promo performs once orders start coming in.",
-  "How do I know which promos are working?":
-    "Velora compares promotion performance by location and channel, then highlights repeat-order impact after the offer ends. That makes it easier to see which promotions are driving durable demand instead of one-time discount spikes.",
-  "How does pricing work?":
-    "Velora pricing is based on team size and the complexity of your growth workflow, including active locations, delivery channels, and campaign volume. For a 20-50 employee restaurant team, the goal is to keep the plan predictable while still covering campaign reporting and menu workflow visibility.",
-  "Can I track performance by location?":
-    "Yes. Velora tracks each location separately, so you can see which restaurants launched a promo, which menu updates are live, and which locations drove the strongest order and repeat-order lift.",
-  "Can I manage several campaigns at once?":
-    "Yes. Velora gives you one dashboard across active campaigns, with launch status, menu updates, delivery channel readiness, and performance grouped by location. If one promo slips, the rest of your campaigns can keep moving.",
-};
+> = pcpVcaScenario.profileResponses;
 const VCA_JOB_SEEKER_QUESTION =
-  "Would my customer operations background be a fit for the Customer Operations Lead role?";
-const VCA_JOB_SEEKER_CHIP = "Would my customer ops background be a fit?";
+  "Would my HR operations background be a fit for the Benefits Implementation Consultant role?";
+const VCA_JOB_SEEKER_CHIP = "Would my HR ops background be a fit?";
 const vcaJobSeekerPrompts = [
   VCA_JOB_SEEKER_CHIP,
   "What does this role own?",
   "Is this role remote?",
 ];
-const VCA_GREETING =
-  "Hi, I'm Velora's AI assistant. I can help explain what Velora does, answer questions about roles or recent updates, and point you to the right next step. What would you like to know?";
-const VCA_DELIVERY_PROMOTION_RESPONSE =
-  "This is one of the core things Velora was built for. When a delivery promotion launches, Velora shows performance by location and channel - no manual spreadsheet cleanup, no guessing which offer worked. Teams can see what is live, what changed, and which promos brought guests back. Here's how a similar restaurant group handled it:";
+const VCA_GREETING = pcpVcaScenario.greeting;
+const VCA_BENEFITS_MIGRATION_RESPONSE = pcpVcaScenario.primaryResponse;
 const VCA_JOB_SEEKER_RESPONSE =
-  "Yes - your customer operations background sounds relevant, especially if you've helped customers through setup, troubleshooting, and feedback loops. For this role, Velora is looking for someone who can connect customer conversations, menu and campaign workflow setup, and cross-functional product feedback so restaurant teams get clear answers quickly.";
+  "Yes - your HR operations background sounds relevant, especially if you've helped employees, benefits partners, or internal teams through setup, troubleshooting, and process changes. For this role, Velora is looking for someone who can connect customer conversations, benefits workflow setup, and cross-functional product feedback so HR teams get clear answers quickly.";
 const VCA_JOB_PROOF_INTRO =
   "This role looks closest to what you're describing:";
-const VCA_CASE_STUDY_RETURN_PROMPT =
-  "Northline Kitchen Group feels pretty close to your world - a multi-location team, delivery channels, and menu updates that ripple into campaign performance. Want me to turn what you've shared into a warm intro to Velora so the team has the right context from the start?";
+const VCA_CASE_STUDY_RETURN_PROMPT = pcpVcaScenario.caseStudyReturnPrompt;
 const VCA_DRAFT_INTRO_PROMPT = "Draft message";
-const VCA_HANDOFF_OFFER =
-  "Sounds like this might be a fit for your team. Want me to put together a message to Velora so they have your context before you connect?";
-const VCA_HANDOFF_MESSAGE =
-  "Hi - I manage marketing operations for a growing restaurant group and I'm trying to understand which delivery promotions actually bring guests back after the offer ends. Your location-level campaign reporting sounds like exactly what we need. Would love to learn more about how it works for a team our size.";
+const VCA_HANDOFF_OFFER = pcpVcaScenario.handoffOffer;
+const VCA_HANDOFF_MESSAGE = pcpVcaScenario.handoffMessage;
 const VCA_AI_CARD_CLASS =
   "chat-message-enter flex w-full max-w-[24rem] flex-col gap-lg rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text shadow-raised-faint";
 
@@ -346,28 +326,26 @@ function VeloraVcaLogoMark({
   );
 }
 
-function VeloraVcaBareLogoMarkWithBadge() {
-  return (
-    <span className="relative inline-flex size-10 shrink-0 items-center justify-center">
-      <Image
-        alt=""
-        className="h-auto w-10 max-w-none object-contain"
-        height={35}
-        src={assetSrc("velora-vca-logo.png")}
-        width={39}
-      />
-      <span className="absolute -bottom-xxs -right-xxs inline-flex size-5 items-center justify-center rounded-round border-2 border-background bg-background text-ai-icon">
-        <Icon className="[&&]:size-3" name="signal-ai" size="small" />
-      </span>
-    </span>
-  );
-}
-
 function VcaAssistantMessage({
   children,
+  streamStatus,
+  streamText,
   timestamp,
-}: Readonly<{ children: ReactNode; timestamp?: string }>) {
-  return <ChatMessage timestamp={timestamp}>{children}</ChatMessage>;
+}: Readonly<{
+  children: ReactNode;
+  streamStatus?: ChatMessageStreamStatus;
+  streamText?: string;
+  timestamp?: string;
+}>) {
+  return (
+    <ChatMessage
+      streamStatus={streamStatus}
+      streamText={streamText}
+      timestamp={timestamp}
+    >
+      {children}
+    </ChatMessage>
+  );
 }
 
 function VcaUserMessage({
@@ -378,6 +356,61 @@ function VcaUserMessage({
     <ChatMessage role="user" timestamp={timestamp}>
       {children}
     </ChatMessage>
+  );
+}
+
+type VcaScriptedAssistantTurnProps = Omit<
+  ComponentProps<typeof ScriptedResponseTurn>,
+  "renderText"
+> & {
+  timestamp: string;
+};
+
+function VcaScriptedAssistantTurn({
+  timestamp,
+  ...props
+}: VcaScriptedAssistantTurnProps) {
+  const [stableTimestamp] = useState(() => timestamp);
+
+  return (
+    <ScriptedResponseTurn
+      {...props}
+      renderText={({ streamStatus, streamText, text }) => (
+        <VcaAssistantMessage
+          streamStatus={streamStatus}
+          streamText={streamText}
+          timestamp={stableTimestamp}
+        >
+          {text}
+        </VcaAssistantMessage>
+      )}
+    />
+  );
+}
+
+function VcaStableAssistantMessage({
+  children,
+  timestamp,
+}: Readonly<{ children: ReactNode; timestamp: string }>) {
+  const [stableTimestamp] = useState(() => timestamp);
+
+  return (
+    <VcaAssistantMessage timestamp={stableTimestamp}>
+      {children}
+    </VcaAssistantMessage>
+  );
+}
+
+function VcaStableUserMessage({
+  children,
+  timestamp,
+}: Readonly<{ children: ReactNode; timestamp: string }>) {
+  const [stableTimestamp] = useState(() => timestamp);
+
+  return (
+    <VcaUserMessage timestamp={stableTimestamp}>
+      {children}
+    </VcaUserMessage>
   );
 }
 
@@ -408,15 +441,14 @@ function VeloraLinkedInPostProofCard({
         </div>
 
         <p className="mt-md text-control-sm text-text">
-          Northline Kitchen Group: how a six-location restaurant group improved
-          delivery promo launches
+          {pcpProofSnippets.caseStudyShort}
         </p>
       </div>
       <Image
         alt=""
         className="aspect-[16/9] w-full object-cover"
         height={272}
-        src={assetSrc("restaurant-case-study-northline.png")}
+        src={assetSrc("media-1.png")}
         width={484}
       />
       <div className="flex items-center justify-between border-t border-border-faint px-lg py-sm text-body-sm text-text-meta">
@@ -463,13 +495,12 @@ function VeloraCaseStudySidePanel({
           alt=""
           className="aspect-[16/7] w-full object-cover"
           height={332}
-          src={assetSrc("restaurant-case-study-northline.png")}
+          src={assetSrc("media-1.png")}
           width={760}
         />
 
         <h1 className="mt-xl text-heading-lg text-text">
-          Northline Kitchen Group: how a six-location restaurant group improved
-          delivery promo launches
+          {pcpProofSnippets.caseStudyTitle}
         </h1>
 
         <div className="mt-lg flex items-start gap-md">
@@ -495,20 +526,21 @@ function VeloraCaseStudySidePanel({
 
         <div className="mt-xl space-y-md text-body-sm-open text-text">
           <p>
-            Northline Kitchen Group was coordinating six locations, three
-            delivery channels, and weekly menu updates. One local offer used to
-            send the whole team into a spreadsheet scramble.
+            Arbor Retail Group was preparing open enrollment for 12,000
+            employees across stores, distribution centers, and corporate teams.
+            Eligibility cleanup and carrier file readiness used to send the
+            benefits team into a spreadsheet scramble.
           </p>
           <p>
-            With Velora, Maya&apos;s team mapped every promotion to the
-            locations, menu changes, and delivery channels behind it. When one
-            channel changed, only the affected launch tasks moved into review.
-            Everyone else stayed on schedule.
+            With Velora, Dana&apos;s team mapped each plan change to the
+            populations, carrier files, and employee communications behind it.
+            When one carrier feed changed, only the affected launch tasks moved
+            into review. Everyone else stayed on schedule.
           </p>
           <p>
-            Local teams could see what was approved, queued, or live. Once the
-            promo ended, Velora showed which locations drove repeat orders
-            automatically.
+            HR leaders could see what was approved, queued, or blocked. Once
+            enrollment opened, Velora showed which employee groups needed
+            follow-up automatically.
           </p>
         </div>
 
@@ -644,11 +676,11 @@ function VeloraJobSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
           <h3 className="text-heading-lg text-text">About the job</h3>
           <h4 className="mt-lg text-heading-sm text-text">About The Team</h4>
           <p className="mt-xl text-body-md-open text-text">
-            Velora helps restaurant teams manage delivery promotions, menu
-            updates, and location-level campaign reporting in one workflow. The
-            Customer Operations team works closely with customers, product, and
-            integration partners to make complex launch questions feel clear and
-            actionable....{" "}
+            Velora helps HR teams manage open enrollment, carrier readiness,
+            eligibility changes, and employee communications in one workflow.
+            The Benefits Implementation team works closely with customers,
+            product, and integration partners to make complex launch questions
+            feel clear and actionable....{" "}
             <button
               className="font-semibold text-text-meta hover:text-text"
               type="button"
@@ -857,13 +889,56 @@ function PremiumCompanyPagesVcaPanel({
   const starterPrompts = isJobSeekerIntent
     ? vcaJobSeekerPrompts
     : vcaStarterPrompts;
-  const composerPlaceholder = "Ask Velora...";
+  const composerPlaceholder = "Send message";
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const sidePanelHistoryRef = useRef<HTMLDivElement | null>(null);
+  const [busyTurnIds, setBusyTurnIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const [stopSignal, setStopSignal] = useState(0);
+  const isAssistantBusy = busyTurnIds.size > 0;
   let messageTimestampIndex = 0;
   const getNextMessageTimestamp = () =>
     getPrototypeMessageTimestamp(messageTimestampIndex++);
+  const handleScriptedTurnBusyChange = useCallback(
+    (turnId: string, isBusy: boolean) => {
+      setBusyTurnIds((currentTurnIds) => {
+        const nextTurnIds = new Set(currentTurnIds);
 
+        if (isBusy) {
+          nextTurnIds.add(turnId);
+        } else {
+          nextTurnIds.delete(turnId);
+        }
+
+        return nextTurnIds;
+      });
+    },
+    [],
+  );
+  const handleStopAssistantResponse = useCallback(() => {
+    setStopSignal((currentSignal) => currentSignal + 1);
+    setBusyTurnIds(new Set());
+  }, []);
+  const handleVcaContentChange = useCallback(() => {
+    const scrollToBottom = () => {
+      const scrollContainer = isDetailPanelOpen
+        ? sidePanelHistoryRef.current
+        : chatBodyRef.current;
+
+      if (!scrollContainer) {
+        return;
+      }
+
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    };
+
+    scrollToBottom();
+    window.requestAnimationFrame(scrollToBottom);
+    window.setTimeout(scrollToBottom, 120);
+    window.setTimeout(scrollToBottom, 360);
+    window.setTimeout(scrollToBottom, 700);
+  }, [isDetailPanelOpen]);
   useEffect(() => {
     if (!isDetailPanelOpen) {
       return;
@@ -913,82 +988,142 @@ function PremiumCompanyPagesVcaPanel({
     <ChatThread aiDisclaimerHref="#">
       <div className="flex flex-col gap-lg">
         {shouldShowGreeting ? (
-          <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-            {greeting}
-          </VcaAssistantMessage>
-        ) : null}
-        {conversationStage === "opening" && !hasStartedConversation ? (
-          <div className="flex flex-col gap-sm">
-            {starterPrompts.map((prompt) => (
-              <Prompt
-                className="w-fit max-w-full self-start"
-                key={prompt}
-                onPromptSelect={onPromptSelect}
-                prompt={prompt}
-              />
-            ))}
-          </div>
+          <VcaScriptedAssistantTurn
+            attachments={
+              conversationStage === "opening" && !hasStartedConversation
+                ? [
+                    {
+                      id: "starter-prompts",
+                      children: (
+                        <div className="flex flex-col gap-sm">
+                          {starterPrompts.map((prompt) => (
+                            <Prompt
+                              className="w-fit max-w-full self-start"
+                              key={prompt}
+                              onPromptSelect={onPromptSelect}
+                              prompt={prompt}
+                            />
+                          ))}
+                        </div>
+                      ),
+                    },
+                  ]
+                : []
+            }
+            id="member-vca-greeting"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={greeting}
+            timestamp={getNextMessageTimestamp()}
+          />
         ) : null}
         {visitorQuestion ? (
-          <VcaUserMessage timestamp={getNextMessageTimestamp()}>
+          <VcaStableUserMessage timestamp={getNextMessageTimestamp()}>
             {visitorQuestion}
-          </VcaUserMessage>
+          </VcaStableUserMessage>
         ) : null}
         {shouldShowProof ? (
-          <>
-            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-              {VCA_DELIVERY_PROMOTION_RESPONSE}
-            </VcaAssistantMessage>
-            <VeloraLinkedInPostProofCard
-              onViewCaseStudy={onOpenCaseStudy}
-            />
-          </>
+          <VcaScriptedAssistantTurn
+            attachments={[
+              {
+                id: "post-proof",
+                children: (
+                  <VeloraLinkedInPostProofCard
+                    onViewCaseStudy={onOpenCaseStudy}
+                  />
+                ),
+              },
+            ]}
+            id="member-vca-post-proof"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={VCA_BENEFITS_MIGRATION_RESPONSE}
+            timestamp={getNextMessageTimestamp()}
+          />
         ) : null}
         {shouldShowJobProof ? (
-          <>
-            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-              {VCA_JOB_SEEKER_RESPONSE}
-            </VcaAssistantMessage>
-            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-              {VCA_JOB_PROOF_INTRO}
-            </VcaAssistantMessage>
-            <VeloraLinkedInJobPreviewCard onViewJob={onOpenJob} />
-          </>
+          <VcaScriptedAssistantTurn
+            attachments={[
+              {
+                id: "job-proof-intro",
+                children: (
+                  <VcaStableAssistantMessage timestamp={getNextMessageTimestamp()}>
+                    {VCA_JOB_PROOF_INTRO}
+                  </VcaStableAssistantMessage>
+                ),
+              },
+              {
+                id: "job-proof-card",
+                children: <VeloraLinkedInJobPreviewCard onViewJob={onOpenJob} />,
+              },
+            ]}
+            id="member-vca-job-proof"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={VCA_JOB_SEEKER_RESPONSE}
+            timestamp={getNextMessageTimestamp()}
+          />
         ) : null}
         {conversationStage === "profilePromptAnswered" &&
         profilePromptAnswer ? (
-          <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-            {profilePromptAnswer}
-          </VcaAssistantMessage>
+          <VcaScriptedAssistantTurn
+            id="member-vca-profile-prompt"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={profilePromptAnswer}
+            timestamp={getNextMessageTimestamp()}
+          />
         ) : null}
         {hasFollowUp && !isJobSeekerIntent ? (
-          <VcaUserMessage timestamp={getNextMessageTimestamp()}>
+          <VcaStableUserMessage timestamp={getNextMessageTimestamp()}>
             {followUpQuestion}
-          </VcaUserMessage>
+          </VcaStableUserMessage>
         ) : null}
         {shouldShowCaseStudyReturnPrompt ? (
-          <>
-            <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-              {VCA_CASE_STUDY_RETURN_PROMPT}
-            </VcaAssistantMessage>
-            <Prompt
-              className="w-fit max-w-full self-start"
-              onPromptSelect={onPromptSelect}
-              prompt={VCA_DRAFT_INTRO_PROMPT}
-            />
-          </>
+          <VcaScriptedAssistantTurn
+            attachments={[
+              {
+                id: "draft-prompt",
+                children: (
+                  <Prompt
+                    className="w-fit max-w-full self-start"
+                    onPromptSelect={onPromptSelect}
+                    prompt={VCA_DRAFT_INTRO_PROMPT}
+                  />
+                ),
+              },
+            ]}
+            id="member-vca-case-study-return"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={VCA_CASE_STUDY_RETURN_PROMPT}
+            timestamp={getNextMessageTimestamp()}
+          />
         ) : null}
         {shouldShowHandoff ? (
-          <>
-            {hasFollowUp ? (
-              <>
-                <VcaAssistantMessage timestamp={getNextMessageTimestamp()}>
-                  {VCA_HANDOFF_OFFER}
-                </VcaAssistantMessage>
-              </>
-            ) : null}
+          hasFollowUp ? (
+            <VcaScriptedAssistantTurn
+              attachments={[
+                {
+                  id: "handoff-card",
+                  children: <VcaHandoffCard onOpenMessage={onOpenMessage} />,
+                },
+              ]}
+              id="member-vca-handoff-offer"
+              onBusyChange={handleScriptedTurnBusyChange}
+              onContentChange={handleVcaContentChange}
+              stopSignal={stopSignal}
+              text={VCA_HANDOFF_OFFER}
+              timestamp={getNextMessageTimestamp()}
+            />
+          ) : (
             <VcaHandoffCard onOpenMessage={onOpenMessage} />
-          </>
+          )
         ) : null}
       </div>
     </ChatThread>
@@ -1034,11 +1169,15 @@ function PremiumCompanyPagesVcaPanel({
           <ChatComposer
             inputProps={{
               "aria-label": `Message ${pcpCompanyProfile.name} AI assistant`,
+              disabled: isAssistantBusy,
               onChange: onDraftChange,
               placeholder: composerPlaceholder,
               value: draft,
             }}
+            isResponding={isAssistantBusy}
             onSend={onSend}
+            onStopResponse={handleStopAssistantResponse}
+            sendDisabled={isAssistantBusy}
             showAttachAction={false}
             showDictationAction={false}
             showTopDivider={false}
@@ -1246,20 +1385,20 @@ function HumanCompanyMessagePanel({
           <HumanMessageDivider label="May 18" />
           <div className="space-y-xl pb-xl">
             <HumanMessageEntry
-              author="Cheri Sparks"
-              avatarSrc={assetSrc("avatar-2.png")}
+              author={pcpVisitorPersona.name}
+              avatarSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
               time="4:02 PM"
             >
               <p>Hi Velora,</p>
               <p>
                 I found your Premium Company Page and I am interested in
-                learning whether Velora could help my restaurant group manage
-                delivery promotions and menu updates.
+                learning whether Velora could help our HR team manage a
+                mid-year benefits migration before open enrollment.
               </p>
             </HumanMessageEntry>
             <HumanMessageEntry
-              author="Cheri Sparks"
-              avatarSrc={assetSrc("avatar-2.png")}
+              author={pcpVisitorPersona.name}
+              avatarSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
               time="4:37 PM"
             >
               <p>Also curious whether this is the right place to ask.</p>
@@ -1285,8 +1424,8 @@ function HumanCompanyMessagePanel({
           {sentMessage ? (
             <div className="space-y-xl pb-xl pt-lg">
               <HumanMessageEntry
-                author="Cheri Sparks"
-                avatarSrc={assetSrc("avatar-2.png")}
+                author={pcpVisitorPersona.name}
+                avatarSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
                 time="Now"
               >
                 <p>{sentMessage}</p>
@@ -1448,7 +1587,7 @@ function Hero({
       <div className="relative min-h-[560px] px-lg sm:min-h-[520px]">
         <div className="mx-auto flex min-h-[560px] w-full max-w-[1128px] flex-col justify-end gap-xxl pb-0 pt-stack sm:min-h-[520px]">
           <div className="grid gap-xxl lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-            <div className="max-w-[720px] pb-xxl">
+            <div className="min-w-0 w-[min(100%,320px)] pb-xxl sm:w-auto sm:max-w-[720px]">
               <CompanyLogo className="size-24 border-2 border-white shadow-raised-faint" />
               <div className="mt-lg flex flex-wrap items-center gap-xs">
                 <h1 className="text-display-xl text-[var(--figma-color-text-color-text-overlay)]">
@@ -1459,10 +1598,10 @@ function Hero({
                   <PremiumMark size="medium" />
                 </span>
               </div>
-              <p className="mt-xs max-w-[640px] text-body-md text-[var(--figma-color-text-color-text-overlay)]">
+              <p className="mt-xs w-[min(100%,320px)] break-words text-body-md text-[var(--figma-color-text-color-text-overlay)] sm:w-auto sm:max-w-[640px]">
                 {pcpCompanyProfile.tagline}
               </p>
-              <p className="mt-xs flex max-w-[640px] flex-wrap items-center gap-x-xs gap-y-xxs text-body-sm text-[var(--figma-color-text-color-text-overlay)]">
+              <p className="mt-xs flex w-[min(100%,320px)] flex-wrap items-center gap-x-xs gap-y-xxs break-words text-body-sm text-[var(--figma-color-text-color-text-overlay)] sm:w-auto sm:max-w-[640px]">
                 {companyMetadata.map((item, index) => (
                   <span key={item} className="inline-flex items-center gap-xs">
                     {index > 0 ? (
@@ -1547,9 +1686,9 @@ function Hero({
               </div>
             </div>
 
-            <aside className="mb-xxl rounded-sm bg-white/0 p-lg text-[var(--figma-color-text-color-text-overlay)]">
+            <aside className="mb-xxl w-[min(100%,320px)] rounded-sm bg-white/0 p-lg text-[var(--figma-color-text-color-text-overlay)] lg:w-auto lg:max-w-none">
               <Icon className="text-[#ACF5B3]" name="quote" size="medium" />
-              <p className="mt-sm text-body-md-open">
+              <p className="mt-sm break-words text-body-md-open">
                 {pcpCompanyProfile.testimonial.quote}
               </p>
               <div className="mt-md flex items-center gap-sm">
@@ -1747,7 +1886,7 @@ function ProfileQuestionNudgeCard({
           <span>Based on your profile</span>
         </div>
         <h2 className="mt-sm text-heading-lg text-text">
-          Top questions from restaurant marketers
+          Top questions from HR benefits leaders
         </h2>
         <div className="relative mt-lg">
           <div
@@ -1806,11 +1945,10 @@ function OverviewCard() {
       <div className="flex flex-col gap-lg px-xxl pb-xl pt-lg">
         <div className="relative overflow-hidden">
           <p className="line-clamp-3 pr-stack text-body-sm-open text-text">
-            {pcpCompanyProfile.name} helps restaurant teams manage delivery
-            promotions, menu updates, and location-level campaign performance in
-            one place. It is built for marketing and operations teams whose
-            growth workflows have outgrown spreadsheets but not their team
-            size.
+            {pcpCompanyProfile.name} helps enterprise HR teams manage open
+            enrollment, carrier connections, eligibility changes, and employee
+            benefits communications in one place. It is built for benefits
+            operations teams whose workflows have outgrown spreadsheets.
           </p>
           <span className="absolute bottom-0 right-0 bg-background pl-xs text-body-sm text-text-meta">
             more
@@ -1873,7 +2011,7 @@ function FeaturedCard() {
             alt="Featured customer video"
             className="aspect-[16/9] w-full object-cover"
             height={410}
-            src={assetSrc("restaurant-case-study-northline.png")}
+            src={assetSrc("media-1.png")}
             width={720}
           />
           <span className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
@@ -1887,13 +2025,13 @@ function FeaturedCard() {
         </p>
         <div className="mt-md grid gap-lg sm:grid-cols-2">
           <MiniContentCard
-            image="restaurant-delivery-dashboard.png"
-            title="When delivery promos end, repeat orders are what teams remember."
+            image="product-image-1.png"
+            title="When open enrollment starts, eligibility exceptions are what teams remember."
             meta="9,430 - 115 comments"
           />
           <MiniContentCard
-            image="restaurant-menu-rollout.png"
-            title="How a restaurant group stopped tracking menu rollouts in spreadsheets."
+            image="product-image-2.png"
+            title="How an enterprise HR team stopped tracking carrier readiness in spreadsheets."
             meta="12,430 - 713 comments"
           />
         </div>
@@ -2031,10 +2169,10 @@ function ProductsCard() {
 
         <div className="mt-xl max-w-[960px]">
           <p className="text-body-sm text-text">
-            Velora helps restaurant teams coordinate delivery promotion timing,
-            menu updates, and location approvals in one workflow. Teams can
-            understand what is live, blocked, or waiting on follow-up before
-            campaigns turn into spreadsheet work.
+            Velora helps HR teams coordinate open enrollment timing, carrier
+            readiness, eligibility changes, and employee communications in one
+            workflow. Teams can understand what is live, blocked, or waiting on
+            follow-up before benefits operations turn into spreadsheet work.
           </p>
 
           <div className="mt-lg">
@@ -2189,7 +2327,7 @@ function EventCard() {
             alt=""
             className="aspect-video min-w-0 flex-1 rounded-xs object-cover"
             height={220}
-            src={assetSrc("restaurant-workshop-event.png")}
+            src={assetSrc("event-launch.png")}
             width={360}
           />
           <div className="flex min-w-0 flex-1 flex-col gap-lg">
@@ -2201,7 +2339,7 @@ function EventCard() {
                 Wed, 06/18/2025, 5:00 PM
               </p>
               <h3 className="text-control-md text-text">
-                Live workshop: keeping delivery promotions aligned across locations
+                Live workshop: preparing benefits teams for mid-year migration
               </h3>
               <p className="text-body-sm text-text">
                 Hosted by {pcpCompanyProfile.name}
@@ -2279,21 +2417,22 @@ function LifeAtVeloraCard() {
           alt=""
           className="aspect-video w-full rounded-xs object-cover"
           height={260}
-          src={assetSrc("restaurant-team-ops.png")}
+          src={assetSrc("media-2.png")}
           width={460}
         />
         <div>
           <h3 className="text-control-md text-text">
-            Built around restaurant growth complexity
+            Built around benefits operations complexity
           </h3>
           <p className="mt-xs text-body-sm-open text-text">
-            {pcpCompanyProfile.name} helps restaurant teams connect menu
-            updates, delivery channels, and campaign reporting in one place.
+            {pcpCompanyProfile.name} helps HR teams connect eligibility data,
+            carrier readiness, employee communications, and enrollment reporting
+            in one place.
           </p>
           <p className="text-body-sm-open text-text">
-            {pcpCompanyProfile.founderName} founded the company for growing
-            teams that need campaign clarity without adding another spreadsheet
-            or operations layer.
+            The Velora team builds for benefits teams that need clarity before
+            open enrollment without adding another spreadsheet or operations
+            layer.
           </p>
         </div>
       </div>
@@ -2338,7 +2477,7 @@ function PremiumInsightsCard() {
             </span>
           </div>
           <p className="mt-lg text-supportive-s text-text-meta">
-            Including restaurant marketers and operations leads from target
+            Including HR leaders and benefits operations leads from target
             accounts
           </p>
         </div>
@@ -2563,7 +2702,7 @@ function SideListCard({
                 <p className="text-supportive-s text-text-meta">
                   {type === "role"
                     ? pcpCompanyProfile.location
-                    : "Restaurant technology software"}
+                    : "Benefits administration software"}
                 </p>
                 <Button className="mt-sm" size="small" variant="tertiary">
                   {type === "role" ? "View role" : "Follow"}
@@ -2738,7 +2877,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       () => {
         resetVcaConversation();
         setVcaPanelVariant("collapsed");
-        if (!isJobSeekerIntent && prompt === VCA_DELIVERY_PROMOTION_CHIP) {
+        if (!isJobSeekerIntent && prompt === VCA_BENEFITS_MIGRATION_CHIP) {
           setVcaVisitorQuestion(VCA_HERO_QUESTION);
           setVcaConversationStage("postProof");
         } else {
@@ -2942,7 +3081,7 @@ function PremiumCompanyPagesSeparateMemberPage({
 
     if (vcaConversationStage === "opening") {
       if (
-        prompt !== VCA_DELIVERY_PROMOTION_CHIP &&
+        prompt !== VCA_BENEFITS_MIGRATION_CHIP &&
         prompt in profileQuestionResponses
       ) {
         setVcaVisitorQuestion(prompt);
@@ -2951,7 +3090,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       }
 
       setVcaVisitorQuestion(
-        prompt === VCA_DELIVERY_PROMOTION_CHIP ? VCA_HERO_QUESTION : prompt,
+        prompt === VCA_BENEFITS_MIGRATION_CHIP ? VCA_HERO_QUESTION : prompt,
       );
       setVcaConversationStage("postProof");
       return;
@@ -3008,9 +3147,9 @@ function PremiumCompanyPagesSeparateMemberPage({
   }
 
   return (
-    <main className="min-h-dvh bg-background-neutral-soft text-text">
+    <main className="min-h-dvh overflow-x-hidden bg-background-neutral-soft text-text">
       <LinkedInGlobalNavigation
-        profileSrc={assetSrc("avatar-2.png")}
+        profileSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
         showAdvertise
       />
       <Hero
@@ -3057,17 +3196,14 @@ function PremiumCompanyPagesSeparateMemberPage({
           style={vcaFabStyle}
         >
           {isFabIconEntryMode ? (
-            <button
-              aria-controls={vcaPanelId}
-              aria-expanded={false}
-              aria-haspopup="dialog"
-              aria-label={`Open ${pcpCompanyProfile.name} assistant`}
-              className="inline-flex size-14 items-center justify-center rounded-[20px] border border-[#8FE8B1] bg-background text-text shadow-raised-active transition-[background-color,border-color,box-shadow,transform] duration-150 ease-out hover:border-[#5DDC91] hover:bg-background hover:shadow-raised-active focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring active:border-[#5DDC91] active:bg-background active:shadow-raised-faint"
+            <VcaFab
+              chatPanelId={vcaPanelId}
+              isOpen={false}
+              label={`Open ${pcpCompanyProfile.name} assistant`}
               onClick={handleOpenVcaFromTray}
-              type="button"
-            >
-              <VeloraVcaBareLogoMarkWithBadge />
-            </button>
+              position="static"
+              variant="visitor"
+            />
           ) : (
             <Button
               aria-controls={vcaPanelId}

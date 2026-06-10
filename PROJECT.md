@@ -44,7 +44,7 @@ For now, Premium has a fake survey path with static question steps and a static 
 
 ### Premium Company Pages
 
-Premium Company Pages is a visionary design prototype for communicating to executives how a LinkedIn-native Virtual Chat Agent could turn Page visitor interest into qualified admin action.
+Premium Company Pages is a visionary design prototype for communicating to executives how a LinkedIn-native Virtual Chat Agent could turn Page visitor interest into audience intelligence, recommended admin action, and optional visitor-initiated outreach.
 
 Entry route: `/premium-company-pages`
 

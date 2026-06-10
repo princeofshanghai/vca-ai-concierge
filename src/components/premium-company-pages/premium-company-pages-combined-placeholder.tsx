@@ -3,7 +3,10 @@
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { Icon } from "@/components/primitives/icon";
 
-import { PCP_MEMBER_ASSET_ROOT } from "./persona";
+import {
+  PCP_MEMBER_ASSET_ROOT,
+  pcpVisitorPersona,
+} from "./persona";
 
 function assetSrc(path: string) {
   return path.startsWith("/") ? path : `${PCP_MEMBER_ASSET_ROOT}/${path}`;
@@ -13,7 +16,7 @@ export function PremiumCompanyPagesCombinedPlaceholder() {
   return (
     <main className="min-h-dvh bg-background-neutral-soft text-text">
       <LinkedInGlobalNavigation
-        profileSrc={assetSrc("avatar-2.png")}
+        profileSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
         showAdvertise
       />
       <section className="mx-auto flex min-h-[calc(100dvh-64px)] max-w-[1128px] items-center justify-center px-lg py-xxl">

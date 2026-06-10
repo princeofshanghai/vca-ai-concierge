@@ -4,17 +4,18 @@ Product context brief for the Premium Company Pages workstream. Shared workspace
 
 This brief captures user-provided project context for prototype work. Pricing, rollout, roadmap, packaging, and privacy details should be re-verified before production-facing artifacts.
 
-Related prototype artifact:
+Related prototype artifacts:
 
 - [VCA prototype spec](./premium-company-pages-vca.md)
+- [VCA executive demo outline](./vca-executive-demo-outline.md)
 
 ## What This Is
 
 LinkedIn Pages are free profiles for organizations to showcase their brand, posts, and updates.
 
-**Premium Company Pages (PCP)** is a paid subscription layered on top of a LinkedIn Page. It helps the Page stand out and convert visitor interest into business outcomes. Once a Page is subscribed, all admins on that Page get premium features.
+**Premium Company Pages (PCP)** is a paid subscription layered on top of a LinkedIn Page. It helps the Page stand out, build credibility, understand who is engaging, and turn organic Page activity into clearer business context. Once a Page is subscribed, all admins on that Page get premium features.
 
-PCP is distinct from LinkedIn Career Pages. Career Pages focus on employer branding and talent attraction. PCP focuses on business credibility, reach, conversion, and intent signals for company Page admins.
+PCP is distinct from LinkedIn Career Pages. Career Pages focus on employer branding and talent attraction. PCP focuses on business credibility, reach, audience intelligence, and organic Page performance for company Page admins.
 
 This workstream is separate from:
 
@@ -23,26 +24,29 @@ This workstream is separate from:
 
 ## Audience
 
-The target audience is SMB owners and marketing or generalist admins at companies with fewer than roughly 500 employees.
+For the current VCA prototype, the target PCP tier is **Plus / Pro** for mid-market and enterprise companies, skewing toward Enterprise 10K+.
 
 Primary users are:
 
-- SMB founders and owners,
-- marketing generalists,
-- Page admins and super admins managing a company presence on LinkedIn.
+- social media and communications managers,
+- brand and corporate communications teams,
+- Page admins and super admins responsible for organic LinkedIn presence,
+- marketing stakeholders who need to understand whether LinkedIn is reaching the right audience.
 
-This is not primarily a talent-team product. Talent attraction and employer branding belong to Career Pages.
+This prototype is not primarily a talent-team product, a sales-owned lead-routing product, or a paid media workflow. Talent attraction and employer branding belong to Career Pages. Pipeline ownership, paid demand generation, and ad optimization sit outside Rose's primary responsibility in this scenario.
 
 ## Jobs To Be Done
 
-PCP helps businesses use their LinkedIn Page to grow customer trust, reach, and conversion.
+PCP helps companies use their LinkedIn Page to grow credibility, prove organic value, and understand what target audiences need from the Page.
 
 Core jobs:
 
 - Stand out versus competitors and build trust quickly.
-- Grow reach and followers with lightweight tools when ads budgets are limited.
-- Convert Page visitors into inquiries or actions.
-- Surface usable visitor intent signals for admins.
+- Grow reach, followers, and engagement with a clearer view of Page health.
+- Help Page owners explain what LinkedIn is doing for the business beyond impressions.
+- Show whether the right roles, industries, company sizes, and seniorities are paying attention.
+- Surface unanswered visitor questions, objections, and content gaps.
+- Recommend practical next actions for content, Page updates, and follow-up.
 
 ## Current Feature Set
 
@@ -68,18 +72,24 @@ User-provided context:
 - controlled eligibility ramping,
 - subscription applies at the Page level.
 
+Current VCA prototype context:
+
+- target PCP tier is Plus / Pro,
+- audience skews mid-market and enterprise,
+- the example company serves enterprise buyers.
+
 Bundle tests may pair PCP with individual Premium SKUs such as Premium Business, Premium Career, or Sales Navigator. These bundles may use separate contracts and invoices, with independent cancellation.
 
 ## Ecosystem Fit
 
 PCP is complementary to LinkedIn Marketing Solutions Ads and Boost.
 
-Ads and Boost help drive reach. PCP increases the credibility and conversion potential of the Page once visitors arrive. This creates a paid growth path for SMBs that may not yet have large ads budgets while still orienting them toward measurable business outcomes.
+Ads and Boost help drive paid reach. PCP increases the credibility, visibility, and interpretability of the Page once visitors arrive. For enterprise Page owners, PCP should help organic teams explain the quality of attention they are earning and identify where content or Page information should improve.
 
 PCP is also distinct from Career Pages:
 
-- PCP audience: SMB owners, marketers, Page admins.
-- PCP objective: credibility, customer conversion, visitor intent.
+- PCP audience: brand, communications, social, and Page admin teams.
+- PCP objective: credibility, organic audience intelligence, Page performance, visitor intent.
 - Career Pages audience: talent and employer-branding teams.
 - Career Pages objective: employer branding and talent attraction.
 
@@ -89,9 +99,9 @@ VCA is a proposed net-new feature within PCP. It should be treated as additive t
 
 The simplest framing:
 
-> PCP helps SMBs stand out and build credibility. VCA closes the gap between visitor interest and real action.
+> PCP helps the Page stand out. VCA explains who is paying attention, what they need, and what the Page owner should do next.
 
-PCP gets visitors to pause and trust the Page. VCA converts that attention into a useful conversation, a context-rich next step for the visitor, and a qualified signal for the admin.
+PCP gets visitors to pause and trust the Page. VCA converts that attention into a useful conversation for the visitor and an intelligence signal for the admin: who engaged, what they asked, whether they match the target audience, and what action would improve the Page or content strategy.
 
 ## Prototype Direction
 
@@ -102,8 +112,8 @@ The prototype should show:
 1. A visitor lands on a Premium Company Page.
 2. VCA uses LinkedIn-native context to personalize a subtle entry point.
 3. The visitor gets a useful answer without a generic lead form or cold sales pitch.
-4. VCA helps the visitor send a pre-filled message to the Page/admin.
-5. The admin receives the message with defensible context, intent signal, and a suggested reply.
+4. VCA lets the visitor decide whether to identify herself or reach out.
+5. The admin receives a defensible audience-intelligence signal with suggested Page, content, or follow-up actions.
 
 ## Guardrails
 
@@ -119,8 +129,9 @@ The prototype should show:
 - Visitor-side clarity matters: prominent CTA, credibility modules, dynamic covers, and premium trust cues should reduce the "scan-and-leave" problem before VCA appears.
 - VCA should feel LinkedIn-native and useful, not like a generic chatbot layered onto a Page.
 - The strongest VCA story is not a new chat surface. It is a subtle on-ramp into the existing LinkedIn Message tray.
-- Admin workflows should stay lightweight: CTA/testimonial/credibility setup, auto-invite toggles, AI post drafts, visitor analytics, and actionable follow-ups.
-- Admin insights should explain who visited, what they cared about, and what the admin should do next.
+- Admin workflows should stay lightweight: Page health, audience fit, visitor questions, content gaps, and actionable follow-ups.
+- Admin insights should explain who visited, what they cared about, whether they are the right audience, and what the admin should do next.
+- VCA should help Rose tell a better internal story about organic LinkedIn value without turning her into a sales development rep.
 - Trust language matters because verification, visitor identity, and intent signals can imply more certainty than the system should claim.
 
 ## System Implications
@@ -129,7 +140,7 @@ The prototype should show:
 - Avoid global product constants for pricing, packaging, feature lists, or roadmap claims.
 - If shared chat components are reused, product-specific prompts, labels, feature names, and routing should be passed from Premium Company Pages-owned modules.
 - Do not introduce real commerce, entitlement, verification, analytics, scheduling, ads-integration, or privacy-sensitive identity logic unless prototype scope explicitly calls for it.
-- Model VCA as scripted prototype data first: visitor identity, ICP match, conversation state, suggested action, admin context strip, and suggested reply.
+- Model VCA as scripted prototype data first: visitor identity, ICP match, conversation state, unanswered questions, audience patterns, suggested action, admin context strip, and optional suggested reply.
 - Visitor analytics and identity visibility must respect member opt-in and LinkedIn privacy constraints.
 
 ## Open Questions
@@ -139,4 +150,5 @@ The prototype should show:
 - What Page and admin data should be simulated versus hidden?
 - Which entry point should be the hero moment: Message button sparkle, inline nudge, or proactive visitor click?
 - How much of VCA setup should be shown before the prototype becomes too operational?
-- How should Ads/Boost be hinted as an ecosystem path without making VCA feel like an upsell machine?
+- How should VCA balance open-ended AI with enterprise admins' need for controlled topics, approved messaging, and brand-safe guardrails?
+- How should Ads/Boost be hinted as an ecosystem path without making VCA feel like a paid media upsell machine?

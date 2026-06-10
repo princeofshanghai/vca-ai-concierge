@@ -23,6 +23,9 @@ const HIRING_PROTOTYPE_HREF = HIRING_ENTRY_LIX_TEST_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
+const PREMIUM_COMPANY_PAGES_ADMIN_COLD_START_HREF =
+  "/premium-company-pages/admin?story=cold-start";
+const PREMIUM_COMPANY_PAGES_STORIES_HREF = "/premium-company-pages/stories";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
@@ -112,20 +115,9 @@ const premiumModeOptions = [
 const premiumCompanyPagesModeOptions = [
   {
     id: "premium-company-pages-member",
+    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
     label: "Member view",
     description: "Visitor-facing company page",
-    options: [
-      {
-        id: "premium-company-pages-member-buyer",
-        href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
-        label: "Buyer intent",
-      },
-      {
-        id: "premium-company-pages-member-job-seeker",
-        href: `${PREMIUM_COMPANY_PAGES_MEMBER_HREF}?vcaIntent=job-seeker`,
-        label: "Job seeker intent",
-      },
-    ],
   },
   {
     id: "premium-company-pages-admin",
@@ -134,6 +126,37 @@ const premiumCompanyPagesModeOptions = [
     description: "Admin view of PCP",
   },
 ] as const;
+const premiumCompanyPagesStoryOptions = [
+  {
+    id: "premium-company-pages-story-1",
+    href: PREMIUM_COMPANY_PAGES_ADMIN_HREF,
+    label: "Story 1",
+    description: "Dashboard entry",
+    typeLabel: "Built",
+  },
+  {
+    id: "premium-company-pages-story-2",
+    href: PREMIUM_COMPANY_PAGES_ADMIN_COLD_START_HREF,
+    label: "Story 2",
+    description: "Cold start",
+    typeLabel: "Built",
+  },
+  {
+    id: "premium-company-pages-story-3",
+    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+    label: "Story 3",
+    description: "Visitor",
+    typeLabel: "Built",
+  },
+] as const;
+const premiumCompanyPagesPlaceholderStoryLabels: Readonly<
+  Record<string, string>
+> = {
+  "1b": "Story 1b",
+  "1c": "Story 1c",
+  "2": "Story 2",
+  "3": "Story 3",
+};
 const prototypeProjectOptions = [
   {
     id: "project-hiring",
@@ -216,23 +239,65 @@ function HomeNavIcon() {
   );
 }
 
+function getPremiumCompanyPagesPlaceholderStoryLabel(pathname: string) {
+  const storyId = pathname
+    .replace(`${PREMIUM_COMPANY_PAGES_STORIES_HREF}/`, "")
+    .split("/")[0];
+
+  if (storyId === pathname) {
+    return undefined;
+  }
+
+  return premiumCompanyPagesPlaceholderStoryLabels[storyId];
+}
+
+function getPremiumCompanyPagesActiveStoryLabel(
+  pathname: string,
+  storyParam: string | null,
+) {
+  if (pathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)) {
+    return "Story 3 · Visitor";
+  }
+
+  if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
+    if (storyParam === "cold-start") {
+      return "Story 2 · Cold start";
+    }
+
+    return "Story 1 · Dashboard entry";
+  }
+
+  return undefined;
+}
+
 function getPrototypeMetaLabel(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
-  premiumCompanyPagesIntentLabel?: PremiumCompanyPagesIntentLabel,
+  premiumCompanyPagesStoryLabel?: string,
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
   }
 
   if (pathname.startsWith("/premium-company-pages")) {
-    if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
-      return `Admin view · ${premiumCompanyPagesShellLabel ?? "FAB icon"}`;
+    const placeholderStoryLabel =
+      getPremiumCompanyPagesPlaceholderStoryLabel(pathname);
+
+    if (placeholderStoryLabel) {
+      return `${placeholderStoryLabel} · Placeholder`;
     }
 
-    return `Member view · ${premiumCompanyPagesIntentLabel ?? "Buyer intent"} · ${premiumCompanyPagesShellLabel ?? "FAB icon"}`;
+    if (premiumCompanyPagesStoryLabel) {
+      return premiumCompanyPagesStoryLabel;
+    }
+
+    if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
+      return "Admin view";
+    }
+
+    return "Member view";
   }
 
   if (pathname.startsWith("/premium")) {
@@ -275,7 +340,7 @@ function getPrototypeDestination(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
-  premiumCompanyPagesIntentLabel?: PremiumCompanyPagesIntentLabel,
+  premiumCompanyPagesStoryLabel?: string,
 ): ReviewDestination {
   if (pathname.startsWith("/internal/components")) {
     return {
@@ -316,7 +381,7 @@ function getPrototypeDestination(
       hiringShellLabel,
       premiumShellLabel,
       premiumCompanyPagesShellLabel,
-      premiumCompanyPagesIntentLabel,
+      premiumCompanyPagesStoryLabel,
     ),
   };
 }
@@ -326,7 +391,7 @@ function getReviewDestinations(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumCompanyPagesShellLabel?: PremiumCompanyPagesShellLabel,
-  premiumCompanyPagesIntentLabel?: PremiumCompanyPagesIntentLabel,
+  premiumCompanyPagesStoryLabel?: string,
   componentProductLens: ComponentProductLens = "hiring",
 ): ReadonlyArray<ReviewDestination> {
   return [
@@ -336,7 +401,7 @@ function getReviewDestinations(
       hiringShellLabel,
       premiumShellLabel,
       premiumCompanyPagesShellLabel,
-      premiumCompanyPagesIntentLabel,
+      premiumCompanyPagesStoryLabel,
     ),
     getComponentsDestination(componentProductLens),
   ];
@@ -394,6 +459,31 @@ function withPremiumCompanyPagesShell(
   }
 
   return withQueryParam(href, "vcaShell", "tray");
+}
+
+function getPremiumCompanyPagesMemberShellLabel(
+  value: string | null,
+): PremiumCompanyPagesShellLabel {
+  if (value === "tray") {
+    return "Tray";
+  }
+
+  if (value === "fab-pill" || value === "fab") {
+    return "FAB pill";
+  }
+
+  return "FAB icon";
+}
+
+function getPremiumCompanyPagesActiveShellLabel(
+  value: string | null,
+  isMemberView: boolean,
+): PremiumCompanyPagesShellLabel {
+  if (isMemberView) {
+    return getPremiumCompanyPagesMemberShellLabel(value);
+  }
+
+  return value === "tray" ? "Tray" : "FAB pill";
 }
 
 function getHiringShellOptions(pathname: string) {
@@ -466,6 +556,7 @@ export function ReviewShellNav({
     isPremiumCompanyPagesMember && hasDarkOverlayBackdrop;
   const currentSearch = searchParams.toString();
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
+  const vcaShellParam = searchParams.get("vcaShell");
   const activeHiringShellLabel: HiringShellLabel =
     searchParams.get("shell") === "hybrid"
       ? "Tray (hybrid)"
@@ -487,24 +578,32 @@ export function ReviewShellNav({
     activePremiumShellLabel === "Tray (persistent)"
       ? currentHref
       : pathname;
-  const activePremiumCompanyPagesShellLabel: PremiumCompanyPagesShellLabel =
-    searchParams.get("vcaShell") === "tray"
-      ? "Tray"
-      : !isPremiumCompanyPagesMember ||
-          searchParams.get("vcaShell") === "fab-pill" ||
-          searchParams.get("vcaShell") === "fab"
-        ? "FAB pill"
-        : "FAB icon";
+  const activePremiumCompanyPagesShellLabel =
+    getPremiumCompanyPagesActiveShellLabel(
+      vcaShellParam,
+      isPremiumCompanyPagesMember,
+    );
   const activePremiumCompanyPagesIntentLabel: PremiumCompanyPagesIntentLabel =
     searchParams.get("vcaIntent") === "job-seeker"
       ? "Job seeker intent"
       : "Buyer intent";
+  const premiumCompanyPagesStoryParam = searchParams.get("story");
+  const activePremiumCompanyPagesStoryLabel =
+    getPremiumCompanyPagesActiveStoryLabel(
+      pathname,
+      premiumCompanyPagesStoryParam,
+    );
+  const premiumCompanyPagesBaseHref =
+    premiumCompanyPagesStoryParam &&
+    pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)
+      ? withQueryParam(pathname, "story", premiumCompanyPagesStoryParam)
+      : activePremiumCompanyPagesIntentLabel === "Job seeker intent" &&
+          pathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+        ? withQueryParam(pathname, "vcaIntent", "job-seeker")
+        : pathname;
   const normalizedPremiumCompanyPagesHref =
     withPremiumCompanyPagesShell(
-      activePremiumCompanyPagesIntentLabel === "Job seeker intent" &&
-        pathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
-        ? withQueryParam(pathname, "vcaIntent", "job-seeker")
-        : pathname,
+      premiumCompanyPagesBaseHref,
       activePremiumCompanyPagesShellLabel,
     );
   const componentProductLens: ComponentProductLens =
@@ -549,19 +648,24 @@ export function ReviewShellNav({
           "href" in option && option.href
             ? withPremiumCompanyPagesShell(
                 option.href,
-                activePremiumCompanyPagesShellLabel,
+                option.href.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+                  ? "FAB icon"
+                  : activePremiumCompanyPagesShellLabel,
               )
             : undefined,
-        options:
-          "options" in option
-            ? option.options.map((childOption) => ({
-                ...childOption,
-                href: withPremiumCompanyPagesShell(
-                  childOption.href,
-                  activePremiumCompanyPagesShellLabel,
-                ),
-              }))
-            : undefined,
+      })),
+    [activePremiumCompanyPagesShellLabel],
+  );
+  const shellAwarePremiumCompanyPagesStoryOptions = useMemo(
+    () =>
+      premiumCompanyPagesStoryOptions.map((option) => ({
+        ...option,
+        href: withPremiumCompanyPagesShell(
+          option.href,
+          option.href.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+            ? "FAB icon"
+            : activePremiumCompanyPagesShellLabel,
+        ),
       })),
     [activePremiumCompanyPagesShellLabel],
   );
@@ -642,14 +746,14 @@ export function ReviewShellNav({
         activeHiringShellLabel,
         activePremiumShellLabel,
         activePremiumCompanyPagesShellLabel,
-        activePremiumCompanyPagesIntentLabel,
+        activePremiumCompanyPagesStoryLabel,
         componentProductLens,
       ),
     [
       activeHiringShellLabel,
       activePremiumShellLabel,
       activePremiumCompanyPagesShellLabel,
-      activePremiumCompanyPagesIntentLabel,
+      activePremiumCompanyPagesStoryLabel,
       componentProductLens,
       pathname,
     ],
@@ -999,7 +1103,19 @@ export function ReviewShellNav({
                         ? premiumModeGroups
                         : undefined
                     }
-                    modeHeading={isProjectMenu ? "Choose project" : "Choose flow"}
+                    storyOptions={
+                      isPremiumCompanyPagesMenu
+                        ? shellAwarePremiumCompanyPagesStoryOptions
+                        : undefined
+                    }
+                    storyHeading="Choose story"
+                    modeHeading={
+                      isProjectMenu
+                        ? "Choose project"
+                        : isPremiumCompanyPagesMenu
+                          ? "Choose view"
+                          : "Choose flow"
+                    }
                     shellHeading="UI"
                     shellOptions={shellOptions}
                     showVisitorControls={

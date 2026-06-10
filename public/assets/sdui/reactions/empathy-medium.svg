@@ -1,0 +1,11 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Empathy Medium">
+<path id="Oval" d="M22 44C34.1503 44 44 34.1503 44 22C44 9.84974 34.1503 0 22 0C9.84974 0 0 9.84974 0 22C0 34.1503 9.84974 44 22 44Z" fill="var(--fill-0, #DF704D)"/>
+<path id="Path" fill-rule="evenodd" clip-rule="evenodd" d="M21.08 12.6C19.5384 11.0452 17.4395 10.1706 15.25 10.1706C13.0605 10.1706 10.9616 11.0452 9.42 12.6C6.19144 15.8552 6.19144 21.1048 9.42 24.36L22 37L34.58 24.36C37.8019 21.106 37.8019 15.8641 34.58 12.61C33.039 11.047 30.935 10.1679 28.74 10.17C26.5588 10.1832 24.4736 11.0691 22.95 12.63L22.01 13.53L21.08 12.6Z" fill="var(--fill-0, #FFF3F0)" stroke="var(--stroke-0, #77280C)"/>
+<g id="Path_2" opacity="0.6">
+</g>
+<g id="Path_3" opacity="0.4">
+</g>
+<path id="Path_4" fill-rule="evenodd" clip-rule="evenodd" d="M21.08 12.44C19.5424 10.8777 17.442 9.99789 15.25 9.99789C13.058 9.99789 10.9576 10.8777 9.42 12.44C6.19144 15.6952 6.19144 20.9448 9.42 24.2L22 36.83L34.58 24.2C37.7977 20.9403 37.7977 15.6997 34.58 12.44C33.0382 10.8841 30.9404 10.0061 28.75 9.99999C26.5697 10.0176 24.4862 10.9028 22.96 12.46L22.02 13.36L21.08 12.44Z" stroke="var(--stroke-0, #77280C)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

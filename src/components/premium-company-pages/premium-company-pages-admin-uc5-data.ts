@@ -1,5 +1,12 @@
 import type { IconName } from "@/components/primitives/icon";
 
+import {
+  pcpCompanyProfile,
+  pcpCompetitorNames,
+  pcpProofSnippets,
+  pcpVisitorPersona,
+} from "./persona";
+
 export type AdminUc5InsightId =
   | "post-amplification"
   | "follower-growth"
@@ -65,29 +72,23 @@ export type AdminUc5Lead = Readonly<{
   replyNeeded?: boolean;
 }>;
 
-export const adminUc5InsightOrder: ReadonlyArray<AdminUc5InsightId> = [
-  "post-amplification",
-  "follower-growth",
-  "visitor-demographics",
-];
-
 export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
   "post-amplification": {
     id: "post-amplification",
     icon: "analytics",
-    label: "One post is worth amplifying",
-    value: "4.2% engagement rate - only 180 impressions",
-    query: "Tell me more about this post.",
+    label: "Open enrollment content is worth amplifying",
+    value: "4.8% engagement rate - only 240 impressions",
+    query: "Tell me more about this open enrollment post.",
     followUps: [
       {
         prompt: "Why this post?",
         response:
-          "Because the early signal is strong. People who saw the post engaged with it at 4.2%, well above the Page average, but only 180 people saw it. That makes it a good candidate to review for more reach.",
+          "Because the early signal is strong. People who saw the migration-readiness post engaged with it at 4.8%, well above the Page average, but only 240 people saw it. That makes it a good candidate to review for more reach.",
       },
       {
         prompt: "Who would this reach?",
         response:
-          "The strongest audience fit is restaurant group marketers, digital ordering leads, and operators at 20-50 employee restaurant teams. They are already showing up in your visitor data.",
+          "The strongest audience fit is HR, benefits, and people operations leaders at enterprise companies. They are already showing up in your visitor data around open enrollment and migration content.",
       },
       {
         prompt: "Explore boost options",
@@ -99,38 +100,43 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
   "follower-growth": {
     id: "follower-growth",
     icon: "people",
-    label: "Follower growth is up this month",
-    value: "312 visitors - 18 points vs last month",
-    query: "Show me follower growth this month.",
+    label: "Follower growth dropped this month",
+    value: "312 visitors - down 18 points vs last month",
+    query: "Why did follower growth drop this month?",
     followUps: [
       {
         prompt: "How does this compare to last quarter?",
         response:
-          "Last quarter averaged 274 visitors per month, so this month is 14% higher. New followers are also pacing ahead of last quarter's weekly average by 9 followers.",
+          "Last quarter averaged 384 visitors per month, so this month is down 19%. The drop appears tied to a posting gap after the open enrollment readiness post, not a loss of relevance with the audience.",
       },
       {
         prompt: "Which posts drove the most follows?",
         response:
-          "The delivery promotion checklist drove the most follows, followed by the menu rollout post. Both converted because they named a restaurant marketing ops pain point directly.",
+          "The open enrollment readiness post drove the most follows, followed by the carrier file checklist. Both converted because they named benefits operations pain points directly.",
+      },
+      {
+        prompt: "What should I do this week?",
+        response:
+          "Post a short follow-up on phased migration readiness, then reuse Cheri's question as a benefits-leader prompt. That keeps the narrative close to the buying conversation already happening in your inbox.",
       },
     ],
   },
   "visitor-demographics": {
     id: "visitor-demographics",
     icon: "analytics",
-    label: "Delivery promo content is pulling the right audience",
-    value: "64% of engaged visitors match multi-location restaurant teams",
+    label: "Benefits leaders are finding your Page",
+    value: "68% of engaged visitors are HR Director+",
     query: "Who is visiting Velora's Page?",
     followUps: [
       {
         prompt: "Are these the right people for Velora?",
         response:
-          "Yes. The strongest visitor groups look like the people Velora is built to help: restaurant group marketers, digital ordering leads, and operators managing menu, delivery, and local campaign complexity.",
+          "Yes. The strongest visitor groups look like the people Velora is built to help: HR, benefits, and people operations leaders managing carrier complexity, eligibility cleanup, and open enrollment readiness.",
       },
       {
         prompt: "How do I reach more of them?",
         response:
-          "Post more operator-facing online ordering scenarios and boost the Northline Kitchen Group story to marketing and operations leads at 20-50 employee restaurant teams.",
+          "Post more open enrollment and carrier-readiness scenarios, then consider boosting the Arbor Retail Group proof to HR and benefits leaders at large employers.",
       },
     ],
   },
@@ -138,18 +144,18 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "content-engagement",
     icon: "popular-content",
     label: "One post is outperforming its reach",
-    value: "Northline story: strong engagement - modest impressions",
+    value: "Arbor proof: strong engagement - modest impressions",
     query: "What should I do with this high-engagement post?",
     followUps: [
       {
         prompt: "Why did the top post perform better?",
         response:
-          "It led with a concrete operational risk: delivery app promotions creating inconsistent menus and hard-to-read performance. That makes the problem obvious before readers need to understand Velora.",
+          "It led with a concrete operational risk: switching benefits systems before open enrollment without a clear carrier-readiness plan. That makes the problem obvious before readers need to understand Velora.",
       },
       {
         prompt: "What should I post next?",
         response:
-          "Turn Cheri's question into a short post: 'Which locations are losing repeat orders after a delivery promo ends?' Pair it with a simple before-and-after workflow.",
+          "Turn Cheri's question into a short post: 'What breaks first when benefits teams migrate mid-year?' Pair it with a simple readiness checklist.",
       },
     ],
   },
@@ -164,12 +170,12 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
         prompt: "Draft the Cheri Sparks customer story",
         primary: true,
         response:
-          "Draft angle: 'How Northline Kitchen Group kept delivery menus consistent across six locations.' Lead with Cheri's delivery promotion question, then explain location-level campaign reporting in one visual example.",
+          `Draft angle: '${pcpProofSnippets.caseStudyTitle}.' Lead with Cheri's mid-year migration question, then explain eligibility cleanup, carrier readiness, and employee communications in one visual example.`,
       },
       {
         prompt: "Which leads need a reply?",
         response:
-          "Cheri Sparks needs the fastest reply because she is high intent and unreplied. Priya Shah is next because POS and menu exports are a concrete buying question.",
+          "Cheri Sparks needs the fastest reply because she is high intent and unreplied. Priya Shah is next because carrier file readiness is a concrete buying question.",
       },
     ],
   },
@@ -181,19 +187,19 @@ export const adminUc5FollowerMetrics: ReadonlyArray<AdminUc5Metric> = [
     value: "312",
     changeValue: "18 points",
     changeContext: "vs last month",
-    tone: "positive",
+    tone: "negative",
   },
   {
     label: "New followers",
-    value: "37",
-    changeValue: "8%",
+    value: "29",
+    changeValue: "11%",
     changeContext: "vs last week",
-    tone: "positive",
+    tone: "negative",
   },
   {
     label: "Follower total",
-    value: "6,842",
-    changeValue: "37",
+    value: "48,218",
+    changeValue: "29",
     changeContext: "this week",
     tone: "positive",
   },
@@ -203,22 +209,22 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
   {
     label: "Company size",
     rows: [
-      { label: "20-50 employees", percentage: 62 },
-      { label: "51-200 employees", percentage: 24 },
+      { label: "10,001+ employees", percentage: 54 },
+      { label: "5,001-10,000 employees", percentage: 22 },
     ],
   },
   {
     label: "Job function",
     rows: [
-      { label: "Marketing and operations", percentage: 65 },
-      { label: "Digital ordering", percentage: 18 },
+      { label: "Human resources", percentage: 46 },
+      { label: "Benefits operations", percentage: 22 },
     ],
   },
   {
     label: "Industry",
     rows: [
-      { label: "Restaurants", percentage: 58 },
-      { label: "Hospitality technology", percentage: 16 },
+      { label: "Retail", percentage: 31 },
+      { label: "Healthcare", percentage: 18 },
     ],
   },
   {
@@ -231,27 +237,27 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
   {
     label: "Seniority",
     rows: [
-      { label: "Manager / Director", percentage: 55 },
-      { label: "Owner / Operator", percentage: 21 },
+      { label: "Director+", percentage: 68 },
+      { label: "VP / CHRO", percentage: 24 },
     ],
   },
 ];
 
 export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
-    title: "How restaurant teams keep delivery menus consistent across locations",
+    title: "What benefits teams should validate before a mid-year migration",
     impressions: "1,688",
     desktop: 32,
     mobile: 68,
   },
   {
-    title: "Restaurant ops win: one launch calendar for every location",
+    title: "Carrier file readiness checklist for open enrollment",
     impressions: "1,204",
     desktop: 41,
     mobile: 59,
   },
   {
-    title: "Which location loses repeat orders after a delivery promo ends?",
+    title: "How HR teams keep employee communications aligned by population",
     impressions: "936",
     desktop: 27,
     mobile: 73,
@@ -260,13 +266,13 @@ export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
 
 export const adminUc5LowPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
-    title: "Velora product update: menu rules",
+    title: "Velora product update: eligibility rules",
     impressions: "214",
     desktop: 52,
     mobile: 48,
   },
   {
-    title: "June release notes for campaign workflow admins",
+    title: "June release notes for benefits workflow admins",
     impressions: "168",
     desktop: 61,
     mobile: 39,
@@ -275,57 +281,57 @@ export const adminUc5LowPosts: ReadonlyArray<AdminUc5PostPerformance> = [
 
 export const adminUc5CompetitorRows: ReadonlyArray<AdminUc5CompetitorRow> = [
   {
-    company: "Velora",
+    company: pcpCompanyProfile.name,
     postsPerWeek: "2",
-    newFollowers: "37",
+    newFollowers: "29",
     commentsPerDay: "11",
     highlight: true,
   },
   {
-    company: "Toast",
+    company: pcpCompetitorNames[0],
     postsPerWeek: "5",
     newFollowers: "82",
     commentsPerDay: "18",
   },
   {
-    company: "Popmenu",
+    company: pcpCompetitorNames[1],
     postsPerWeek: "4",
     newFollowers: "64",
     commentsPerDay: "14",
   },
   {
-    company: "Owner.com",
+    company: pcpCompetitorNames[2],
     postsPerWeek: "3",
-    newFollowers: "29",
+    newFollowers: "41",
     commentsPerDay: "7",
   },
 ];
 
 export const adminUc5Leads: ReadonlyArray<AdminUc5Lead> = [
   {
-    name: "Cheri Sparks",
-    company: "Brightframe Kitchen Group",
-    summary: "Asked how to measure delivery promotions across locations.",
+    name: pcpVisitorPersona.name,
+    company: pcpVisitorPersona.company,
+    summary: "Asked whether Velora can support a mid-year benefits migration.",
     status: "High intent",
     replyNeeded: true,
   },
   {
     name: "Priya Shah",
-    company: "North Pier Restaurants",
-    summary: "Asked whether Velora supports POS and menu exports.",
+    company: "Calico Health Network",
+    summary: "Asked whether Velora supports carrier file validation.",
     status: "Awaiting reply",
     replyNeeded: true,
   },
   {
-    name: "Maya Patel",
-    company: "Northline Kitchen Group",
-    summary: "Shared a positive multi-location campaign workflow story.",
+    name: "Dana Kim",
+    company: "Arbor Retail Group",
+    summary: "Shared a positive open enrollment migration story.",
     status: "Replied",
   },
 ];
 
 export const adminUc5SynthesisRecommendation =
-  "Popmenu is posting customer stories 3x a week. You have a strong one in your inbox from Cheri Sparks. Want me to draft it?";
+  `${pcpCompetitorNames[0]} is posting benefits migration stories 3x a week. You have a strong one in your inbox from Cheri Sparks. Want me to draft it?`;
 
 export const adminUc5PrototypeFallback =
   "This prototype is scripted for the four performance reporting prompts. Choose a digest item or prompt chip to see the compact report.";

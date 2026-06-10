@@ -11,9 +11,9 @@ import {
   type ReactNode,
 } from "react";
 
-import { type ChatPanelVariant } from "@/components/chat";
+import { Prompt, type ChatPanelVariant } from "@/components/chat";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { Button, getButtonClassName } from "@/components/primitives/button";
+import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
@@ -25,24 +25,37 @@ import { TextArea } from "@/components/primitives/text-area";
 
 import {
   PCP_ASSET_ROOT,
+  pcpAdminPersona,
+  pcpAdminScenario,
   pcpCompanyProfile,
+  pcpProofSnippets,
+  pcpVcaScenario,
+  pcpVisitorPersona,
 } from "./persona";
 import { GlobalInboxTray } from "./global-inbox-tray";
 import {
+  ADMIN_UC5_SELF_INITIATED_PROMPTS,
   AdminPerformanceDigestCard,
   AdminUc5AgentPanel,
   buildAdminUc5PrototypeFallbackTurn,
+  type AdminUc5SelfInitiatedView,
   type AdminUc5ThreadTurn,
 } from "./premium-company-pages-admin-uc5";
 import {
   type AdminUc5FollowUp,
   type AdminUc5InsightId,
 } from "./premium-company-pages-admin-uc5-data";
+import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
 const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
 const ADMIN_ANALYTICS_HREF = "/premium-company-pages/admin/analytics";
 const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
+const VELORA_AI_ACCENT = "#2AA986";
+
+type AdminAiIconMarkStyle = CSSProperties & {
+  "--pcp-admin-ai-accent": string;
+};
 
 const primaryRailItems = [
   "Dashboard",
@@ -153,104 +166,91 @@ const performanceCards: Array<PerformanceCardData> = [
 
 const recentPosts = [
   {
-    body: "How do restaurant teams keep delivery menus consistent across locations? A shared campaign workflow can keep online ordering and delivery updates aligned before launch.",
+    body: "What benefits teams should validate before a mid-year platform migration: eligibility data, carrier file readiness, employee communications, and open enrollment timing.",
     metric: "Get up to 12K more impressions by boosting",
-    image: "restaurant-post-menu-ops.png",
-    imageAlt: "Restaurant manager using a menu workflow on a tablet",
-    linkTitle: "How restaurant teams keep delivery menus consistent",
+    image: "member/post-image-1.png",
+    imageAlt: "Benefits team reviewing an implementation dashboard",
+    linkTitle: "Benefits migration readiness checklist",
     linkMeta: "veloracloud.com",
     reactions: "152",
     comments: "18 Comments",
   },
   {
-    body: "Before and after: replacing a location-by-location promotion spreadsheet with one shared view of menu updates, local offers, and delivery channel performance.",
+    body: "Before and after: replacing carrier-by-carrier spreadsheets with one shared view of open issues, plan changes, and employee communication status.",
     metric: "Get up to 9K more impressions by boosting",
-    image: "restaurant-post-campaign-calendar.png",
-    imageAlt: "Restaurant team reviewing a campaign calendar",
-    linkTitle: "Restaurant ops win",
-    linkMeta: "Northline Kitchen Group",
+    image: "member/post-image-2.png",
+    imageAlt: "Benefits administrators reviewing open enrollment tasks",
+    linkTitle: "Open enrollment operations win",
+    linkMeta: "Arbor Retail Group",
     reactions: "860",
     comments: "42 Comments",
   },
   {
-    body: "A short operating question for restaurant marketers: which location loses repeat orders after this delivery promo ends?",
+    body: "A short operating question for HR leaders: what breaks first when eligibility cleanup, carrier files, and employee communications are managed in separate systems?",
     metric: "Get up to 7K more impressions by boosting",
-    image: "restaurant-post-delivery-performance.png",
-    imageAlt: "Restaurant pickup shelf with delivery performance dashboard",
+    image: "feed-post-content.png",
+    imageAlt: "Benefits analytics post preview",
     reactions: "240",
     comments: "12 Comments",
   },
 ];
 
 const vcaLeadBrief = {
-  buyer: "Cheri Sparks",
-  role: "Marketing Operations Lead at Brightframe Kitchen Group",
-  avatar: "member/avatar-2.png",
-  companyContext: "32-person restaurant group with six locations",
-  need: "Delivery promotions are hard to measure across locations",
-  signals: "Asked how Velora measures delivery app promotions by location",
-  proofShown: "Northline Kitchen Group delivery promotion case study",
-  outcome: "Sent Ning a drafted message through Velora",
-  sentMessage:
-    "Hi Ning - I manage marketing operations for a growing restaurant group and I'm trying to understand which delivery promotions actually bring guests back after the offer ends. Velora's location-level campaign reporting sounds like exactly what we need. Would love to learn more about how it works for a team our size.",
-  intentSummary:
-    "She asked how to measure delivery promotions across locations, viewed the Northline Kitchen Group case study, and sent a drafted message to Ning.",
-  intentTags: [
-    "32-person restaurant group",
-    "Delivery promotion measurement",
-    "Multi-location campaign interest",
-    "Evaluated just now",
-  ],
-  suggestedReply:
-    "Hi Cheri - thanks for reaching out. I founded Velora for exactly this kind of restaurant growth workflow. You can see campaign performance by location, delivery channel, and repeat-order behavior, so your team knows which promos are actually bringing guests back. Happy to walk through how this would work for Brightframe.",
-  suggestedPrep: [
-    "Lead with how Velora shows which delivery promotions drive repeat orders.",
-    "Explain location-level campaign reporting in plain language.",
-    "Ask how Brightframe tracks offers across delivery channels today.",
-  ],
+  buyer: pcpVisitorPersona.name,
+  role: `${pcpVisitorPersona.title} at ${pcpVisitorPersona.company}`,
+  avatar: pcpVisitorPersona.avatar,
+  companyContext: pcpVisitorPersona.companyContext,
+  need: pcpVisitorPersona.evaluationNeed,
+  signals: "Asked whether Velora can support a mid-year migration before open enrollment",
+  proofShown: pcpProofSnippets.caseStudyShort,
+  outcome: `Sent ${pcpAdminPersona.firstName} a drafted message through Velora`,
+  sentMessage: pcpVcaScenario.handoffMessage,
+  intentSummary: pcpAdminScenario.leadSummary,
+  intentTags: pcpVisitorPersona.intentTags,
+  suggestedReply: pcpAdminScenario.suggestedReply,
+  suggestedPrep: pcpAdminScenario.suggestedPrep,
 };
 
 const inboxThreads: ReadonlyArray<InboxThreadData> = [
   {
     name: vcaLeadBrief.buyer,
     role: vcaLeadBrief.role,
-    topic: "Delivery promotion measurement",
-    snippet:
-      "Cheri: Hi Ning - I manage marketing operations for a growing restaurant group...",
+    topic: "Benefits migration evaluation",
+    snippet: pcpAdminScenario.inboxThreadPreview,
     timestamp: "4:48 PM",
     avatar: vcaLeadBrief.avatar,
     selected: true,
     vca: true,
   },
   {
-    name: "Maya Patel",
-    role: "Managing Partner at Northline Kitchen Group",
+    name: "Dana Kim",
+    role: "VP of People Operations at Arbor Retail Group",
     topic: "Services",
-    snippet: "Ning: Glad the campaign view helped your team.",
+    snippet: "Rose: Glad the migration readiness view helped your team.",
     timestamp: "4:44 PM",
     avatar: "avatar-1.png",
   },
   {
     name: "Priya Shah",
-    role: "Founder at North Pier Restaurants",
+    role: "Director of Benefits at Calico Health Network",
     topic: "Other",
-    snippet: "Priya: Does Velora support POS and menu exports?",
+    snippet: "Priya: Does Velora support carrier file validation?",
     timestamp: "May 31",
     avatar: "avatar-3.png",
   },
   {
     name: "Luis Romero",
-    role: "Operations Lead at Grove Hospitality",
+    role: "People Operations Lead at Grove Health",
     topic: "Service request",
-    snippet: "Luis: We need a clearer way to track menu approval status...",
+    snippet: "Luis: We need a clearer way to track eligibility exceptions...",
     timestamp: "May 21",
     avatar: "avatar-2.png",
   },
   {
     name: "Diana Lin",
-    role: "Marketing Manager at Lin Kitchen Group",
+    role: "Benefits Manager at Lin Manufacturing",
     topic: "Careers",
-    snippet: "Diana: Are you hiring for customer operations roles?",
+    snippet: "Diana: Are you hiring benefits implementation specialists?",
     timestamp: "Mar 30",
     avatar: "avatar-1.png",
   },
@@ -294,41 +294,41 @@ const analyticsHighlights: ReadonlyArray<AnalyticsHighlightData> = [
 
 const contentEngagementRows: ReadonlyArray<ContentEngagementRowData> = [
   {
-    title: "How Northline aligned delivery promos across six locations",
-    postedBy: "Ning Hu",
+    title: "How Arbor prepared 12,000 employees for open enrollment",
+    postedBy: pcpAdminPersona.name,
     date: "6/8/2026",
     type: "Article",
-    audience: "Restaurant operators",
+    audience: "HR leaders",
     impressions: "1,284",
     views: "184",
     clicks: "46",
   },
   {
-    title: "Menu rollout checklist for multi-location restaurant teams",
+    title: "Carrier file readiness checklist for enterprise benefits teams",
     postedBy: "Velora",
     date: "6/6/2026",
     type: "Document",
-    audience: "Franchise marketers",
+    audience: "Benefits teams",
     impressions: "986",
     views: "132",
     clicks: "31",
   },
   {
-    title: "Which delivery offer brings guests back after the promo ends?",
-    postedBy: "Ning Hu",
+    title: "What breaks first when benefits teams migrate mid-year?",
+    postedBy: pcpAdminPersona.name,
     date: "6/3/2026",
     type: "Image",
-    audience: "Growth leaders",
+    audience: "People leaders",
     impressions: "812",
     views: "-",
     clicks: "34",
   },
   {
-    title: "Friday menu updates should not require five spreadsheets",
+    title: "Eligibility cleanup should not require five spreadsheets",
     postedBy: "Velora",
     date: "5/30/2026",
     type: "Text",
-    audience: "Restaurant ops",
+    audience: "HR operations",
     impressions: "654",
     views: "-",
     clicks: "18",
@@ -340,13 +340,13 @@ const analyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
     insightId: "visitor-demographics",
     icon: "people",
     title: "Right audience is engaging",
-    detail: "64% of engaged visitors match multi-location restaurant teams.",
+    detail: "68% of engaged visitors are HR Director+.",
   },
   {
     insightId: "content-engagement",
     icon: "popular-content",
     title: "High-engagement post needs reach",
-    detail: "The Northline story is working, but impressions are modest.",
+    detail: "The Arbor proof is working, but impressions are modest.",
   },
 ];
 
@@ -807,10 +807,10 @@ function InboxProfileHeader() {
       <div>
         <h2 className="text-heading-lg text-text">{vcaLeadBrief.buyer}</h2>
         <p className="text-body-md text-text">
-          Marketing Operations Lead at Brightframe Kitchen Group
+          {vcaLeadBrief.role}
         </p>
         <p className="mt-xs text-body-sm text-text-meta">
-          Delivery promotion measurement
+          Benefits migration evaluation
         </p>
       </div>
       <VcaInboxContextStrip />
@@ -1038,7 +1038,7 @@ function DashboardContent({
     <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
       <div className="bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background px-lg pb-[28px] pt-[40px] sm:px-xxl">
         <h1 className="text-display-md text-text">
-          Welcome back, {pcpCompanyProfile.name}
+          Welcome back, {pcpAdminPersona.firstName}
         </h1>
         <div className="mt-[40px]">
           <AdminPerformanceDigestCard
@@ -1081,8 +1081,9 @@ function DashboardContent({
             <div>
               <h2 className="text-heading-sm text-text">Manage recent posts</h2>
               <p className="mt-xs text-body-sm text-text-meta">
-                Manage restaurant growth content and amplify top-performing
-                posts with boosting. <InlineAction>Learn more</InlineAction>
+                Manage benefits administration content and amplify
+                top-performing posts with boosting.{" "}
+                <InlineAction>Learn more</InlineAction>
               </p>
             </div>
             <CarouselControls
@@ -1274,23 +1275,31 @@ function AnalyticsInsightCard({
           {insight.detail}
         </span>
       </span>
-      <span
-        aria-hidden="true"
-        className={getButtonClassName({
-          className: "pointer-events-none justify-self-end",
-          size: "small",
-          variant: "tertiary",
-        })}
-      >
-        <Icon
-          aria-hidden="true"
-          className="text-premium-inbug"
-          name="signal-ai"
-          size="small"
-        />
-        <span>Ask AI</span>
-      </span>
+      <AdminAiIconMark selected={active} />
     </button>
+  );
+}
+
+function AdminAiIconMark({ selected = false }: Readonly<{ selected?: boolean }>) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx(
+        "pointer-events-none inline-flex size-8 shrink-0 items-center justify-center justify-self-end rounded-sm border-[1.5px] border-[color:var(--pcp-admin-ai-accent)] bg-background text-[color:var(--pcp-admin-ai-accent)] transition-[background-color,box-shadow] duration-150 ease-out",
+        selected && "bg-background-transparent-active shadow-raised-faint-active",
+      )}
+      style={
+        {
+          "--pcp-admin-ai-accent": VELORA_AI_ACCENT,
+        } as AdminAiIconMarkStyle
+      }
+    >
+      <Icon
+        aria-hidden="true"
+        name={selected ? "navigation-signal-ai-active" : "navigation-signal-ai"}
+        size="small"
+      />
+    </span>
   );
 }
 
@@ -1441,8 +1450,8 @@ function MetricsCard() {
           <div>
             <h2 className="text-heading-sm text-text">Metrics</h2>
             <p className="mt-xs text-body-sm text-text-meta">
-              Smoother reach growth from restaurant operators and multi-location
-              marketing teams.
+              Reach patterns from HR leaders, benefits operators, and enterprise
+              people teams.
             </p>
           </div>
           <button
@@ -1627,7 +1636,7 @@ function PremiumCompanyPagesAdminShell({
 }>) {
   return (
     <main className="min-h-dvh bg-background-neutral-soft text-text">
-      <LinkedInGlobalNavigation profileSrc={pcpCompanyProfile.founderAvatarSrc} />
+      <LinkedInGlobalNavigation profileSrc={pcpAdminPersona.avatarSrc} />
       <div className="mx-auto grid w-full max-w-[1145px] gap-lg px-lg py-xxl lg:grid-cols-[225px_minmax(0,888px)] lg:gap-[32px] lg:px-0">
         <PageRail activeItem={activeItem} />
         {children}
@@ -1636,14 +1645,69 @@ function PremiumCompanyPagesAdminShell({
   );
 }
 
-export function PremiumCompanyPagesPage() {
+type PremiumCompanyPagesAdminVcaShellProps = Readonly<{
+  activeItem: string;
+  children: (props: {
+    activeInsightId: AdminUc5InsightId | null;
+    onInsightSelect: (insightId: AdminUc5InsightId) => void;
+  }) => ReactNode;
+  initialAgentOpen?: boolean;
+  turnIdPrefix: string;
+}>;
+
+function AdminVcaFabEntry({
+  chatPanelId,
+  onOpen,
+  onPromptSelect,
+  style,
+}: Readonly<{
+  chatPanelId: string;
+  onOpen: () => void;
+  onPromptSelect: (view: AdminUc5SelfInitiatedView) => void;
+  style: CSSProperties;
+}>) {
+  return (
+    <div
+      className="group fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
+      style={style}
+    >
+      <div className="pointer-events-none absolute bottom-full right-0 hidden translate-y-xs flex-col items-end gap-sm pb-sm opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:flex">
+        {ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => (
+          <Prompt
+            className="w-max max-w-[calc(100vw-3rem)] self-end shadow-raised-faint [&>span]:whitespace-nowrap [&>span]:break-normal"
+            key={item.id}
+            onPromptSelect={() => onPromptSelect(item.id)}
+            prompt={item.prompt}
+          />
+        ))}
+      </div>
+      <VcaFab
+        accentColor={VELORA_AI_ACCENT}
+        chatPanelId={chatPanelId}
+        label="Open Assistant"
+        onClick={onOpen}
+        position="static"
+        variant="admin"
+      />
+    </div>
+  );
+}
+
+function PremiumCompanyPagesAdminVcaShell({
+  activeItem,
+  children,
+  initialAgentOpen = false,
+  turnIdPrefix,
+}: PremiumCompanyPagesAdminVcaShellProps) {
   const agentPanelId = useId();
   const nextTurnIdRef = useRef(0);
-  const [isAgentOpen, setIsAgentOpen] = useState(false);
+  const [isAgentOpen, setIsAgentOpen] = useState(initialAgentOpen);
   const [agentPanelVariant, setAgentPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [activeInsightId, setActiveInsightId] =
     useState<AdminUc5InsightId | null>(null);
+  const [initialSelfInitiatedView, setInitialSelfInitiatedView] =
+    useState<AdminUc5SelfInitiatedView | null>(null);
   const [agentDraft, setAgentDraft] = useState("");
   const [agentThreadTurns, setAgentThreadTurns] = useState<
     ReadonlyArray<AdminUc5ThreadTurn>
@@ -1651,14 +1715,15 @@ export function PremiumCompanyPagesPage() {
   const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
 
   function createTurnId() {
-    const turnId = `admin-uc5-turn-${nextTurnIdRef.current}`;
+    const turnId = `${turnIdPrefix}-${nextTurnIdRef.current}`;
     nextTurnIdRef.current += 1;
 
     return turnId;
   }
 
-  function handleDigestInsightSelect(insightId: AdminUc5InsightId) {
+  function handleInsightSelect(insightId: AdminUc5InsightId) {
     setActiveInsightId(insightId);
+    setInitialSelfInitiatedView(null);
     setAgentThreadTurns([]);
     setAgentDraft("");
     setAgentPanelVariant("collapsed");
@@ -1667,6 +1732,16 @@ export function PremiumCompanyPagesPage() {
 
   function handleOpenAgentFromFab() {
     setActiveInsightId(null);
+    setInitialSelfInitiatedView(null);
+    setAgentThreadTurns([]);
+    setAgentDraft("");
+    setAgentPanelVariant("collapsed");
+    setIsAgentOpen(true);
+  }
+
+  function handleOpenSelfInitiatedView(view: AdminUc5SelfInitiatedView) {
+    setActiveInsightId(null);
+    setInitialSelfInitiatedView(view);
     setAgentThreadTurns([]);
     setAgentDraft("");
     setAgentPanelVariant("collapsed");
@@ -1677,6 +1752,7 @@ export function PremiumCompanyPagesPage() {
     setIsAgentOpen(false);
     setAgentPanelVariant("collapsed");
     setAgentDraft("");
+    setInitialSelfInitiatedView(null);
   }
 
   function handleAgentDraftChange(event: ChangeEvent<HTMLTextAreaElement>) {
@@ -1722,11 +1798,11 @@ export function PremiumCompanyPagesPage() {
 
   return (
     <>
-      <PremiumCompanyPagesAdminShell activeItem="Dashboard">
-        <DashboardContent
-          activeInsightId={isAgentOpen ? activeInsightId : null}
-          onDigestInsightSelect={handleDigestInsightSelect}
-        />
+      <PremiumCompanyPagesAdminShell activeItem={activeItem}>
+        {children({
+          activeInsightId: isAgentOpen ? activeInsightId : null,
+          onInsightSelect: handleInsightSelect,
+        })}
       </PremiumCompanyPagesAdminShell>
 
       {!isAgentOpen ? (
@@ -1735,35 +1811,18 @@ export function PremiumCompanyPagesPage() {
           onToggle={() =>
             setIsGlobalInboxExpanded((currentValue) => !currentValue)
           }
+          profileLabel={pcpAdminPersona.name}
+          profileSrc={pcpAdminPersona.avatarSrc}
         />
       ) : null}
 
       {!isAgentOpen ? (
-        <div
-          className="fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
+        <AdminVcaFabEntry
+          chatPanelId={agentPanelId}
+          onOpen={handleOpenAgentFromFab}
+          onPromptSelect={handleOpenSelfInitiatedView}
           style={agentFabStyle}
-        >
-          <Button
-            aria-controls={agentPanelId}
-            aria-expanded={false}
-            aria-haspopup="dialog"
-            aria-label="Open AI assistant"
-            className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
-            leadingIcon={
-              <Icon
-                className="text-[#2AA986]"
-                name="signal-ai"
-                size="small"
-              />
-            }
-            onClick={handleOpenAgentFromFab}
-            size="medium"
-            style={{ borderWidth: "1.5px" }}
-            variant="tertiary"
-          >
-            Ask AI
-          </Button>
-        </div>
+        />
       ) : null}
 
       {isAgentOpen ? (
@@ -1788,6 +1847,7 @@ export function PremiumCompanyPagesPage() {
             <AdminUc5AgentPanel
               activeInsightId={activeInsightId}
               draft={agentDraft}
+              initialSelfInitiatedView={initialSelfInitiatedView}
               panelId={agentPanelId}
               threadTurns={agentThreadTurns}
               variant={agentPanelVariant}
@@ -1805,6 +1865,29 @@ export function PremiumCompanyPagesPage() {
         </>
       ) : null}
     </>
+  );
+}
+
+type PremiumCompanyPagesPageProps = Readonly<{
+  initialAgentOpen?: boolean;
+}>;
+
+export function PremiumCompanyPagesPage({
+  initialAgentOpen = false,
+}: PremiumCompanyPagesPageProps) {
+  return (
+    <PremiumCompanyPagesAdminVcaShell
+      activeItem="Dashboard"
+      initialAgentOpen={initialAgentOpen}
+      turnIdPrefix="admin-uc5-turn"
+    >
+      {({ activeInsightId, onInsightSelect }) => (
+        <DashboardContent
+          activeInsightId={activeInsightId}
+          onDigestInsightSelect={onInsightSelect}
+        />
+      )}
+    </PremiumCompanyPagesAdminVcaShell>
   );
 }
 
@@ -1817,173 +1900,17 @@ export function PremiumCompanyPagesAdminInboxPage() {
 }
 
 export function PremiumCompanyPagesAdminAnalyticsPage() {
-  const agentPanelId = useId();
-  const nextTurnIdRef = useRef(0);
-  const [isAgentOpen, setIsAgentOpen] = useState(false);
-  const [agentPanelVariant, setAgentPanelVariant] =
-    useState<ChatPanelVariant>("collapsed");
-  const [activeInsightId, setActiveInsightId] =
-    useState<AdminUc5InsightId | null>(null);
-  const [agentDraft, setAgentDraft] = useState("");
-  const [agentThreadTurns, setAgentThreadTurns] = useState<
-    ReadonlyArray<AdminUc5ThreadTurn>
-  >([]);
-  const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
-
-  function createTurnId() {
-    const turnId = `admin-analytics-turn-${nextTurnIdRef.current}`;
-    nextTurnIdRef.current += 1;
-
-    return turnId;
-  }
-
-  function handleAnalyticsInsightSelect(insightId: AdminUc5InsightId) {
-    setActiveInsightId(insightId);
-    setAgentThreadTurns([]);
-    setAgentDraft("");
-    setAgentPanelVariant("collapsed");
-    setIsAgentOpen(true);
-  }
-
-  function handleOpenAgentFromFab() {
-    setActiveInsightId(null);
-    setAgentThreadTurns([]);
-    setAgentDraft("");
-    setAgentPanelVariant("collapsed");
-    setIsAgentOpen(true);
-  }
-
-  function handleCloseAgent() {
-    setIsAgentOpen(false);
-    setAgentPanelVariant("collapsed");
-    setAgentDraft("");
-  }
-
-  function handleAgentDraftChange(event: ChangeEvent<HTMLTextAreaElement>) {
-    setAgentDraft(event.currentTarget.value);
-  }
-
-  function handleAgentFollowUpSelect(followUp: AdminUc5FollowUp) {
-    setAgentThreadTurns((currentTurns) => [
-      ...currentTurns,
-      {
-        id: createTurnId(),
-        prompt: followUp.prompt,
-        response: followUp.response,
-      },
-    ]);
-    setAgentDraft("");
-  }
-
-  function handleAgentSend() {
-    const trimmedDraft = agentDraft.trim();
-
-    if (!trimmedDraft) {
-      return;
-    }
-
-    setAgentThreadTurns((currentTurns) => [
-      ...currentTurns,
-      buildAdminUc5PrototypeFallbackTurn(trimmedDraft, createTurnId()),
-    ]);
-    setAgentDraft("");
-  }
-
-  const isAgentExpanded = agentPanelVariant === "expanded";
-  const globalInboxHeightExpression = isGlobalInboxExpanded
-    ? "min(calc(100dvh - 96px), 690px)"
-    : "var(--design-layout-chat-tray-height, 48px)";
-  const agentFabStyle = {
-    "--pcp-admin-ai-fab-bottom": `calc(${globalInboxHeightExpression} + var(--design-spacing-md))`,
-  } as CSSProperties;
-  const agentPanelPositionClass = isAgentExpanded
-    ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-    : "md:inset-auto md:bottom-6 md:right-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
-
   return (
-    <>
-      <PremiumCompanyPagesAdminShell activeItem="Analytics">
+    <PremiumCompanyPagesAdminVcaShell
+      activeItem="Analytics"
+      turnIdPrefix="admin-analytics-turn"
+    >
+      {({ activeInsightId, onInsightSelect }) => (
         <AnalyticsContent
-          activeInsightId={isAgentOpen ? activeInsightId : null}
-          onInsightSelect={handleAnalyticsInsightSelect}
+          activeInsightId={activeInsightId}
+          onInsightSelect={onInsightSelect}
         />
-      </PremiumCompanyPagesAdminShell>
-
-      {!isAgentOpen ? (
-        <GlobalInboxTray
-          isExpanded={isGlobalInboxExpanded}
-          onToggle={() =>
-            setIsGlobalInboxExpanded((currentValue) => !currentValue)
-          }
-        />
-      ) : null}
-
-      {!isAgentOpen ? (
-        <div
-          className="fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
-          style={agentFabStyle}
-        >
-          <Button
-            aria-controls={agentPanelId}
-            aria-expanded={false}
-            aria-haspopup="dialog"
-            aria-label="Open AI assistant"
-            className="!h-12 !w-[156px] !gap-xs !rounded-[24px] !border-[1.5px] !border-[#2AA986] !bg-background !px-0 !py-0 !text-[#2AA986] !shadow-raised-active hover:!border-[#2AA986] hover:!bg-background active:!border-[#2AA986] active:!bg-background active:!shadow-raised-active [&>span[aria-hidden='true']]:!size-5"
-            leadingIcon={
-              <Icon
-                className="text-[#2AA986]"
-                name="signal-ai"
-                size="small"
-              />
-            }
-            onClick={handleOpenAgentFromFab}
-            size="medium"
-            style={{ borderWidth: "1.5px" }}
-            variant="tertiary"
-          >
-            Ask AI
-          </Button>
-        </div>
-      ) : null}
-
-      {isAgentOpen ? (
-        <>
-          <button
-            aria-label="Collapse expanded Velora AI"
-            className={cx(
-              "fixed inset-0 z-30 hidden bg-overlay-dim md:block",
-              !isAgentExpanded && "pointer-events-none opacity-0",
-            )}
-            onClick={() => setAgentPanelVariant("collapsed")}
-            type="button"
-          />
-          <div
-            aria-label="Velora AI"
-            className={cx(
-              "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
-              agentPanelPositionClass,
-            )}
-            role="dialog"
-          >
-            <AdminUc5AgentPanel
-              activeInsightId={activeInsightId}
-              draft={agentDraft}
-              panelId={agentPanelId}
-              threadTurns={agentThreadTurns}
-              variant={agentPanelVariant}
-              onClose={handleCloseAgent}
-              onDraftChange={handleAgentDraftChange}
-              onFollowUpSelect={handleAgentFollowUpSelect}
-              onSend={handleAgentSend}
-              onVariantToggle={() =>
-                setAgentPanelVariant((currentVariant) =>
-                  currentVariant === "expanded" ? "collapsed" : "expanded",
-                )
-              }
-            />
-          </div>
-        </>
-      ) : null}
-    </>
+      )}
+    </PremiumCompanyPagesAdminVcaShell>
   );
 }

@@ -136,6 +136,20 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
               "Collects PCP AI cards from VCA conversation, admin attention, AI insight, and inbox context moments.",
             href: "/internal/components/premium-company-page/ai-cards",
           },
+          {
+            id: "premium-company-page-insight-cards",
+            title: "Insight cards",
+            description:
+              "Showcases the reusable dashboard insight card system, routing rule, and six card types.",
+            href: "/internal/components/premium-company-page/insight-cards",
+          },
+          {
+            id: "premium-company-page-response-system",
+            title: "Response system",
+            description:
+              "Showcases the PCP VCA response grammar, block anatomy, entity variants, and visitor signal tiers.",
+            href: "/internal/components/premium-company-page/response-system",
+          },
         ],
       },
     ],
@@ -226,6 +240,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Provides visual cues for actions, statuses, and AI moments.",
             href: "/internal/components/sdui/icon",
+          },
+          {
+            id: "sdui-reaction-icons",
+            title: "Reaction icons",
+            description:
+              "Displays SDUI reaction illustrations for like, praise, support, recommendation, and related signals.",
+            href: "/internal/components/sdui/reaction-icons",
           },
           {
             id: "sdui-entity",

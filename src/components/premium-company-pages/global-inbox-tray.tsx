@@ -9,7 +9,9 @@ import { Icon } from "@/components/primitives/icon";
 import {
   PCP_ASSET_ROOT,
   PCP_MEMBER_ASSET_ROOT,
+  pcpAdminScenario,
   pcpCompanyProfile,
+  pcpVisitorPersona,
 } from "./persona";
 
 const VELORA_LOGO_AVATAR_RADIUS_CLASS = "rounded-sm";
@@ -32,52 +34,52 @@ const globalInboxThreads: ReadonlyArray<GlobalInboxThread> = [
   {
     id: "velora",
     name: pcpCompanyProfile.name,
-    detail: "You: Hi Velora, I found your...",
+    detail: "Cheri: Hi Rose - I lead HR for...",
     time: "Jun 1",
     avatar: "velora-logo.png",
     selected: true,
   },
   {
-    id: "maya",
-    name: "Maya Patel",
-    detail: "Lorem ipsum dolor sit amet, consectetur...",
+    id: "cheri",
+    name: pcpVisitorPersona.name,
+    detail: pcpAdminScenario.inboxThreadPreview,
     time: "4:48 PM",
-    avatar: `${PCP_ASSET_ROOT}/avatar-1.png`,
+    avatar: `${PCP_ASSET_ROOT}/${pcpVisitorPersona.avatar}`,
     active: true,
   },
   {
     id: "jordan",
-    name: "Jordan Lee",
-    detail: "Praesent commodo cursus magna...",
+    name: "Priya Shah",
+    detail: "Can Velora validate carrier files before...",
     time: "May 29",
     avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
   },
   {
     id: "nicole",
-    name: "Nicole Zhang",
-    detail: "Etiam porta sem malesuada magna...",
+    name: "Dana Kim",
+    detail: "The open enrollment checklist helped our...",
     time: "May 27",
     avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
     active: true,
   },
   {
     id: "james",
-    name: "James Yu",
-    detail: "Donec ullamcorper nulla non metus...",
+    name: "Luis Romero",
+    detail: "We need a clearer way to track...",
     time: "May 27",
     avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
   },
   {
     id: "steven",
-    name: "Steven Ji",
-    detail: "Nullam id dolor id nibh ultricies...",
+    name: "Diana Lin",
+    detail: "Are you hiring benefits implementation specialists?",
     time: "May 25",
     avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
   },
   {
     id: "amanda",
     name: "Amanda Liu",
-    detail: "Aenean lacinia bibendum nulla sed...",
+    detail: "Do you support eligibility exception reporting?",
     time: "May 13",
     avatar: `${PCP_ASSET_ROOT}/avatar-1.png`,
     active: true,
@@ -134,10 +136,14 @@ export function GlobalInboxTray({
   isExpanded,
   onOpenVeloraThread,
   onToggle,
+  profileLabel = pcpVisitorPersona.name,
+  profileSrc = pcpVisitorPersona.memberAvatar,
 }: Readonly<{
   isExpanded: boolean;
   onOpenVeloraThread?: () => void;
   onToggle: () => void;
+  profileLabel?: string;
+  profileSrc?: string;
 }>) {
   return (
     <aside
@@ -158,9 +164,9 @@ export function GlobalInboxTray({
         >
           <GlobalInboxAvatar
             active
-            label="Cheri Sparks"
+            label={profileLabel}
             size={32}
-            src={assetSrc("avatar-2.png")}
+            src={assetSrc(profileSrc)}
           />
           <span className="min-w-0 truncate text-heading-md text-text">
             Messaging

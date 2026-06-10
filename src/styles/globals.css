@@ -1075,8 +1075,10 @@ body {
 
 .chat-response-attachment-inner {
   min-height: 0;
+  margin-inline: calc(var(--spacing-md) * -1);
   overflow: hidden;
-  padding-top: var(--chat-response-attachment-gap, var(--spacing-md));
+  padding: var(--chat-response-attachment-gap, var(--spacing-md))
+    var(--spacing-md) var(--spacing-md);
 }
 
 .composer-stop-ring {
