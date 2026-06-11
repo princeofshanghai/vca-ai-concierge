@@ -38,7 +38,7 @@ const projectOptions: Array<{
     status: "Ready",
   },
   {
-    href: "/premium-company-pages/member",
+    href: "/premium-company-pages/admin",
     label: "Premium Company Pages vision",
     description:
       "VCA agent that helps give admins more insight and helps visitors get their questions answered.",

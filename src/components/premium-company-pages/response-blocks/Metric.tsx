@@ -114,14 +114,14 @@ export function Metric({ title, items, className, ...props }: MetricProps) {
       {...props}
       data-response-block="Metric"
       className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-lg text-text shadow-raised-faint",
+        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
         className,
       )}
     >
       {title ? (
-        <h3 className="mb-lg text-body-sm font-semibold text-text">{title}</h3>
+        <h3 className="mb-xl text-control-md text-text">{title}</h3>
       ) : null}
-      <div className={cx("grid gap-md", getGridClassName(items.length))}>
+      <div className={cx("grid gap-lg", getGridClassName(items.length))}>
         {items.map((item, index) => {
           const {
             value,

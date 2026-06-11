@@ -6,13 +6,16 @@ export {
   PremiumCompanyPagesVcaPostProofCardPreview,
 } from "./premium-company-pages-member-page";
 export type {
+  PremiumCompanyPagesMemberStory,
   VcaMemberIntent,
   VcaShellMode,
 } from "./premium-company-pages-member-page";
 export {
+  PremiumCompanyPagesAdminAiAssistantSettingsPage,
   PremiumCompanyPagesAdminAnalyticsPage,
   PremiumCompanyPagesInboxContextStripPreview,
   PremiumCompanyPagesAdminInboxPage,
+  PremiumCompanyPagesAdminSettingsPage,
   PremiumCompanyPagesPage,
 } from "./premium-company-pages-page";
 export {

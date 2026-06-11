@@ -42,17 +42,18 @@ export const pcpAdminPersona = {
 
 export const pcpVisitorPersona = {
   name: "Cheri Sparks",
+  firstName: "Cheri",
   title: "VP of HR",
   company: "Arbor Retail Group",
   avatar: "member/cheri-sparks.png",
   memberAvatar: "cheri-sparks.png",
   companyContext: "12,000-employee retail organization with seasonal hiring peaks",
   evaluationNeed:
-    "Evaluating whether Velora can support a mid-year benefits platform migration before open enrollment.",
+    "Exploring whether Velora is relevant for HR and benefits operations after viewing a Velora Page post.",
   intentTags: [
     "12,000-employee retail organization",
-    "Mid-year migration",
-    "Multi-carrier open enrollment",
+    "Viewed Velora post",
+    "HR and benefits operations",
     "Evaluated just now",
   ],
 } as const;
@@ -63,11 +64,29 @@ export const pcpCompetitorNames = [
   "HavenHR",
 ] as const;
 
+const pcpArborPostTitle =
+  "How Arbor Retail Group simplified carrier coordination before open enrollment";
+const pcpArborPostSummary =
+  "Arbor Retail Group: how a 12,000-employee retailer simplified carrier coordination before open enrollment";
+
 export const pcpProofSnippets = {
-  caseStudyTitle:
-    "How Arbor Retail Group reduced open enrollment spreadsheet work",
-  caseStudyShort:
-    "Arbor Retail Group: how a 12,000-employee retailer simplified carrier coordination before open enrollment",
+  postTitle: pcpArborPostTitle,
+  postSummary: pcpArborPostSummary,
+  postImage: "media-1.png",
+  postImageAlt: "Benefits operations dashboard showing carrier coordination tasks",
+  postTimestamp: "2d",
+  postDateLabel: "June 2, 2026 · Edited",
+  postEngagement: "1,284",
+  postCommentCount: "36",
+  postCommentLabel: "36 comments",
+  postRepostCount: "18",
+  postBody: [
+    "Arbor Retail Group was preparing open enrollment for 12,000 employees across stores, distribution centers, and corporate teams. Eligibility cleanup and carrier file readiness used to send the benefits team into a spreadsheet scramble.",
+    "With Velora, Dana's team mapped each plan change to the populations, carrier files, and employee communications behind it. When one carrier feed changed, only the affected launch tasks moved into review. Everyone else stayed on schedule.",
+    "HR leaders could see what was approved, queued, or blocked. Once enrollment opened, Velora showed which employee groups needed follow-up automatically.",
+  ],
+  caseStudyTitle: pcpArborPostTitle,
+  caseStudyShort: pcpArborPostSummary,
   implementationProof:
     "Velora supports staged migration, carrier file validation, eligibility audits, and employee communications from one benefits operations workspace.",
   privacyStance:
@@ -77,41 +96,48 @@ export const pcpProofSnippets = {
 export const pcpVcaScenario = {
   heroQuestion:
     "What happens to our benefits enrollment if we switch platforms mid-year?",
-  primaryChip: "Can Velora handle a mid-year migration?",
-  starterPrompts: [
-    "Can Velora handle a mid-year migration?",
-    "How do you work with multiple carriers?",
-    "How does implementation work?",
+  openingTitle: `Hi ${pcpVisitorPersona.firstName}`,
+  openingSubcopy:
+    "I can help you explore Velora and decide what to do next.",
+  visitorPrompts: [
+    {
+      id: "overview",
+      label: "What should I know about Velora?",
+    },
+    {
+      id: "fit",
+      label: "Is Velora relevant to me?",
+    },
+    {
+      id: "posts",
+      label: "Show me recent posts",
+    },
   ],
-  profilePrompts: [
-    "Can Velora handle a mid-year migration?",
-    "How do you work with multiple carriers?",
-    "How does implementation work?",
-    "Can teams manage open enrollment in Velora?",
-    "How does pricing work?",
-  ],
-  profileResponses: {
-    "Can Velora handle a mid-year migration?":
-      "Yes. Velora supports phased benefits migrations with eligibility validation, carrier file checks, employee communications, and reporting controls so HR teams can move without losing visibility before open enrollment.",
-    "How do you work with multiple carriers?":
-      "Velora gives benefits teams one place to track carrier feeds, plan rules, open issues, and launch readiness across medical, dental, vision, life, and voluntary benefits.",
-    "How does implementation work?":
-      "Implementation usually starts with carrier mapping, eligibility cleanup, and a migration calendar. Velora then gives HR, brokers, and carrier partners a shared command center for decisions, files, and employee communications.",
-    "Can teams manage open enrollment in Velora?":
-      "Yes. Velora helps teams stage plan changes, confirm carrier readiness, schedule employee communications, and monitor enrollment progress by population, location, and plan type.",
-    "How does pricing work?":
-      "Velora pricing is based on employee population, carrier complexity, and implementation scope. For enterprise HR teams, the goal is predictable platform pricing with clear migration and support expectations.",
+  pageExplorerPrompts: {
+    overview: "What should I know about Velora?",
+    fit: "Is Velora relevant to me?",
+    posts: "Show me recent posts",
+    people: "Who are the top people here?",
+    jobs: "Are there open roles?",
   },
-  greeting:
-    "Hi, I'm Velora's AI assistant. I can help explain what Velora does, answer benefits administration questions, summarize proof, and draft a warm message to the team. What would you like to know?",
-  primaryResponse:
-    "Yes. This is one of the core scenarios Velora was built for. Velora helps HR teams move benefits administration in phases, validate eligibility data, coordinate carrier files, and keep employee communications on track before open enrollment. Here's a similar enterprise example:",
+  pageExplorerResponses: {
+    overview:
+      "Velora is a benefits administration platform for enterprise HR teams. It helps teams coordinate open enrollment, carrier readiness, eligibility changes, and employee communications in one shared workflow.",
+    fit:
+      "Based on your HR leadership role and company context, Velora looks relevant if your team manages benefits operations across employee populations, carriers, locations, or enrollment windows.",
+    posts:
+      "Here are recent posts from Velora. This one shows how a large retail HR team simplified carrier coordination before open enrollment.",
+    people:
+      "A few leaders stand out on Velora's Page. Rose Reynolds manages Page communications, Avery Chen leads carrier integrations, and Marcus Lee focuses on benefits implementation.",
+    jobs:
+      "Velora is hiring across benefits implementation and carrier integrations. The open roles suggest the team is investing in customer operations and benefits workflow expertise.",
+  },
   caseStudyReturnPrompt:
-    "Arbor Retail Group feels close to your world: a large employee population, seasonal hiring spikes, multiple carriers, and open enrollment timing pressure. Want me to turn what you've shared into a warm intro to Velora so Rose has the right context from the start?",
+    "Want me to draft a message to Velora based on the post you viewed and what you're exploring?",
   handoffOffer:
-    "Sounds like this might be relevant for your HR team. Want me to put together a message to Velora so they have your context before you connect?",
+    "I can draft a short message to Velora so Rose knows what caught your attention and why you're reaching out.",
   handoffMessage:
-    "Hi Rose - I lead HR for a 12,000-employee retail organization and we're evaluating whether Velora could support a mid-year benefits migration before open enrollment. I'm especially interested in carrier coordination, eligibility cleanup, and employee communications. Would love to learn how Velora handles this for a team our size.",
+    "Hi Rose - I'm exploring Velora for HR and benefits operations and saw your post about how Arbor Retail Group simplified carrier coordination before open enrollment. I'm interested in whether Velora could be relevant for a team like mine. Would love to connect.",
 } as const;
 
 export const pcpAdminScenario = {
@@ -119,14 +145,14 @@ export const pcpAdminScenario = {
   contextualAnalyticsDetail:
     "A migration-readiness post has strong engagement but modest impressions.",
   leadSummary:
-    "Cheri asked whether Velora can support a mid-year migration, viewed the Arbor Retail Group proof, and sent Rose a drafted message.",
+    "Cheri viewed Velora's Arbor Retail Group post, explored whether Velora is relevant for HR and benefits operations, and sent Rose a drafted message.",
   suggestedReply:
-    "Hi Cheri - thanks for reaching out. Velora is designed for enterprise benefits teams moving through exactly this kind of migration window. We can walk through phased implementation, carrier file readiness, eligibility cleanup, and employee communications for a 12,000-person workforce. Happy to compare notes on your open enrollment timeline.",
+    "Hi Cheri - thanks for reaching out. Glad the Arbor Retail Group post was useful. Velora is built for HR and benefits teams managing carrier coordination, eligibility cleanup, and employee communications at scale. Happy to compare notes on what your team is exploring.",
   suggestedPrep: [
-    "Lead with Velora's phased migration approach for enterprise HR teams.",
-    "Explain carrier file readiness and eligibility cleanup in plain language.",
-    "Ask what open enrollment deadlines and carrier partners Cheri is working against.",
+    "Reference the Arbor Retail Group post Cheri viewed.",
+    "Explain carrier coordination and eligibility cleanup in plain language.",
+    "Ask what HR and benefits operations questions Cheri is exploring.",
   ],
   inboxThreadPreview:
-    "Cheri: Hi Rose - I lead HR for a 12,000-employee retail organization...",
+    "Cheri: Hi Rose - I'm exploring Velora for HR and benefits operations...",
 } as const;

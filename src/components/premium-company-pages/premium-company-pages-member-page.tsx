@@ -17,6 +17,7 @@ import {
 import {
   ChatBody,
   ChatComposer,
+  ChatHeader,
   ChatMessage,
   ChatPanel,
   ChatSidePanel,
@@ -24,6 +25,7 @@ import {
   ChatTray,
   ChatThread,
   Prompt,
+  type ChatHeaderIdentity,
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
@@ -37,6 +39,7 @@ import { Icon, type IconName } from "@/components/primitives/icon";
 import { OverlayButtonIcon } from "@/components/primitives/overlay-button-icon";
 import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
+import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
 import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
@@ -51,6 +54,12 @@ import {
   pcpVisitorPersona,
 } from "./persona";
 import { GlobalInboxTray } from "./global-inbox-tray";
+import {
+  Draft as ResponseDraft,
+  Entity as ResponseEntity,
+  PersonCard as ResponsePersonCard,
+  ResponseRail,
+} from "./response-blocks";
 import { ScriptedResponseTurn } from "./scripted-response-turn";
 import { VcaFab } from "./vca-fab";
 
@@ -97,10 +106,10 @@ const overviewHighlights = [
 
 const posts = [
   {
-    title: "What benefits teams should validate before a mid-year migration.",
-    body: "The teams that make open enrollment feel calm have a clear readiness plan before data moves. Shared workflows can keep eligibility, carrier files, and employee communications aligned.",
+    title: pcpProofSnippets.postTitle,
+    body: "A 12,000-employee retailer simplified carrier coordination before open enrollment by keeping eligibility cleanup, carrier files, and employee communications in one workflow.",
     image: "post-image-1.png",
-    stats: "4,238 impressions",
+    stats: `${pcpProofSnippets.postEngagement} reactions`,
   },
   {
     title: "Three signs your benefits workflow has outgrown spreadsheets.",
@@ -220,6 +229,7 @@ const footerLinkColumns = [
 
 export type VcaShellMode = "tray" | "fab" | "fab-icon";
 export type VcaMemberIntent = "buyer" | "job-seeker";
+export type PremiumCompanyPagesMemberStory = "default" | "live-support";
 type MessagingSurfaceState = "closed" | "docked" | "open";
 
 type ViewTransitionDocument = Document & {
@@ -229,22 +239,64 @@ type ViewTransitionDocument = Document & {
 };
 type VcaConversationStage =
   | "opening"
-  | "profilePromptAnswered"
+  | "pageExplorerAnswered"
   | "postProof"
   | "caseStudyReturned"
   | "jobProof"
   | "handoffOffered"
-  | "handoffOpened";
+  | "handoffOpened"
+  | "liveSupportConnecting"
+  | "liveSupportConnected";
+type VcaAnimatedTurnId =
+  | "member-vca-page-explorer-answer"
+  | "member-vca-post-proof"
+  | "member-vca-job-proof"
+  | "member-vca-case-study-return"
+  | "member-vca-handoff-offer";
+type VcaVisitorPromptId = keyof typeof pcpVcaScenario.pageExplorerPrompts;
 
-const VCA_HERO_QUESTION =
-  pcpVcaScenario.heroQuestion;
-const VCA_BENEFITS_MIGRATION_CHIP = pcpVcaScenario.primaryChip;
-const vcaStarterPrompts = pcpVcaScenario.starterPrompts;
-const profileQuestionPrompts = pcpVcaScenario.profilePrompts;
-const profileQuestionResponses: Record<
-  (typeof profileQuestionPrompts)[number],
-  string
-> = pcpVcaScenario.profileResponses;
+function getActiveVcaAnimatedTurnId({
+  conversationStage,
+  hasFollowUp,
+  isDetailPanelOpen,
+  isJobSeekerIntent,
+}: Readonly<{
+  conversationStage: VcaConversationStage;
+  hasFollowUp: boolean;
+  isDetailPanelOpen: boolean;
+  isJobSeekerIntent: boolean;
+}>): VcaAnimatedTurnId | null {
+  if (isDetailPanelOpen) {
+    return null;
+  }
+
+  if (isJobSeekerIntent) {
+    return conversationStage === "jobProof" ? "member-vca-job-proof" : null;
+  }
+
+  if (conversationStage === "pageExplorerAnswered") {
+    return "member-vca-page-explorer-answer";
+  }
+
+  if (conversationStage === "postProof") {
+    return "member-vca-post-proof";
+  }
+
+  if (conversationStage === "caseStudyReturned") {
+    return "member-vca-case-study-return";
+  }
+
+  if (conversationStage === "handoffOffered" && hasFollowUp) {
+    return "member-vca-handoff-offer";
+  }
+
+  return null;
+}
+
+const vcaOpeningPrompts = pcpVcaScenario.visitorPrompts;
+const pageExplorerPromptEntries = Object.entries(
+  pcpVcaScenario.pageExplorerPrompts,
+) as Array<[VcaVisitorPromptId, string]>;
 const VCA_JOB_SEEKER_QUESTION =
   "Would my HR operations background be a fit for the Benefits Implementation Consultant role?";
 const VCA_JOB_SEEKER_CHIP = "Would my HR ops background be a fit?";
@@ -253,18 +305,124 @@ const vcaJobSeekerPrompts = [
   "What does this role own?",
   "Is this role remote?",
 ];
-const VCA_GREETING = pcpVcaScenario.greeting;
-const VCA_BENEFITS_MIGRATION_RESPONSE = pcpVcaScenario.primaryResponse;
+const VCA_POST_RESPONSE = pcpVcaScenario.pageExplorerResponses.posts;
 const VCA_JOB_SEEKER_RESPONSE =
-  "Yes - your HR operations background sounds relevant, especially if you've helped employees, benefits partners, or internal teams through setup, troubleshooting, and process changes. For this role, Velora is looking for someone who can connect customer conversations, benefits workflow setup, and cross-functional product feedback so HR teams get clear answers quickly.";
+  "Yes - your HR operations background sounds relevant, especially if you've helped employees, benefits partners, or internal teams through setup, troubleshooting, and process changes. These roles connect customer conversations, benefits workflow setup, and cross-functional product feedback so HR teams get clear answers quickly.";
 const VCA_JOB_PROOF_INTRO =
-  "This role looks closest to what you're describing:";
+  "These roles look closest to what you're describing:";
+const vcaJobOpenings = [
+  {
+    title: "Benefits Implementation Consultant",
+    location: pcpCompanyProfile.location,
+    posted: "2 days ago",
+    employmentType: "Full-time",
+    applyClicks: "20 people clicked apply",
+    alumni: "1,412 school alumni work here",
+    summary:
+      "Help enterprise HR teams set up benefits workflows, enrollment milestones, and customer launch plans.",
+    about:
+      "Velora helps HR teams manage open enrollment, carrier readiness, eligibility changes, and employee communications in one workflow. The Benefits Implementation team works closely with customers, product, and integration partners to make complex launch questions feel clear and actionable.",
+  },
+  {
+    title: "Carrier Integrations Lead",
+    location: pcpCompanyProfile.location,
+    posted: "1 week ago",
+    employmentType: "Full-time",
+    applyClicks: "14 people clicked apply",
+    alumni: "1,412 school alumni work here",
+    summary:
+      "Own carrier readiness workflows across file validation, exceptions, and partner coordination.",
+    about:
+      "This role leads the connective tissue between Velora customers, carrier partners, and internal product teams. You would help define how file readiness, exception handling, and carrier decisions stay visible before enrollment opens.",
+  },
+  {
+    title: "Product Designer, Admin Experience",
+    location: pcpCompanyProfile.location,
+    posted: "3 days ago",
+    employmentType: "Full-time",
+    applyClicks: "9 people clicked apply",
+    alumni: "1,412 school alumni work here",
+    summary:
+      "Design admin workflows for benefits teams managing enrollment, eligibility, and carrier coordination.",
+    about:
+      "The Admin Experience team designs the workspace HR and benefits leaders use to understand plan changes, population updates, and open enrollment progress. This role focuses on making complex operational states easy to scan and act on.",
+  },
+] as const;
+type VcaJobOpening = (typeof vcaJobOpenings)[number];
 const VCA_CASE_STUDY_RETURN_PROMPT = pcpVcaScenario.caseStudyReturnPrompt;
 const VCA_DRAFT_INTRO_PROMPT = "Draft message";
 const VCA_HANDOFF_OFFER = pcpVcaScenario.handoffOffer;
 const VCA_HANDOFF_MESSAGE = pcpVcaScenario.handoffMessage;
-const VCA_AI_CARD_CLASS =
-  "chat-message-enter flex w-full max-w-[24rem] flex-col gap-lg rounded-md border border-ai-border bg-background py-xl pl-xl pr-lg text-text shadow-raised-faint";
+const LIVE_SUPPORT_CONNECT_DELAY_MS = 900;
+const PCP_LIVE_SUPPORT_AGENT = {
+  name: "Maya R.",
+  role: "Velora live support",
+  timestamp: "9:37 PM",
+  message: "How can I help you?",
+} as const;
+
+function normalizeVcaPromptText(prompt: string) {
+  return prompt.trim().toLowerCase();
+}
+
+function getVcaVisitorPromptId(prompt: string): VcaVisitorPromptId | null {
+  const normalizedPrompt = normalizeVcaPromptText(prompt);
+  const matchedEntry = pageExplorerPromptEntries.find(
+    ([, label]) => normalizeVcaPromptText(label) === normalizedPrompt,
+  );
+
+  if (matchedEntry) {
+    return matchedEntry[0];
+  }
+
+  if (
+    normalizedPrompt.includes("people") ||
+    normalizedPrompt.includes("leader") ||
+    normalizedPrompt.includes("founder")
+  ) {
+    return "people";
+  }
+
+  if (
+    normalizedPrompt.includes("job") ||
+    normalizedPrompt.includes("role") ||
+    normalizedPrompt.includes("career") ||
+    normalizedPrompt.includes("hiring") ||
+    normalizedPrompt.includes("position") ||
+    normalizedPrompt.includes("opening") ||
+    normalizedPrompt.includes("opportunit") ||
+    normalizedPrompt.includes("apply")
+  ) {
+    return "jobs";
+  }
+
+  if (
+    normalizedPrompt.includes("post") ||
+    normalizedPrompt.includes("proof") ||
+    normalizedPrompt.includes("case study") ||
+    normalizedPrompt.includes("recent")
+  ) {
+    return "posts";
+  }
+
+  if (
+    normalizedPrompt.includes("relevant") ||
+    normalizedPrompt.includes("right for me") ||
+    normalizedPrompt.includes("fit")
+  ) {
+    return "fit";
+  }
+
+  if (
+    normalizedPrompt.includes("what should") ||
+    normalizedPrompt.includes("what does") ||
+    normalizedPrompt.includes("overview")
+  ) {
+    return "overview";
+  }
+
+  return null;
+}
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -367,24 +525,68 @@ type VcaScriptedAssistantTurnProps = Omit<
 };
 
 function VcaScriptedAssistantTurn({
+  attachments = [],
+  id,
   timestamp,
   ...props
 }: VcaScriptedAssistantTurnProps) {
   const [stableTimestamp] = useState(() => timestamp);
+  const attachmentsWithTimestamp: ComponentProps<
+    typeof ScriptedResponseTurn
+  >["attachments"] = [
+    ...attachments,
+    {
+      id: `${id}-timestamp`,
+      gap: "sm",
+      children: (
+        <p className="text-body-xs text-text-meta">{stableTimestamp}</p>
+      ),
+    },
+  ];
 
   return (
     <ScriptedResponseTurn
       {...props}
+      attachments={attachmentsWithTimestamp}
+      id={id}
       renderText={({ streamStatus, streamText, text }) => (
         <VcaAssistantMessage
           streamStatus={streamStatus}
           streamText={streamText}
-          timestamp={stableTimestamp}
         >
           {text}
         </VcaAssistantMessage>
       )}
     />
+  );
+}
+
+function VcaWelcomeIntro({
+  prompts,
+  onPromptSelect,
+}: Readonly<{
+  prompts: ReadonlyArray<Readonly<{ label: string }>>;
+  onPromptSelect: (prompt: string) => void;
+}>) {
+  return (
+    <section className="flex w-full max-w-[var(--design-layout-chat-message-assistant-max)] flex-col items-start pb-xl pt-sm pr-sm">
+      <h2 className="text-heading-lg text-text">
+        {pcpVcaScenario.openingTitle}
+      </h2>
+      <p className="mt-xs text-body-sm text-text">
+        {pcpVcaScenario.openingSubcopy}
+      </p>
+      <div className="mt-lg flex flex-col gap-sm">
+        {prompts.map((prompt) => (
+          <Prompt
+            className="w-fit max-w-full self-start"
+            key={prompt.label}
+            onPromptSelect={() => onPromptSelect(prompt.label)}
+            prompt={prompt.label}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -415,55 +617,56 @@ function VcaStableUserMessage({
 }
 
 function VeloraLinkedInPostProofCard({
-  onViewCaseStudy,
-}: Readonly<{ onViewCaseStudy: () => void }>) {
+  onViewPost,
+}: Readonly<{ onViewPost: () => void }>) {
   return (
-    <article className="chat-message-enter w-full max-w-[24rem] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
-      <div className="p-lg">
-        <div className="flex items-start gap-sm">
-          <Entity
-            className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
-            label={pcpCompanyProfile.name}
-            shape="square"
-            size={40}
-            style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
-            src={pcpCompanyProfile.logoSrc}
-          />
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-control-sm text-text">
-              {pcpCompanyProfile.name}
-            </h3>
-            <p className="text-supportive-s text-text-meta">
-              {pcpCompanyProfile.followers}
-            </p>
-            <p className="text-supportive-s text-text-meta">2d</p>
-          </div>
-        </div>
+    <ResponseEntity
+      actions={[
+        {
+          label: "View post",
+          onSelect: onViewPost,
+          variant: "secondary",
+        },
+      ]}
+      audience="visitor"
+      className="chat-message-enter max-w-[24rem]"
+      commentCount={pcpProofSnippets.postCommentCount}
+      engagement={pcpProofSnippets.postEngagement}
+      followerCount={pcpCompanyProfile.followers}
+      logoSrc={pcpCompanyProfile.logoSrc}
+      name={pcpCompanyProfile.name}
+      previewImageAlt={pcpProofSnippets.postImageAlt}
+      previewImageSrc={assetSrc(pcpProofSnippets.postImage)}
+      repostCount={pcpProofSnippets.postRepostCount}
+      snippet={pcpProofSnippets.postSummary}
+      timestamp={pcpProofSnippets.postTimestamp}
+      variant="post"
+    />
+  );
+}
 
-        <p className="mt-md text-control-sm text-text">
-          {pcpProofSnippets.caseStudyShort}
-        </p>
-      </div>
-      <Image
-        alt=""
-        className="aspect-[16/9] w-full object-cover"
-        height={272}
-        src={assetSrc("media-1.png")}
-        width={484}
-      />
-      <div className="flex items-center justify-between border-t border-border-faint px-lg py-sm text-body-sm text-text-meta">
-        <span className="inline-flex min-w-0 items-center gap-sm">
-          <ReactionPile />
-          <span>1,284</span>
-        </span>
-        <span>36 comments</span>
-      </div>
-      <div className="flex justify-start border-t border-border-faint px-lg py-md">
-        <Button onClick={onViewCaseStudy} size="small" variant="secondary">
-          View case study
-        </Button>
-      </div>
-    </article>
+function VeloraPeopleSummaryCard() {
+  return (
+    <ResponseRail
+      aria-label="People on this Page"
+      className="chat-message-enter"
+      title={
+        <>
+          <Icon name="people" size="small" />
+          <span>People on this Page</span>
+        </>
+      }
+    >
+      {leaders.slice(0, 3).map((leader) => (
+        <ResponsePersonCard
+          avatarSrc={assetSrc(leader.image)}
+          followers={leader.followers}
+          headline={leader.role}
+          key={leader.name}
+          name={leader.name}
+        />
+      ))}
+    </ResponseRail>
   );
 }
 
@@ -492,15 +695,15 @@ function VeloraCaseStudySidePanel({
     >
       <article className="text-text">
         <Image
-          alt=""
+          alt={pcpProofSnippets.postImageAlt}
           className="aspect-[16/7] w-full object-cover"
           height={332}
-          src={assetSrc("media-1.png")}
+          src={assetSrc(pcpProofSnippets.postImage)}
           width={760}
         />
 
         <h1 className="mt-xl text-heading-lg text-text">
-          {pcpProofSnippets.caseStudyTitle}
+          {pcpProofSnippets.postTitle}
         </h1>
 
         <div className="mt-lg flex items-start gap-md">
@@ -521,35 +724,21 @@ function VeloraCaseStudySidePanel({
         </div>
 
         <p className="mt-xl text-body-sm text-text-meta">
-          June 2, 2026 &middot; Edited
+          {pcpProofSnippets.postDateLabel}
         </p>
 
         <div className="mt-xl space-y-md text-body-sm-open text-text">
-          <p>
-            Arbor Retail Group was preparing open enrollment for 12,000
-            employees across stores, distribution centers, and corporate teams.
-            Eligibility cleanup and carrier file readiness used to send the
-            benefits team into a spreadsheet scramble.
-          </p>
-          <p>
-            With Velora, Dana&apos;s team mapped each plan change to the
-            populations, carrier files, and employee communications behind it.
-            When one carrier feed changed, only the affected launch tasks moved
-            into review. Everyone else stayed on schedule.
-          </p>
-          <p>
-            HR leaders could see what was approved, queued, or blocked. Once
-            enrollment opened, Velora showed which employee groups needed
-            follow-up automatically.
-          </p>
+          {pcpProofSnippets.postBody.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
         </div>
 
         <div className="mt-xl flex items-center justify-between border-t border-border-faint py-md text-body-sm text-text-meta">
           <span className="inline-flex min-w-0 items-center gap-sm">
             <ReactionPile />
-            <span>1,284</span>
+            <span>{pcpProofSnippets.postEngagement}</span>
           </span>
-          <span>36 comments</span>
+          <span>{pcpProofSnippets.postCommentLabel}</span>
         </div>
       </article>
     </ChatSidePanel>
@@ -557,58 +746,33 @@ function VeloraCaseStudySidePanel({
 }
 
 function VeloraLinkedInJobPreviewCard({
+  job,
   onViewJob,
-}: Readonly<{ onViewJob: () => void }>) {
+}: Readonly<{ job: VcaJobOpening; onViewJob: (job: VcaJobOpening) => void }>) {
   return (
-    <article className="chat-message-enter w-full max-w-[24rem] overflow-hidden rounded-md border border-ai-border bg-background text-text shadow-raised-faint">
-      <div className="p-xl">
-        <Image
-          alt=""
-          className="size-14 rounded-sm bg-[#ACF5B3] object-cover"
-          height={56}
-          src={pcpCompanyProfile.logoSrc}
-          style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
-          width={56}
-        />
-
-        <div className="mt-sm">
-          <h3 className="flex items-center gap-xxs text-heading-md text-text">
-            Customer Operations Lead
-            <Icon className="shrink-0 text-icon" name="verified" size="small" />
-          </h3>
-          <div className="mt-sm">
-            <p className="text-control-sm text-text">
-              {pcpCompanyProfile.name}
-            </p>
-            <p className="text-body-sm text-text-meta">
-              {pcpCompanyProfile.location}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-xl flex items-center gap-sm text-body-xs text-text-meta">
-          <Image
-            alt=""
-            className="size-8 rounded-xs object-cover"
-            height={32}
-            src={assetSrc("school-alumni-spartan.png")}
-            width={32}
-          />
-          <span>1,412 school alumni work here</span>
-        </div>
-
-        <p className="mt-xl text-body-xs text-text-meta">2 days ago</p>
-      </div>
-      <div className="flex justify-start border-t border-border-faint px-lg py-md">
-        <Button onClick={onViewJob} size="small" variant="secondary">
-          View job
-        </Button>
-      </div>
-    </article>
+    <ResponseEntity
+      alumni={job.alumni}
+      alumniImageSrc={assetSrc("school-alumni-spartan.png")}
+      audience="visitor"
+      className="chat-message-enter w-[15.5rem] shrink-0 p-lg"
+      company={pcpCompanyProfile.name}
+      location={job.location}
+      logoSrc={pcpCompanyProfile.logoSrc}
+      name={job.title}
+      onCardSelect={() => onViewJob(job)}
+      cardSelectLabel={`View ${job.title} details`}
+      snippet={job.summary}
+      timestamp={job.posted}
+      title={job.title}
+      variant="job"
+    />
   );
 }
 
-function VeloraJobSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
+function VeloraJobSidePanel({
+  job,
+  onBack,
+}: Readonly<{ job: VcaJobOpening; onBack: () => void }>) {
   return (
     <ChatSidePanel
       className="bg-background"
@@ -647,21 +811,21 @@ function VeloraJobSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
         </div>
 
         <h1 className="mt-xl flex items-center gap-sm text-heading-xl text-text">
-          Customer Operations Lead
+          {job.title}
           <Icon className="shrink-0 text-icon" name="verified" size="medium" />
         </h1>
 
         <div className="mt-md space-y-xxs text-body-sm-open text-text-meta">
           <p>
-            {pcpCompanyProfile.location} &middot; 2 days ago &middot;{" "}
+            {job.location} &middot; {job.posted} &middot;{" "}
             <span className="font-semibold text-positive">
-              20 people clicked apply
+              {job.applyClicks}
             </span>
           </p>
         </div>
 
         <div className="mt-xl flex flex-wrap gap-sm">
-          {[pcpCompanyProfile.location, "Full-time"].map((detail) => (
+          {[job.location, job.employmentType].map((detail) => (
             <Pill
               aria-disabled="true"
               key={detail}
@@ -676,11 +840,7 @@ function VeloraJobSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
           <h3 className="text-heading-lg text-text">About the job</h3>
           <h4 className="mt-lg text-heading-sm text-text">About The Team</h4>
           <p className="mt-xl text-body-md-open text-text">
-            Velora helps HR teams manage open enrollment, carrier readiness,
-            eligibility changes, and employee communications in one workflow.
-            The Benefits Implementation team works closely with customers,
-            product, and integration partners to make complex launch questions
-            feel clear and actionable....{" "}
+            {job.about}{" "}
             <button
               className="font-semibold text-text-meta hover:text-text"
               type="button"
@@ -715,36 +875,80 @@ function VcaHandoffCard({
   onOpenMessage,
 }: Readonly<{ onOpenMessage: () => void }>) {
   return (
-    <article className={VCA_AI_CARD_CLASS}>
-      <div className="flex items-center gap-xs text-body-xs text-text-meta">
-        <Icon name="send" size="small" />
-        <span>Drafted message</span>
-      </div>
-      <div className="space-y-xs">
-        <h2 className="text-heading-md text-text">
-          Ready to send to Velora
-        </h2>
-        <p className="rounded-sm bg-background-neutral-soft p-md text-body-sm-open text-text">
-          {VCA_HANDOFF_MESSAGE}
-        </p>
-      </div>
-      <Button
-        className="w-fit px-pill-padding-inline"
-        onClick={onOpenMessage}
-        size="small"
+    <ResponseDraft
+      className="chat-message-enter max-w-[24rem]"
+      message={VCA_HANDOFF_MESSAGE}
+      onActionSelect={onOpenMessage}
+      recipient={`To ${pcpCompanyProfile.adminName} at ${pcpCompanyProfile.name}`}
+    />
+  );
+}
+
+function VcaLiveSupportHandoff({
+  state,
+}: Readonly<{ state: "connecting" | "connected" }>) {
+  return (
+    <>
+      <article
+        role="status"
+        aria-live="polite"
+        className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text"
       >
-        Open drafted message
-      </Button>
-    </article>
+        {state === "connecting" ? (
+          <div className="flex items-center gap-md">
+            <ProgressIndicatorCircular
+              aria-label="Connecting"
+              size={20}
+              type="indeterminate"
+            />
+            <h2 className="text-heading-md">Connecting you now</h2>
+          </div>
+        ) : null}
+        {state === "connected" ? (
+          <div className="flex items-center gap-sm">
+            <span
+              aria-hidden="true"
+              className="inline-flex size-6 shrink-0 items-center justify-center text-checked [&_svg]:size-6"
+            >
+              <Icon name="signal-success" size="medium" />
+            </span>
+            <h2 className="text-heading-md">
+              Connected to {PCP_LIVE_SUPPORT_AGENT.name}
+            </h2>
+          </div>
+        ) : null}
+      </article>
+      {state === "connected" ? (
+        <div className="flex flex-col gap-lg">
+          <p className="chat-message-enter text-center text-body-xs text-text-meta">
+            {PCP_LIVE_SUPPORT_AGENT.name} joined the chat -{" "}
+            {PCP_LIVE_SUPPORT_AGENT.timestamp}
+          </p>
+          <ChatMessage
+            role="representative"
+            authorName={PCP_LIVE_SUPPORT_AGENT.name}
+            avatarLabel={`${PCP_LIVE_SUPPORT_AGENT.name}, ${PCP_LIVE_SUPPORT_AGENT.role}`}
+            timestamp={PCP_LIVE_SUPPORT_AGENT.timestamp}
+          >
+            {PCP_LIVE_SUPPORT_AGENT.message}
+          </ChatMessage>
+        </div>
+      ) : null}
+    </>
   );
 }
 
 export function PremiumCompanyPagesVcaPostProofCardPreview() {
-  return <VeloraLinkedInPostProofCard onViewCaseStudy={() => {}} />;
+  return <VeloraLinkedInPostProofCard onViewPost={() => {}} />;
 }
 
 export function PremiumCompanyPagesVcaJobPreviewCardPreview() {
-  return <VeloraLinkedInJobPreviewCard onViewJob={() => {}} />;
+  return (
+    <VeloraLinkedInJobPreviewCard
+      job={vcaJobOpenings[0]}
+      onViewJob={() => {}}
+    />
+  );
 }
 
 export function PremiumCompanyPagesVcaHandoffCardPreview() {
@@ -824,6 +1028,9 @@ function PremiumCompanyPagesVcaPanel({
   conversationStage,
   isCaseStudyOpen,
   isJobOpen,
+  liveSupportMessages,
+  selectedJob,
+  visitorPromptId,
   visitorQuestion,
   followUpQuestion,
   onClose,
@@ -845,6 +1052,9 @@ function PremiumCompanyPagesVcaPanel({
   conversationStage: VcaConversationStage;
   isCaseStudyOpen: boolean;
   isJobOpen: boolean;
+  liveSupportMessages: ReadonlyArray<string>;
+  selectedJob: VcaJobOpening;
+  visitorPromptId: VcaVisitorPromptId | null;
   visitorQuestion: string | null;
   followUpQuestion: string | null;
   onClose: () => void;
@@ -852,7 +1062,7 @@ function PremiumCompanyPagesVcaPanel({
   onCloseJob: () => void;
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onOpenCaseStudy: () => void;
-  onOpenJob: () => void;
+  onOpenJob: (job: VcaJobOpening) => void;
   onOpenMessage: () => void;
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
@@ -863,7 +1073,19 @@ function PremiumCompanyPagesVcaPanel({
   const showHeaderResponseTime = true;
   const isJobSeekerIntent = memberIntent === "job-seeker";
   const isDetailPanelOpen = isCaseStudyOpen || isJobOpen;
-  const hasStartedConversation = Boolean(visitorQuestion);
+  const [firstLiveSupportMessage, ...liveSupportFollowUpMessages] =
+    liveSupportMessages;
+  const hasLiveSupportMessages = liveSupportMessages.length > 0;
+  const isLiveSupportConnecting =
+    conversationStage === "liveSupportConnecting";
+  const isLiveSupportConnected = conversationStage === "liveSupportConnected";
+  const liveSupportHeaderIdentity: ChatHeaderIdentity = {
+    type: "representative",
+    name: PCP_LIVE_SUPPORT_AGENT.name,
+    role: PCP_LIVE_SUPPORT_AGENT.role,
+  };
+  const hasStartedConversation =
+    Boolean(visitorQuestion) || hasLiveSupportMessages;
   const hasFollowUp = Boolean(followUpQuestion);
   const shouldShowProof =
     !isJobSeekerIntent &&
@@ -871,24 +1093,25 @@ function PremiumCompanyPagesVcaPanel({
       conversationStage === "caseStudyReturned" ||
       conversationStage === "handoffOffered" ||
       conversationStage === "handoffOpened");
-  const shouldShowJobProof =
-    isJobSeekerIntent && conversationStage === "jobProof";
-  const profilePromptAnswer = visitorQuestion
-    ? profileQuestionResponses[
-        visitorQuestion as keyof typeof profileQuestionResponses
-      ]
+  const shouldShowJobProof = conversationStage === "jobProof";
+  const pageExplorerAnswer = visitorPromptId
+    ? pcpVcaScenario.pageExplorerResponses[visitorPromptId]
     : undefined;
+  const shouldShowPageExplorerAnswer =
+    !isJobSeekerIntent &&
+    conversationStage === "pageExplorerAnswered" &&
+    Boolean(pageExplorerAnswer);
   const shouldShowCaseStudyReturnPrompt =
     !isJobSeekerIntent && conversationStage === "caseStudyReturned";
   const shouldShowHandoff =
     !isJobSeekerIntent &&
     (conversationStage === "handoffOffered" ||
       conversationStage === "handoffOpened");
-  const shouldShowGreeting = conversationStage !== "profilePromptAnswered";
-  const greeting = VCA_GREETING;
+  const shouldShowWelcome =
+    conversationStage === "opening" && !hasStartedConversation;
   const starterPrompts = isJobSeekerIntent
-    ? vcaJobSeekerPrompts
-    : vcaStarterPrompts;
+    ? vcaJobSeekerPrompts.map((label) => ({ label }))
+    : vcaOpeningPrompts;
   const composerPlaceholder = "Send message";
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const sidePanelHistoryRef = useRef<HTMLDivElement | null>(null);
@@ -897,6 +1120,13 @@ function PremiumCompanyPagesVcaPanel({
   );
   const [stopSignal, setStopSignal] = useState(0);
   const isAssistantBusy = busyTurnIds.size > 0;
+  const isComposerDisabled = isAssistantBusy || isLiveSupportConnecting;
+  const activeAnimatedTurnId = getActiveVcaAnimatedTurnId({
+    conversationStage,
+    hasFollowUp,
+    isDetailPanelOpen,
+    isJobSeekerIntent,
+  });
   let messageTimestampIndex = 0;
   const getNextMessageTimestamp = () =>
     getPrototypeMessageTimestamp(messageTimestampIndex++);
@@ -961,6 +1191,7 @@ function PremiumCompanyPagesVcaPanel({
     conversationStage,
     followUpQuestion,
     isDetailPanelOpen,
+    liveSupportMessages,
     visitorQuestion,
   ]);
 
@@ -987,35 +1218,10 @@ function PremiumCompanyPagesVcaPanel({
   const thread = (
     <ChatThread aiDisclaimerHref="#">
       <div className="flex flex-col gap-lg">
-        {shouldShowGreeting ? (
-          <VcaScriptedAssistantTurn
-            attachments={
-              conversationStage === "opening" && !hasStartedConversation
-                ? [
-                    {
-                      id: "starter-prompts",
-                      children: (
-                        <div className="flex flex-col gap-sm">
-                          {starterPrompts.map((prompt) => (
-                            <Prompt
-                              className="w-fit max-w-full self-start"
-                              key={prompt}
-                              onPromptSelect={onPromptSelect}
-                              prompt={prompt}
-                            />
-                          ))}
-                        </div>
-                      ),
-                    },
-                  ]
-                : []
-            }
-            id="member-vca-greeting"
-            onBusyChange={handleScriptedTurnBusyChange}
-            onContentChange={handleVcaContentChange}
-            stopSignal={stopSignal}
-            text={greeting}
-            timestamp={getNextMessageTimestamp()}
+        {shouldShowWelcome ? (
+          <VcaWelcomeIntro
+            onPromptSelect={onPromptSelect}
+            prompts={starterPrompts}
           />
         ) : null}
         {visitorQuestion ? (
@@ -1023,14 +1229,56 @@ function PremiumCompanyPagesVcaPanel({
             {visitorQuestion}
           </VcaStableUserMessage>
         ) : null}
+        {firstLiveSupportMessage ? (
+          <VcaStableUserMessage timestamp={getNextMessageTimestamp()}>
+            {firstLiveSupportMessage}
+          </VcaStableUserMessage>
+        ) : null}
+        {isLiveSupportConnecting || isLiveSupportConnected ? (
+          <VcaLiveSupportHandoff
+            state={isLiveSupportConnected ? "connected" : "connecting"}
+          />
+        ) : null}
+        {isLiveSupportConnected
+          ? liveSupportFollowUpMessages.map((message, index) => (
+              <VcaStableUserMessage
+                key={`${message}-${index}`}
+                timestamp={getNextMessageTimestamp()}
+              >
+                {message}
+              </VcaStableUserMessage>
+            ))
+          : null}
+        {shouldShowPageExplorerAnswer && pageExplorerAnswer ? (
+          <VcaScriptedAssistantTurn
+            animate={activeAnimatedTurnId === "member-vca-page-explorer-answer"}
+            attachments={
+              visitorPromptId === "people"
+                ? [
+                    {
+                      id: "people-summary",
+                      children: <VeloraPeopleSummaryCard />,
+                    },
+                  ]
+                : []
+            }
+            id="member-vca-page-explorer-answer"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={pageExplorerAnswer}
+            timestamp={getNextMessageTimestamp()}
+          />
+        ) : null}
         {shouldShowProof ? (
           <VcaScriptedAssistantTurn
+            animate={activeAnimatedTurnId === "member-vca-post-proof"}
             attachments={[
               {
                 id: "post-proof",
                 children: (
                   <VeloraLinkedInPostProofCard
-                    onViewCaseStudy={onOpenCaseStudy}
+                    onViewPost={onOpenCaseStudy}
                   />
                 ),
               },
@@ -1039,42 +1287,65 @@ function PremiumCompanyPagesVcaPanel({
             onBusyChange={handleScriptedTurnBusyChange}
             onContentChange={handleVcaContentChange}
             stopSignal={stopSignal}
-            text={VCA_BENEFITS_MIGRATION_RESPONSE}
+            text={VCA_POST_RESPONSE}
             timestamp={getNextMessageTimestamp()}
           />
         ) : null}
         {shouldShowJobProof ? (
           <VcaScriptedAssistantTurn
+            animate={activeAnimatedTurnId === "member-vca-job-proof"}
             attachments={[
+              ...(isJobSeekerIntent
+                ? [
+                    {
+                      id: "job-proof-intro",
+                      children: (
+                        <VcaStableAssistantMessage timestamp={getNextMessageTimestamp()}>
+                          {VCA_JOB_PROOF_INTRO}
+                        </VcaStableAssistantMessage>
+                      ),
+                    },
+                  ]
+                : []),
               {
-                id: "job-proof-intro",
+                id: "job-proof-rail",
                 children: (
-                  <VcaStableAssistantMessage timestamp={getNextMessageTimestamp()}>
-                    {VCA_JOB_PROOF_INTRO}
-                  </VcaStableAssistantMessage>
+                  <ResponseRail aria-label="Open roles at Velora">
+                    {vcaJobOpenings.map((job) => (
+                      <VeloraLinkedInJobPreviewCard
+                        job={job}
+                        key={job.title}
+                        onViewJob={onOpenJob}
+                      />
+                    ))}
+                  </ResponseRail>
                 ),
               },
               {
-                id: "job-proof-card",
-                children: <VeloraLinkedInJobPreviewCard onViewJob={onOpenJob} />,
+                id: "jobs-page-link",
+                children: (
+                  <VcaStableAssistantMessage timestamp={getNextMessageTimestamp()}>
+                    You can also see all open roles by visiting the{" "}
+                    <a
+                      className="font-semibold text-action hover:text-action-hover"
+                      href="#jobs"
+                    >
+                      Jobs page
+                    </a>
+                    .
+                  </VcaStableAssistantMessage>
+                ),
               },
             ]}
             id="member-vca-job-proof"
             onBusyChange={handleScriptedTurnBusyChange}
             onContentChange={handleVcaContentChange}
             stopSignal={stopSignal}
-            text={VCA_JOB_SEEKER_RESPONSE}
-            timestamp={getNextMessageTimestamp()}
-          />
-        ) : null}
-        {conversationStage === "profilePromptAnswered" &&
-        profilePromptAnswer ? (
-          <VcaScriptedAssistantTurn
-            id="member-vca-profile-prompt"
-            onBusyChange={handleScriptedTurnBusyChange}
-            onContentChange={handleVcaContentChange}
-            stopSignal={stopSignal}
-            text={profilePromptAnswer}
+            text={
+              isJobSeekerIntent
+                ? VCA_JOB_SEEKER_RESPONSE
+                : pcpVcaScenario.pageExplorerResponses.jobs
+            }
             timestamp={getNextMessageTimestamp()}
           />
         ) : null}
@@ -1085,6 +1356,7 @@ function PremiumCompanyPagesVcaPanel({
         ) : null}
         {shouldShowCaseStudyReturnPrompt ? (
           <VcaScriptedAssistantTurn
+            animate={activeAnimatedTurnId === "member-vca-case-study-return"}
             attachments={[
               {
                 id: "draft-prompt",
@@ -1108,6 +1380,7 @@ function PremiumCompanyPagesVcaPanel({
         {shouldShowHandoff ? (
           hasFollowUp ? (
             <VcaScriptedAssistantTurn
+              animate={activeAnimatedTurnId === "member-vca-handoff-offer"}
               attachments={[
                 {
                   id: "handoff-card",
@@ -1141,14 +1414,25 @@ function PremiumCompanyPagesVcaPanel({
       )}
       variant={variant}
     >
-      <VeloraAiHeader
-        actionSize={headerActionSize}
-        onClose={onClose}
-        onMinimizeToTray={onMinimizeToTray}
-        onVariantToggle={onVariantToggle}
-        showResponseTime={showHeaderResponseTime}
-        variant={variant}
-      />
+      {isLiveSupportConnected ? (
+        <ChatHeader
+          actionSize={headerActionSize}
+          identity={liveSupportHeaderIdentity}
+          onClose={onClose}
+          onMinimizeToTray={onMinimizeToTray}
+          onVariantToggle={onVariantToggle}
+          variant={variant}
+        />
+      ) : (
+        <VeloraAiHeader
+          actionSize={headerActionSize}
+          onClose={onClose}
+          onMinimizeToTray={onMinimizeToTray}
+          onVariantToggle={onVariantToggle}
+          showResponseTime={showHeaderResponseTime}
+          variant={variant}
+        />
+      )}
       {isDetailPanelOpen ? (
         <ChatSidePanelLayout
           chatBodyClassName="pb-[96px]"
@@ -1156,7 +1440,7 @@ function PremiumCompanyPagesVcaPanel({
           history={thread}
           sidePanel={
             isJobOpen ? (
-              <VeloraJobSidePanel onBack={onCloseJob} />
+              <VeloraJobSidePanel job={selectedJob} onBack={onCloseJob} />
             ) : (
               <VeloraCaseStudySidePanel onBack={onCloseCaseStudy} />
             )
@@ -1169,7 +1453,7 @@ function PremiumCompanyPagesVcaPanel({
           <ChatComposer
             inputProps={{
               "aria-label": `Message ${pcpCompanyProfile.name} AI assistant`,
-              disabled: isAssistantBusy,
+              disabled: isComposerDisabled,
               onChange: onDraftChange,
               placeholder: composerPlaceholder,
               value: draft,
@@ -1177,7 +1461,7 @@ function PremiumCompanyPagesVcaPanel({
             isResponding={isAssistantBusy}
             onSend={onSend}
             onStopResponse={handleStopAssistantResponse}
-            sendDisabled={isAssistantBusy}
+            sendDisabled={isComposerDisabled}
             showAttachAction={false}
             showDictationAction={false}
             showTopDivider={false}
@@ -1391,9 +1675,9 @@ function HumanCompanyMessagePanel({
             >
               <p>Hi Velora,</p>
               <p>
-                I found your Premium Company Page and I am interested in
-                learning whether Velora could help our HR team manage a
-                mid-year benefits migration before open enrollment.
+                I found your Premium Company Page and saw your post about Arbor
+                Retail Group. I am interested in whether Velora could be
+                relevant for our HR and benefits operations.
               </p>
             </HumanMessageEntry>
             <HumanMessageEntry
@@ -1830,114 +2114,6 @@ function CarouselButton({ label }: Readonly<{ label: string }>) {
   );
 }
 
-function ProfileQuestionNudgeCard({
-  onPromptSelect,
-}: Readonly<{
-  onPromptSelect: (prompt: (typeof profileQuestionPrompts)[number]) => void;
-}>) {
-  const promptScrollerRef = useRef<HTMLDivElement>(null);
-  const [canScrollPromptsLeft, setCanScrollPromptsLeft] = useState(false);
-  const [canScrollPromptsRight, setCanScrollPromptsRight] = useState(false);
-
-  function updatePromptScrollState() {
-    const scroller = promptScrollerRef.current;
-
-    if (!scroller) {
-      return;
-    }
-
-    const maxScrollLeft = scroller.scrollWidth - scroller.clientWidth;
-
-    setCanScrollPromptsLeft(scroller.scrollLeft > 1);
-    setCanScrollPromptsRight(scroller.scrollLeft < maxScrollLeft - 1);
-  }
-
-  function scrollPromptRow(direction: "left" | "right") {
-    const scroller = promptScrollerRef.current;
-
-    if (!scroller) {
-      return;
-    }
-
-    scroller.scrollBy({
-      behavior: "smooth",
-      left:
-        direction === "right"
-          ? Math.max(scroller.clientWidth * 0.8, 240)
-          : -Math.max(scroller.clientWidth * 0.8, 240),
-    });
-  }
-
-  useEffect(() => {
-    updatePromptScrollState();
-
-    window.addEventListener("resize", updatePromptScrollState);
-
-    return () => {
-      window.removeEventListener("resize", updatePromptScrollState);
-    };
-  }, []);
-
-  return (
-    <Card>
-      <div className="relative px-xxl py-xl">
-        <div className="flex items-center gap-xs text-control-sm text-text">
-          <Icon className="shrink-0 text-ai-icon" name="signal-ai" size="small" />
-          <span>Based on your profile</span>
-        </div>
-        <h2 className="mt-sm text-heading-lg text-text">
-          Top questions from HR benefits leaders
-        </h2>
-        <div className="relative mt-lg">
-          <div
-            className="flex gap-md overflow-x-auto overflow-y-hidden pr-xxl scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            onScroll={updatePromptScrollState}
-            ref={promptScrollerRef}
-          >
-            {profileQuestionPrompts.map((prompt) => (
-              <Prompt
-                className="h-14 w-fit shrink-0 rounded-sm px-lg py-0 text-body-md"
-                key={prompt}
-                onPromptSelect={() => onPromptSelect(prompt)}
-                prompt={prompt}
-              >
-                <span className="inline-flex min-w-0 items-center gap-xs">
-                  <Icon
-                    className="shrink-0 text-ai-icon"
-                    name="signal-ai"
-                    size="small"
-                  />
-                  <span className="min-w-0 whitespace-nowrap">{prompt}</span>
-                </span>
-              </Prompt>
-            ))}
-          </div>
-          {canScrollPromptsLeft ? (
-            <OverlayButtonIcon
-              className="absolute left-0 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2"
-              color="white"
-              icon="chevron-left"
-              label="View previous suggested questions"
-              onClick={() => scrollPromptRow("left")}
-              size="small"
-            />
-          ) : null}
-          {canScrollPromptsRight ? (
-            <OverlayButtonIcon
-              className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-1/2"
-              color="white"
-              icon="chevron-right"
-              label="View more suggested questions"
-              onClick={() => scrollPromptRow("right")}
-              size="small"
-            />
-          ) : null}
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 function OverviewCard() {
   return (
     <Card>
@@ -2336,10 +2512,10 @@ function EventCard() {
                 Upcoming
               </span>
               <p className="text-body-sm text-text-meta">
-                Wed, 06/18/2025, 5:00 PM
+                Thu, 06/18/2026, 5:00 PM
               </p>
               <h3 className="text-control-md text-text">
-                Live workshop: preparing benefits teams for mid-year migration
+                Live workshop: carrier coordination before open enrollment
               </h3>
               <p className="text-body-sm text-text">
                 Hosted by {pcpCompanyProfile.name}
@@ -2392,19 +2568,21 @@ function JobLockup({ title }: Readonly<{ title: string }>) {
 
 function RecentJobOpeningsCard() {
   return (
-    <Card>
-      <ModuleHeader title="Recent job openings" />
-      <div className="flex flex-wrap gap-lg p-xxl">
-        {mainJobOpenings.map((job) => (
-          <JobLockup key={job} title={job} />
-        ))}
-      </div>
-      <ModuleFooter>
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
-          Show all 2 jobs
-        </GhostButton>
-      </ModuleFooter>
-    </Card>
+    <div id="jobs">
+      <Card>
+        <ModuleHeader title="Recent job openings" />
+        <div className="flex flex-wrap gap-lg p-xxl">
+          {mainJobOpenings.map((job) => (
+            <JobLockup key={job} title={job} />
+          ))}
+        </div>
+        <ModuleFooter>
+          <GhostButton icon="arrow-right" iconAtEnd size="small">
+            Show all 2 jobs
+          </GhostButton>
+        </ModuleFooter>
+      </Card>
+    </div>
   );
 }
 
@@ -2724,14 +2902,17 @@ function SideListCard({
 export function PremiumCompanyPagesMemberPage({
   memberIntent = "buyer",
   shellMode = "fab-icon",
+  story = "default",
 }: Readonly<{
   memberIntent?: VcaMemberIntent;
   shellMode?: VcaShellMode;
+  story?: PremiumCompanyPagesMemberStory;
 }>) {
   return (
     <PremiumCompanyPagesSeparateMemberPage
       entryMode={shellMode}
       memberIntent={memberIntent}
+      story={story}
     />
   );
 }
@@ -2739,10 +2920,16 @@ export function PremiumCompanyPagesMemberPage({
 function PremiumCompanyPagesSeparateMemberPage({
   entryMode,
   memberIntent,
-}: Readonly<{ entryMode: VcaShellMode; memberIntent: VcaMemberIntent }>) {
+  story,
+}: Readonly<{
+  entryMode: VcaShellMode;
+  memberIntent: VcaMemberIntent;
+  story: PremiumCompanyPagesMemberStory;
+}>) {
   const isFabEntryMode = entryMode !== "tray";
   const isFabIconEntryMode = entryMode === "fab-icon";
   const isJobSeekerIntent = memberIntent === "job-seeker";
+  const isLiveSupportStory = story === "live-support";
   const vcaPanelId = useId();
   const [aiSurfaceState, setAiSurfaceState] =
     useState<MessagingSurfaceState>(() =>
@@ -2754,15 +2941,23 @@ function PremiumCompanyPagesSeparateMemberPage({
     useState<ChatPanelVariant>("collapsed");
   const [vcaConversationStage, setVcaConversationStage] =
     useState<VcaConversationStage>("opening");
+  const [vcaVisitorPromptId, setVcaVisitorPromptId] =
+    useState<VcaVisitorPromptId | null>(null);
   const [vcaVisitorQuestion, setVcaVisitorQuestion] =
     useState<string | null>(null);
   const [vcaFollowUpQuestion, setVcaFollowUpQuestion] =
     useState<string | null>(null);
+  const [vcaLiveSupportMessages, setVcaLiveSupportMessages] = useState<
+    ReadonlyArray<string>
+  >([]);
   const [vcaDraft, setVcaDraft] = useState("");
   const [humanDraft, setHumanDraft] = useState("");
   const [humanSentMessage, setHumanSentMessage] = useState<string | null>(null);
   const [isCaseStudyOpen, setIsCaseStudyOpen] = useState(false);
   const [isJobOpen, setIsJobOpen] = useState(false);
+  const [selectedVcaJob, setSelectedVcaJob] = useState<VcaJobOpening>(
+    vcaJobOpenings[0],
+  );
   const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
   const isVcaOpen = aiSurfaceState === "open";
   const isVcaEntryVisible = aiSurfaceState === "docked";
@@ -2801,6 +2996,18 @@ function PremiumCompanyPagesSeparateMemberPage({
   const vcaFloatingDesktopRightClass = "md:right-6";
   const isExpandedVcaSurface =
     vcaPanelVariant === "expanded" || isCaseStudyOpen || isJobOpen;
+  const vcaTrayIdentity: ChatHeaderIdentity =
+    vcaConversationStage === "liveSupportConnected"
+      ? {
+          type: "representative",
+          name: PCP_LIVE_SUPPORT_AGENT.name,
+          role: PCP_LIVE_SUPPORT_AGENT.role,
+        }
+      : {
+          type: "ai",
+          title: pcpCompanyProfile.name,
+          icon: <VeloraVcaLogoMark showAiBadge />,
+        };
   const shouldShowGlobalInboxTray =
     !isExpandedVcaSurface && !(isFabEntryMode && isVcaOpen);
   const vcaSurfacePanelPositionClass =
@@ -2814,8 +3021,8 @@ function PremiumCompanyPagesSeparateMemberPage({
       : cx(
           "md:inset-auto",
           isFabEntryMode
-            ? "md:bottom-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))]"
-            : "md:bottom-0 md:h-[min(calc(100dvh_-_72px),var(--design-layout-panel-collapsed-height))]",
+            ? "md:bottom-6 md:top-[calc(52px_+_var(--design-spacing-xxl))]"
+            : "md:bottom-0 md:top-[calc(52px_+_var(--design-spacing-xxl))]",
           isFabEntryMode
             ? "md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]"
             : "md:w-[min(calc(100vw_-_var(--pcp-ai-tray-right)_-_var(--design-spacing-xxl)),var(--design-layout-panel-collapsed-width))]",
@@ -2826,12 +3033,48 @@ function PremiumCompanyPagesSeparateMemberPage({
 
   function resetVcaConversation() {
     setVcaConversationStage("opening");
+    setVcaVisitorPromptId(null);
     setVcaVisitorQuestion(null);
     setVcaFollowUpQuestion(null);
+    setVcaLiveSupportMessages([]);
     setVcaDraft("");
     setIsCaseStudyOpen(false);
     setIsJobOpen(false);
   }
+
+  function startVcaLiveSupportFlow(message: string) {
+    setVcaVisitorPromptId(null);
+    setVcaVisitorQuestion(null);
+    setVcaFollowUpQuestion(null);
+    setVcaLiveSupportMessages([message]);
+    setVcaConversationStage("liveSupportConnecting");
+    setVcaDraft("");
+    setIsCaseStudyOpen(false);
+    setIsJobOpen(false);
+    setVcaPanelVariant("collapsed");
+  }
+
+  function appendVcaLiveSupportMessage(message: string) {
+    setVcaLiveSupportMessages((currentMessages) => [
+      ...currentMessages,
+      message,
+    ]);
+    setVcaDraft("");
+  }
+
+  useEffect(() => {
+    if (vcaConversationStage !== "liveSupportConnecting") {
+      return;
+    }
+
+    const connectingTimer = window.setTimeout(() => {
+      setVcaConversationStage("liveSupportConnected");
+    }, LIVE_SUPPORT_CONNECT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(connectingTimer);
+    };
+  }, [vcaConversationStage]);
 
   function runMessagingSurfaceTransition(
     updateSurfaceState: () => void,
@@ -2868,29 +3111,6 @@ function PremiumCompanyPagesSeparateMemberPage({
 
   function getBackgroundTrayTransitionClass() {
     return isFabEntryMode ? "pcp-background-trays-slide" : undefined;
-  }
-
-  function handleOpenVcaWithProfilePrompt(
-    prompt: (typeof profileQuestionPrompts)[number],
-  ) {
-    runMessagingSurfaceTransition(
-      () => {
-        resetVcaConversation();
-        setVcaPanelVariant("collapsed");
-        if (!isJobSeekerIntent && prompt === VCA_BENEFITS_MIGRATION_CHIP) {
-          setVcaVisitorQuestion(VCA_HERO_QUESTION);
-          setVcaConversationStage("postProof");
-        } else {
-          setVcaVisitorQuestion(prompt);
-          setVcaConversationStage("profilePromptAnswered");
-        }
-        setHumanSurfaceState((currentState) =>
-          currentState === "closed" ? "closed" : "docked",
-        );
-        setAiSurfaceState("open");
-      },
-      getBackgroundTrayTransitionClass(),
-    );
   }
 
   function handleCloseVca() {
@@ -2970,8 +3190,9 @@ function PremiumCompanyPagesSeparateMemberPage({
     });
   }
 
-  function handleOpenVcaJob() {
+  function handleOpenVcaJob(job: VcaJobOpening) {
     runMessagingSurfaceTransition(() => {
+      setSelectedVcaJob(job);
       setIsCaseStudyOpen(false);
       setIsJobOpen(true);
       setVcaPanelVariant("expanded");
@@ -3059,6 +3280,19 @@ function PremiumCompanyPagesSeparateMemberPage({
   function handleVcaPromptSelect(prompt: string) {
     setVcaDraft("");
 
+    if (isLiveSupportStory) {
+      if (vcaConversationStage === "liveSupportConnected") {
+        appendVcaLiveSupportMessage(prompt);
+        return;
+      }
+
+      if (vcaConversationStage !== "liveSupportConnecting") {
+        startVcaLiveSupportFlow(prompt);
+      }
+
+      return;
+    }
+
     if (isJobSeekerIntent) {
       setVcaVisitorQuestion(
         prompt === VCA_JOB_SEEKER_CHIP ? VCA_JOB_SEEKER_QUESTION : prompt,
@@ -3068,8 +3302,18 @@ function PremiumCompanyPagesSeparateMemberPage({
       return;
     }
 
+    const promptId = getVcaVisitorPromptId(prompt);
+
     if (prompt === VCA_DRAFT_INTRO_PROMPT) {
       setVcaConversationStage("handoffOffered");
+      return;
+    }
+
+    if (promptId === "jobs") {
+      setVcaVisitorQuestion(prompt);
+      setVcaVisitorPromptId(promptId);
+      setVcaFollowUpQuestion(null);
+      setVcaConversationStage("jobProof");
       return;
     }
 
@@ -3080,18 +3324,27 @@ function PremiumCompanyPagesSeparateMemberPage({
     }
 
     if (vcaConversationStage === "opening") {
-      if (
-        prompt !== VCA_BENEFITS_MIGRATION_CHIP &&
-        prompt in profileQuestionResponses
-      ) {
-        setVcaVisitorQuestion(prompt);
-        setVcaConversationStage("profilePromptAnswered");
+      setVcaVisitorQuestion(prompt);
+      setVcaVisitorPromptId(promptId);
+
+      if (promptId && promptId !== "posts") {
+        setVcaConversationStage("pageExplorerAnswered");
         return;
       }
 
-      setVcaVisitorQuestion(
-        prompt === VCA_BENEFITS_MIGRATION_CHIP ? VCA_HERO_QUESTION : prompt,
-      );
+      setVcaConversationStage("postProof");
+      return;
+    }
+
+    if (vcaConversationStage === "pageExplorerAnswered") {
+      setVcaVisitorQuestion(prompt);
+      setVcaVisitorPromptId(promptId);
+
+      if (promptId && promptId !== "posts") {
+        setVcaConversationStage("pageExplorerAnswered");
+        return;
+      }
+
       setVcaConversationStage("postProof");
       return;
     }
@@ -3107,9 +3360,23 @@ function PremiumCompanyPagesSeparateMemberPage({
   }
 
   function handleVcaSend() {
-    const trimmedDraft = vcaDraft.trim();
+    const draftText = vcaDraft;
+    const trimmedDraft = draftText.trim();
 
     if (!trimmedDraft) {
+      return;
+    }
+
+    if (isLiveSupportStory) {
+      if (vcaConversationStage === "liveSupportConnected") {
+        appendVcaLiveSupportMessage(draftText);
+        return;
+      }
+
+      if (vcaConversationStage !== "liveSupportConnecting") {
+        startVcaLiveSupportFlow(draftText);
+      }
+
       return;
     }
 
@@ -3121,12 +3388,31 @@ function PremiumCompanyPagesSeparateMemberPage({
       return;
     }
 
+    const promptId = getVcaVisitorPromptId(trimmedDraft);
+
+    if (promptId === "jobs") {
+      setVcaVisitorQuestion(trimmedDraft);
+      setVcaVisitorPromptId(promptId);
+      setVcaFollowUpQuestion(null);
+      setVcaConversationStage("jobProof");
+      setVcaDraft("");
+      return;
+    }
+
     if (
       vcaConversationStage === "opening" ||
-      vcaConversationStage === "profilePromptAnswered"
+      vcaConversationStage === "pageExplorerAnswered"
     ) {
       setVcaVisitorQuestion(trimmedDraft);
+      setVcaVisitorPromptId(promptId);
       setVcaFollowUpQuestion(null);
+
+      if (promptId && promptId !== "posts") {
+        setVcaConversationStage("pageExplorerAnswered");
+        setVcaDraft("");
+        return;
+      }
+
       setVcaConversationStage("postProof");
       setVcaDraft("");
       return;
@@ -3240,11 +3526,7 @@ function PremiumCompanyPagesSeparateMemberPage({
             "pcp-ai-messaging-surface fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-chat-tray-width,384px)] !rounded-t-sm !transition-[height,width,right,bottom,transform,background-color,border-color,box-shadow] !duration-[var(--design-motion-duration-moderate)] !ease-emphasized md:left-auto md:mx-0 md:!w-[336px] md:!max-w-[336px]",
             vcaSeparateDesktopRightClass,
           )}
-          identity={{
-            type: "ai",
-            title: pcpCompanyProfile.name,
-            icon: <VeloraVcaLogoMark showAiBadge />,
-          }}
+          identity={vcaTrayIdentity}
           onClose={handleCloseVca}
           onOpen={handleOpenVcaFromTray}
           onVariantToggle={handleExpandVcaFromTray}
@@ -3285,8 +3567,11 @@ function PremiumCompanyPagesSeparateMemberPage({
               followUpQuestion={vcaFollowUpQuestion}
               isCaseStudyOpen={isCaseStudyOpen}
               isJobOpen={isJobOpen}
+              liveSupportMessages={vcaLiveSupportMessages}
               memberIntent={memberIntent}
+              selectedJob={selectedVcaJob}
               surfaceMode={isFabEntryMode ? "fab" : "tray"}
+              visitorPromptId={vcaVisitorPromptId}
               onCloseCaseStudy={handleCloseVcaCaseStudy}
               onCloseJob={handleCloseVcaJob}
               onClose={handleCloseVca}
@@ -3307,9 +3592,6 @@ function PremiumCompanyPagesSeparateMemberPage({
 
       <div className="mx-auto grid max-w-[1128px] gap-xxl px-lg py-md lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-md">
-          <ProfileQuestionNudgeCard
-            onPromptSelect={handleOpenVcaWithProfilePrompt}
-          />
           <OverviewCard />
           <FeaturedCard />
           <Card>

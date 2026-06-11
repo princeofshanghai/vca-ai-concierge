@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import {
   type ChangeEvent,
   useCallback,
@@ -19,17 +18,21 @@ import {
   Prompt,
   type ChatPanelVariant,
 } from "@/components/chat";
-import { Button, getButtonClassName } from "@/components/primitives/button";
+import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 import {
+  AudienceFit as ResponseAudienceFit,
   Chips as ResponseChips,
+  ContentList as ResponseContentList,
   Compare as ResponseCompare,
-  Entity as ResponseEntity,
+  Draft as ResponseDraft,
   Metric as ResponseMetric,
   MetricWithTrend as ResponseMetricWithTrend,
+  PersonCard as ResponsePersonCard,
   PostCompact as ResponsePostCompact,
+  ResponseRail,
   Text as ResponseText,
   TextRecommendationList as ResponseTextRecommendationList,
 } from "@/components/premium-company-pages/response-blocks";
@@ -38,6 +41,8 @@ import { InsightCard } from "./insight-card";
 import {
   PCP_ASSET_ROOT,
   pcpCompanyProfile,
+  pcpCompetitorNames,
+  pcpProofSnippets,
   pcpVisitorPersona,
 } from "./persona";
 import { ScriptedResponseTurn } from "./scripted-response-turn";
@@ -57,6 +62,7 @@ import {
   type AdminUc5FollowUp,
   type AdminUc5Insight,
   type AdminUc5InsightId,
+  type AdminUc5InsightSelection,
   type AdminUc5Lead,
   type AdminUc5Metric,
   type AdminUc5PostPerformance,
@@ -67,16 +73,17 @@ const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
 const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
   backgroundColor: "#ACF5B3",
 };
-const ADMIN_ANALYTICS_HREF = "/premium-company-pages/admin/analytics";
 const CHERI_SPARKS_AVATAR = pcpVisitorPersona.avatar;
 const STORY_1A_CARD_ID = "story-1a-follower-growth";
+const STORY_1A_FOLLOWER_GROWTH_PROMPT =
+  "How do I recover my follower growth?";
 const AUTO_INVITE_CARD_ID = "auto-invite";
 const FOLLOW_PAGES_CARD_ID = "follow-pages";
 
 const postVisuals: ReadonlyArray<Readonly<{ image: string; alt: string }>> = [
   {
     image: "member/post-image-1.png",
-    alt: "Benefits migration readiness post preview",
+    alt: "Carrier coordination post preview",
   },
   {
     image: "member/post-image-2.png",
@@ -106,7 +113,7 @@ export type AdminUc5ThreadTurn = Readonly<{
 
 type AdminPerformanceDigestCardProps = Readonly<{
   activeInsightId: AdminUc5InsightId | null;
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
 }>;
 
 type AdminUc5SelfInitiatedTurn = Readonly<{
@@ -120,7 +127,7 @@ type AdminAttentionCardId =
   | typeof FOLLOW_PAGES_CARD_ID;
 
 type AdminUc5AgentPanelProps = Readonly<{
-  activeInsightId: AdminUc5InsightId | null;
+  activeInsight: AdminUc5InsightSelection | null;
   draft: string;
   initialSelfInitiatedView?: AdminUc5SelfInitiatedView | null;
   panelId: string;
@@ -139,8 +146,8 @@ export type AdminUc5SelfInitiatedView =
   | "visitor-audience";
 
 const ADMIN_PAGE_PERFORMANCE_PROMPT = "How is my page performing this month?";
-const ADMIN_COMPETITORS_PROMPT = "What are my competitors doing?";
-const ADMIN_VISITOR_AUDIENCE_PROMPT = "Who's been visiting my Page?";
+const ADMIN_COMPETITORS_PROMPT = "How are my competitors doing?";
+const ADMIN_VISITOR_AUDIENCE_PROMPT = "Who's been visiting my page?";
 
 export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   Readonly<{
@@ -149,16 +156,16 @@ export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   }>
 > = [
   {
+    id: "visitor-audience",
+    prompt: ADMIN_VISITOR_AUDIENCE_PROMPT,
+  },
+  {
     id: "page-performance",
     prompt: ADMIN_PAGE_PERFORMANCE_PROMPT,
   },
   {
     id: "competitors",
     prompt: ADMIN_COMPETITORS_PROMPT,
-  },
-  {
-    id: "visitor-audience",
-    prompt: ADMIN_VISITOR_AUDIENCE_PROMPT,
   },
 ] as const;
 
@@ -181,12 +188,16 @@ function getSelfInitiatedViewForPrompt(
     return "page-performance";
   }
 
-  if (prompt === ADMIN_COMPETITORS_PROMPT) {
+  if (
+    prompt === ADMIN_COMPETITORS_PROMPT ||
+    prompt === "What are my competitors doing?"
+  ) {
     return "competitors";
   }
 
   if (
     prompt === ADMIN_VISITOR_AUDIENCE_PROMPT ||
+    prompt === "Who's been visiting my Page?" ||
     prompt === "Who's been visiting?"
   ) {
     return "visitor-audience";
@@ -254,17 +265,6 @@ function MetricTrend({
   );
 }
 
-function AnalyticsPageButton() {
-  return (
-    <Link
-      className={getButtonClassName({ size: "small", variant: "secondary" })}
-      href={ADMIN_ANALYTICS_HREF}
-    >
-      View in Analytics page
-    </Link>
-  );
-}
-
 export function AdminPerformanceDigestCard({
   activeInsightId,
   onInsightSelect,
@@ -284,9 +284,9 @@ export function AdminPerformanceDigestCard({
   }
 
   function handleInsightCardSelect(
-    insightId: AdminUc5InsightId,
+    insight: AdminUc5InsightSelection,
   ) {
-    onInsightSelect(insightId);
+    onInsightSelect(insight);
   }
 
   return (
@@ -311,11 +311,15 @@ export function AdminPerformanceDigestCard({
               id: "ask-ai",
               kind: "ask-ai",
               label: "Ask",
-              onSelect: () => handleInsightCardSelect("follower-growth"),
+              onSelect: () =>
+                handleInsightCardSelect({
+                  id: "follower-growth",
+                  prompt: STORY_1A_FOLLOWER_GROWTH_PROMPT,
+                }),
             }}
             dismissLabel="Dismiss follower growth insight"
-            evidence="Posting slowed from 3x a week to once."
-            headline="Follower growth down 18% this month"
+            evidence="Down 18% after posting slowed to once a week."
+            headline="Recover your follower growth"
             onDismiss={() => resolveCard(STORY_1A_CARD_ID)}
             type="anomaly"
           />
@@ -386,7 +390,7 @@ function MiniAvatarPile({
 }
 
 export function AdminUc5AgentPanel({
-  activeInsightId,
+  activeInsight,
   draft,
   initialSelfInitiatedView = null,
   panelId,
@@ -411,8 +415,8 @@ export function AdminUc5AgentPanel({
     () => new Set(),
   );
   const [stopSignal, setStopSignal] = useState(0);
-  const activeInsight = activeInsightId
-    ? adminUc5Insights[activeInsightId]
+  const activeInsightData = activeInsight
+    ? adminUc5Insights[activeInsight.id]
     : null;
   const headerActionSize = variant === "expanded" ? "medium" : "small";
   const isAssistantBusy = busyTurnIds.size > 0;
@@ -498,14 +502,15 @@ export function AdminUc5AgentPanel({
         variant={variant}
       />
       <ChatBody ref={chatBodyRef}>
-        <ChatThread showAiDisclaimer={false}>
+        <ChatThread>
           <div className="flex flex-col gap-lg">
-            {activeInsight ? (
+            {activeInsight && activeInsightData ? (
               <ActiveInsightThread
-                insight={activeInsight}
+                insight={activeInsightData}
                 onBusyChange={handleScriptedTurnBusyChange}
                 onContentChange={handleThreadContentChange}
                 onFollowUpSelect={onFollowUpSelect}
+                prompt={activeInsight.prompt}
                 stopSignal={stopSignal}
               />
             ) : selfInitiatedTurns.length > 0 ? (
@@ -665,7 +670,7 @@ function SelfInitiatedPerformanceThread({
                 dimension="Follower growth this month"
                 rows={[
                   {
-                    name: "BenefitHub",
+                    name: pcpCompetitorNames[0],
                     value: 18,
                     valueLabel: "+18%",
                     visual: {
@@ -683,7 +688,7 @@ function SelfInitiatedPerformanceThread({
                     },
                   },
                   {
-                    name: "Enrollly",
+                    name: pcpCompetitorNames[1],
                     value: 4,
                     valueLabel: "+4%",
                     visual: {
@@ -699,8 +704,8 @@ function SelfInitiatedPerformanceThread({
             id: "performance-context",
             children: (
               <ResponseText className="chat-message-enter">
-                BenefitHub grew faster — but they posted 3x as much. Per post,
-                your engagement is the strongest of the three. And the right
+                {pcpCompetitorNames[0]} grew faster — but they posted 3x as
+                much. Per post, your engagement is the strongest of the three. And the right
                 people are showing up: 68% of your visitors this month are HR
                 Director or above.
               </ResponseText>
@@ -713,7 +718,7 @@ function SelfInitiatedPerformanceThread({
                 onPromptSelect={onPromptSelect}
                 prompts={[
                   "Who's been visiting?",
-                  "What are my competitors doing?",
+                  ADMIN_COMPETITORS_PROMPT,
                 ]}
               />
             ),
@@ -754,7 +759,7 @@ function SelfInitiatedCompetitorsThread({
                 dimension="This month"
                 rows={[
                   {
-                    name: "BenefitHub",
+                    name: pcpCompetitorNames[0],
                     value: 22,
                     valueLabel: "22",
                     visual: {
@@ -772,7 +777,7 @@ function SelfInitiatedCompetitorsThread({
                     },
                   },
                   {
-                    name: "Enrollly",
+                    name: pcpCompetitorNames[1],
                     value: 8,
                     valueLabel: "8",
                     visual: {
@@ -797,10 +802,10 @@ function SelfInitiatedCompetitorsThread({
             id: "competitor-post",
             children: (
               <ResponsePostCompact
-                author="BenefitHub"
+                author={pcpCompetitorNames[0]}
                 meta="421 reactions · 1w"
                 text="5 things to lock down before open enrollment opens. Number 4 is the one…"
-                thumbnailAlt="BenefitHub checklist post thumbnail"
+                thumbnailAlt={`${pcpCompetitorNames[0]} checklist post thumbnail`}
                 thumbnailSrc={assetSrc("member/post-image-2.png")}
               />
             ),
@@ -822,7 +827,7 @@ function SelfInitiatedCompetitorsThread({
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
         stopSignal={stopSignal}
-        text="BenefitHub is setting the pace right now — they've moved to short, deadline-focused posts and they're publishing almost daily."
+        text={`${pcpCompetitorNames[0]} is setting the pace right now — they've moved to short, deadline-focused posts and they're publishing almost daily.`}
       />
     </>
   );
@@ -846,50 +851,32 @@ function SelfInitiatedVisitorAudienceThread({
         attachments={[
           {
             id: "visitor-audience",
-            children: (
-              <ResponseEntity
-                audience="admin"
-                headline="Your target buyer · up from 51% last month"
-                name="68% are HR Director or above"
-                signal={{
-                  tier: "tier-3",
-                  label: "Tier 3 · Aggregate",
-                  avatars: [
-                    assetSrc("avatar-2.png"),
-                    assetSrc("avatar-1.png"),
-                    assetSrc("avatar-3.png"),
-                  ],
-                }}
-                variant="person"
-              />
-            ),
+            children: <VisitorAudienceFitResponse />,
           },
           {
-            id: "visitor-standout-text",
+            id: "visitor-relevance-text",
             children: (
               <ResponseText className="chat-message-enter">
-                One visitor stands out this week:
+                Here are a few visitors who may be most relevant to Velora right now:
               </ResponseText>
             ),
           },
           {
-            id: "visitor-person",
+            id: "visitor-rail",
             children: (
-              <ResponseEntity
-                actions={[
-                  { label: "View profile", variant: "secondary" },
-                  { label: "See what they viewed", variant: "secondary" },
-                ]}
-                audience="admin"
-                connectionDegree="3rd"
-                headline="Director of Benefits · Healthcare · 8,500 employees"
-                name="Marcus Tran"
-                signal={{
-                  tier: "tier-2",
-                  label: "Viewed your pricing post twice this week",
-                }}
-                variant="person"
-              />
+              <ResponseRail aria-label="Relevant visitors">
+                {visitorAudienceCards.map((visitor) => (
+                  <ResponsePersonCard
+                    actionIcon="visibility"
+                    actionLabel="View profile"
+                    avatarSrc={visitor.avatarSrc}
+                    followers={visitor.context}
+                    headline={visitor.headline}
+                    key={visitor.name}
+                    name={visitor.name}
+                  />
+                ))}
+              </ResponseRail>
             ),
           },
           {
@@ -908,7 +895,7 @@ function SelfInitiatedVisitorAudienceThread({
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
         stopSignal={stopSignal}
-        text="1,204 people visited this month — and the right ones are finding you."
+        text="1,204 people visited this month, and more of them match the audience Velora is built for."
       />
     </>
   );
@@ -919,12 +906,14 @@ function ActiveInsightThread({
   onBusyChange,
   onContentChange,
   onFollowUpSelect,
+  prompt,
   stopSignal,
 }: Readonly<{
   insight: AdminUc5Insight;
   onBusyChange?: (id: string, isBusy: boolean) => void;
   onContentChange?: () => void;
   onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+  prompt: string;
   stopSignal?: number;
 }>) {
   if (insight.id === "follower-growth") {
@@ -932,6 +921,46 @@ function ActiveInsightThread({
       <Story1aFollowerGrowthThread
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
+        prompt={prompt}
+        stopSignal={stopSignal}
+      />
+    );
+  }
+
+  if (insight.id === "competitor-growth") {
+    return (
+      <CompetitorGrowthThread
+        insight={insight}
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        onFollowUpSelect={onFollowUpSelect}
+        prompt={prompt}
+        stopSignal={stopSignal}
+      />
+    );
+  }
+
+  if (insight.id === "content-engagement") {
+    return (
+      <ContentResonanceThread
+        insight={insight}
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        onFollowUpSelect={onFollowUpSelect}
+        prompt={prompt}
+        stopSignal={stopSignal}
+      />
+    );
+  }
+
+  if (insight.id === "visitor-demographics") {
+    return (
+      <VisitorAudienceFitThread
+        insight={insight}
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        onFollowUpSelect={onFollowUpSelect}
+        prompt={prompt}
         stopSignal={stopSignal}
       />
     );
@@ -941,7 +970,7 @@ function ActiveInsightThread({
 
   return (
     <>
-      <ChatMessage role="user">{insight.query}</ChatMessage>
+      <ChatMessage role="user">{prompt}</ChatMessage>
       <ScriptedResponseTurn
         attachments={[
           {
@@ -987,7 +1016,7 @@ function getActiveInsightIntro(insightId: AdminUc5InsightId) {
   }
 
   if (insightId === "content-engagement") {
-    return "The Arbor proof is getting efficient engagement. I would treat it as a reach opportunity: the message is working, but distribution is still modest.";
+    return "Your strongest engagement is clustering around carrier coordination and eligibility cleanup content.";
   }
 
   if (insightId === "weekly-synthesis") {
@@ -997,10 +1026,15 @@ function getActiveInsightIntro(insightId: AdminUc5InsightId) {
   return adminUc5Insights[insightId].value;
 }
 
-type Story1aBlockTurn = "compare" | "recommendations";
+type Story1aBlockTurn = "compare" | "draft";
 
 const STORY_1A_COMPARE_PROMPT = "How do my competitors compare?";
-const STORY_1A_RECOMMENDATIONS_PROMPT = "What should I do this week?";
+const STORY_1A_DRAFT_POST_PROMPT = "Draft post";
+const story1aDraftPost = `Carrier readiness can make or break open enrollment.
+
+Before enrollment opens, HR and benefits teams should know which carrier files are ready, which eligibility issues need cleanup, and where employee communications might get delayed.
+
+Velora helps teams catch those gaps earlier, so open enrollment feels less reactive and more coordinated.`;
 const story1aFollowerGrowthAxisTicks = ["May 5", "May 19", "Jun 2"] as const;
 const story1aFollowerGrowthValues = [
   94,
@@ -1013,21 +1047,103 @@ const story1aFollowerGrowthValues = [
   80,
   74,
 ] as const;
+const contentResonanceItems = [
+  {
+    title: pcpProofSnippets.postTitle,
+    thumbnailSrc: assetSrc("member/post-image-1.png"),
+    thumbnailAlt: "Carrier coordination post preview",
+    metrics: [
+      { label: "Engagement rate", value: "4.8%" },
+      { label: "Impressions", value: "1,688" },
+    ],
+  },
+  {
+    title: "Carrier file readiness checklist for open enrollment",
+    thumbnailSrc: assetSrc("member/post-image-2.png"),
+    thumbnailAlt: "Open enrollment checklist post preview",
+    metrics: [
+      { label: "Engagement rate", value: "4.2%" },
+      { label: "Impressions", value: "1,204" },
+    ],
+  },
+] as const;
+
+const visitorAudienceFitAvatars = [
+  {
+    label: "Priya Shah",
+    src: assetSrc("avatar-3.png"),
+  },
+  {
+    label: "Dana Kim",
+    src: assetSrc("avatar-2.png"),
+  },
+  {
+    label: "Morgan Lee",
+    src: assetSrc("avatar-1.png"),
+  },
+] as const;
+
+const visitorAudienceFitSegments = [
+  {
+    label: "HR leaders",
+    detail: "Largest viewer group",
+    value: "38%",
+  },
+  {
+    label: "Benefits operations",
+    detail: "Viewed readiness content",
+    value: "16%",
+  },
+  {
+    label: "People operations",
+    detail: "Growing share of Page viewers",
+    value: "10%",
+  },
+] as const;
+
+const visitorAudienceCards = [
+  {
+    name: pcpVisitorPersona.name,
+    headline: `${pcpVisitorPersona.title} · ${pcpVisitorPersona.company}`,
+    context: "Retail · viewed carrier coordination post",
+    avatarSrc: assetSrc(CHERI_SPARKS_AVATAR),
+  },
+  {
+    name: "Priya Shah",
+    headline: "Director of Benefits · Calico Health Network",
+    context: "Healthcare · asked about carrier files",
+    avatarSrc: assetSrc("avatar-3.png"),
+  },
+  {
+    name: "Dana Kim",
+    headline: "VP People Operations · Arbor Retail Group",
+    context: "Retail · open enrollment coordination",
+    avatarSrc: assetSrc("avatar-2.png"),
+  },
+  {
+    name: "Morgan Lee",
+    headline: "HR Operations Lead · Meridian Logistics",
+    context: "Logistics · viewed eligibility cleanup content",
+    avatarSrc: assetSrc("avatar-1.png"),
+  },
+] as const;
 
 function Story1aFollowerGrowthThread({
   onBusyChange,
   onContentChange,
+  prompt,
   stopSignal,
 }: Readonly<{
   onBusyChange?: (id: string, isBusy: boolean) => void;
   onContentChange?: () => void;
+  prompt: string;
   stopSignal?: number;
-}>) {
+  }>) {
   const [visibleTurns, setVisibleTurns] = useState<
     ReadonlyArray<Story1aBlockTurn>
   >([]);
   const hasCompareTurn = visibleTurns.includes("compare");
-  const hasRecommendationsTurn = visibleTurns.includes("recommendations");
+  const hasDraftTurn = visibleTurns.includes("draft");
 
   function showTurn(turn: Story1aBlockTurn) {
     setVisibleTurns((currentTurns) =>
@@ -1038,16 +1154,16 @@ function Story1aFollowerGrowthThread({
   function handlePromptSelect(prompt: string) {
     if (prompt === STORY_1A_COMPARE_PROMPT) {
       showTurn("compare");
-      return;
     }
 
-    if (prompt === STORY_1A_RECOMMENDATIONS_PROMPT) {
-      showTurn("recommendations");
+    if (prompt === STORY_1A_DRAFT_POST_PROMPT) {
+      showTurn("draft");
     }
   }
 
   return (
     <>
+      <ChatMessage role="user">{prompt}</ChatMessage>
       <ScriptedResponseTurn
         attachments={[
           {
@@ -1060,7 +1176,7 @@ function Story1aFollowerGrowthThread({
                 annotation={{
                   startIndex: 6,
                   endIndex: 8,
-                  label: "Posting gap",
+                  label: "",
                   tone: "negative",
                 }}
                 title="Follower growth"
@@ -1071,6 +1187,34 @@ function Story1aFollowerGrowthThread({
               />
             ),
           },
+          {
+            id: "recommendations",
+            children: (
+              <ResponseText className="chat-message-enter">
+                <p>
+                  Good news first: your audience hasn&apos;t gone anywhere — they
+                  just haven&apos;t heard from you. Here&apos;s what I&apos;d do
+                  this week:
+                </p>
+                <ResponseTextRecommendationList
+                  items={[
+                    {
+                      action: "Get back to 3 posts a week",
+                      reason: "even short ones keep you in the feed.",
+                    },
+                    {
+                      action: "Talk about open enrollment deadlines",
+                      reason:
+                        "that's what brought your best visitors last month.",
+                    },
+                  ]}
+                />
+                <p className="mt-sm">
+                  I can help you draft a new post if you&apos;d like.
+                </p>
+              </ResponseText>
+            ),
+          },
           ...(visibleTurns.length === 0
             ? [
                 {
@@ -1079,8 +1223,11 @@ function Story1aFollowerGrowthThread({
                     <ResponseChips
                       onPromptSelect={handlePromptSelect}
                       prompts={[
+                        {
+                          label: STORY_1A_DRAFT_POST_PROMPT,
+                          leadingIcon: "signal-ai",
+                        },
                         STORY_1A_COMPARE_PROMPT,
-                        STORY_1A_RECOMMENDATIONS_PROMPT,
                       ]}
                     />
                   ),
@@ -1096,119 +1243,297 @@ function Story1aFollowerGrowthThread({
       />
 
       {hasCompareTurn ? (
-        <ScriptedResponseTurn
-          attachments={[
-            {
-              id: "compare",
-              children: (
-                <ResponseCompare
-                  dimension="Follower growth this month"
-                  rows={[
-                    {
-                      name: "Velora",
-                      value: -18,
-                      valueLabel: "-18%",
-                      isYou: true,
-                      visual: {
-                        kind: "company-logo",
-                        src: pcpCompanyProfile.logoSrc,
+        <>
+          <ChatMessage role="user">{STORY_1A_COMPARE_PROMPT}</ChatMessage>
+          <ScriptedResponseTurn
+            attachments={[
+              {
+                id: "compare",
+                children: (
+                  <ResponseCompare
+                    dimension="Follower growth this month"
+                    rows={[
+                      {
+                        name: "Velora",
+                        value: -18,
+                        valueLabel: "-18%",
+                        isYou: true,
+                        visual: {
+                          kind: "company-logo",
+                          src: pcpCompanyProfile.logoSrc,
+                        },
                       },
-                    },
-                    {
-                      name: "BenefitHub",
-                      value: 24,
-                      valueLabel: "+24%",
-                      visual: {
-                        kind: "company-logo",
+                      {
+                        name: pcpCompetitorNames[0],
+                        value: 24,
+                        valueLabel: "+24%",
+                        visual: {
+                          kind: "company-logo",
+                        },
                       },
-                    },
-                    {
-                      name: "Enrollly",
-                      value: 6,
-                      valueLabel: "+6%",
-                      visual: {
-                        kind: "company-logo",
+                      {
+                        name: pcpCompetitorNames[1],
+                        value: 6,
+                        valueLabel: "+6%",
+                        visual: {
+                          kind: "company-logo",
+                        },
                       },
-                    },
-                  ]}
-                  title="Competitor comparison"
-                />
-              ),
-            },
-            ...(!hasRecommendationsTurn
-              ? [
-                  {
-                    id: "chips",
-                    children: (
-                      <ResponseChips
-                        onPromptSelect={handlePromptSelect}
-                        prompts={[STORY_1A_RECOMMENDATIONS_PROMPT]}
-                      />
-                    ),
-                  },
-                ]
-              : []),
-          ]}
-          id="story-1a-compare"
-          onBusyChange={onBusyChange}
-          onContentChange={onContentChange}
-          stopSignal={stopSignal}
-          text="Compared with similar benefits platforms, Velora is losing follower momentum while BenefitHub and Enrollly are still growing."
-        />
+                    ]}
+                    title="Competitor comparison"
+                  />
+                ),
+              },
+            ]}
+            id="story-1a-compare"
+            onBusyChange={onBusyChange}
+            onContentChange={onContentChange}
+            stopSignal={stopSignal}
+            text={`Compared with similar benefits platforms, Velora is losing follower momentum while ${pcpCompetitorNames[0]} and ${pcpCompetitorNames[1]} are still growing.`}
+          />
+        </>
       ) : null}
 
-      {hasRecommendationsTurn ? (
-        <ScriptedResponseTurn
-          attachments={[
-            {
-              id: "post",
-              children: (
-                <ResponsePostCompact
-                  meta="134 reactions · 3w"
-                  text="Open enrollment creates a hard deadline for benefits teams. Here are three carrier-readiness checks to finish before a mid-year migration."
-                  thumbnailAlt="Open enrollment readiness post thumbnail"
-                  thumbnailSrc={assetSrc("member/post-image-1.png")}
-                />
-              ),
-            },
-          ]}
-          id="story-1a-recommendations"
-          onBusyChange={onBusyChange}
-          onContentChange={onContentChange}
-          renderText={({ streamStatus, streamText }) => (
-            <ResponseText
-              className="chat-message-enter"
-              streamStatus={streamStatus}
-              streamText={streamText}
-            >
-              <p>
-                Good news first: your audience hasn&apos;t gone anywhere — they
-                just haven&apos;t heard from you. Here&apos;s what I&apos;d do
-                this week:
-              </p>
-              <ResponseTextRecommendationList
-                items={[
+      {hasDraftTurn ? (
+        <>
+          <ChatMessage role="user">{STORY_1A_DRAFT_POST_PROMPT}</ChatMessage>
+          <ScriptedResponseTurn
+            attachments={[
+              {
+                id: "draft-post",
+                children: (
+                  <ResponseDraft
+                    actionLabel="Open post draft"
+                    message={story1aDraftPost}
+                    recipient="New Velora Page post"
+                    title="Drafted post"
+                  />
+                ),
+              },
+            ]}
+            id="story-1a-draft-post"
+            onBusyChange={onBusyChange}
+            onContentChange={onContentChange}
+            stopSignal={stopSignal}
+            text="Here is a concise post draft based on the recovery plan."
+          />
+        </>
+      ) : null}
+    </>
+  );
+}
+
+function CompetitorGrowthThread({
+  insight,
+  onBusyChange,
+  onContentChange,
+  onFollowUpSelect,
+  prompt,
+  stopSignal,
+}: Readonly<{
+  insight: AdminUc5Insight;
+  onBusyChange?: (id: string, isBusy: boolean) => void;
+  onContentChange?: () => void;
+  onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+  prompt: string;
+  stopSignal?: number;
+}>) {
+  const followUps = insight.followUps.filter((followUp) => !followUp.primary);
+
+  return (
+    <>
+      <ChatMessage role="user">{prompt}</ChatMessage>
+      <ScriptedResponseTurn
+        attachments={[
+          {
+            id: "compare",
+            children: (
+              <ResponseCompare
+                dimension="New followers this month"
+                rows={[
                   {
-                    action: "Get back to 3 posts a week",
-                    reason: "even short ones keep you in the feed.",
+                    name: pcpCompetitorNames[0],
+                    value: 82,
+                    valueLabel: "+82",
+                    detail: "22 posts",
+                    visual: {
+                      kind: "company-logo",
+                    },
                   },
                   {
-                    action: "Talk about open enrollment deadlines",
-                    reason:
-                      "that's what brought your best visitors last month.",
+                    name: pcpCompetitorNames[1],
+                    value: 64,
+                    valueLabel: "+64",
+                    detail: "18 posts",
+                    visual: {
+                      kind: "company-logo",
+                    },
                   },
                   {
-                    action: "Re-run your top post",
-                    reason: "it's still your strongest performer:",
+                    name: pcpCompanyProfile.name,
+                    value: 29,
+                    valueLabel: "+29",
+                    detail: "12 posts",
+                    isYou: true,
+                    visual: {
+                      kind: "company-logo",
+                      src: pcpCompanyProfile.logoSrc,
+                    },
                   },
                 ]}
+                title="Follower growth gap"
               />
-            </ResponseText>
-          )}
-          stopSignal={stopSignal}
-          text="Good news first: your audience hasn't gone anywhere — they just haven't heard from you. Here's what I'd do this week:"
-        />
-      ) : null}
+            ),
+          },
+          {
+            id: "recommendation-text",
+            children: (
+              <ResponseText className="chat-message-enter">
+                <p>Here&apos;s what I&apos;d do next:</p>
+                <ul className="mt-md list-disc space-y-sm pl-xl">
+                  <li>
+                    <strong className="font-semibold text-text">
+                      Publish one deadline-driven checklist.
+                    </strong>{" "}
+                    Use a practical open enrollment or carrier-readiness angle
+                    while the topic is already earning competitor attention.
+                  </li>
+                  <li>
+                    <strong className="font-semibold text-text">
+                      Pair it with Velora proof.
+                    </strong>{" "}
+                    Follow with the Arbor Retail Group story so the response is
+                    specific to Velora, not just a copy of the competitor format.
+                  </li>
+                </ul>
+              </ResponseText>
+            ),
+          },
+          ...(followUps.length
+            ? [
+                {
+                  id: "follow-ups",
+                  children: (
+                    <FollowUpActions
+                      followUps={followUps}
+                      onFollowUpSelect={onFollowUpSelect}
+                    />
+                  ),
+                },
+              ]
+            : []),
+        ]}
+        id="competitor-growth-insight"
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        stopSignal={stopSignal}
+        text={`${pcpCompetitorNames[0]} is gaining faster because they paired higher posting cadence with short, checklist-style open enrollment content. The gap is less about brand size and more about repeating practical topics HR leaders are already engaging with.`}
+      />
+    </>
+  );
+}
+
+function ContentResonanceThread({
+  insight,
+  onBusyChange,
+  onContentChange,
+  onFollowUpSelect,
+  prompt,
+  stopSignal,
+}: Readonly<{
+  insight: AdminUc5Insight;
+  onBusyChange?: (id: string, isBusy: boolean) => void;
+  onContentChange?: () => void;
+  onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+  prompt: string;
+  stopSignal?: number;
+}>) {
+  const followUps = insight.followUps.filter((followUp) => !followUp.primary);
+
+  return (
+    <>
+      <ChatMessage role="user">{prompt}</ChatMessage>
+      <ScriptedResponseTurn
+        attachments={[
+          {
+            id: "content-list",
+            children: (
+              <ResponseContentList
+                items={contentResonanceItems}
+                title="Posts"
+              />
+            ),
+          },
+          ...(followUps.length
+            ? [
+                {
+                  id: "follow-ups",
+                  children: (
+                    <FollowUpActions
+                      followUps={followUps}
+                      onFollowUpSelect={onFollowUpSelect}
+                    />
+                  ),
+                },
+              ]
+            : []),
+        ]}
+        id="content-resonance-insight"
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        stopSignal={stopSignal}
+        text="Your strongest engagement is clustering around operational benefits topics, especially carrier coordination and eligibility cleanup. The Arbor Retail Group post and the carrier-readiness checklist both outperformed broader Page updates, which suggests visitors are responding to concrete workflow pain points."
+      />
+    </>
+  );
+}
+
+function VisitorAudienceFitThread({
+  insight,
+  onBusyChange,
+  onContentChange,
+  onFollowUpSelect,
+  prompt,
+  stopSignal,
+}: Readonly<{
+  insight: AdminUc5Insight;
+  onBusyChange?: (id: string, isBusy: boolean) => void;
+  onContentChange?: () => void;
+  onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+  prompt: string;
+  stopSignal?: number;
+}>) {
+  const followUps = insight.followUps.filter((followUp) => !followUp.primary);
+
+  return (
+    <>
+      <ChatMessage role="user">{prompt}</ChatMessage>
+      <ScriptedResponseTurn
+        attachments={[
+          {
+            id: "audience-fit",
+            children: <VisitorAudienceFitResponse />,
+          },
+          ...(followUps.length
+            ? [
+                {
+                  id: "follow-ups",
+                  children: (
+                    <FollowUpActions
+                      followUps={followUps}
+                      onFollowUpSelect={onFollowUpSelect}
+                    />
+                  ),
+                },
+              ]
+            : []),
+        ]}
+        id="visitor-audience-fit-insight"
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        stopSignal={stopSignal}
+        text="Yes. 64% of people who viewed your Page this month work in HR, benefits, or people operations roles. That is the audience Velora is built for."
+      />
     </>
   );
 }
@@ -1253,7 +1578,7 @@ function InsightResponse({
         ) : null}
         {insight.id === "follower-growth" ? <FollowerGrowthResponse /> : null}
         {insight.id === "visitor-demographics" ? (
-          <VisitorDemographicsResponse />
+          <VisitorAudienceFitResponse />
         ) : null}
         {insight.id === "content-engagement" ? (
           <ContentEngagementResponse />
@@ -1267,12 +1592,6 @@ function InsightResponse({
           />
         ) : null}
       </div>
-
-      {insight.id === "post-amplification" ? null : (
-        <footer className="border-t border-border-faint px-lg py-md">
-          <AnalyticsPageButton />
-        </footer>
-      )}
     </article>
   );
 }
@@ -1317,7 +1636,7 @@ function BoostCandidatePostPreview() {
         />
         <div className="min-w-0">
           <h4 className="truncate text-control-sm text-text">
-            What benefits teams should validate before a mid-year migration
+            {pcpProofSnippets.postTitle}
           </h4>
           <p className="mt-xxs text-body-xs text-text-meta">2d</p>
         </div>
@@ -1375,7 +1694,16 @@ function MetricRow({ metric }: Readonly<{ metric: AdminUc5Metric }>) {
   );
 }
 
-function VisitorDemographicsResponse() {
+function VisitorAudienceFitResponse() {
+  return (
+    <ResponseAudienceFit
+      avatars={visitorAudienceFitAvatars}
+      segments={visitorAudienceFitSegments}
+    />
+  );
+}
+
+export function VisitorDemographicsResponse() {
   return (
     <div>
       {adminUc5DemographicGroups.map((group) => (

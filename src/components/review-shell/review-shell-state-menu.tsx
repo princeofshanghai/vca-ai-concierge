@@ -65,6 +65,7 @@ type ReviewShellStateMenuProps = Readonly<{
   isSignedIn: boolean;
   pathname: string;
   currentHref?: string;
+  storyCurrentHref?: string;
   onLoginSelect?: (next: boolean) => void;
   onClose: () => void;
   triggerRef: RefObject<HTMLElement | null>;
@@ -84,6 +85,7 @@ export function ReviewShellStateMenu({
   isSignedIn,
   pathname,
   currentHref = pathname,
+  storyCurrentHref,
   onLoginSelect,
   onClose,
   triggerRef,
@@ -106,26 +108,31 @@ export function ReviewShellStateMenu({
   const storyControlCount = storyOptions.length;
   const modeControlCount = modeGroups?.length ?? modeOptions.length;
   const hasSettings = visitorOptions.length > 0 || shellOptions.length > 0;
+  const currentStoryHref = storyCurrentHref ?? currentHref;
   const optionCount =
     storyControlCount +
     modeControlCount +
     shellOptions.length +
     visitorOptions.length;
-  const optionMatchesCurrentHref = (href?: string) => {
+  const optionMatchesCurrentHref = (
+    href?: string,
+    candidateHref = currentHref,
+  ) => {
     if (!href) {
       return false;
     }
 
-    const hasQuerySensitiveState = href.includes("?") || currentHref.includes("?");
+    const hasQuerySensitiveState =
+      href.includes("?") || candidateHref.includes("?");
 
     if (hasQuerySensitiveState) {
-      return href === currentHref;
+      return href === candidateHref;
     }
 
     return href.split("?")[0] === pathname;
   };
   const activeStoryIndex = storyOptions.findIndex((option) =>
-    optionMatchesCurrentHref(option.href),
+    optionMatchesCurrentHref(option.href, currentStoryHref),
   );
   const shouldShowModeSelection = activeStoryIndex < 0;
   const activeModeIndex = modeGroups
@@ -310,7 +317,10 @@ export function ReviewShellStateMenu({
   function renderStoryOptions() {
     return storyOptions.map((option, optionIndex) => {
       const display = getModeOptionDisplay(option);
-      const isSelected = optionMatchesCurrentHref(option.href);
+      const isSelected = optionMatchesCurrentHref(
+        option.href,
+        currentStoryHref,
+      );
 
       return (
         <Link

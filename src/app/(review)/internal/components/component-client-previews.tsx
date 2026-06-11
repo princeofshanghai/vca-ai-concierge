@@ -60,6 +60,7 @@ import {
   type InsightCardAction,
   type VcaFabVisualState,
 } from "@/components/premium-company-pages";
+import { pcpCompetitorNames } from "@/components/premium-company-pages/persona";
 import { PremiumConciergeFab } from "@/components/premium/premium-concierge-fab";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
@@ -298,7 +299,7 @@ const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
   { label: "Disabled", value: "disabled" },
 ];
 const pcpAiCardDemoOptions: ReadonlyArray<DemoOption<PcpAiCardDemoId>> = [
-  { label: "Case study proof", value: "vca-case-study" },
+  { label: "Post proof", value: "vca-case-study" },
   { label: "Job preview", value: "vca-job" },
   { label: "Drafted message", value: "vca-handoff" },
   { label: "Attention digest", value: "admin-attention" },
@@ -2523,7 +2524,7 @@ export function PcpInsightCardSystemPreview() {
             onSelect: () => {},
           }}
           dismissLabel="Dismiss lead insight"
-          evidence="She asked about a mid-year benefits migration and sent Rose a message."
+          evidence="She viewed the Arbor Retail Group post and sent Rose a message."
           headline="A VP of HR sent you a message"
           onDismiss={() => {}}
           type="lead-tier-1"
@@ -2542,8 +2543,8 @@ export function PcpInsightCardSystemPreview() {
         <InsightCard
           action={askAiAction("ask-ai-anomaly")}
           dismissLabel="Dismiss follower growth insight"
-          evidence="Posting slowed from 3x a week to once."
-          headline="Follower growth down 18% this month"
+          evidence="Down 18% after posting slowed to once a week."
+          headline="Recover your follower growth"
           onDismiss={() => {}}
           type="anomaly"
         />
@@ -2556,12 +2557,12 @@ export function PcpInsightCardSystemPreview() {
         <InsightCard
           action={askAiAction("ask-ai-opportunity")}
           dismissLabel="Dismiss opportunity insight"
-          evidence="Only 240 impressions so far."
-          headline="Open enrollment post has 4.8% engagement"
+          evidence="Your top 2 posts by engagement both focus on carrier readiness and eligibility cleanup."
+          headline="Carrier coordination content is resonating"
           onDismiss={() => {}}
           type="opportunity"
           visual={{
-            alt: "Benefits migration readiness post preview",
+            alt: "Carrier coordination post preview",
             kind: "post-thumbnail",
             src: "/assets/premium-company-pages/member/post-image-1.png",
           }}
@@ -2575,17 +2576,17 @@ export function PcpInsightCardSystemPreview() {
         <InsightCard
           action={askAiAction("ask-ai-strong-fit")}
           dismissLabel="Dismiss strong-fit visitor insight"
-          evidence="Marcus viewed two migration posts and matches your benefits leader audience."
+          evidence="Priya viewed carrier coordination content and matches your benefits leader audience."
           headline="A benefits director matches your ICP"
           onDismiss={() => {}}
           signal={{
             tone: "profile",
-            text: "Viewed your pricing post twice this week",
+            text: "Viewed carrier coordination content twice this week",
           }}
           type="strong-fit-tier-2"
           visual={{
             kind: "avatar",
-            label: "Marcus Tran",
+            label: "Priya Shah",
             src: "/assets/premium-company-pages/avatar-3.png",
           }}
         />
@@ -2598,13 +2599,13 @@ export function PcpInsightCardSystemPreview() {
         <InsightCard
           action={askAiAction("ask-ai-competitive")}
           dismissLabel="Dismiss competitive insight"
-          evidence="They posted benefits migration stories 3x this week."
-          headline="BenefitHub follower growth is up 24%"
+          evidence="82 new followers this month vs. Velora's 29."
+          headline={`${pcpCompetitorNames[0]} is pulling ahead in follower growth`}
           onDismiss={() => {}}
           type="competitive"
           visual={{
             kind: "company-logo",
-            label: "BenefitHub",
+            label: pcpCompetitorNames[0],
           }}
         />
       </section>
@@ -2616,10 +2617,21 @@ export function PcpInsightCardSystemPreview() {
         <InsightCard
           action={askAiAction("ask-ai-audience-fit")}
           dismissLabel="Dismiss audience fit insight"
-          evidence="Visitors cluster around HR, benefits, and people operations leaders."
-          headline="68% of engaged visitors are HR Director+"
+          evidence="64% of engaged visitors work in HR, benefits, or people operations."
+          headline="Your page is reaching more relevant visitors"
           onDismiss={() => {}}
           type="audience-fit"
+          visual={{
+            kind: "avatar-pair",
+            primary: {
+              label: "Priya Shah",
+              src: "/assets/premium-company-pages/avatar-3.png",
+            },
+            secondary: {
+              label: "Dana Kim",
+              src: "/assets/premium-company-pages/avatar-2.png",
+            },
+          }}
         />
       </section>
     </div>
@@ -2658,7 +2670,7 @@ export function PcpAdminAttentionCardsPreview() {
     <PcpAdminAttentionFrame>
       <AdminPerformanceDigestCard
         activeInsightId={activeInsightId}
-        onInsightSelect={setActiveInsightId}
+        onInsightSelect={(insight) => setActiveInsightId(insight.id)}
       />
     </PcpAdminAttentionFrame>
   );

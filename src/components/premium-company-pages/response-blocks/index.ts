@@ -1,5 +1,17 @@
+export { AudienceFit } from "./AudienceFit";
+export type {
+  AudienceFitAvatar,
+  AudienceFitProps,
+  AudienceFitSegment,
+} from "./AudienceFit";
 export { Chips } from "./Chips";
-export type { ChipsProps } from "./Chips";
+export type { ChipPrompt, ChipsProps } from "./Chips";
+export { ContentList } from "./ContentList";
+export type {
+  ContentListItem,
+  ContentListMetric,
+  ContentListProps,
+} from "./ContentList";
 export { Compare } from "./Compare";
 export type { CompareProps, CompareRow, CompareRowVisual } from "./Compare";
 export { Draft } from "./Draft";
@@ -16,13 +28,14 @@ export { Metric } from "./Metric";
 export type { MetricItem, MetricProps, MetricTone } from "./Metric";
 export { MetricWithTrend } from "./MetricWithTrend";
 export type { MetricWithTrendProps } from "./MetricWithTrend";
+export { PageIdentityCard } from "./PageIdentityCard";
+export type { PageIdentityCardProps } from "./PageIdentityCard";
+export { PersonCard } from "./PersonCard";
+export type { PersonCardProps } from "./PersonCard";
 export { PostCompact } from "./PostCompact";
 export type { PostCompactProps } from "./PostCompact";
-export { Recommendations } from "./Recommendations";
-export type {
-  RecommendationItem,
-  RecommendationsProps,
-} from "./Recommendations";
+export { ResponseRail } from "./ResponseRail";
+export type { ResponseRailProps } from "./ResponseRail";
 export { Text } from "./Text";
 export { TextRecommendationList } from "./Text";
 export type {

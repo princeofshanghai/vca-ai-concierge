@@ -58,13 +58,18 @@ import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
 import {
+  AudienceFit as ResponseAudienceFit,
   Chips as ResponseChips,
+  ContentList as ResponseContentList,
   Compare as ResponseCompare,
   Draft as ResponseDraft,
   Entity as ResponseEntity,
   Metric as ResponseMetric,
   MetricWithTrend as ResponseMetricWithTrend,
+  PageIdentityCard as ResponsePageIdentityCard,
+  PersonCard as ResponsePersonCard,
   PostCompact as ResponsePostCompact,
+  ResponseRail,
   Text as ResponseText,
   TextRecommendationList as ResponseTextRecommendationList,
   Trend as ResponseTrend,
@@ -72,6 +77,7 @@ import {
 import {
   pcpAdminScenario,
   pcpCompanyProfile,
+  pcpCompetitorNames,
   pcpProofSnippets,
   pcpVcaScenario,
   pcpVisitorPersona,
@@ -1208,7 +1214,7 @@ function PremiumCompanyPageAiCardsPage({
       <PreviewSection title="Visitor VCA conversation cards">
         <PreviewMomentStack>
           <PreviewMoment>
-            <PreviewExampleHeading>Case study proof</PreviewExampleHeading>
+            <PreviewExampleHeading>Post proof</PreviewExampleHeading>
             <PcpVcaCaseStudyCardPreview />
           </PreviewMoment>
           <PreviewMoment>
@@ -1292,7 +1298,7 @@ function PremiumCompanyPageInsightCardsPage({
 
       <PreviewSection
         title="AI insight card catalog"
-        description="AI insight cards use the same shell with added provenance, an inline AI Ask action, optional visuals, and signal pills. Anomaly and audience-fit cards have no visual; Tier 2 profile signals use blue."
+        description="AI insight cards use the same shell with added provenance, an inline AI Ask action, optional visuals, and signal pills. Audience-fit cards can use paired avatars when the insight is about visitor quality; Tier 2 profile signals use blue."
       >
         <PcpInsightCardSystemPreview />
       </PreviewSection>
@@ -1322,7 +1328,8 @@ function PremiumCompanyPageInsightCardsPage({
   );
 }
 
-const benefitHubName = "BenefitHub";
+const benefitHubName = pcpCompetitorNames[0];
+const enrollwiseName = pcpCompetitorNames[1];
 const cheriAvatarSrc = "/assets/premium-company-pages/member/cheri-sparks.png";
 const postPreviewImageSrc = "/assets/premium-company-pages/member/media-1.png";
 const schoolAlumniImageSrc =
@@ -1342,13 +1349,33 @@ const followerGrowthTrendValues = [
 const followerGrowthTrendAnnotation = {
   startIndex: 6,
   endIndex: 8,
-  label: "Posting gap",
+  label: "",
   tone: "negative",
 } as const;
 const aggregateAvatarSrcs = [
   "/assets/premium-company-pages/avatar-1.png",
   "/assets/premium-company-pages/avatar-2.png",
   "/assets/premium-company-pages/avatar-3.png",
+] as const;
+const responseRailPeople = [
+  {
+    name: pcpCompanyProfile.adminName,
+    headline: pcpCompanyProfile.adminTitle,
+    followers: "8,412 followers",
+    avatarSrc: pcpCompanyProfile.adminAvatarSrc,
+  },
+  {
+    name: "Avery Chen",
+    headline: "Head of Carrier Integrations",
+    followers: "3,284 followers",
+    avatarSrc: "/assets/premium-company-pages/avatar-2.png",
+  },
+  {
+    name: "Marcus Lee",
+    headline: "Benefits Implementation Lead",
+    followers: "2,981 followers",
+    avatarSrc: "/assets/premium-company-pages/avatar-3.png",
+  },
 ] as const;
 
 function ResponseSystemStack({
@@ -1446,7 +1473,8 @@ function ResponseSystemRules() {
         light numbered list, not as a separate evidence card.
       </RuleTile>
       <RuleTile title="Never nest blocks">
-        Metric, Trend, Compare, Entity, Draft, and Chips stay as siblings.
+        Metric, Trend, Compare, ContentList, Entity, Draft, and Chips stay as
+        siblings.
       </RuleTile>
       <RuleTile title="Respect audience">
         Visitors get Text, Draft, and relevant public entities. Admins get the
@@ -1587,7 +1615,7 @@ function ResponseSystemBlockCatalog() {
                 },
               },
               {
-                name: "Enrollly",
+                name: enrollwiseName,
                 value: 6,
                 valueLabel: "+6%",
                 visual: {
@@ -1596,6 +1624,84 @@ function ResponseSystemBlockCatalog() {
               },
             ]}
             title="Competitor comparison"
+          />
+        </ResponseSystemStack>
+      </PreviewMoment>
+
+      <PreviewMoment>
+        <PreviewExampleHeading>AudienceFit</PreviewExampleHeading>
+        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
+          AudienceFit summarizes which visitor groups are showing up after the
+          agent explains the main audience-match signal.
+        </p>
+        <ResponseSystemStack>
+          <ResponseAudienceFit
+            avatars={[
+              {
+                label: "Priya Shah",
+                src: "/assets/premium-company-pages/avatar-3.png",
+              },
+              {
+                label: "Dana Kim",
+                src: "/assets/premium-company-pages/avatar-2.png",
+              },
+              {
+                label: "Morgan Lee",
+                src: "/assets/premium-company-pages/avatar-1.png",
+              },
+            ]}
+            segments={[
+              {
+                label: "HR leaders",
+                detail: "Largest viewer group",
+                value: "38%",
+              },
+              {
+                label: "Benefits operations",
+                detail: "Viewed readiness content",
+                value: "16%",
+              },
+              {
+                label: "People operations",
+                detail: "Growing share of Page viewers",
+                value: "10%",
+              },
+            ]}
+          />
+        </ResponseSystemStack>
+      </PreviewMoment>
+
+      <PreviewMoment>
+        <PreviewExampleHeading>ContentList</PreviewExampleHeading>
+        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
+          ContentList compares a small set of posts when the agent is explaining
+          content performance patterns.
+        </p>
+        <ResponseSystemStack>
+          <ResponseContentList
+            items={[
+              {
+                title: pcpProofSnippets.postTitle,
+                thumbnailSrc:
+                  "/assets/premium-company-pages/member/post-image-1.png",
+                thumbnailAlt: "Carrier coordination post preview",
+                metrics: [
+                  { label: "Engagement rate", value: "4.8%" },
+                  { label: "Impressions", value: "1,688" },
+                ],
+              },
+              {
+                title: "Carrier file readiness checklist for open enrollment",
+                thumbnailSrc:
+                  "/assets/premium-company-pages/member/post-image-2.png",
+                thumbnailAlt: "Open enrollment checklist post preview",
+                metrics: [
+                  { label: "Engagement rate", value: "4.2%" },
+                  { label: "Impressions", value: "1,204" },
+                ],
+              },
+            ]}
+            title="Posts"
           />
         </ResponseSystemStack>
       </PreviewMoment>
@@ -1622,6 +1728,92 @@ function ResponseSystemBlockCatalog() {
           />
         </ResponseSystemStack>
       </PreviewMoment>
+
+      <PreviewMoment>
+        <PreviewExampleHeading>ResponseRail + identity cards</PreviewExampleHeading>
+        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
+          ResponseRail is the reusable horizontal-scroll wrapper for future
+          multi-card responses. PersonCard and PageIdentityCard are the first
+          card types using it.
+        </p>
+        <div className="grid gap-lg xl:grid-cols-3">
+          <div className="space-y-sm">
+            <PreviewExampleHeading level="h4">
+              Collapsed chat width
+            </PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseRail
+                aria-label="People on this Page"
+                title={
+                  <>
+                    <Icon name="people" size="small" />
+                    <span>People on this Page</span>
+                  </>
+                }
+              >
+                {responseRailPeople.map((person) => (
+                  <ResponsePersonCard
+                    avatarSrc={person.avatarSrc}
+                    followers={person.followers}
+                    headline={person.headline}
+                    key={person.name}
+                    name={person.name}
+                  />
+                ))}
+              </ResponseRail>
+            </ChatThreadReferenceFrame>
+          </div>
+          <div className="space-y-sm">
+            <PreviewExampleHeading level="h4">
+              Expanded chat width
+            </PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="expanded">
+              <ResponseRail
+                aria-label="People on this Page"
+                title={
+                  <>
+                    <Icon name="people" size="small" />
+                    <span>People on this Page</span>
+                  </>
+                }
+              >
+                {responseRailPeople.map((person) => (
+                  <ResponsePersonCard
+                    avatarSrc={person.avatarSrc}
+                    followers={person.followers}
+                    headline={person.headline}
+                    key={person.name}
+                    name={person.name}
+                  />
+                ))}
+              </ResponseRail>
+            </ChatThreadReferenceFrame>
+          </div>
+          <div className="space-y-sm">
+            <PreviewExampleHeading level="h4">
+              Page identity card
+            </PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseRail
+                aria-label="Page identity"
+                title={
+                  <>
+                    <Icon name="company" size="small" />
+                    <span>Page identity</span>
+                  </>
+                }
+              >
+                <ResponsePageIdentityCard
+                  followers={pcpCompanyProfile.followers}
+                  industry={pcpCompanyProfile.industry}
+                  logoSrc={pcpCompanyProfile.logoSrc}
+                  name={pcpCompanyProfile.name}
+                />
+              </ResponseRail>
+            </ChatThreadReferenceFrame>
+          </div>
+        </div>
+      </PreviewMoment>
     </PreviewMomentStack>
   );
 }
@@ -1639,7 +1831,7 @@ function ResponseEntityActionPairs() {
           <div className="space-y-sm">
             <PreviewExampleHeading level="h4">Full visitor</PreviewExampleHeading>
             <ResponseEntity
-              actions={[{ label: "Read post" }, { label: "Follow" }]}
+              actions={[{ label: "View post" }, { label: "Follow" }]}
               audience="visitor"
               commentCount="3"
               engagement="134"
@@ -1648,7 +1840,7 @@ function ResponseEntityActionPairs() {
               name={pcpCompanyProfile.name}
               previewImageSrc={postPreviewImageSrc}
               repostCount="3"
-              snippet={pcpProofSnippets.caseStudyShort}
+              snippet={pcpProofSnippets.postSummary}
               timestamp="3d"
               variant="post"
             />
@@ -1670,7 +1862,7 @@ function ResponseEntityActionPairs() {
               previewImageSrc={postPreviewImageSrc}
               reactions={["like", "support", "interest"]}
               repostCount="3"
-              snippet="What benefits teams should validate before a mid-year migration."
+              snippet={pcpProofSnippets.postSummary}
               timestamp="3d"
               variant="post"
             />
@@ -1680,10 +1872,10 @@ function ResponseEntityActionPairs() {
               Compact reference
             </PreviewExampleHeading>
             <ResponsePostCompact
-              author="BenefitHub"
+              author={benefitHubName}
               meta="421 reactions · 1w"
               text="5 things to lock down before open enrollment opens. Number 4 is the one…"
-              thumbnailAlt="BenefitHub checklist post thumbnail"
+              thumbnailAlt={`${benefitHubName} checklist post thumbnail`}
               thumbnailSrc={postPreviewImageSrc}
             />
           </div>
@@ -1725,7 +1917,8 @@ function ResponseEntityActionPairs() {
         <div className="grid gap-lg lg:grid-cols-2">
           <RuleTile title="Visitor side">
             Person cards do not render for visitors. The visitor experience uses
-            Text and Draft, plus public Post, Job, Company, or Event entities.
+            Text and Draft, plus public Post, Job, Company, Event, or Page people
+            summaries.
           </RuleTile>
           <ResponseEntity
             actions={[{ label: "View message" }, { label: "Profile" }]}
@@ -1738,7 +1931,7 @@ function ResponseEntityActionPairs() {
               tier: "tier-1",
               label: "High intent",
               quote:
-                "Can Velora support a mid-year benefits migration before open enrollment?",
+                "I'm exploring Velora for HR and benefits operations after seeing the Arbor Retail Group post.",
               detail: pcpAdminScenario.leadSummary,
             }}
             variant="person"
@@ -1785,7 +1978,7 @@ function ResponseEntityActionPairs() {
             attendance="1,284 attendees"
             audience="visitor"
             date={{ month: "JUN", day: "24" }}
-            name="Open enrollment migration readiness workshop"
+            name="Open enrollment carrier coordination workshop"
             variant="event"
           />
           <ResponseEntity
@@ -1793,7 +1986,7 @@ function ResponseEntityActionPairs() {
             attendance="1,284 attendees"
             audience="admin"
             date={{ month: "JUN", day: "24" }}
-            name="Open enrollment migration readiness workshop"
+            name="Open enrollment carrier coordination workshop"
             variant="event"
           />
         </div>
@@ -1816,7 +2009,7 @@ function VisitorSignalTierExamples() {
           tier: "tier-1",
           label: "Tier 1 · High intent",
           quote:
-            "Can Velora support a mid-year benefits migration before open enrollment?",
+            "I'm exploring Velora for HR and benefits operations after seeing the Arbor Retail Group post.",
           detail: "Amber signal: she did something.",
         }}
         variant="person"
@@ -1829,7 +2022,7 @@ function VisitorSignalTierExamples() {
         audience="admin"
         connectionDegree="2nd"
         headline="Director, Benefits · Northstar Health"
-        name="Marcus Tran"
+        name="Priya Shah"
         signal={{
           tier: "tier-2",
           label: "Tier 2 · Strong fit",
@@ -1849,7 +2042,7 @@ function VisitorSignalTierExamples() {
           count: "43 visitors",
           avatars: aggregateAvatarSrcs,
           detail:
-            "68% of engaged visitors are HR Director+ at enterprise companies.",
+            "64% of people who viewed your Page are in HR, benefits, or people operations roles.",
         }}
         variant="person"
       />
@@ -1892,20 +2085,21 @@ function StoryCompositionExamples() {
             tier: "tier-1",
             label: "High intent",
             quote:
-              "Can Velora support a mid-year benefits migration before open enrollment?",
+              "I'm exploring Velora for HR and benefits operations after seeing the Arbor Retail Group post.",
           }}
           variant="person"
         />
         <ResponseText>
-          Cheri asked a buying-stage migration question, viewed the Arbor proof,
-          and sent Rose a drafted message.
+          Cheri viewed Velora&apos;s Arbor Retail Group post, explored whether
+          Velora is relevant for HR and benefits operations, and sent Rose a
+          drafted message.
         </ResponseText>
         <ResponseDraft
           message={pcpAdminScenario.suggestedReply}
           recipient={`Reply to ${pcpVisitorPersona.name}`}
         />
         <ResponseChips
-          prompts={["Prep Rose for the reply", "Draft the customer story"]}
+          prompts={["Prep Rose for the reply", "Draft a follow-up post"]}
         />
       </ResponseSystemStack>
     </div>

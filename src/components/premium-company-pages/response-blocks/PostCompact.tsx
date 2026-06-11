@@ -60,7 +60,7 @@ export function PostCompact({
   ...props
 }: PostCompactProps) {
   const classNames = cx(
-    "flex w-full items-center gap-sm rounded-sm border border-border-faint bg-background p-sm text-left text-text shadow-raised-faint",
+    "flex w-full items-center gap-md rounded-sm border border-border-faint bg-background p-md text-left text-text shadow-raised-faint",
     href
       ? "outline-none transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:shadow-raised-soft focus-visible:ring-4 focus-visible:ring-action-focus-ring"
       : "",

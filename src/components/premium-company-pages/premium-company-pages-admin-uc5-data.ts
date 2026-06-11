@@ -12,6 +12,7 @@ export type AdminUc5InsightId =
   | "follower-growth"
   | "visitor-demographics"
   | "content-engagement"
+  | "competitor-growth"
   | "weekly-synthesis";
 
 export type AdminUc5Tone = "positive" | "negative" | "neutral";
@@ -20,6 +21,11 @@ export type AdminUc5FollowUp = Readonly<{
   prompt: string;
   response: string;
   primary?: boolean;
+}>;
+
+export type AdminUc5InsightSelection = Readonly<{
+  id: AdminUc5InsightId;
+  prompt: string;
 }>;
 
 export type AdminUc5Insight = Readonly<{
@@ -83,12 +89,12 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
       {
         prompt: "Why this post?",
         response:
-          "Because the early signal is strong. People who saw the migration-readiness post engaged with it at 4.8%, well above the Page average, but only 240 people saw it. That makes it a good candidate to review for more reach.",
+          "Because the early signal is strong. People who saw the Arbor Retail Group post engaged with it at 4.8%, well above the Page average, but only 240 people saw it. That makes it a good candidate to review for more reach.",
       },
       {
         prompt: "Who would this reach?",
         response:
-          "The strongest audience fit is HR, benefits, and people operations leaders at enterprise companies. They are already showing up in your visitor data around open enrollment and migration content.",
+          "The strongest audience fit is HR, benefits, and people operations leaders at enterprise companies. They are already showing up in your visitor data around open enrollment and carrier coordination content.",
       },
       {
         prompt: "Explore boost options",
@@ -117,7 +123,7 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
       {
         prompt: "What should I do this week?",
         response:
-          "Post a short follow-up on phased migration readiness, then reuse Cheri's question as a benefits-leader prompt. That keeps the narrative close to the buying conversation already happening in your inbox.",
+          "Post a short follow-up on carrier coordination, then reference the Arbor Retail Group post Cheri viewed. That keeps the narrative close to the Page engagement already happening in your inbox.",
       },
     ],
   },
@@ -125,7 +131,7 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "visitor-demographics",
     icon: "analytics",
     label: "Benefits leaders are finding your Page",
-    value: "68% of engaged visitors are HR Director+",
+    value: "64% of people who viewed your Page match your target audience",
     query: "Who is visiting Velora's Page?",
     followUps: [
       {
@@ -143,19 +149,41 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
   "content-engagement": {
     id: "content-engagement",
     icon: "popular-content",
-    label: "One post is outperforming its reach",
-    value: "Arbor proof: strong engagement - modest impressions",
-    query: "What should I do with this high-engagement post?",
+    label: "Carrier coordination content is resonating",
+    value: "Top 2 posts focus on carrier readiness and eligibility cleanup",
+    query: "What content is resonating most?",
     followUps: [
       {
-        prompt: "Why did the top post perform better?",
+        prompt: "Show the top posts",
         response:
-          "It led with a concrete operational risk: switching benefits systems before open enrollment without a clear carrier-readiness plan. That makes the problem obvious before readers need to understand Velora.",
+          "The Arbor Retail Group proof and the carrier file readiness checklist are the clearest signals. Both turn benefits operations into a concrete workflow problem before asking readers to learn more about Velora.",
       },
       {
-        prompt: "What should I post next?",
+        prompt: "Break down by audience",
         response:
-          "Turn Cheri's question into a short post: 'What breaks first when benefits teams migrate mid-year?' Pair it with a simple readiness checklist.",
+          "The strongest engagement is coming from HR, benefits, and people operations visitors. The content appears to resonate most when it names a specific operational moment like carrier readiness, eligibility cleanup, or open enrollment preparation.",
+      },
+      {
+        prompt: "What themes are emerging?",
+        response:
+          "The emerging theme is operational clarity. Posts that make complex benefits coordination feel specific and manageable are outperforming broader Page updates.",
+      },
+    ],
+  },
+  "competitor-growth": {
+    id: "competitor-growth",
+    icon: "company",
+    label: `${pcpCompetitorNames[0]} is gaining followers faster`,
+    value: "82 new followers this month vs Velora's 29",
+    query: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
+    followUps: [
+      {
+        prompt: "What should we post next?",
+        response: `Post a concise carrier-readiness checklist this week, then follow with a customer proof point. Keep the angle practical and deadline-driven so it competes with the open enrollment content already working for ${pcpCompetitorNames[0]}.`,
+      },
+      {
+        prompt: "Compare recent posts",
+        response: `${pcpCompetitorNames[0]} is winning on cadence and checklist-style packaging. Velora's strongest posts are more specific to benefits operations, so the opportunity is to publish more often without losing that sharper point of view.`,
       },
     ],
   },
@@ -167,10 +195,10 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     query: "Summarize the top things I should act on this week.",
     followUps: [
       {
-        prompt: "Draft the Cheri Sparks customer story",
+        prompt: "Draft the Cheri Sparks follow-up",
         primary: true,
         response:
-          `Draft angle: '${pcpProofSnippets.caseStudyTitle}.' Lead with Cheri's mid-year migration question, then explain eligibility cleanup, carrier readiness, and employee communications in one visual example.`,
+          `Draft angle: '${pcpProofSnippets.postTitle}.' Lead with the Arbor Retail Group post Cheri viewed, then explain eligibility cleanup, carrier readiness, and employee communications in one visual example.`,
       },
       {
         prompt: "Which leads need a reply?",
@@ -245,7 +273,7 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
 
 export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
-    title: "What benefits teams should validate before a mid-year migration",
+    title: pcpProofSnippets.postTitle,
     impressions: "1,688",
     desktop: 32,
     mobile: 68,
@@ -311,7 +339,7 @@ export const adminUc5Leads: ReadonlyArray<AdminUc5Lead> = [
   {
     name: pcpVisitorPersona.name,
     company: pcpVisitorPersona.company,
-    summary: "Asked whether Velora can support a mid-year benefits migration.",
+    summary: "Viewed the Arbor Retail Group post and asked whether Velora is relevant.",
     status: "High intent",
     replyNeeded: true,
   },
@@ -325,13 +353,13 @@ export const adminUc5Leads: ReadonlyArray<AdminUc5Lead> = [
   {
     name: "Dana Kim",
     company: "Arbor Retail Group",
-    summary: "Shared a positive open enrollment migration story.",
+    summary: "Shared a positive open enrollment coordination story.",
     status: "Replied",
   },
 ];
 
 export const adminUc5SynthesisRecommendation =
-  `${pcpCompetitorNames[0]} is posting benefits migration stories 3x a week. You have a strong one in your inbox from Cheri Sparks. Want me to draft it?`;
+  `${pcpCompetitorNames[0]} is posting open enrollment operations stories 3x a week. You have a strong one in your inbox from Cheri Sparks. Want me to draft it?`;
 
 export const adminUc5PrototypeFallback =
   "This prototype is scripted for the four performance reporting prompts. Choose a digest item or prompt chip to see the compact report.";

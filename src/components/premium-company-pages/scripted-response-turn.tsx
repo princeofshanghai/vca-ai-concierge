@@ -42,6 +42,7 @@ export type ScriptedResponseTurnProps = Readonly<{
   onContentChange?: () => void;
   onBusyChange?: (id: string, isBusy: boolean) => void;
   stopSignal?: number;
+  animate?: boolean;
 }>;
 
 const ATTACHMENT_REVEAL_INTERVAL_MS = 220;
@@ -50,25 +51,67 @@ export function ScriptedResponseTurn({
   id,
   text,
   attachments = [],
+  animate = true,
+  ...props
+}: ScriptedResponseTurnProps) {
+  const turnKey = `${id}\u0000${text}\u0000${animate ? "animated" : "static"}`;
+
+  return (
+    <ScriptedResponseTurnContent
+      {...props}
+      animate={animate}
+      attachments={attachments}
+      id={id}
+      key={turnKey}
+      text={text}
+    />
+  );
+}
+
+type ScriptedResponseTurnContentProps = Omit<
+  ScriptedResponseTurnProps,
+  "animate" | "attachments"
+> &
+  Readonly<{
+    animate: boolean;
+    attachments: ReadonlyArray<ScriptedResponseAttachment>;
+  }>;
+
+function ScriptedResponseTurnContent({
+  id,
+  text,
+  attachments,
   renderText,
   onContentChange,
   onBusyChange,
   stopSignal = 0,
-}: ScriptedResponseTurnProps) {
+  animate,
+}: ScriptedResponseTurnContentProps) {
   const [pendingResponse, setPendingResponse] =
-    useState<ScriptedAssistantResponse | null>(() => ({ id, text }));
+    useState<ScriptedAssistantResponse | null>(() =>
+      animate ? { id, text } : null,
+    );
   const [streamStatus, setStreamStatus] =
-    useState<ChatMessageStreamStatus>("thinking");
-  const [streamText, setStreamText] = useState("");
-  const [visibleAttachmentCount, setVisibleAttachmentCount] = useState(0);
+    useState<ChatMessageStreamStatus>(() =>
+      animate ? "thinking" : "complete",
+    );
+  const [streamText, setStreamText] = useState(() => (animate ? "" : text));
+  const [visibleAttachmentCount, setVisibleAttachmentCount] = useState(() =>
+    animate ? 0 : attachments.length,
+  );
   const [isStopped, setIsStopped] = useState(false);
   const attachmentCount = attachments.length;
+  const renderedAttachmentCount = animate
+    ? Math.min(visibleAttachmentCount, attachmentCount)
+    : attachmentCount;
+  const streamPendingResponse = animate ? pendingResponse : null;
   const isBusy =
+    animate &&
     !isStopped &&
     (pendingResponse !== null ||
       streamStatus === "thinking" ||
       streamStatus === "streaming" ||
-      visibleAttachmentCount < attachmentCount);
+      renderedAttachmentCount < attachmentCount);
 
   const handleStreamStart = useCallback(() => {
     setStreamStatus("streaming");
@@ -92,7 +135,7 @@ export function ScriptedResponseTurn({
   );
 
   useChatAssistantStream({
-    pendingResponse,
+    pendingResponse: streamPendingResponse,
     onStreamStart: handleStreamStart,
     onStreamText: handleStreamText,
     onComplete: handleComplete,
@@ -116,33 +159,38 @@ export function ScriptedResponseTurn({
   }, [isBusy, stopSignal]);
 
   useEffect(() => {
-    if (streamStatus !== "complete" || isStopped) {
+    if (!animate || streamStatus !== "complete" || isStopped) {
       return;
     }
 
-    if (attachmentCount === 0) {
+    if (renderedAttachmentCount >= attachmentCount) {
       return;
     }
 
-    const revealInterval = prefersReducedMotion()
+    const revealDelay = prefersReducedMotion()
       ? 0
       : ATTACHMENT_REVEAL_INTERVAL_MS;
-    const timers = Array.from({ length: attachmentCount }, (_, index) =>
-      window.setTimeout(() => {
-        setVisibleAttachmentCount((currentCount) =>
-          Math.max(currentCount, index + 1),
-        );
-      }, revealInterval * (index + 1)),
-    );
+    const nextAttachmentCount = renderedAttachmentCount + 1;
+    const timer = window.setTimeout(() => {
+      setVisibleAttachmentCount((currentCount) =>
+        Math.min(attachmentCount, Math.max(currentCount, nextAttachmentCount)),
+      );
+    }, revealDelay);
 
     return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
+      window.clearTimeout(timer);
     };
-  }, [attachmentCount, isStopped, streamStatus]);
+  }, [
+    animate,
+    attachmentCount,
+    isStopped,
+    renderedAttachmentCount,
+    streamStatus,
+  ]);
 
   useEffect(() => {
     onContentChange?.();
-  }, [isStopped, onContentChange, streamStatus, streamText, visibleAttachmentCount]);
+  }, [isStopped, onContentChange, renderedAttachmentCount, streamStatus, streamText]);
 
   useEffect(() => {
     onBusyChange?.(id, isBusy);
@@ -182,7 +230,7 @@ export function ScriptedResponseTurn({
           <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
         </ChatResponseAttachment>
       ) : null}
-      {attachments.slice(0, visibleAttachmentCount).map((attachment) => (
+      {attachments.slice(0, renderedAttachmentCount).map((attachment) => (
         <ChatResponseAttachment
           gap={attachment.gap ?? "sm"}
           key={attachment.id}

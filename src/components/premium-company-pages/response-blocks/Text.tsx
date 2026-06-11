@@ -81,7 +81,7 @@ export function TextRecommendationList({
   return (
     <ol
       {...props}
-      className={cx("mt-sm list-decimal space-y-xs pl-lg", className)}
+      className={cx("mt-md list-decimal space-y-sm pl-xl", className)}
     >
       {items.map(({ action, reason }, index) => (
         <li className="pl-xs" key={`${String(action)}-${index}`}>

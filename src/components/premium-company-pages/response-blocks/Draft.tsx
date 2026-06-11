@@ -8,6 +8,8 @@ export type DraftProps = HTMLAttributes<HTMLElement> & {
   recipient: ReactNode;
   message: string;
   actionLabel?: ReactNode;
+  onActionSelect?: () => void;
+  title?: ReactNode;
 };
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -19,6 +21,8 @@ export function Draft({
   message,
   actionLabel = "Open drafted message",
   className,
+  onActionSelect,
+  title = "Drafted message",
   ...props
 }: DraftProps) {
   return (
@@ -26,18 +30,18 @@ export function Draft({
       {...props}
       data-response-block="Draft"
       className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-lg text-text shadow-raised-faint",
+        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
         className,
       )}
     >
-      <div className="space-y-lg">
-        <div className="flex items-center gap-sm">
+      <div className="space-y-xl">
+        <div className="flex items-center gap-md">
           <span className="inline-flex size-8 items-center justify-center rounded-round bg-ai-background-soft text-ai-icon">
             <Icon name="send" size="small" />
           </span>
           <div className="min-w-0">
-            <p className="text-body-sm font-semibold text-text">Drafted message</p>
-            <p className="truncate text-body-xs text-text-meta">{recipient}</p>
+            <p className="text-control-md text-text">{title}</p>
+            <p className="truncate text-body-sm text-text">{recipient}</p>
           </div>
         </div>
         <TextArea
@@ -50,6 +54,7 @@ export function Draft({
         <Button
           size="small"
           leadingIcon={<Icon name="envelope-open" size="small" />}
+          onClick={onActionSelect}
         >
           {actionLabel}
         </Button>

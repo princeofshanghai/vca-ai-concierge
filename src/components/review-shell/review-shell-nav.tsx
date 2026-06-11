@@ -23,8 +23,12 @@ const HIRING_PROTOTYPE_HREF = HIRING_ENTRY_LIX_TEST_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
+const PREMIUM_COMPANY_PAGES_ADMIN_DASHBOARD_ENTRY_HREF =
+  "/premium-company-pages/admin?story=dashboard-entry";
 const PREMIUM_COMPANY_PAGES_ADMIN_COLD_START_HREF =
   "/premium-company-pages/admin?story=cold-start";
+const PREMIUM_COMPANY_PAGES_ADMIN_SETTINGS_HREF =
+  "/premium-company-pages/admin/settings";
 const PREMIUM_COMPANY_PAGES_STORIES_HREF = "/premium-company-pages/stories";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
@@ -116,8 +120,8 @@ const premiumCompanyPagesModeOptions = [
   {
     id: "premium-company-pages-member",
     href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
-    label: "Member view",
-    description: "Visitor-facing company page",
+    label: "Visitor view",
+    description: "Visitor view of PCP",
   },
   {
     id: "premium-company-pages-admin",
@@ -131,22 +135,31 @@ const premiumCompanyPagesStoryOptions = [
     id: "premium-company-pages-story-1",
     href: PREMIUM_COMPANY_PAGES_ADMIN_HREF,
     label: "Story 1",
-    description: "Dashboard entry",
-    typeLabel: "Built",
+    description: "Admin activates VCA",
   },
   {
     id: "premium-company-pages-story-2",
-    href: PREMIUM_COMPANY_PAGES_ADMIN_COLD_START_HREF,
+    href: PREMIUM_COMPANY_PAGES_ADMIN_DASHBOARD_ENTRY_HREF,
     label: "Story 2",
-    description: "Cold start",
-    typeLabel: "Built",
+    description: "Admin takes VCA action",
   },
   {
     id: "premium-company-pages-story-3",
-    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+    href: PREMIUM_COMPANY_PAGES_ADMIN_COLD_START_HREF,
     label: "Story 3",
-    description: "Visitor",
-    typeLabel: "Built",
+    description: "Admin cold start",
+  },
+  {
+    id: "premium-company-pages-story-4",
+    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+    label: "Story 4",
+    description: "Visitor asks questions",
+  },
+  {
+    id: "premium-company-pages-story-5",
+    href: `${PREMIUM_COMPANY_PAGES_MEMBER_HREF}?story=live-support`,
+    label: "Story 5",
+    description: "Visitor asks for live support",
   },
 ] as const;
 const premiumCompanyPagesPlaceholderStoryLabels: Readonly<
@@ -172,7 +185,7 @@ const prototypeProjectOptions = [
   },
   {
     id: "project-premium-company-pages",
-    href: PREMIUM_COMPANY_PAGES_MEMBER_HREF,
+    href: PREMIUM_COMPANY_PAGES_ADMIN_HREF,
     label: "Premium Company Pages",
     description: "Company Pages prototype",
   },
@@ -256,15 +269,27 @@ function getPremiumCompanyPagesActiveStoryLabel(
   storyParam: string | null,
 ) {
   if (pathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)) {
-    return "Story 3 · Visitor";
+    if (storyParam === "live-support") {
+      return "Story 5 · Live support";
+    }
+
+    return "Story 4 · Visitor asks questions";
   }
 
   if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
-    if (storyParam === "cold-start") {
-      return "Story 2 · Cold start";
+    if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_SETTINGS_HREF)) {
+      return "Story 1 · Admin activates VCA";
     }
 
-    return "Story 1 · Dashboard entry";
+    if (storyParam === "dashboard-entry") {
+      return "Story 2 · Admin takes VCA action";
+    }
+
+    if (storyParam === "cold-start") {
+      return "Story 3 · Admin cold start";
+    }
+
+    return "Story 1 · Admin activates VCA";
   }
 
   return undefined;
@@ -297,7 +322,7 @@ function getPrototypeMetaLabel(
       return "Admin view";
     }
 
-    return "Member view";
+    return "Visitor view";
   }
 
   if (pathname.startsWith("/premium")) {
@@ -512,13 +537,15 @@ function getPremiumShellOptions(pathname: string) {
 function getPremiumCompanyPagesShellOptions(
   pathname: string,
   intentLabel: PremiumCompanyPagesIntentLabel,
+  storyParam: string | null,
 ) {
   const basePathname = pathname.startsWith("/premium-company-pages")
     ? pathname
     : PREMIUM_COMPANY_PAGES_MEMBER_HREF;
-  const baseHref =
-    intentLabel === "Job seeker intent" &&
-    basePathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
+  const baseHref = storyParam
+    ? withQueryParam(basePathname, "story", storyParam)
+    : intentLabel === "Job seeker intent" &&
+        basePathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
       ? withQueryParam(basePathname, "vcaIntent", "job-seeker")
       : basePathname;
 
@@ -594,8 +621,7 @@ export function ReviewShellNav({
       premiumCompanyPagesStoryParam,
     );
   const premiumCompanyPagesBaseHref =
-    premiumCompanyPagesStoryParam &&
-    pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)
+    premiumCompanyPagesStoryParam
       ? withQueryParam(pathname, "story", premiumCompanyPagesStoryParam)
       : activePremiumCompanyPagesIntentLabel === "Job seeker intent" &&
           pathname.startsWith(PREMIUM_COMPANY_PAGES_MEMBER_HREF)
@@ -606,6 +632,14 @@ export function ReviewShellNav({
       premiumCompanyPagesBaseHref,
       activePremiumCompanyPagesShellLabel,
     );
+  const normalizedPremiumCompanyPagesStoryHref = pathname.startsWith(
+    PREMIUM_COMPANY_PAGES_ADMIN_SETTINGS_HREF,
+  )
+    ? withPremiumCompanyPagesShell(
+        PREMIUM_COMPANY_PAGES_ADMIN_HREF,
+        activePremiumCompanyPagesShellLabel,
+      )
+    : normalizedPremiumCompanyPagesHref;
   const componentProductLens: ComponentProductLens =
     (pathname.startsWith("/premium") &&
       !pathname.startsWith("/premium-company-pages")) ||
@@ -736,8 +770,13 @@ export function ReviewShellNav({
       getPremiumCompanyPagesShellOptions(
         pathname,
         activePremiumCompanyPagesIntentLabel,
+        premiumCompanyPagesStoryParam,
       ),
-    [activePremiumCompanyPagesIntentLabel, pathname],
+    [
+      activePremiumCompanyPagesIntentLabel,
+      pathname,
+      premiumCompanyPagesStoryParam,
+    ],
   );
   const reviewDestinations = useMemo(
     () =>
@@ -1088,6 +1127,11 @@ export function ReviewShellNav({
                         : isPremiumMenu
                           ? normalizedPremiumHref
                           : normalizedHiringHref
+                    }
+                    storyCurrentHref={
+                      isPremiumCompanyPagesMenu
+                        ? normalizedPremiumCompanyPagesStoryHref
+                        : undefined
                     }
                     onLoginSelect={
                       isProjectMenu || isPremiumMenu || isPremiumCompanyPagesMenu

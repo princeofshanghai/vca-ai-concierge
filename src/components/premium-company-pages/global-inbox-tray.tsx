@@ -34,7 +34,7 @@ const globalInboxThreads: ReadonlyArray<GlobalInboxThread> = [
   {
     id: "velora",
     name: pcpCompanyProfile.name,
-    detail: "Cheri: Hi Rose - I lead HR for...",
+    detail: pcpAdminScenario.inboxThreadPreview,
     time: "Jun 1",
     avatar: "velora-logo.png",
     selected: true,

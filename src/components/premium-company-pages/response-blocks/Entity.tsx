@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, KeyboardEvent, ReactNode } from "react";
 
 import { Button } from "@/components/primitives/button";
 import { Entity as PrimitiveEntity } from "@/components/primitives/entity";
@@ -10,6 +10,8 @@ import {
 } from "@/components/primitives/reaction-icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 
+import { pcpCompanyProfile } from "../persona";
+
 type Audience = "visitor" | "admin";
 type EntityVariant = "post" | "job" | "person" | "company" | "event";
 type SignalTier = "tier-1" | "tier-2" | "tier-3";
@@ -17,6 +19,7 @@ type SignalTier = "tier-1" | "tier-2" | "tier-3";
 export type EntityAction = Readonly<{
   label: ReactNode;
   icon?: IconName;
+  onSelect?: () => void;
   variant?: "primary" | "secondary" | "tertiary";
 }>;
 
@@ -67,6 +70,8 @@ export type EntityProps = HTMLAttributes<HTMLElement> & {
   followerCount?: ReactNode;
   stats?: ReadonlyArray<EntityStat>;
   signal?: EntitySignal;
+  onCardSelect?: () => void;
+  cardSelectLabel?: string;
   date?: Readonly<{
     month: ReactNode;
     day: ReactNode;
@@ -87,8 +92,28 @@ const signalBoxClasses: Record<SignalTier, string> = {
   "tier-3": "border-border-faint bg-background-neutral-soft",
 };
 
+const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
+const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
+  backgroundColor: "#ACF5B3",
+};
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
+}
+
+function isVeloraLogo(src?: string, label?: ReactNode) {
+  return src === pcpCompanyProfile.logoSrc || String(label) === pcpCompanyProfile.name;
+}
+
+function getCompanyLogoEntityProps(src?: string, label?: ReactNode) {
+  if (!isVeloraLogo(src, label)) {
+    return {};
+  }
+
+  return {
+    className: VELORA_LOGO_TILE_BACKGROUND_CLASS,
+    style: VELORA_LOGO_TILE_BACKGROUND_STYLE,
+  };
 }
 
 function ActionRow({
@@ -99,13 +124,14 @@ function ActionRow({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-sm border-t border-border-faint pt-md">
-      {actions.map(({ label, icon, variant }, index) => (
+    <div className="flex flex-wrap items-center gap-md border-t border-border-faint pt-lg">
+      {actions.map(({ label, icon, onSelect, variant }, index) => (
         <Button
           key={`${String(label)}-${index}`}
           size="small"
           variant={variant ?? (index === 0 ? "primary" : "secondary")}
           leadingIcon={icon ? <Icon name={icon} size="small" /> : undefined}
+          onClick={onSelect}
         >
           {label}
         </Button>
@@ -122,7 +148,7 @@ function SignalBox({ signal }: Readonly<{ signal?: EntitySignal }>) {
   return (
     <div
       className={cx(
-        "space-y-sm rounded-sm border p-md",
+        "space-y-md rounded-sm border p-lg",
         signalBoxClasses[signal.tier],
       )}
     >
@@ -228,6 +254,7 @@ function renderPost(props: EntityProps) {
       <div className="flex items-start justify-between gap-md">
         <div className="flex min-w-0 items-start gap-sm">
           <PrimitiveEntity
+            {...getCompanyLogoEntityProps(props.logoSrc, props.name)}
             src={props.logoSrc}
             label={String(props.name)}
             shape="square"
@@ -283,16 +310,19 @@ function renderJob(props: EntityProps) {
   return (
     <div className="flex items-start gap-md">
       <PrimitiveEntity
+        {...getCompanyLogoEntityProps(props.logoSrc, props.company)}
         src={props.logoSrc}
         label={props.company ? String(props.company) : undefined}
         shape="square"
         size={40}
       />
-      <div className="min-w-0 flex-1 space-y-md">
+      <div className="min-w-0 flex-1 space-y-md text-left">
         <div className="space-y-xxs">
-          <p className="text-body-sm font-semibold text-text">{props.title}</p>
-          <p className="text-body-sm text-text">
-            {props.company}
+          <p className="line-clamp-2 text-body-sm font-semibold text-text">
+            {props.title}
+          </p>
+          <p className="truncate text-body-sm text-text">
+            <span>{props.company}</span>
             {props.location ? (
               <span className="text-text-meta"> · {props.location}</span>
             ) : null}
@@ -309,8 +339,19 @@ function renderJob(props: EntityProps) {
                 width={24}
               />
             ) : null}
-            <span>{props.alumni}</span>
+            <span className="min-w-0 truncate">{props.alumni}</span>
           </div>
+        ) : null}
+        {props.timestamp || props.applicantCount || props.easyApply ? (
+          <p className="text-body-xs text-text-meta">
+            {props.timestamp}
+            {props.timestamp && props.applicantCount ? " · " : null}
+            {props.applicantCount}
+            {(props.timestamp || props.applicantCount) && props.easyApply
+              ? " · "
+              : null}
+            {props.easyApply ? "Easy Apply" : null}
+          </p>
         ) : null}
       </div>
     </div>
@@ -353,6 +394,7 @@ function renderCompany(props: EntityProps) {
     <>
       <div className="flex items-start gap-md">
         <PrimitiveEntity
+          {...getCompanyLogoEntityProps(props.logoSrc, props.name)}
           src={props.logoSrc}
           label={String(props.name)}
           shape="square"
@@ -436,21 +478,42 @@ export function Entity({
   className,
   actions,
   audience = "visitor",
+  onCardSelect,
+  cardSelectLabel,
   ...props
 }: EntityProps) {
   const entityProps = { ...props, audience, actions };
 
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (!onCardSelect) {
+      return;
+    }
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onCardSelect();
+    }
+  }
+
   return (
     <article
+      aria-label={cardSelectLabel}
       data-response-block="Entity"
       data-variant={props.variant}
       data-audience={audience}
+      onClick={onCardSelect}
+      onKeyDown={onCardSelect ? handleKeyDown : undefined}
+      role={onCardSelect ? "button" : undefined}
+      tabIndex={onCardSelect ? 0 : undefined}
       className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-lg text-text shadow-raised-faint",
+        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
+        onCardSelect
+          ? "cursor-pointer outline-none transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:shadow-raised-soft focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+          : "",
         className,
       )}
     >
-      <div className="space-y-lg">
+      <div className="space-y-xl">
         {renderEntityContent(entityProps)}
         <ActionRow actions={actions} />
       </div>

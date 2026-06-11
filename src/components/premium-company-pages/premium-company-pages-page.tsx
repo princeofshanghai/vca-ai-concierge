@@ -10,10 +10,11 @@ import {
   type ChangeEvent,
   type ReactNode,
 } from "react";
+import { flushSync } from "react-dom";
 
 import { Prompt, type ChatPanelVariant } from "@/components/chat";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { Button } from "@/components/primitives/button";
+import { Button, getButtonClassName } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
@@ -21,6 +22,7 @@ import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
+import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 
 import {
@@ -28,11 +30,17 @@ import {
   pcpAdminPersona,
   pcpAdminScenario,
   pcpCompanyProfile,
+  pcpCompetitorNames,
   pcpProofSnippets,
   pcpVcaScenario,
   pcpVisitorPersona,
 } from "./persona";
 import { GlobalInboxTray } from "./global-inbox-tray";
+import {
+  InsightCard,
+  type InsightCardType,
+  type InsightCardVisual,
+} from "./insight-card";
 import {
   ADMIN_UC5_SELF_INITIATED_PROMPTS,
   AdminPerformanceDigestCard,
@@ -44,6 +52,7 @@ import {
 import {
   type AdminUc5FollowUp,
   type AdminUc5InsightId,
+  type AdminUc5InsightSelection,
 } from "./premium-company-pages-admin-uc5-data";
 import { VcaFab } from "./vca-fab";
 
@@ -51,10 +60,15 @@ const ASSET_ROOT = PCP_ASSET_ROOT;
 const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
 const ADMIN_ANALYTICS_HREF = "/premium-company-pages/admin/analytics";
 const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
+const ADMIN_SETTINGS_HREF = "/premium-company-pages/admin/settings";
+const ADMIN_AI_ASSISTANT_SETTINGS_HREF =
+  "/premium-company-pages/admin/settings/manage-ai-assistant";
 const VELORA_AI_ACCENT = "#2AA986";
 
-type AdminAiIconMarkStyle = CSSProperties & {
-  "--pcp-admin-ai-accent": string;
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (updateCallback: () => void) => {
+    finished: Promise<void>;
+  };
 };
 
 const primaryRailItems = [
@@ -73,6 +87,7 @@ const railItemHrefs: Partial<Record<string, string>> = {
   Analytics: ADMIN_ANALYTICS_HREF,
   Dashboard: ADMIN_DASHBOARD_HREF,
   Inbox: ADMIN_INBOX_HREF,
+  Settings: ADMIN_SETTINGS_HREF,
 };
 
 const premiumRailItems: Array<{ label: string; icon?: IconName }> = [
@@ -103,6 +118,13 @@ type InboxThreadData = Readonly<{
   vca?: boolean;
 }>;
 
+type SettingsRowData = Readonly<{
+  title: string;
+  description: string;
+  badge?: string;
+  href?: string;
+}>;
+
 type AnalyticsTabId =
   | "content"
   | "visitors"
@@ -111,6 +133,8 @@ type AnalyticsTabId =
   | "competitors"
   | "leads"
   | "newsletters";
+
+type AnalyticsTrendTone = "negative" | "positive";
 
 type AnalyticsHighlightData = Readonly<{
   label: string;
@@ -130,10 +154,81 @@ type ContentEngagementRowData = Readonly<{
 }>;
 
 type AnalyticsInsightCardData = Readonly<{
+  dismissLabel: string;
+  evidence: string;
+  headline: string;
   insightId: AdminUc5InsightId;
-  icon: IconName;
-  title: string;
+  question: string;
+  type: InsightCardType;
+  visual?: InsightCardVisual;
+}>;
+
+type VisitorHighlightData = Readonly<{
+  label: string;
+  value: string;
+  delta: string;
+  tone: AnalyticsTrendTone;
+}>;
+
+type VisitorProfileData = Readonly<{
+  name: string;
+  headline: string;
+  location: string;
   detail: string;
+  shown: string;
+  avatar: string;
+}>;
+
+type VisitorDemographicRowData = Readonly<{
+  label: string;
+  count: string;
+  percentage: string;
+  barPercent: number;
+}>;
+
+type CompetitorHighlightData = Readonly<{
+  label: string;
+  value: string;
+  delta: string;
+  tone: AnalyticsTrendTone;
+  context: string;
+}>;
+
+type CompetitorGrowthMetricData = Readonly<{
+  value: string;
+  delta: string;
+  tone: AnalyticsTrendTone;
+}>;
+
+type CompetitorGrowthRowData = Readonly<{
+  rank: number;
+  company: string;
+  followers: string;
+  isYou?: boolean;
+  newFollowers: CompetitorGrowthMetricData;
+  posts: CompetitorGrowthMetricData;
+  comments: CompetitorGrowthMetricData;
+  commentsPerDay: CompetitorGrowthMetricData;
+  reactions: CompetitorGrowthMetricData;
+}>;
+
+type CompetitorPostData = Readonly<{
+  company: string;
+  timestamp: string;
+  body: string;
+  title: string;
+  meta: string;
+  image: string;
+  imageAlt: string;
+  reactions: string;
+  comments: string;
+}>;
+
+type CompetitiveTipData = Readonly<{
+  title: string;
+  description: string;
+  action: string;
+  icon: IconName;
 }>;
 
 const performanceCards: Array<PerformanceCardData> = [
@@ -201,7 +296,8 @@ const vcaLeadBrief = {
   avatar: pcpVisitorPersona.avatar,
   companyContext: pcpVisitorPersona.companyContext,
   need: pcpVisitorPersona.evaluationNeed,
-  signals: "Asked whether Velora can support a mid-year migration before open enrollment",
+  signals:
+    "Viewed Velora's Arbor Retail Group post and explored whether Velora is relevant for HR and benefits operations",
   proofShown: pcpProofSnippets.caseStudyShort,
   outcome: `Sent ${pcpAdminPersona.firstName} a drafted message through Velora`,
   sentMessage: pcpVcaScenario.handoffMessage,
@@ -215,7 +311,7 @@ const inboxThreads: ReadonlyArray<InboxThreadData> = [
   {
     name: vcaLeadBrief.buyer,
     role: vcaLeadBrief.role,
-    topic: "Benefits migration evaluation",
+    topic: "Velora Page post follow-up",
     snippet: pcpAdminScenario.inboxThreadPreview,
     timestamp: "4:48 PM",
     avatar: vcaLeadBrief.avatar,
@@ -256,6 +352,45 @@ const inboxThreads: ReadonlyArray<InboxThreadData> = [
   },
 ];
 
+const settingsRows: ReadonlyArray<SettingsRowData> = [
+  {
+    title: "Manage admins",
+    description: "Control who manages your page",
+  },
+  {
+    title: "Manage restricted members",
+    description: "See all the restricted members",
+  },
+  {
+    title: "Manage following",
+    description: "See all the pages your page follows",
+  },
+  {
+    title: "Inbox settings",
+    description:
+      "Choose whether members can message the page and select conversation topics",
+  },
+  {
+    title: "Manage AI assistant",
+    description: "Turn on and manage your Page's AI assistant",
+    badge: "New",
+    href: ADMIN_AI_ASSISTANT_SETTINGS_HREF,
+  },
+  {
+    title: "Job posting",
+    description: "Manage who can post jobs and how jobs are shared on your page",
+  },
+  {
+    title: "Verification controls",
+    description:
+      "Review or change the ways members can verify their association with your organization",
+  },
+  {
+    title: "Deactivate page",
+    description: "Take your page down",
+  },
+];
+
 const analyticsTabs: ReadonlyArray<Readonly<{
   id: AnalyticsTabId;
   label: string;
@@ -289,6 +424,221 @@ const analyticsHighlights: ReadonlyArray<AnalyticsHighlightData> = [
     label: "Reposts",
     value: "42",
     delta: "15.6%",
+  },
+];
+
+const VISITOR_ANALYTICS_DATE_RANGE = "May 11, 2026 - Jun 9, 2026";
+
+const visitorHighlights: ReadonlyArray<VisitorHighlightData> = [
+  {
+    label: "Page views",
+    value: "507",
+    delta: "28%",
+    tone: "positive",
+  },
+  {
+    label: "Unique visitors",
+    value: "150",
+    delta: "20.2%",
+    tone: "negative",
+  },
+  {
+    label: "Custom button clicks",
+    value: "0",
+    delta: "100%",
+    tone: "negative",
+  },
+];
+
+const visitorProfiles: ReadonlyArray<VisitorProfileData> = [
+  {
+    name: pcpVisitorPersona.name,
+    headline: `${pcpVisitorPersona.title} at ${pcpVisitorPersona.company}`,
+    location: "United States",
+    detail: "Works in Human Resources industry",
+    shown: "Shown just now",
+    avatar: pcpVisitorPersona.avatar,
+  },
+  {
+    name: "Priya Shah",
+    headline: "Director of Benefits at Calico Health Network",
+    location: "United States",
+    detail: "Works in Healthcare industry",
+    shown: "Shown 2 days ago",
+    avatar: "avatar-3.png",
+  },
+  {
+    name: "Dana Kim",
+    headline: "VP of People Operations at Arbor Retail Group",
+    location: "United States",
+    detail: "Works in Retail industry",
+    shown: "Shown 4 days ago",
+    avatar: "avatar-2.png",
+  },
+];
+
+const visitorDemographics: ReadonlyArray<VisitorDemographicRowData> = [
+  {
+    label: "Human Resources",
+    count: "211",
+    percentage: "41.6",
+    barPercent: 100,
+  },
+  {
+    label: "Operations",
+    count: "109",
+    percentage: "21.5",
+    barPercent: 52,
+  },
+  {
+    label: "Information Technology",
+    count: "28",
+    percentage: "5.5",
+    barPercent: 13,
+  },
+  {
+    label: "Product Management",
+    count: "23",
+    percentage: "4.5",
+    barPercent: 11,
+  },
+  {
+    label: "Business Development",
+    count: "20",
+    percentage: "3.9",
+    barPercent: 9,
+  },
+  {
+    label: "Marketing",
+    count: "19",
+    percentage: "3.7",
+    barPercent: 9,
+  },
+];
+
+const COMPETITOR_ANALYTICS_DATE_RANGE = "May 11, 2026 - Jun 9, 2026";
+
+const competitorHighlights: ReadonlyArray<CompetitorHighlightData> = [
+  {
+    label: "Comments on posts",
+    value: "39",
+    delta: "96.8%",
+    tone: "negative",
+    context: "vs competitors",
+  },
+  {
+    label: "New followers",
+    value: "11",
+    delta: "100%",
+    tone: "negative",
+    context: "vs competitors",
+  },
+];
+
+const competitorGrowthRows: ReadonlyArray<CompetitorGrowthRowData> = [
+  {
+    rank: 1,
+    company: pcpCompetitorNames[0],
+    followers: "64,280 followers",
+    newFollowers: { value: "82", delta: "24%", tone: "positive" },
+    posts: { value: "22", delta: "83.3%", tone: "positive" },
+    comments: { value: "146", delta: "18.7%", tone: "positive" },
+    commentsPerDay: { value: "18", delta: "63.6%", tone: "positive" },
+    reactions: { value: "1.8K", delta: "32.4%", tone: "positive" },
+  },
+  {
+    rank: 2,
+    company: pcpCompetitorNames[1],
+    followers: "42,910 followers",
+    newFollowers: { value: "64", delta: "12.5%", tone: "positive" },
+    posts: { value: "18", delta: "50%", tone: "positive" },
+    comments: { value: "118", delta: "6.8%", tone: "positive" },
+    commentsPerDay: { value: "14", delta: "27.3%", tone: "positive" },
+    reactions: { value: "1.2K", delta: "18.6%", tone: "positive" },
+  },
+  {
+    rank: 3,
+    company: pcpCompetitorNames[2],
+    followers: "28,740 followers",
+    newFollowers: { value: "41", delta: "7.3%", tone: "positive" },
+    posts: { value: "15", delta: "25%", tone: "positive" },
+    comments: { value: "74", delta: "28.8%", tone: "negative" },
+    commentsPerDay: { value: "7", delta: "36.4%", tone: "negative" },
+    reactions: { value: "684", delta: "9.2%", tone: "positive" },
+  },
+  {
+    rank: 4,
+    company: pcpCompanyProfile.name,
+    followers: pcpCompanyProfile.followers,
+    isYou: true,
+    newFollowers: { value: "29", delta: "64.6%", tone: "negative" },
+    posts: { value: "12", delta: "45.5%", tone: "negative" },
+    comments: { value: "39", delta: "73.3%", tone: "negative" },
+    commentsPerDay: { value: "11", delta: "38.9%", tone: "negative" },
+    reactions: { value: "486", delta: "73%", tone: "negative" },
+  },
+];
+
+const competitorPosts: ReadonlyArray<CompetitorPostData> = [
+  {
+    company: pcpCompetitorNames[0],
+    timestamp: "posted this - 1w",
+    body:
+      "Open enrollment gets easier when carrier file readiness, eligibility cleanup, and employee communications are checked before October.",
+    title: "5 things benefits teams should lock down before enrollment opens",
+    meta: "Checklist - 8 min read",
+    image: "member/post-image-2.png",
+    imageAlt: "Open enrollment planning post preview",
+    reactions: "1,284",
+    comments: "117 comments - 52 reposts",
+  },
+  {
+    company: pcpCompetitorNames[1],
+    timestamp: "posted this - 2w",
+    body:
+      "Benefits teams do not need another tracker. They need one place to see which carrier files are ready, blocked, or waiting on follow-up.",
+    title: "Carrier readiness scorecard for distributed HR teams",
+    meta: "Document - 6 pages",
+    image: "feed-post-content.png",
+    imageAlt: "Benefits analytics post preview",
+    reactions: "936",
+    comments: "84 comments - 31 reposts",
+  },
+  {
+    company: pcpCompetitorNames[2],
+    timestamp: "posted this - 3w",
+    body:
+      "Seasonal worker enrollment windows can break when eligibility rules live outside the benefits operations workflow.",
+    title: "How people teams support seasonal enrollment without spreadsheets",
+    meta: "Case study - 5 min read",
+    image: "member/post-image-1.png",
+    imageAlt: "Benefits operations dashboard post preview",
+    reactions: "642",
+    comments: "48 comments - 18 reposts",
+  },
+];
+
+const competitiveTips: ReadonlyArray<CompetitiveTipData> = [
+  {
+    title: "Grow your audience",
+    description:
+      "Invite relevant HR and benefits leaders who engaged with open enrollment content.",
+    action: "Invite to follow",
+    icon: "connection-add",
+  },
+  {
+    title: "Drive more engagement",
+    description:
+      "Post a short carrier-readiness checklist while competitors are publishing deadline content.",
+    action: "Start a post",
+    icon: "compose",
+  },
+  {
+    title: "Follow peer Pages",
+    description:
+      "Track similar benefits platforms to spot topics your audience is already responding to.",
+    action: "Find Pages to follow",
+    icon: "company",
   },
 ];
 
@@ -335,18 +685,58 @@ const contentEngagementRows: ReadonlyArray<ContentEngagementRowData> = [
   },
 ];
 
-const analyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
+const visitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
   {
+    dismissLabel: "Dismiss audience insight",
+    evidence:
+      "64% of people who viewed your Page work in HR, benefits, or people operations.",
+    headline: "Your page is reaching more relevant visitors",
     insightId: "visitor-demographics",
-    icon: "people",
-    title: "Right audience is engaging",
-    detail: "68% of engaged visitors are HR Director+.",
+    question: "Is my Page reaching more relevant visitors?",
+    type: "audience-fit",
+    visual: {
+      kind: "avatar-pair",
+      primary: {
+        label: "Priya Shah",
+        src: assetSrc("avatar-3.png"),
+      },
+      secondary: {
+        label: "Dana Kim",
+        src: assetSrc("avatar-2.png"),
+      },
+    },
   },
+];
+
+const contentAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
   {
+    dismissLabel: "Dismiss content engagement insight",
+    evidence:
+      "Your top 2 posts by engagement both focus on carrier readiness and eligibility cleanup.",
+    headline: "Carrier coordination content is resonating",
     insightId: "content-engagement",
-    icon: "popular-content",
-    title: "High-engagement post needs reach",
-    detail: "The Arbor proof is working, but impressions are modest.",
+    question: "What content is resonating most?",
+    type: "opportunity",
+    visual: {
+      alt: "Carrier coordination post preview",
+      kind: "post-thumbnail",
+      src: assetSrc("member/post-image-1.png"),
+    },
+  },
+];
+
+const competitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
+  {
+    dismissLabel: "Dismiss competitor growth insight",
+    evidence: "82 new followers this month vs. Velora's 29.",
+    headline: `${pcpCompetitorNames[0]} is pulling ahead in follower growth`,
+    insightId: "competitor-growth",
+    question: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
+    type: "competitive",
+    visual: {
+      kind: "company-logo",
+      label: pcpCompetitorNames[0],
+    },
   },
 ];
 
@@ -370,6 +760,17 @@ function CompanyPremiumBug() {
       name="linked-in-bug"
       size="medium"
     />
+  );
+}
+
+function NewFeatureTag() {
+  return (
+    <Tag
+      className="!bg-ai-background-soft !text-action"
+      size="small"
+    >
+      New
+    </Tag>
   );
 }
 
@@ -810,7 +1211,7 @@ function InboxProfileHeader() {
           {vcaLeadBrief.role}
         </p>
         <p className="mt-xs text-body-sm text-text-meta">
-          Benefits migration evaluation
+          Velora Page post follow-up
         </p>
       </div>
       <VcaInboxContextStrip />
@@ -1027,94 +1428,770 @@ function InboxContent() {
   );
 }
 
+function SettingsRow({ row }: Readonly<{ row: SettingsRowData }>) {
+  const rowClassName =
+    "group grid min-h-[88px] w-full grid-cols-[minmax(0,1fr)_32px] items-center gap-md border-t border-border-faint px-lg py-md text-left outline-none transition-colors first:border-t-0 hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring sm:px-xxl";
+  const rowContent = (
+    <>
+      <span className="min-w-0">
+        <span className="flex min-w-0 flex-wrap items-center gap-xs">
+          <span className="text-heading-md text-text">{row.title}</span>
+          {row.badge ? <NewFeatureTag /> : null}
+        </span>
+        <span className="mt-xxs block text-body-sm text-text-meta">
+          {row.description}
+        </span>
+      </span>
+      <Icon
+        aria-hidden="true"
+        className="justify-self-end text-icon transition-transform group-hover:translate-x-xxs"
+        name="arrow-right"
+        size="medium"
+      />
+    </>
+  );
+
+  if (row.href) {
+    return (
+      <Link className={rowClassName} href={row.href}>
+        {rowContent}
+      </Link>
+    );
+  }
+
+  return (
+    <button className={rowClassName} type="button">
+      {rowContent}
+    </button>
+  );
+}
+
+function SettingsContent() {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+      <div className="border-b border-border-faint px-lg py-lg sm:px-xxl">
+        <h1 className="text-heading-xl text-text">Settings</h1>
+      </div>
+      <div>
+        {settingsRows.map((row) => (
+          <SettingsRow key={row.title} row={row} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+type AssistantCalendarProvider = "google" | "outlook";
+
+type AssistantColorOption = Readonly<{
+  id: string;
+  label: string;
+  value: string;
+}>;
+
+type StatusChipTone = "neutral" | "positive";
+
+const assistantColorOptions: ReadonlyArray<AssistantColorOption> = [
+  { id: "red", label: "Red", value: "#D11124" },
+  { id: "orange", label: "Orange", value: "#F28C28" },
+  { id: "yellow", label: "Yellow", value: "#F4B400" },
+  { id: "green", label: "Green", value: VELORA_AI_ACCENT },
+  { id: "teal", label: "Teal", value: "#00A3A3" },
+  { id: "blue", label: "Blue", value: "#0A66C2" },
+  { id: "purple", label: "Purple", value: "#8E3FF2" },
+  { id: "gray", label: "Gray", value: "#56687A" },
+];
+
+const assistantDefaultColor =
+  assistantColorOptions.find((option) => option.id === "green") ??
+  assistantColorOptions[0];
+
+const defaultAssistantInstructions = `# Velora visitor assistant
+
+- Keep answers concise and professional.
+- Use Velora's Page, website, and uploaded files.
+- Do not make pricing, legal, or medical commitments.`;
+
+const additionalKnowledgeLinks: ReadonlyArray<string> = [
+  "https://help.velora.com/faqs",
+  "https://www.velora.com/resources",
+  "https://www.velora.com/customers",
+];
+
+const defaultKnowledgeLinks: ReadonlyArray<string> = [
+  "https://www.velora.com",
+  ...additionalKnowledgeLinks,
+];
+
+function SettingsDetailHeader() {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+      <div className="flex min-h-[72px] items-center gap-md px-lg py-lg sm:px-xxl">
+        <Link
+          aria-label="Back to Settings"
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-round text-icon outline-none transition-colors hover:bg-background-transparent-hover hover:text-icon-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          href={ADMIN_SETTINGS_HREF}
+        >
+          <Icon name="arrow-left-large" size="medium" />
+        </Link>
+        <h1 className="text-heading-lg tracking-normal text-text">
+          Manage AI assistant
+        </h1>
+      </div>
+    </section>
+  );
+}
+
+function StatusChip({
+  children,
+  tone = "neutral",
+}: Readonly<{
+  children: ReactNode;
+  tone?: StatusChipTone;
+}>) {
+  return (
+    <span
+      className={cx(
+        "inline-flex min-h-6 items-center rounded-xs px-sm text-supportive-s-strong",
+        tone === "positive"
+          ? "bg-positive text-on-checked"
+          : "bg-tag-default-background text-text-meta",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function SettingsCard({
+  action,
+  children,
+  description,
+  title,
+}: Readonly<{
+  action?: ReactNode;
+  children?: ReactNode;
+  description?: ReactNode;
+  title: ReactNode;
+}>) {
+  return (
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+      <div className="flex flex-wrap items-start justify-between gap-md px-lg py-xl sm:px-xxl">
+        <div className="min-w-0">
+          <h2 className="text-heading-lg tracking-normal text-text">{title}</h2>
+          {description ? (
+            <p className="mt-xxs max-w-[680px] text-body-sm text-text">
+              {description}
+            </p>
+          ) : null}
+        </div>
+        {action ? <div className="shrink-0">{action}</div> : null}
+      </div>
+      {children ? (
+        <div className="border-t border-border-faint">{children}</div>
+      ) : null}
+    </section>
+  );
+}
+
+function SettingsSwitch({
+  checked,
+  disabled = false,
+  label,
+  onCheckedChange,
+}: Readonly<{
+  checked: boolean;
+  disabled?: boolean;
+  label: string;
+  onCheckedChange: (checked: boolean) => void;
+}>) {
+  return (
+    <div className="flex items-center gap-sm">
+      <span className="text-body-sm text-text-meta">
+        {checked ? "On" : "Off"}
+      </span>
+      <button
+        aria-checked={checked}
+        aria-label={label}
+        className={cx(
+          "relative inline-flex h-8 w-14 shrink-0 items-center rounded-round border outline-none transition-colors focus-visible:ring-4 focus-visible:ring-action-focus-ring disabled:cursor-not-allowed disabled:opacity-60",
+          checked
+            ? "border-positive bg-positive"
+            : "border-border-subtle bg-background",
+        )}
+        disabled={disabled}
+        onClick={() => onCheckedChange(!checked)}
+        role="switch"
+        type="button"
+      >
+        <span
+          aria-hidden="true"
+          className={cx(
+            "absolute size-6 rounded-round bg-background shadow-raised-faint transition-transform",
+            checked ? "translate-x-7" : "translate-x-xs",
+          )}
+        />
+      </button>
+    </div>
+  );
+}
+
+function SetupRow({
+  action,
+  children,
+  description,
+  required = false,
+  title,
+}: Readonly<{
+  action?: ReactNode;
+  children?: ReactNode;
+  description?: ReactNode;
+  required?: boolean;
+  title: ReactNode;
+}>) {
+  return (
+    <div className="grid gap-lg border-t border-border-faint px-lg py-xl first:border-t-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-xxl sm:py-xxl">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-xs">
+          <h3 className="text-heading-md tracking-normal text-text">{title}</h3>
+          {required ? <StatusChip>Required</StatusChip> : null}
+        </div>
+        {description ? (
+          <p className="mt-xxs max-w-[620px] text-body-sm text-text">
+            {description}
+          </p>
+        ) : null}
+        {children ? <div className="mt-lg">{children}</div> : null}
+      </div>
+      {action ? (
+        <div className="flex shrink-0 items-center justify-start sm:justify-end">
+          {action}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FileStatusChip({
+  children = "Velora FAQs.pdf",
+}: Readonly<{
+  children?: ReactNode;
+}>) {
+  return (
+    <span className="inline-flex min-h-8 items-center gap-xs rounded-xs border border-border-faint bg-background px-sm text-body-sm text-text">
+      <Icon aria-hidden="true" name="document" size="small" />
+      {children}
+    </span>
+  );
+}
+
+function KnowledgeSourceChip({
+  children,
+  iconName,
+  suffix,
+}: Readonly<{
+  children: ReactNode;
+  iconName: IconName;
+  suffix?: ReactNode;
+}>) {
+  return (
+    <span className="inline-flex min-h-8 max-w-full items-center gap-xs rounded-xs border border-border-faint bg-background px-sm text-body-sm text-text">
+      <Icon
+        aria-hidden="true"
+        className="shrink-0"
+        name={iconName}
+        size="small"
+      />
+      <span className="min-w-0 truncate">{children}</span>
+      {suffix ? (
+        <span className="shrink-0 text-body-xs text-text-meta">{suffix}</span>
+      ) : null}
+    </span>
+  );
+}
+
+function KnowledgeSourcesRow({
+  hasUploadedFaq,
+  knowledgeLinks,
+  onUploadFile,
+}: Readonly<{
+  hasUploadedFaq: boolean;
+  knowledgeLinks: ReadonlyArray<string>;
+  onUploadFile: () => void;
+}>) {
+  return (
+    <div className="border-t border-border-faint px-lg py-xl first:border-t-0 sm:px-xxl sm:py-xxl">
+      <div className="flex flex-col gap-lg sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-heading-md tracking-normal text-text">
+            Knowledge sources
+          </h3>
+          <p className="mt-xxs max-w-[620px] text-body-sm text-text">
+            Choose the Page content, links, and files the assistant can use.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-sm sm:justify-end">
+          <Button
+            leadingIcon={<Icon name="add" />}
+            onClick={() => undefined}
+            size="small"
+            variant="secondary"
+          >
+            Add link
+          </Button>
+          <Button
+            leadingIcon={<Icon name={hasUploadedFaq ? "check" : "upload"} />}
+            onClick={onUploadFile}
+            size="small"
+            variant="secondary"
+          >
+            {hasUploadedFaq ? "Uploaded" : "Upload file"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-xxl">
+        <div className="flex max-w-[620px] flex-wrap gap-sm">
+          <KnowledgeSourceChip iconName="company" suffix="Included">
+            Velora Page
+          </KnowledgeSourceChip>
+          {knowledgeLinks.map((link) => (
+            <KnowledgeSourceChip iconName="link" key={link}>
+              {link}
+            </KnowledgeSourceChip>
+          ))}
+          {hasUploadedFaq ? <FileStatusChip /> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AssistantInstructionsRow({
+  hasUploadedInstructions,
+  instructions,
+  onInstructionsChange,
+  onUploadInstructions,
+}: Readonly<{
+  hasUploadedInstructions: boolean;
+  instructions: string;
+  onInstructionsChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  onUploadInstructions: () => void;
+}>) {
+  return (
+    <div className="border-t border-border-faint px-lg py-xl first:border-t-0 sm:px-xxl sm:py-xxl">
+      <div className="flex flex-col gap-lg sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-heading-md tracking-normal text-text">
+            Assistant instructions
+          </h3>
+          <p className="mt-xxs max-w-[620px] text-body-sm text-text">
+            Define tone, guardrails, and what the assistant should avoid.
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-sm sm:justify-end">
+          <Button
+            leadingIcon={
+              <Icon name={hasUploadedInstructions ? "check" : "upload"} />
+            }
+            onClick={onUploadInstructions}
+            size="small"
+            variant="secondary"
+          >
+            {hasUploadedInstructions ? "Uploaded" : "Upload .md"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-xxl max-w-[620px] space-y-sm">
+        <TextArea
+          aria-label="Assistant instructions markdown"
+          onChange={onInstructionsChange}
+          size="large"
+          textareaClassName="!min-h-[220px] font-mono text-body-sm-open sm:!min-h-[168px]"
+          value={instructions}
+        />
+        {hasUploadedInstructions ? (
+          <FileStatusChip>Velora assistant instructions.md</FileStatusChip>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function ConnectedCalendarChip({
+  label,
+}: Readonly<{
+  label: string;
+}>) {
+  return (
+    <span className="inline-flex min-h-8 items-center gap-xs rounded-xs bg-tag-default-background px-sm text-body-sm text-text">
+      <Icon aria-hidden="true" name="check" size="small" />
+      {label} connected
+    </span>
+  );
+}
+
+function ColorSwatch({
+  checked,
+  option,
+  onSelect,
+}: Readonly<{
+  checked: boolean;
+  option: AssistantColorOption;
+  onSelect: (option: AssistantColorOption) => void;
+}>) {
+  return (
+    <button
+      aria-label={option.label}
+      aria-pressed={checked}
+      className={cx(
+        "inline-flex size-6 items-center justify-center rounded-round outline-none transition-[box-shadow,transform] hover:scale-105 focus-visible:ring-4 focus-visible:ring-action-focus-ring",
+        checked && "ring-2 ring-action ring-offset-1 ring-offset-background",
+      )}
+      onClick={() => onSelect(option)}
+      type="button"
+    >
+      <span
+        aria-hidden="true"
+        className="size-6 rounded-round"
+        style={{ backgroundColor: option.value }}
+      />
+    </button>
+  );
+}
+
+function AssistantColorPicker({
+  selectedColor,
+  onSelect,
+}: Readonly<{
+  selectedColor: AssistantColorOption;
+  onSelect: (option: AssistantColorOption) => void;
+}>) {
+  return (
+    <div className="flex flex-wrap items-center gap-sm">
+      {assistantColorOptions.map((option) => (
+        <ColorSwatch
+          checked={selectedColor.id === option.id}
+          key={option.id}
+          option={option}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+function AdminAssistantColorPreview({
+  color,
+}: Readonly<{
+  color: AssistantColorOption;
+}>) {
+  return (
+    <div className="inline-flex">
+      <VcaFab
+        accentColor={color.value}
+        borderColor={color.value}
+        borderHoverColor={color.value}
+        label="Admin assistant color preview"
+        position="static"
+        variant="admin"
+      />
+    </div>
+  );
+}
+
+function VisitorAssistantFabPreview({
+  color,
+}: Readonly<{
+  color: AssistantColorOption;
+}>) {
+  return (
+    <div className="inline-flex">
+      <VcaFab
+        accentColor={color.value}
+        borderColor={color.value}
+        borderHoverColor={color.value}
+        label="Visitor assistant color preview"
+        position="static"
+        variant="visitor"
+      />
+    </div>
+  );
+}
+
+function AiAssistantSettingsPlaceholderContent() {
+  const [visitorAssistantEnabled, setVisitorAssistantEnabled] = useState(false);
+  const [hasUploadedFaq, setHasUploadedFaq] = useState(false);
+  const [assistantInstructions, setAssistantInstructions] = useState(
+    defaultAssistantInstructions,
+  );
+  const [hasUploadedInstructions, setHasUploadedInstructions] = useState(false);
+  const [connectedCalendars, setConnectedCalendars] = useState<
+    ReadonlySet<AssistantCalendarProvider>
+  >(new Set());
+  const [adminSelectedColor, setAdminSelectedColor] =
+    useState(assistantDefaultColor);
+  const [visitorSelectedColor, setVisitorSelectedColor] =
+    useState(assistantDefaultColor);
+
+  function handleAssistantInstructionsChange(
+    event: ChangeEvent<HTMLTextAreaElement>,
+  ) {
+    setAssistantInstructions(event.currentTarget.value);
+  }
+
+  function handleCalendarConnect(provider: AssistantCalendarProvider) {
+    setConnectedCalendars((currentCalendars) => {
+      const nextCalendars = new Set(currentCalendars);
+      nextCalendars.add(provider);
+
+      return nextCalendars;
+    });
+  }
+
+  return (
+    <div className="min-w-0 space-y-md">
+      <SettingsDetailHeader />
+
+      <SettingsCard
+        action={
+          <SettingsSwitch
+            checked={visitorAssistantEnabled}
+            label="Toggle visitor AI assistant"
+            onCheckedChange={setVisitorAssistantEnabled}
+          />
+        }
+        title="AI assistant for visitors"
+      >
+        {visitorAssistantEnabled ? (
+          <>
+            <KnowledgeSourcesRow
+              hasUploadedFaq={hasUploadedFaq}
+              knowledgeLinks={defaultKnowledgeLinks}
+              onUploadFile={() => setHasUploadedFaq(true)}
+            />
+
+            <AssistantInstructionsRow
+              hasUploadedInstructions={hasUploadedInstructions}
+              instructions={assistantInstructions}
+              onInstructionsChange={handleAssistantInstructionsChange}
+              onUploadInstructions={() => setHasUploadedInstructions(true)}
+            />
+
+            <SetupRow
+              description="Let visitors request time with your team after the assistant answers their questions."
+              title="Set calendar availability"
+            >
+              <div className="flex flex-wrap gap-sm">
+                {connectedCalendars.has("google") ? (
+                  <ConnectedCalendarChip label="Google Calendar" />
+                ) : (
+                  <Button
+                    leadingIcon={<Icon name="add" />}
+                    onClick={() => handleCalendarConnect("google")}
+                    size="small"
+                    variant="secondary"
+                  >
+                    Google Calendar
+                  </Button>
+                )}
+                {connectedCalendars.has("outlook") ? (
+                  <ConnectedCalendarChip label="Outlook" />
+                ) : (
+                  <Button
+                    leadingIcon={<Icon name="add" />}
+                    onClick={() => handleCalendarConnect("outlook")}
+                    size="small"
+                    variant="secondary"
+                  >
+                    Outlook
+                  </Button>
+                )}
+              </div>
+            </SetupRow>
+
+            <SetupRow title="Pick color">
+              <div className="flex flex-col items-start gap-md">
+                <VisitorAssistantFabPreview color={visitorSelectedColor} />
+                <AssistantColorPicker
+                  selectedColor={visitorSelectedColor}
+                  onSelect={setVisitorSelectedColor}
+                />
+              </div>
+            </SetupRow>
+          </>
+        ) : null}
+      </SettingsCard>
+
+      <SettingsCard
+        action={
+          <SettingsSwitch
+            checked
+            disabled
+            label="Admin AI assistant is on"
+            onCheckedChange={() => undefined}
+          />
+        }
+        title="AI assistant for admins"
+      >
+        <SetupRow title="Pick color">
+          <div className="flex flex-col items-start gap-md">
+            <AdminAssistantColorPreview color={adminSelectedColor} />
+            <AssistantColorPicker
+              selectedColor={adminSelectedColor}
+              onSelect={setAdminSelectedColor}
+            />
+          </div>
+        </SetupRow>
+      </SettingsCard>
+    </div>
+  );
+}
+
+function VisitorAssistantAvailabilityBanner({
+  onDismiss,
+}: Readonly<{
+  onDismiss: () => void;
+}>) {
+  return (
+    <section className="relative min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+      <GhostIconButton
+        className="absolute right-sm top-sm text-icon"
+        horizontalPadding={false}
+        icon="close"
+        label="Dismiss visitor assistant setup banner"
+        onClick={onDismiss}
+        touchTarget={false}
+      />
+      <div className="flex flex-col gap-lg px-lg py-xl pr-stack sm:flex-row sm:items-center sm:justify-between sm:px-xxl sm:pr-[72px]">
+        <div className="min-w-0">
+          <NewFeatureTag />
+          <h2 className="mt-xs text-heading-lg tracking-normal text-text">
+            AI assistant is now available for your Page
+          </h2>
+          <p className="mt-xs max-w-[620px] text-body-sm text-text">
+            Help visitors get instant answers from approved Velora content you
+            control. <InlineAction>Learn more</InlineAction>
+          </p>
+        </div>
+        <Link
+          className={getButtonClassName({
+            className: "self-start sm:self-center",
+            size: "small",
+          })}
+          href={ADMIN_AI_ASSISTANT_SETTINGS_HREF}
+        >
+          Set up
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 function DashboardContent({
   activeInsightId,
   onDigestInsightSelect,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
-  onDigestInsightSelect: (insightId: AdminUc5InsightId) => void;
+  onDigestInsightSelect: (insight: AdminUc5InsightSelection) => void;
 }>) {
+  const [
+    isVisitorAssistantBannerDismissed,
+    setIsVisitorAssistantBannerDismissed,
+  ] = useState(false);
+
   return (
-    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
-      <div className="bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background px-lg pb-[28px] pt-[40px] sm:px-xxl">
-        <h1 className="text-display-md text-text">
-          Welcome back, {pcpAdminPersona.firstName}
-        </h1>
-        <div className="mt-[40px]">
-          <AdminPerformanceDigestCard
-            activeInsightId={activeInsightId}
-            onInsightSelect={onDigestInsightSelect}
-          />
+    <div className="min-w-0 space-y-md">
+      {!isVisitorAssistantBannerDismissed ? (
+        <VisitorAssistantAvailabilityBanner
+          onDismiss={() => setIsVisitorAssistantBannerDismissed(true)}
+        />
+      ) : null}
+
+      <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+        <div className="bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background px-lg pb-[28px] pt-[40px] sm:px-xxl">
+          <h1 className="text-display-md text-text">
+            Welcome back, {pcpAdminPersona.firstName}
+          </h1>
+          <div className="mt-[40px]">
+            <AdminPerformanceDigestCard
+              activeInsightId={activeInsightId}
+              onInsightSelect={onDigestInsightSelect}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-[40px] px-lg pb-xxl pt-[40px] sm:px-xxl">
-        <section>
-          <div className="flex items-start justify-between gap-lg">
-            <div>
-              <h2 className="text-heading-sm text-text">Track performance</h2>
-              <p className="mt-xs text-body-sm text-text-meta">
-                Turn Page interest into qualified conversations with weekly visitor
-                and intent insights.
-              </p>
+        <div className="space-y-[40px] px-lg pb-xxl pt-[40px] sm:px-xxl">
+          <section>
+            <div className="flex items-start justify-between gap-lg">
+              <div>
+                <h2 className="text-heading-sm text-text">Track performance</h2>
+                <p className="mt-xs text-body-sm text-text-meta">
+                  Turn Page interest into qualified conversations with weekly
+                  visitor and intent insights.
+                </p>
+              </div>
+              <CarouselControls
+                nextLabel="Next performance insights"
+                previousLabel="Previous performance insights"
+              />
             </div>
-            <CarouselControls
-              nextLabel="Next performance insights"
-              previousLabel="Previous performance insights"
-            />
-          </div>
 
-          <div className="mt-lg grid gap-md sm:grid-cols-2 xl:grid-cols-4">
-            {performanceCards.map((card) => (
-              <PerformanceCard key={card.title} {...card} />
-            ))}
-          </div>
-
-          <div className="mt-md flex justify-center gap-md" aria-hidden="true">
-            <span className="size-[6px] rounded-round bg-text" />
-            <span className="size-[6px] rounded-round border border-border-subtle" />
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-start justify-between gap-lg">
-            <div>
-              <h2 className="text-heading-sm text-text">Manage recent posts</h2>
-              <p className="mt-xs text-body-sm text-text-meta">
-                Manage benefits administration content and amplify
-                top-performing posts with boosting.{" "}
-                <InlineAction>Learn more</InlineAction>
-              </p>
+            <div className="mt-lg grid gap-md sm:grid-cols-2 xl:grid-cols-4">
+              {performanceCards.map((card) => (
+                <PerformanceCard key={card.title} {...card} />
+              ))}
             </div>
-            <CarouselControls
-              nextLabel="Next posts"
-              previousLabel="Previous posts"
-            />
-          </div>
 
-          <div className="mt-lg flex gap-md overflow-hidden">
-            {recentPosts.map((post) => (
-              <PostCard key={post.body} {...post} />
-            ))}
-          </div>
+            <div className="mt-md flex justify-center gap-md" aria-hidden="true">
+              <span className="size-[6px] rounded-round bg-text" />
+              <span className="size-[6px] rounded-round border border-border-subtle" />
+            </div>
+          </section>
 
-          <div className="mt-lg flex justify-center gap-md" aria-hidden="true">
-            <span className="size-[6px] rounded-round bg-text" />
-            <span className="size-[6px] rounded-round border border-border-subtle" />
-            <span className="size-[6px] rounded-round border border-border-subtle" />
-            <span className="size-[6px] rounded-round border border-border-subtle" />
-            <span className="size-[6px] rounded-round border border-border-subtle" />
-            <span className="size-[6px] rounded-round border border-border-subtle" />
-          </div>
+          <section>
+            <div className="flex items-start justify-between gap-lg">
+              <div>
+                <h2 className="text-heading-sm text-text">
+                  Manage recent posts
+                </h2>
+                <p className="mt-xs text-body-sm text-text-meta">
+                  Manage benefits administration content and amplify
+                  top-performing posts with boosting.{" "}
+                  <InlineAction>Learn more</InlineAction>
+                </p>
+              </div>
+              <CarouselControls
+                nextLabel="Next posts"
+                previousLabel="Previous posts"
+              />
+            </div>
 
-          <div className="mt-lg flex justify-center border-t border-border-faint pt-md">
-            <GhostButton icon="arrow-right" iconAtEnd size="medium">
-              Show all page posts
-            </GhostButton>
-          </div>
-        </section>
-      </div>
-    </section>
+            <div className="mt-lg flex gap-md overflow-hidden">
+              {recentPosts.map((post) => (
+                <PostCard key={post.body} {...post} />
+              ))}
+            </div>
+
+            <div className="mt-lg flex justify-center gap-md" aria-hidden="true">
+              <span className="size-[6px] rounded-round bg-text" />
+              <span className="size-[6px] rounded-round border border-border-subtle" />
+              <span className="size-[6px] rounded-round border border-border-subtle" />
+              <span className="size-[6px] rounded-round border border-border-subtle" />
+              <span className="size-[6px] rounded-round border border-border-subtle" />
+              <span className="size-[6px] rounded-round border border-border-subtle" />
+            </div>
+
+            <div className="mt-lg flex justify-center border-t border-border-faint pt-md">
+              <GhostButton icon="arrow-right" iconAtEnd size="medium">
+                Show all page posts
+              </GhostButton>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -1147,10 +2224,24 @@ function AnalyticsTabButton({
   );
 }
 
-function AnalyticsTrend({ value }: Readonly<{ value: string }>) {
+function AnalyticsTrend({
+  tone = "positive",
+  value,
+}: Readonly<{ tone?: AnalyticsTrendTone; value: string }>) {
+  const isNegative = tone === "negative";
+
   return (
-    <span className="mt-xs inline-flex items-center gap-xxs text-supportive-s-strong text-positive">
-      <Icon aria-hidden="true" name="caret-up" size="small" />
+    <span
+      className={cx(
+        "mt-xs inline-flex items-center gap-xxs text-supportive-s-strong",
+        isNegative ? "text-negative" : "text-positive",
+      )}
+    >
+      <Icon
+        aria-hidden="true"
+        name={isNegative ? "caret-down" : "caret-up"}
+        size="small"
+      />
       <span>{value}</span>
     </span>
   );
@@ -1175,7 +2266,9 @@ function AnalyticsCard({
   );
 }
 
-function AnalyticsControlsCard() {
+function AnalyticsControlsCard({
+  dateRange = "May 10, 2026 - Jun 8, 2026",
+}: Readonly<{ dateRange?: string }> = {}) {
   return (
     <AnalyticsCard>
       <div className="flex min-h-[64px] flex-wrap items-center justify-between gap-md px-lg py-md">
@@ -1189,9 +2282,7 @@ function AnalyticsControlsCard() {
             name="calendar"
             size="small"
           />
-          <span className="min-w-0 truncate">
-            May 10, 2026 - Jun 8, 2026
-          </span>
+          <span className="min-w-0 truncate">{dateRange}</span>
           <Icon
             aria-hidden="true"
             className="shrink-0 text-text-meta"
@@ -1207,13 +2298,7 @@ function AnalyticsControlsCard() {
   );
 }
 
-function HighlightsCard({
-  activeInsightId,
-  onInsightSelect,
-}: Readonly<{
-  activeInsightId: AdminUc5InsightId | null;
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
-}>) {
+function HighlightsCard() {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
@@ -1234,107 +2319,90 @@ function HighlightsCard({
             </article>
           ))}
         </div>
-        <AnalyticsInsightsSection
-          activeInsightId={activeInsightId}
-          onInsightSelect={onInsightSelect}
-        />
       </div>
     </AnalyticsCard>
   );
 }
 
-function AnalyticsInsightCard({
-  active,
-  insight,
-  onSelect,
-}: Readonly<{
-  active: boolean;
-  insight: AnalyticsInsightCardData;
-  onSelect: (insightId: AdminUc5InsightId) => void;
-}>) {
-  return (
-    <button
-      aria-pressed={active}
-      className={cx(
-        "group grid min-h-[78px] w-full grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-md rounded-xs border bg-background px-lg py-md text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring",
-        active
-          ? "border-action bg-surface-tint shadow-[inset_4px_0_0_var(--color-action)]"
-          : "border-border-faint",
-      )}
-      onClick={() => onSelect(insight.insightId)}
-      type="button"
-    >
-      <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-round bg-ai-background-soft text-ai-icon">
-        <Icon aria-hidden="true" name={insight.icon} size="medium" />
-      </span>
-      <span className="min-w-0 py-xxs">
-        <span className="block text-control-sm text-text">
-          {insight.title}
-        </span>
-        <span className="mt-xs block text-body-sm text-text-meta">
-          {insight.detail}
-        </span>
-      </span>
-      <AdminAiIconMark selected={active} />
-    </button>
-  );
-}
-
-function AdminAiIconMark({ selected = false }: Readonly<{ selected?: boolean }>) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cx(
-        "pointer-events-none inline-flex size-8 shrink-0 items-center justify-center justify-self-end rounded-sm border-[1.5px] border-[color:var(--pcp-admin-ai-accent)] bg-background text-[color:var(--pcp-admin-ai-accent)] transition-[background-color,box-shadow] duration-150 ease-out",
-        selected && "bg-background-transparent-active shadow-raised-faint-active",
-      )}
-      style={
-        {
-          "--pcp-admin-ai-accent": VELORA_AI_ACCENT,
-        } as AdminAiIconMarkStyle
-      }
-    >
-      <Icon
-        aria-hidden="true"
-        name={selected ? "navigation-signal-ai-active" : "navigation-signal-ai"}
-        size="small"
-      />
-    </span>
-  );
-}
-
-function AnalyticsInsightsSection({
+function AnalyticsKeyInsightsCard({
   activeInsightId,
+  insights,
   onInsightSelect,
+  sectionId,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+  insights: ReadonlyArray<AnalyticsInsightCardData>;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  sectionId: string;
 }>) {
+  const [dismissedInsightIds, setDismissedInsightIds] = useState<
+    ReadonlySet<AdminUc5InsightId>
+  >(() => new Set());
+  const headingId = `${sectionId}-heading`;
+  const visibleInsights = insights.filter(
+    (insight) => !dismissedInsightIds.has(insight.insightId),
+  );
+
+  function handleDismiss(insightId: AdminUc5InsightId) {
+    setDismissedInsightIds((currentInsightIds) => {
+      const nextInsightIds = new Set(currentInsightIds);
+
+      nextInsightIds.add(insightId);
+
+      return nextInsightIds;
+    });
+  }
+
+  if (visibleInsights.length === 0) {
+    return null;
+  }
+
   return (
-    <section
-      aria-labelledby="analytics-ai-insights-heading"
-      className="mt-xxl border-t border-border-faint pt-lg"
-    >
-      <div className="flex items-center gap-xs text-control-sm text-text">
-        <Icon
-          aria-hidden="true"
-          className="shrink-0 text-premium-inbug"
-          name="signal-ai"
-          size="small"
-        />
-        <h2 id="analytics-ai-insights-heading">Key insights</h2>
-      </div>
-      <div className="mt-lg grid gap-md">
-        {analyticsInsightCards.map((insight) => (
-          <AnalyticsInsightCard
-            active={activeInsightId === insight.insightId}
-            insight={insight}
-            key={insight.insightId}
-            onSelect={onInsightSelect}
+    <AnalyticsCard>
+      <section
+        aria-labelledby={headingId}
+        className="px-lg py-lg"
+      >
+        <div className="flex items-center gap-xs">
+          <Icon
+            aria-hidden="true"
+            className="shrink-0 text-premium-inbug"
+            name="signal-ai"
+            size="small"
           />
-        ))}
-      </div>
-    </section>
+          <h2
+            className="text-heading-sm text-text"
+            id={headingId}
+          >
+            Key insights
+          </h2>
+        </div>
+        <div className="mt-lg grid gap-md">
+          {visibleInsights.map((insight) => (
+            <InsightCard
+              active={activeInsightId === insight.insightId}
+              action={{
+                id: `analytics-${insight.insightId}`,
+                kind: "ask-ai",
+                label: "Ask",
+                onSelect: () =>
+                  onInsightSelect({
+                    id: insight.insightId,
+                    prompt: insight.question,
+                  }),
+              }}
+              dismissLabel={insight.dismissLabel}
+              evidence={insight.evidence}
+              headline={insight.headline}
+              key={insight.insightId}
+              onDismiss={() => handleDismiss(insight.insightId)}
+              type={insight.type}
+              visual={insight.visual}
+            />
+          ))}
+        </div>
+      </section>
+    </AnalyticsCard>
   );
 }
 
@@ -1474,6 +2542,647 @@ function MetricsCard() {
   );
 }
 
+function VisitorHighlightsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div className="flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">Visitor highlights</h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+        <div className="mt-lg grid gap-lg sm:grid-cols-3">
+          {visitorHighlights.map((highlight) => (
+            <article key={highlight.label}>
+              <p className="text-heading-md text-text">{highlight.value}</p>
+              <h3 className="mt-xxs text-body-sm text-text-meta">
+                {highlight.label}
+              </h3>
+              <AnalyticsTrend tone={highlight.tone} value={highlight.delta} />
+            </article>
+          ))}
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function VisitorMetricFilterButton({
+  active = false,
+  label,
+}: Readonly<{
+  active?: boolean;
+  label: string;
+}>) {
+  return (
+    <button
+      aria-pressed={active}
+      className={cx(
+        "inline-flex min-h-8 items-center gap-xs rounded-round border px-md text-control-sm outline-none transition-colors focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
+        active
+          ? "border-positive bg-positive text-on-checked hover:bg-positive-hover"
+          : "border-border-subtle bg-background text-label hover:border-border-subtle-hover hover:bg-background-transparent-hover",
+      )}
+      type="button"
+    >
+      <span>{label}</span>
+      <Icon
+        aria-hidden="true"
+        className={active ? "text-on-checked" : "text-text-meta"}
+        name="chevron-down"
+        size="small"
+      />
+    </button>
+  );
+}
+
+function VisitorMetricsChart() {
+  return (
+    <div className="mt-lg overflow-x-auto pb-xs">
+      <svg
+        aria-labelledby="velora-visitor-metrics-chart-title"
+        className="min-w-[620px]"
+        role="img"
+        viewBox="0 0 720 290"
+      >
+        <title id="velora-visitor-metrics-chart-title">
+          Velora visitor page views by device from May 11, 2026 to Jun 9, 2026
+        </title>
+        {[42, 92, 142, 192, 242].map((y, index) => (
+          <g key={y}>
+            <line
+              stroke="var(--color-border-faint)"
+              strokeWidth="1"
+              x1="72"
+              x2="690"
+              y1={y}
+              y2={y}
+            />
+            <text
+              fill="var(--color-text-meta)"
+              fontSize="12"
+              textAnchor="end"
+              x="58"
+              y={y + 4}
+            >
+              {[100, 75, 50, 25, 0][index]}
+            </text>
+          </g>
+        ))}
+        <path
+          d="M72 178 L100 166 L126 238 L154 216 L180 214 L206 242 L232 238 L258 210 L286 230 L314 232 L342 218 L368 174 L394 242 L422 234 L450 82 L478 178 L506 170 L532 224 L560 238 L588 212 L614 166 L640 190 L666 178 L690 236"
+          fill="none"
+          stroke="var(--color-action)"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.5"
+          vectorEffect="non-scaling-stroke"
+        />
+        <path
+          d="M72 238 L100 236 L126 242 L154 240 L180 242 L206 242 L232 240 L258 236 L286 240 L314 242 L342 238 L368 228 L394 242 L422 236 L450 220 L478 238 L506 212 L532 238 L560 240 L588 234 L614 232 L640 238 L666 218 L690 240"
+          fill="none"
+          stroke="var(--color-positive)"
+          strokeDasharray="6 5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+        {[
+          ["May 11", 72],
+          ["May 16", 180],
+          ["May 21", 314],
+          ["May 26", 450],
+          ["May 31", 560],
+          ["Jun 5", 666],
+        ].map(([label, x]) => (
+          <text
+            fill="var(--color-text-meta)"
+            fontSize="12"
+            key={label}
+            textAnchor="middle"
+            x={x}
+            y="270"
+          >
+            {label}
+          </text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function VisitorDeviceLegendRow({
+  dashed = false,
+  label,
+  value,
+}: Readonly<{
+  dashed?: boolean;
+  label: string;
+  value: string;
+}>) {
+  return (
+    <div className="grid min-h-10 grid-cols-[24px_32px_minmax(0,1fr)_auto] items-center gap-sm border-t border-border-faint py-sm">
+      <span
+        aria-hidden="true"
+        className="inline-flex size-5 items-center justify-center rounded-xs bg-positive text-on-checked"
+      >
+        <Icon name="check" size="small" />
+      </span>
+      <span
+        aria-hidden="true"
+        className={cx(
+          "block h-0 w-6 border-t-2",
+          dashed ? "border-dashed border-positive" : "border-action",
+        )}
+      />
+      <span className="min-w-0 truncate text-body-sm text-text-meta">
+        {label}
+      </span>
+      <span className="text-control-sm text-text">{value}</span>
+    </div>
+  );
+}
+
+function VisitorMetricsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div className="flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">Visitor metrics</h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+
+        <div className="mt-lg flex flex-wrap gap-sm">
+          <VisitorMetricFilterButton active label="Page views" />
+          <VisitorMetricFilterButton active label="All pages" />
+          <VisitorMetricFilterButton label="All filters" />
+        </div>
+
+        <VisitorMetricsChart />
+
+        <div className="mt-lg">
+          <VisitorDeviceLegendRow label="Desktop" value="436" />
+          <VisitorDeviceLegendRow dashed label="Mobile" value="71" />
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function VisitorProfileRow({
+  visitor,
+}: Readonly<{ visitor: VisitorProfileData }>) {
+  return (
+    <article className="grid grid-cols-[40px_minmax(0,1fr)] gap-md border-t border-border-faint px-lg py-lg first:border-t-0">
+      <Entity
+        label={visitor.name}
+        size={40}
+        src={assetSrc(visitor.avatar)}
+      />
+      <div className="min-w-0">
+        <h3 className="truncate text-control-sm text-text">{visitor.name}</h3>
+        <p className="mt-xxs line-clamp-2 text-body-sm text-text">
+          {visitor.headline}
+        </p>
+        <p className="mt-xs text-body-xs text-text-meta">{visitor.location}</p>
+        <p className="mt-xxs text-body-xs text-text-meta">{visitor.detail}</p>
+        <p className="mt-xxs text-body-xs text-text-meta">{visitor.shown}</p>
+      </div>
+    </article>
+  );
+}
+
+function WhoVisitedYourPageCard() {
+  return (
+    <AnalyticsCard className="overflow-hidden border-t-4 border-t-premium-brand">
+      <div className="px-lg py-md">
+        <PremiumMark label="Premium" />
+        <div className="mt-xs flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">
+            Who&apos;s visited your Page
+          </h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+        <p className="mt-xxs text-body-sm text-text-meta">
+          See one new page visitor each day.
+        </p>
+      </div>
+
+      <div>
+        {visitorProfiles.map((visitor) => (
+          <VisitorProfileRow key={visitor.name} visitor={visitor} />
+        ))}
+      </div>
+
+      <div className="border-t border-border-faint px-lg py-md text-center">
+        <button
+          className="inline-flex items-center gap-xs text-control-sm text-label transition-colors hover:text-action hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          type="button"
+        >
+          <span>Show all visitors</span>
+          <Icon aria-hidden="true" name="arrow-right" size="small" />
+        </button>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function VisitorDemographicsCard() {
+  return (
+    <AnalyticsCard className="overflow-hidden">
+      <div className="px-lg py-lg">
+        <div className="flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">Visitor demographics</h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+        <button
+          className="mt-lg inline-flex min-h-8 items-center gap-xs rounded-round border border-border-subtle bg-background px-md text-control-sm text-label outline-none transition-colors hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          type="button"
+        >
+          <span>Job function</span>
+          <Icon aria-hidden="true" name="chevron-down" size="small" />
+        </button>
+
+        <div className="mt-lg space-y-lg">
+          {visitorDemographics.map((row) => (
+            <div className="space-y-xs" key={row.label}>
+              <p className="text-supportive-s-strong text-text">
+                {row.label}
+                <span className="font-normal text-text-meta">
+                  {" "}
+                  · {row.count} ({row.percentage}%)
+                </span>
+              </p>
+              <span
+                aria-hidden="true"
+                className="block h-2 rounded-xs bg-tag-neutral-background"
+                style={{ width: `${row.barPercent}%` }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-border-faint px-lg py-md text-center">
+        <button
+          className="inline-flex items-center gap-xs text-control-sm text-label transition-colors hover:text-action hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          type="button"
+        >
+          <span>Show all</span>
+          <Icon aria-hidden="true" name="arrow-right" size="small" />
+        </button>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function CompetitorDateButton() {
+  return (
+    <button
+      className="inline-flex min-h-9 max-w-full items-center gap-xs rounded-round border border-border-subtle bg-background px-md py-xs text-control-sm text-label outline-none transition-colors hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+      type="button"
+    >
+      <Icon
+        aria-hidden="true"
+        className="shrink-0 text-text-meta"
+        name="calendar"
+        size="small"
+      />
+      <span className="min-w-0 truncate">{COMPETITOR_ANALYTICS_DATE_RANGE}</span>
+      <Icon
+        aria-hidden="true"
+        className="shrink-0 text-text-meta"
+        name="chevron-down"
+        size="small"
+      />
+    </button>
+  );
+}
+
+function CompetitorIntroCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-md">
+        <PremiumMark label="Premium" />
+        <h2 className="mt-xs text-heading-sm text-text">
+          Learn from other Pages
+        </h2>
+        <p className="mt-xxs text-body-sm text-text-meta">
+          Stay ahead with competitor insights
+        </p>
+      </div>
+      <div className="flex min-h-[64px] flex-wrap items-center justify-between gap-md border-t border-border-faint px-lg py-md">
+        <CompetitorDateButton />
+        <div className="flex flex-wrap gap-sm">
+          <Button size="small" variant="secondary">
+            Edit competitors
+          </Button>
+          <Button leadingIcon={<Icon name="download" />} size="small">
+            Export
+          </Button>
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function CompetitorTrackingNoticeCard() {
+  return (
+    <AnalyticsCard>
+      <div className="grid min-h-[72px] grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-md px-lg py-md">
+        <span className="inline-flex size-10 items-center justify-center rounded-xs bg-surface-tint text-action">
+          <Icon aria-hidden="true" name="document-search" size="medium" />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-control-sm text-text">
+            Start tracking and benchmarking your Page&apos;s performance
+          </h2>
+          <p className="mt-xxs text-body-sm text-text-meta">
+            Edit your competitors list to track specific Pages on LinkedIn.{" "}
+            <span className="font-semibold text-action">Learn more</span>
+          </p>
+        </div>
+        <ButtonIcon
+          icon="close"
+          label="Dismiss competitor tracking notice"
+          size="small"
+          touchTarget={false}
+          variant="tertiary"
+        />
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function CompetitorHighlightsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div className="flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">Competitor highlights</h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+        <p className="mt-xxs text-body-sm text-text-meta">Last 30 days</p>
+        <div className="mt-lg grid gap-lg sm:grid-cols-2">
+          {competitorHighlights.map((highlight) => (
+            <article key={highlight.label}>
+              <p className="text-heading-md text-text">{highlight.value}</p>
+              <h3 className="mt-xxs text-body-sm text-text-meta">
+                {highlight.label}
+              </h3>
+              <div className="flex flex-wrap items-center gap-xs">
+                <AnalyticsTrend tone={highlight.tone} value={highlight.delta} />
+                <span className="mt-xs text-supportive-s text-text-meta">
+                  {highlight.context}
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function CompetitorLogo({
+  company,
+}: Readonly<{
+  company: string;
+}>) {
+  const isVelora = company === pcpCompanyProfile.name;
+
+  return (
+    <Entity
+      className={cx(isVelora && "bg-[#ACF5B3]")}
+      label={company}
+      shape="square"
+      size={40}
+      src={isVelora ? pcpCompanyProfile.logoSrc : undefined}
+      style={isVelora ? { backgroundColor: "#ACF5B3" } : undefined}
+    />
+  );
+}
+
+function CompetitorMetricCell({
+  metric,
+}: Readonly<{
+  metric: CompetitorGrowthMetricData;
+}>) {
+  return (
+    <td className="px-md py-md text-right align-top">
+      <p className="text-control-sm text-text">{metric.value}</p>
+      <AnalyticsTrend tone={metric.tone} value={metric.delta} />
+    </td>
+  );
+}
+
+function CompetitorGrowthTable() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div className="flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">Compare growth</h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+        <p className="mt-xxs text-body-sm text-text-meta">Last 30 days</p>
+      </div>
+
+      <div className="overflow-x-auto px-lg pb-lg">
+        <table className="w-full min-w-[820px] border-collapse text-left">
+          <thead>
+            <tr className="text-label-xs text-text-meta">
+              <th className="w-[260px] px-md py-sm font-semibold">
+                Competitors
+              </th>
+              <th className="px-md py-sm text-right font-semibold">
+                New followers
+              </th>
+              <th className="px-md py-sm text-right font-semibold">Posts</th>
+              <th className="px-md py-sm text-right font-semibold">
+                Comments
+              </th>
+              <th className="px-md py-sm text-right font-semibold">
+                Comments per day
+              </th>
+              <th className="px-md py-sm text-right font-semibold">
+                Reactions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {competitorGrowthRows.map((row) => (
+              <tr
+                className="border-t border-border-faint text-body-sm text-text"
+                key={row.company}
+              >
+                <td className="px-md py-md align-top">
+                  <div className="grid grid-cols-[24px_40px_minmax(0,1fr)] items-center gap-sm">
+                    <span className="text-body-md text-text-meta">
+                      {row.rank}
+                    </span>
+                    <CompetitorLogo company={row.company} />
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 items-center gap-xs">
+                        <p className="truncate text-control-sm text-text">
+                          {row.company}
+                        </p>
+                        {row.isYou ? (
+                          <span className="rounded-xs bg-tag-default-background px-xs text-supportive-s-strong text-text">
+                            You
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-xxs truncate text-body-xs text-text-meta">
+                        {row.followers}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <CompetitorMetricCell metric={row.newFollowers} />
+                <CompetitorMetricCell metric={row.posts} />
+                <CompetitorMetricCell metric={row.comments} />
+                <CompetitorMetricCell metric={row.commentsPerDay} />
+                <CompetitorMetricCell metric={row.reactions} />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function CompetitorPostCard({
+  post,
+}: Readonly<{
+  post: CompetitorPostData;
+}>) {
+  return (
+    <article className="rounded-xs border border-border-faint p-md">
+      <p className="text-body-xs text-text-meta">
+        {post.company} {post.timestamp}
+      </p>
+      <p className="mt-sm line-clamp-2 text-body-sm text-text">{post.body}</p>
+      <div className="mt-md grid grid-cols-[72px_minmax(0,1fr)] gap-md">
+        <Image
+          alt={post.imageAlt}
+          className="aspect-square rounded-xs object-cover"
+          height={72}
+          src={assetSrc(post.image)}
+          width={72}
+        />
+        <div className="min-w-0 self-center">
+          <h3 className="line-clamp-2 text-control-sm text-text">
+            {post.title}
+          </h3>
+          <p className="mt-xxs text-body-xs text-text-meta">{post.meta}</p>
+        </div>
+      </div>
+      <div className="mt-md flex flex-wrap items-center justify-between gap-sm">
+        <ReactionSummary comments={post.comments} reactions={post.reactions} />
+        <button
+          className="text-body-sm text-text-meta transition-colors hover:text-action hover:underline"
+          type="button"
+        >
+          show more
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function TrendingCompetitorPostsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <div className="flex items-center gap-xs">
+          <h2 className="text-heading-sm text-text">
+            Trending competitor posts
+          </h2>
+          <Icon
+            aria-hidden="true"
+            className="text-text-meta"
+            name="question"
+            size="small"
+          />
+        </div>
+        <p className="mt-xxs text-body-sm text-text-meta">Last 30 days</p>
+        <div className="mt-lg grid gap-md">
+          {competitorPosts.map((post) => (
+            <CompetitorPostCard key={post.title} post={post} />
+          ))}
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
+function CompetitiveTipCard({
+  tip,
+}: Readonly<{
+  tip: CompetitiveTipData;
+}>) {
+  return (
+    <article className="grid min-h-[104px] grid-cols-[minmax(0,1fr)_56px] items-center gap-md rounded-xs border border-border-faint p-md">
+      <div className="min-w-0">
+        <h3 className="text-control-sm text-text">{tip.title}</h3>
+        <p className="mt-xxs text-body-sm text-text-meta">{tip.description}</p>
+        <Button className="mt-sm" size="small" variant="secondary">
+          {tip.action}
+        </Button>
+      </div>
+      <span className="inline-flex size-14 items-center justify-center justify-self-end rounded-xs bg-surface-tint text-action">
+        <Icon aria-hidden="true" name={tip.icon} size="medium" />
+      </span>
+    </article>
+  );
+}
+
+function CompetitiveTipsCard() {
+  return (
+    <AnalyticsCard>
+      <div className="px-lg py-lg">
+        <h2 className="text-heading-sm text-text">Tips to stay competitive</h2>
+        <div className="mt-lg grid gap-md">
+          {competitiveTips.map((tip) => (
+            <CompetitiveTipCard key={tip.title} tip={tip} />
+          ))}
+        </div>
+      </div>
+    </AnalyticsCard>
+  );
+}
+
 function ContentEngagementTable() {
   return (
     <AnalyticsCard>
@@ -1545,7 +3254,7 @@ function ContentAnalyticsPanel({
   onInsightSelect,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
 }>) {
   return (
     <div
@@ -1554,13 +3263,75 @@ function ContentAnalyticsPanel({
       id="premium-company-pages-analytics-content-panel"
       role="tabpanel"
     >
-      <AnalyticsControlsCard />
-      <HighlightsCard
+      <AnalyticsKeyInsightsCard
         activeInsightId={activeInsightId}
+        insights={contentAnalyticsInsightCards}
         onInsightSelect={onInsightSelect}
+        sectionId="analytics-content-ai-insights"
       />
+      <AnalyticsControlsCard />
+      <HighlightsCard />
       <MetricsCard />
       <ContentEngagementTable />
+    </div>
+  );
+}
+
+function VisitorAnalyticsPanel({
+  activeInsightId,
+  onInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+}>) {
+  return (
+    <div
+      aria-labelledby="premium-company-pages-analytics-visitors-tab"
+      className="space-y-md"
+      id="premium-company-pages-analytics-visitors-panel"
+      role="tabpanel"
+    >
+      <AnalyticsKeyInsightsCard
+        activeInsightId={activeInsightId}
+        insights={visitorAnalyticsInsightCards}
+        onInsightSelect={onInsightSelect}
+        sectionId="analytics-visitors-ai-insights"
+      />
+      <AnalyticsControlsCard dateRange={VISITOR_ANALYTICS_DATE_RANGE} />
+      <VisitorHighlightsCard />
+      <VisitorMetricsCard />
+      <WhoVisitedYourPageCard />
+      <VisitorDemographicsCard />
+    </div>
+  );
+}
+
+function CompetitorAnalyticsPanel({
+  activeInsightId,
+  onInsightSelect,
+}: Readonly<{
+  activeInsightId: AdminUc5InsightId | null;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+}>) {
+  return (
+    <div
+      aria-labelledby="premium-company-pages-analytics-competitors-tab"
+      className="space-y-md"
+      id="premium-company-pages-analytics-competitors-panel"
+      role="tabpanel"
+    >
+      <AnalyticsKeyInsightsCard
+        activeInsightId={activeInsightId}
+        insights={competitorAnalyticsInsightCards}
+        onInsightSelect={onInsightSelect}
+        sectionId="analytics-competitors-ai-insights"
+      />
+      <CompetitorIntroCard />
+      <CompetitorTrackingNoticeCard />
+      <CompetitorHighlightsCard />
+      <CompetitorGrowthTable />
+      <TrendingCompetitorPostsCard />
+      <CompetitiveTipsCard />
     </div>
   );
 }
@@ -1587,7 +3358,7 @@ function AnalyticsContent({
   onInsightSelect,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
-  onInsightSelect: (insightId: AdminUc5InsightId) => void;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
 }>) {
   const [activeTabId, setActiveTabId] = useState<AnalyticsTabId>("content");
   const activeTab =
@@ -1620,6 +3391,16 @@ function AnalyticsContent({
           activeInsightId={activeInsightId}
           onInsightSelect={onInsightSelect}
         />
+      ) : activeTabId === "visitors" ? (
+        <VisitorAnalyticsPanel
+          activeInsightId={activeInsightId}
+          onInsightSelect={onInsightSelect}
+        />
+      ) : activeTabId === "competitors" ? (
+        <CompetitorAnalyticsPanel
+          activeInsightId={activeInsightId}
+          onInsightSelect={onInsightSelect}
+        />
       ) : (
         <EmptyAnalyticsPanel tab={activeTab} />
       )}
@@ -1637,7 +3418,7 @@ function PremiumCompanyPagesAdminShell({
   return (
     <main className="min-h-dvh bg-background-neutral-soft text-text">
       <LinkedInGlobalNavigation profileSrc={pcpAdminPersona.avatarSrc} />
-      <div className="mx-auto grid w-full max-w-[1145px] gap-lg px-lg py-xxl lg:grid-cols-[225px_minmax(0,888px)] lg:gap-[32px] lg:px-0">
+      <div className="mx-auto grid w-full max-w-[1145px] gap-lg px-lg pb-[112px] pt-xxl lg:grid-cols-[225px_minmax(0,888px)] lg:gap-[32px] lg:px-0 lg:py-xxl">
         <PageRail activeItem={activeItem} />
         {children}
       </div>
@@ -1649,7 +3430,7 @@ type PremiumCompanyPagesAdminVcaShellProps = Readonly<{
   activeItem: string;
   children: (props: {
     activeInsightId: AdminUc5InsightId | null;
-    onInsightSelect: (insightId: AdminUc5InsightId) => void;
+    onInsightSelect: (insight: AdminUc5InsightSelection) => void;
   }) => ReactNode;
   initialAgentOpen?: boolean;
   turnIdPrefix: string;
@@ -1668,7 +3449,7 @@ function AdminVcaFabEntry({
 }>) {
   return (
     <div
-      className="group fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
+      className="pcp-ai-messaging-surface group fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
       style={style}
     >
       <div className="pointer-events-none absolute bottom-full right-0 hidden translate-y-xs flex-col items-end gap-sm pb-sm opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:flex">
@@ -1704,8 +3485,8 @@ function PremiumCompanyPagesAdminVcaShell({
   const [isAgentOpen, setIsAgentOpen] = useState(initialAgentOpen);
   const [agentPanelVariant, setAgentPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
-  const [activeInsightId, setActiveInsightId] =
-    useState<AdminUc5InsightId | null>(null);
+  const [activeInsight, setActiveInsight] =
+    useState<AdminUc5InsightSelection | null>(null);
   const [initialSelfInitiatedView, setInitialSelfInitiatedView] =
     useState<AdminUc5SelfInitiatedView | null>(null);
   const [agentDraft, setAgentDraft] = useState("");
@@ -1721,38 +3502,81 @@ function PremiumCompanyPagesAdminVcaShell({
     return turnId;
   }
 
-  function handleInsightSelect(insightId: AdminUc5InsightId) {
-    setActiveInsightId(insightId);
-    setInitialSelfInitiatedView(null);
-    setAgentThreadTurns([]);
-    setAgentDraft("");
-    setAgentPanelVariant("collapsed");
-    setIsAgentOpen(true);
+  function runAdminMessagingSurfaceTransition(updateSurfaceState: () => void) {
+    const viewTransitionDocument = document as ViewTransitionDocument;
+
+    if (typeof viewTransitionDocument.startViewTransition !== "function") {
+      updateSurfaceState();
+      return;
+    }
+
+    const transitionClassName = "pcp-messaging-surface-transition";
+
+    document.documentElement.classList.add(transitionClassName);
+
+    const transition = viewTransitionDocument.startViewTransition(() => {
+      flushSync(updateSurfaceState);
+    });
+
+    void transition.finished.finally(() => {
+      document.documentElement.classList.remove(transitionClassName);
+    });
+  }
+
+  function handleInsightSelect(insight: AdminUc5InsightSelection) {
+    runAdminMessagingSurfaceTransition(() => {
+      setActiveInsight(insight);
+      setInitialSelfInitiatedView(null);
+      setAgentThreadTurns([]);
+      setAgentDraft("");
+      setAgentPanelVariant("collapsed");
+      setIsAgentOpen(true);
+    });
   }
 
   function handleOpenAgentFromFab() {
-    setActiveInsightId(null);
-    setInitialSelfInitiatedView(null);
-    setAgentThreadTurns([]);
-    setAgentDraft("");
-    setAgentPanelVariant("collapsed");
-    setIsAgentOpen(true);
+    runAdminMessagingSurfaceTransition(() => {
+      setActiveInsight(null);
+      setInitialSelfInitiatedView(null);
+      setAgentThreadTurns([]);
+      setAgentDraft("");
+      setAgentPanelVariant("collapsed");
+      setIsAgentOpen(true);
+    });
   }
 
   function handleOpenSelfInitiatedView(view: AdminUc5SelfInitiatedView) {
-    setActiveInsightId(null);
-    setInitialSelfInitiatedView(view);
-    setAgentThreadTurns([]);
-    setAgentDraft("");
-    setAgentPanelVariant("collapsed");
-    setIsAgentOpen(true);
+    runAdminMessagingSurfaceTransition(() => {
+      setActiveInsight(null);
+      setInitialSelfInitiatedView(view);
+      setAgentThreadTurns([]);
+      setAgentDraft("");
+      setAgentPanelVariant("collapsed");
+      setIsAgentOpen(true);
+    });
   }
 
   function handleCloseAgent() {
-    setIsAgentOpen(false);
-    setAgentPanelVariant("collapsed");
-    setAgentDraft("");
-    setInitialSelfInitiatedView(null);
+    runAdminMessagingSurfaceTransition(() => {
+      setIsAgentOpen(false);
+      setAgentPanelVariant("collapsed");
+      setAgentDraft("");
+      setInitialSelfInitiatedView(null);
+    });
+  }
+
+  function handleCollapseAgentPanel() {
+    runAdminMessagingSurfaceTransition(() => {
+      setAgentPanelVariant("collapsed");
+    });
+  }
+
+  function handleToggleAgentPanelVariant() {
+    runAdminMessagingSurfaceTransition(() => {
+      setAgentPanelVariant((currentVariant) =>
+        currentVariant === "expanded" ? "collapsed" : "expanded",
+      );
+    });
   }
 
   function handleAgentDraftChange(event: ChangeEvent<HTMLTextAreaElement>) {
@@ -1794,13 +3618,13 @@ function PremiumCompanyPagesAdminVcaShell({
   } as CSSProperties;
   const agentPanelPositionClass = isAgentExpanded
     ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
-    : "md:inset-auto md:bottom-6 md:right-6 md:h-[min(calc(100dvh_-_96px),var(--design-layout-panel-collapsed-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+    : "md:inset-auto md:bottom-6 md:right-6 md:top-[calc(52px_+_var(--design-spacing-xxl))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
 
   return (
     <>
       <PremiumCompanyPagesAdminShell activeItem={activeItem}>
         {children({
-          activeInsightId: isAgentOpen ? activeInsightId : null,
+          activeInsightId: isAgentOpen ? activeInsight?.id ?? null : null,
           onInsightSelect: handleInsightSelect,
         })}
       </PremiumCompanyPagesAdminShell>
@@ -1833,19 +3657,19 @@ function PremiumCompanyPagesAdminVcaShell({
               "fixed inset-0 z-30 hidden bg-overlay-dim md:block",
               !isAgentExpanded && "pointer-events-none opacity-0",
             )}
-            onClick={() => setAgentPanelVariant("collapsed")}
+            onClick={handleCollapseAgentPanel}
             type="button"
           />
           <div
             className={cx(
-              "fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
+              "pcp-ai-messaging-surface fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
               agentPanelPositionClass,
             )}
             role="dialog"
             aria-label="Velora AI"
           >
             <AdminUc5AgentPanel
-              activeInsightId={activeInsightId}
+              activeInsight={activeInsight}
               draft={agentDraft}
               initialSelfInitiatedView={initialSelfInitiatedView}
               panelId={agentPanelId}
@@ -1855,11 +3679,7 @@ function PremiumCompanyPagesAdminVcaShell({
               onDraftChange={handleAgentDraftChange}
               onFollowUpSelect={handleAgentFollowUpSelect}
               onSend={handleAgentSend}
-              onVariantToggle={() =>
-                setAgentPanelVariant((currentVariant) =>
-                  currentVariant === "expanded" ? "collapsed" : "expanded",
-                )
-              }
+              onVariantToggle={handleToggleAgentPanelVariant}
             />
           </div>
         </>
@@ -1893,9 +3713,34 @@ export function PremiumCompanyPagesPage({
 
 export function PremiumCompanyPagesAdminInboxPage() {
   return (
-    <PremiumCompanyPagesAdminShell activeItem="Inbox">
-      <InboxContent />
-    </PremiumCompanyPagesAdminShell>
+    <PremiumCompanyPagesAdminVcaShell
+      activeItem="Inbox"
+      turnIdPrefix="admin-inbox-turn"
+    >
+      {() => <InboxContent />}
+    </PremiumCompanyPagesAdminVcaShell>
+  );
+}
+
+export function PremiumCompanyPagesAdminSettingsPage() {
+  return (
+    <PremiumCompanyPagesAdminVcaShell
+      activeItem="Settings"
+      turnIdPrefix="admin-settings-turn"
+    >
+      {() => <SettingsContent />}
+    </PremiumCompanyPagesAdminVcaShell>
+  );
+}
+
+export function PremiumCompanyPagesAdminAiAssistantSettingsPage() {
+  return (
+    <PremiumCompanyPagesAdminVcaShell
+      activeItem="Settings"
+      turnIdPrefix="admin-ai-assistant-settings-turn"
+    >
+      {() => <AiAssistantSettingsPlaceholderContent />}
+    </PremiumCompanyPagesAdminVcaShell>
   );
 }
 

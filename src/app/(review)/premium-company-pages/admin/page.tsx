@@ -23,12 +23,7 @@ export default async function PremiumCompanyPagesAdminRoute({
   searchParams,
 }: PremiumCompanyPagesAdminRouteProps) {
   const { story } = await searchParams;
-  const initialAgentOpen = getStoryParam(story) === "cold-start";
+  const storyParam = getStoryParam(story);
 
-  return (
-    <PremiumCompanyPagesPage
-      key={initialAgentOpen ? "cold-start" : "dashboard"}
-      initialAgentOpen={initialAgentOpen}
-    />
-  );
+  return <PremiumCompanyPagesPage key={storyParam ?? "dashboard"} />;
 }

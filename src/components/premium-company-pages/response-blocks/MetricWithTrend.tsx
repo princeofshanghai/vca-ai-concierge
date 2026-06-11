@@ -45,12 +45,12 @@ export function MetricWithTrend({
       {...props}
       data-response-block="MetricWithTrend"
       className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-lg text-text shadow-raised-faint",
+        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
         className,
       )}
     >
-      <h3 className="text-body-sm font-semibold text-text">{title}</h3>
-      <div className="mt-xs flex min-w-0 flex-wrap items-baseline gap-xs">
+      <h3 className="text-control-md text-text">{title}</h3>
+      <div className="mt-md flex min-w-0 flex-wrap items-baseline gap-sm">
         <MetricValue unit={unit} value={value} />
         <MetricDelta
           delta={delta}
@@ -58,7 +58,7 @@ export function MetricWithTrend({
           tone={tone}
         />
       </div>
-      <div className="mt-lg">
+      <div className="mt-xl">
         <TrendChart
           annotation={annotation}
           axisTicks={axisTicks}

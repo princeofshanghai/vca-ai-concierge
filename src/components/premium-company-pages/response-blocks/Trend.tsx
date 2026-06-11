@@ -119,14 +119,16 @@ export function TrendChart({
             width: `${Number.isFinite(annotationSpan.width) ? annotationSpan.width : 8}%`,
           }}
         >
-          <span
-            className={cx(
-              "absolute left-1/2 top-xs -translate-x-1/2 whitespace-nowrap text-body-xs font-semibold",
-              annotationClasses.label,
-            )}
-          >
-            {annotation.label}
-          </span>
+          {annotation.label ? (
+            <span
+              className={cx(
+                "absolute left-1/2 top-xs -translate-x-1/2 whitespace-nowrap text-body-xs font-semibold",
+                annotationClasses.label,
+              )}
+            >
+              {annotation.label}
+            </span>
+          ) : null}
         </div>
         <svg
           aria-hidden="true"
@@ -186,12 +188,12 @@ export function Trend({
       {...props}
       data-response-block="Trend"
       className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-lg text-text shadow-raised-faint",
+        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
         className,
       )}
     >
       {title ? (
-        <figcaption className="mb-lg text-body-sm font-semibold text-text">
+        <figcaption className="mb-xl text-control-md text-text">
           {title}
         </figcaption>
       ) : null}

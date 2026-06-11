@@ -1,7 +1,8 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 import { Entity } from "@/components/primitives/entity";
-import { Tag } from "@/components/primitives/tag";
+
+import { pcpCompanyProfile } from "../persona";
 
 export type CompareRowVisual = Readonly<{
   kind: "avatar" | "company-logo";
@@ -26,6 +27,15 @@ export type CompareProps = HTMLAttributes<HTMLElement> & {
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
+}
+
+const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
+const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
+  backgroundColor: "#ACF5B3",
+};
+
+function isVeloraLogo(src?: string, label?: ReactNode) {
+  return src === pcpCompanyProfile.logoSrc || String(label) === pcpCompanyProfile.name;
 }
 
 function getValueLabel(row: CompareRow) {
@@ -72,10 +82,20 @@ function renderVisual(row: CompareRow) {
 
   return (
     <Entity
+      className={
+        visual.kind === "company-logo" && isVeloraLogo(visual.src, row.name)
+          ? VELORA_LOGO_TILE_BACKGROUND_CLASS
+          : undefined
+      }
       label={visual.label ?? row.name}
       shape={visual.kind === "company-logo" ? "square" : "circle"}
       size={24}
       src={visual.src}
+      style={
+        visual.kind === "company-logo" && isVeloraLogo(visual.src, row.name)
+          ? VELORA_LOGO_TILE_BACKGROUND_STYLE
+          : undefined
+      }
     />
   );
 }
@@ -107,15 +127,15 @@ export function Compare({
       {...props}
       data-response-block="Compare"
       className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-lg text-text shadow-raised-faint",
+        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
         className,
       )}
     >
-      <div className="mb-lg space-y-xxs">
-        {title ? <h3 className="text-body-sm font-semibold text-text">{title}</h3> : null}
-        <p className="text-body-xs text-text-meta">{dimension}</p>
+      <div className="mb-xl space-y-xs">
+        {title ? <h3 className="text-control-md text-text">{title}</h3> : null}
+        <p className="text-body-sm text-text">{dimension}</p>
       </div>
-      <div className="grid gap-xs">
+      <div className="grid gap-md">
         {sortedRows.map((row, index) => {
           const { detail, isYou, name, value } = row;
           const barLayout = getBarLayout(value, maxPositive, maxNegative, zeroX);
@@ -125,21 +145,14 @@ export function Compare({
             <div
               key={`${name}-${index}`}
               className={cx(
-                "grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(72px,1fr)_auto] items-center gap-sm rounded-xs px-sm py-xs",
+                "grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(72px,1fr)_auto] items-center gap-md rounded-xs px-md py-sm",
                 isYou ? "bg-surface-tint" : "",
               )}
             >
-              <div className="flex min-w-0 items-center gap-sm">
+              <div className="flex min-w-0 items-center gap-md">
                 {renderVisual(row)}
                 <div className="min-w-0">
-                  <p className="flex min-w-0 items-center gap-xs">
-                    <span className="truncate text-body-sm text-text">{name}</span>
-                    {isYou ? (
-                      <Tag tone="neutral" size="small">
-                        YOU
-                      </Tag>
-                    ) : null}
-                  </p>
+                  <p className="truncate text-body-sm text-text">{name}</p>
                   {detail ? (
                     <p className="text-body-xs text-text-meta">{detail}</p>
                   ) : null}

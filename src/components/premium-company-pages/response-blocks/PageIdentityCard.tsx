@@ -1,0 +1,65 @@
+import type { HTMLAttributes, ReactNode } from "react";
+
+import { Button } from "@/components/primitives/button";
+import { Entity } from "@/components/primitives/entity";
+import { Icon } from "@/components/primitives/icon";
+
+export type PageIdentityCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
+  actionLabel?: ReactNode;
+  followers?: ReactNode;
+  industry: ReactNode;
+  logoSrc?: string;
+  name: ReactNode;
+  onAction?: () => void;
+};
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export function PageIdentityCard({
+  actionLabel = "Follow",
+  className,
+  followers,
+  industry,
+  logoSrc,
+  name,
+  onAction,
+  ...props
+}: PageIdentityCardProps) {
+  const nameText = typeof name === "string" ? name : undefined;
+
+  return (
+    <article
+      {...props}
+      data-response-block="PageIdentityCard"
+      className={cx(
+        "flex w-[176px] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint sm:w-[188px]",
+        className,
+      )}
+    >
+      <Entity label={nameText} shape="square" size={80} src={logoSrc} />
+      <div className="mt-lg flex min-h-[104px] w-full flex-1 flex-col items-center">
+        <p className="line-clamp-2 max-w-full text-control-md text-text">
+          {name}
+        </p>
+        <p className="mt-xxs line-clamp-3 text-body-xs text-text-meta">
+          {industry}
+        </p>
+        {followers ? (
+          <p className="mt-sm text-body-xs text-text-meta">{followers}</p>
+        ) : null}
+      </div>
+      <Button
+        aria-label={nameText ? `${String(actionLabel)} ${nameText}` : undefined}
+        className="mt-lg w-full"
+        leadingIcon={<Icon name="add" size="small" />}
+        onClick={onAction}
+        size="small"
+        variant="secondary"
+      >
+        {actionLabel}
+      </Button>
+    </article>
+  );
+}

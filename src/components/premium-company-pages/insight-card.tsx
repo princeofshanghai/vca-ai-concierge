@@ -9,6 +9,8 @@ import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon } from "@/components/primitives/icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 
+import { pcpCompanyProfile } from "./persona";
+
 type InsightCardType =
   | "anomaly"
   | "opportunity"
@@ -27,7 +29,17 @@ type InsightCardVisual =
       alt: string;
       kind: "post-thumbnail";
       src: string;
+    }>
+  | Readonly<{
+      kind: "avatar-pair";
+      primary: InsightCardAvatarVisual;
+      secondary: InsightCardAvatarVisual;
     }>;
+
+type InsightCardAvatarVisual = Readonly<{
+  label: string;
+  src?: string;
+}>;
 
 type InsightCardSignal = Readonly<{
   tone: "behavioral" | "profile";
@@ -59,6 +71,19 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
+const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
+const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
+  backgroundColor: "#ACF5B3",
+};
+
+function isVeloraLogo(visual: InsightCardVisual) {
+  return (
+    visual.kind === "company-logo" &&
+    (visual.src === pcpCompanyProfile.logoSrc ||
+      visual.label === pcpCompanyProfile.name)
+  );
+}
+
 function getSignalTone(tone: InsightCardSignal["tone"]): TagTone {
   return tone === "behavioral" ? "caution" : "supportive-4";
 }
@@ -76,12 +101,33 @@ function renderVisual(visual: InsightCardVisual) {
     );
   }
 
+  if (visual.kind === "avatar-pair") {
+    return (
+      <span
+        aria-label={`${visual.primary.label} and ${visual.secondary.label}`}
+        className="relative block size-12 shrink-0 self-center"
+        role="img"
+      >
+        <span className="absolute right-0 top-0 block">
+          <Entity className="ring-2 ring-background" size={32} src={visual.secondary.src} />
+        </span>
+        <span className="absolute bottom-0 left-0 block">
+          <Entity className="ring-2 ring-background" size={40} src={visual.primary.src} />
+        </span>
+      </span>
+    );
+  }
+
   return (
     <Entity
+      className={
+        isVeloraLogo(visual) ? VELORA_LOGO_TILE_BACKGROUND_CLASS : undefined
+      }
       label={visual.label}
       shape={visual.kind === "company-logo" ? "square" : "circle"}
       size={40}
       src={visual.src}
+      style={isVeloraLogo(visual) ? VELORA_LOGO_TILE_BACKGROUND_STYLE : undefined}
     />
   );
 }
@@ -140,18 +186,8 @@ export function InsightCard({
 
   const cardBody = (
     <>
-      <div className="flex items-center gap-xs text-control-sm text-text">
-        <Icon
-          aria-hidden="true"
-          className="shrink-0 text-premium-inbug"
-          name="signal-ai"
-          size="small"
-        />
-        <span>Based on your page activity</span>
-      </div>
-
       {visual ? (
-        <div className="mt-sm flex min-w-0 items-start gap-sm">
+        <div className="flex min-w-0 items-start gap-sm">
           {renderVisual(visual)}
           <div className="min-w-0 flex-1">
             <h3 className="text-control-md text-text">{headline}</h3>
@@ -171,7 +207,7 @@ export function InsightCard({
         </div>
       ) : (
         <>
-          <h3 className="mt-sm text-control-md text-text">{headline}</h3>
+          <h3 className="text-control-md text-text">{headline}</h3>
           <p className="mt-xs text-body-sm text-text">
             {evidence} <InlineAction action={action} />
           </p>
