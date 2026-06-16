@@ -83,13 +83,13 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "post-amplification",
     icon: "analytics",
     label: "Open enrollment content is worth amplifying",
-    value: "4.8% engagement rate - only 240 impressions",
+    value: "8.2% engagement rate - 18.4K impressions",
     query: "Tell me more about this open enrollment post.",
     followUps: [
       {
         prompt: "Why this post?",
         response:
-          "Because the early signal is strong. People who saw the Arbor Retail Group post engaged with it at 4.8%, well above the Page average, but only 240 people saw it. That makes it a good candidate to review for more reach.",
+          "Because the signal is strong. People who saw the Arbor Retail Group post engaged with it at 8.2%, well above the Page average, and it reached 18.4K impressions. That makes it a good candidate to review for more reach.",
       },
       {
         prompt: "Who would this reach?",
@@ -107,13 +107,13 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "follower-growth",
     icon: "people",
     label: "Follower growth dropped this month",
-    value: "312 visitors - down 18 points vs last month",
+    value: "8,740 visitors - down 18% vs last month",
     query: "Why did follower growth drop this month?",
     followUps: [
       {
         prompt: "How does this compare to last quarter?",
         response:
-          "Last quarter averaged 384 visitors per month, so this month is down 19%. The drop appears tied to a posting gap after the open enrollment readiness post, not a loss of relevance with the audience.",
+          "Last quarter averaged 10,800 visitors per month, so this month is down 19%. The drop appears tied to a posting gap after the open enrollment readiness post, not a loss of relevance with the audience.",
       },
       {
         prompt: "Which posts drove the most follows?",
@@ -174,7 +174,7 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "competitor-growth",
     icon: "company",
     label: `${pcpCompetitorNames[0]} is gaining followers faster`,
-    value: "82 new followers this month vs Velora's 29",
+    value: "1,280 new followers this month vs Velora's 420",
     query: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
     followUps: [
       {
@@ -212,23 +212,23 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
 export const adminUc5FollowerMetrics: ReadonlyArray<AdminUc5Metric> = [
   {
     label: "Visitors",
-    value: "312",
-    changeValue: "18 points",
+    value: "8,740",
+    changeValue: "18%",
     changeContext: "vs last month",
     tone: "negative",
   },
   {
     label: "New followers",
-    value: "29",
+    value: "420",
     changeValue: "11%",
-    changeContext: "vs last week",
+    changeContext: "vs last month",
     tone: "negative",
   },
   {
     label: "Follower total",
-    value: "48,218",
-    changeValue: "29",
-    changeContext: "this week",
+    value: "86,420",
+    changeValue: "420",
+    changeContext: "this month",
     tone: "positive",
   },
 ];
@@ -274,19 +274,19 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
 export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
     title: pcpProofSnippets.postTitle,
-    impressions: "1,688",
+    impressions: "18.4K",
     desktop: 32,
     mobile: 68,
   },
   {
     title: "Carrier file readiness checklist for open enrollment",
-    impressions: "1,204",
+    impressions: "14.2K",
     desktop: 41,
     mobile: 59,
   },
   {
     title: "How HR teams keep employee communications aligned by population",
-    impressions: "936",
+    impressions: "10.8K",
     desktop: 27,
     mobile: 73,
   },
@@ -295,13 +295,13 @@ export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
 export const adminUc5LowPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
     title: "Velora product update: eligibility rules",
-    impressions: "214",
+    impressions: "4.2K",
     desktop: 52,
     mobile: 48,
   },
   {
     title: "June release notes for benefits workflow admins",
-    impressions: "168",
+    impressions: "3.8K",
     desktop: 61,
     mobile: 39,
   },
@@ -311,27 +311,27 @@ export const adminUc5CompetitorRows: ReadonlyArray<AdminUc5CompetitorRow> = [
   {
     company: pcpCompanyProfile.name,
     postsPerWeek: "2",
-    newFollowers: "29",
-    commentsPerDay: "11",
+    newFollowers: "420",
+    commentsPerDay: "21",
     highlight: true,
   },
   {
     company: pcpCompetitorNames[0],
     postsPerWeek: "5",
-    newFollowers: "82",
-    commentsPerDay: "18",
+    newFollowers: "1,280",
+    commentsPerDay: "162",
   },
   {
     company: pcpCompetitorNames[1],
     postsPerWeek: "4",
-    newFollowers: "64",
-    commentsPerDay: "14",
+    newFollowers: "940",
+    commentsPerDay: "121",
   },
   {
     company: pcpCompetitorNames[2],
     postsPerWeek: "3",
-    newFollowers: "41",
-    commentsPerDay: "7",
+    newFollowers: "610",
+    commentsPerDay: "66",
   },
 ];
 

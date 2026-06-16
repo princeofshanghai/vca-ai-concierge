@@ -11,7 +11,7 @@ export const pcpCompanyProfile = {
   tagline: "Enterprise benefits administration for open enrollment and carriers.",
   industry: "Software Development",
   location: "San Francisco, CA",
-  followers: "33K followers",
+  followers: "86K followers",
   employees: "10K+ employees",
   clientReach: "Built for enterprise HR and benefits teams",
   ctaLabel: "Ask Velora",
@@ -75,10 +75,10 @@ export const pcpProofSnippets = {
   postImageAlt: "Benefits operations dashboard showing carrier coordination tasks",
   postTimestamp: "2d",
   postDateLabel: "June 2, 2026 · Edited",
-  postEngagement: "1,284",
-  postCommentCount: "36",
-  postCommentLabel: "36 comments",
-  postRepostCount: "18",
+  postEngagement: "3,840",
+  postCommentCount: "186",
+  postCommentLabel: "186 comments",
+  postRepostCount: "72",
   postBody: [
     "Arbor Retail Group was preparing open enrollment for 12,000 employees across stores, distribution centers, and corporate teams. Eligibility cleanup and carrier file readiness used to send the benefits team into a spreadsheet scramble.",
     "With Velora, Dana's team mapped each plan change to the populations, carrier files, and employee communications behind it. When one carrier feed changed, only the affected launch tasks moved into review. Everyone else stayed on schedule.",
@@ -101,29 +101,32 @@ export const pcpVcaScenario = {
   visitorPrompts: [
     {
       id: "overview",
-      label: "What should I know about Velora?",
+      label: "What does Velora do?",
     },
     {
       id: "fit",
-      label: "Is Velora relevant to me?",
+      label: "Is Velora built for companies like mine?",
     },
     {
-      id: "posts",
-      label: "Show me recent posts",
+      id: "difference",
+      label: "What makes Velora different?",
     },
   ],
   pageExplorerPrompts: {
-    overview: "What should I know about Velora?",
-    fit: "Is Velora relevant to me?",
+    overview: "What does Velora do?",
+    fit: "Is Velora built for companies like mine?",
+    difference: "What makes Velora different?",
     posts: "Show me recent posts",
     people: "Who are the top people here?",
     jobs: "Are there open roles?",
   },
   pageExplorerResponses: {
     overview:
-      "Velora is a benefits administration platform for enterprise HR teams. It helps teams coordinate open enrollment, carrier readiness, eligibility changes, and employee communications in one shared workflow.",
+      "Velora helps HR and benefits teams manage benefits operations in one shared workflow.\n\nIt brings open enrollment, carrier readiness, eligibility changes, and employee communications into the same place, so teams are not coordinating across scattered spreadsheets or one-off status updates.\n\nThat makes Velora useful when benefits work has both an employee-facing enrollment experience and an operations layer behind it. You can learn more on Velora's website.",
     fit:
-      "Based on your HR leadership role and company context, Velora looks relevant if your team manages benefits operations across employee populations, carriers, locations, or enrollment windows.",
+      "Velora is built for larger teams with complex benefits operations.\n\nIt is most relevant when a company manages multiple employee groups, carrier connections, eligibility rules, or enrollment windows across locations or worker types.\n\nIf your team is coordinating benefits across those kinds of moving parts, Velora is likely worth a closer look. You can review Velora's customer stories or connect with their team to confirm fit.",
+    difference:
+      "Velora focuses on making benefits operations easier to coordinate before enrollment issues become urgent.\n\nInstead of only helping employees choose plans, it gives HR teams visibility into carrier readiness, eligibility cleanup, plan changes, deadlines, and employee communications.\n\nThat combination matters for teams that need both an employee-facing enrollment experience and an operational command center behind it.",
     posts:
       "Here are recent posts from Velora. This one shows how a large retail HR team simplified carrier coordination before open enrollment.",
     people:

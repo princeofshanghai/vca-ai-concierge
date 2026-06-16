@@ -1,7 +1,6 @@
 export { PremiumCompanyPagesCombinedPlaceholder } from "./premium-company-pages-combined-placeholder";
 export {
   PremiumCompanyPagesMemberPage,
-  PremiumCompanyPagesVcaHandoffCardPreview,
   PremiumCompanyPagesVcaJobPreviewCardPreview,
   PremiumCompanyPagesVcaPostProofCardPreview,
 } from "./premium-company-pages-member-page";

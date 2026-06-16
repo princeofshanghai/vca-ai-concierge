@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ReviewShell } from "@/components/review-shell";
+import { ReviewShell } from "@/components/review-shell/review-shell";
 
 export default function ReviewLayout({
   children,

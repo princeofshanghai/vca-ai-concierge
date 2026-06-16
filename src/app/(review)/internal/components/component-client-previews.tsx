@@ -7,12 +7,6 @@ import {
   type MouseEventHandler,
   type ReactNode,
 } from "react";
-import {
-  Maximize2,
-  Monitor,
-  Smartphone,
-  type LucideIcon,
-} from "lucide-react";
 
 import {
   ChatBody,
@@ -25,8 +19,6 @@ import {
   ChatMessageFeedback,
   ChatMessageFeedbackFlow,
   ChatPanel,
-  ChatSidePanel,
-  ChatSidePanelLayout,
   ChatThinkingMessage,
   ChatThread,
   ChatTray,
@@ -34,33 +26,37 @@ import {
   RecommendationCard,
   type ChatFeedbackReason,
   type ChatPanelVariant,
-} from "@/components/chat";
+} from "@/components/chat/chat-ui";
+import {
+  ChatSidePanel,
+  ChatSidePanelLayout,
+} from "@/components/chat/chat-side-panel";
 import {
   HighValueMatchCardPreview,
   MediumAvailableHandoffPreview,
   type BookedMeeting,
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
-} from "@/components/flow-review";
+} from "@/components/flow-review/flow-review-chat-panel";
 import {
   premiumConversationFlows,
   type PremiumReviewFlowId,
-} from "@/components/premium";
+} from "@/components/premium/premium-concierge-flows";
 import {
-  AdminPerformanceDigestCard,
-  AdminUc5InsightResponseCardPreview,
   InsightCard,
-  PremiumCompanyPagesInboxContextStripPreview,
-  PremiumCompanyPagesVcaHandoffCardPreview,
-  PremiumCompanyPagesVcaJobPreviewCardPreview,
-  PremiumCompanyPagesVcaPostProofCardPreview,
-  TodayActionCard,
-  VcaFab,
-  type AdminUc5InsightId,
   type InsightCardAction,
-  type VcaFabVisualState,
-} from "@/components/premium-company-pages";
+} from "@/components/premium-company-pages/insight-card";
+import {
+  PremiumCompanyPagesVcaSidePanelPreview,
+  type PremiumCompanyPagesVcaSidePanelPreviewKind,
+} from "@/components/premium-company-pages/premium-company-pages-member-page";
+import { PremiumCompanyPagesInboxContextStripPreview } from "@/components/premium-company-pages/premium-company-pages-page";
 import { pcpCompetitorNames } from "@/components/premium-company-pages/persona";
+import { TodayActionCard } from "@/components/premium-company-pages/today-action-card";
+import {
+  VcaFab,
+  type VcaFabVisualState,
+} from "@/components/premium-company-pages/vca-fab";
 import { PremiumConciergeFab } from "@/components/premium/premium-concierge-fab";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
@@ -79,7 +75,7 @@ import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog"
 import { Entity, type EntityProps } from "@/components/primitives/entity";
 import { GhostButton, type GhostButtonProps } from "@/components/primitives/ghost-button";
 import { GhostIconButton, type GhostIconButtonProps } from "@/components/primitives/ghost-icon-button";
-import { Icon } from "@/components/primitives/icon";
+import { Icon, type IconName } from "@/components/primitives/icon";
 import {
   NavLinkItemHorizontal,
   type NavLinkItemHorizontalIndicator,
@@ -159,17 +155,6 @@ type SpecialistActionDemoStateId =
   | "booked-online"
   | "booked-phone";
 type VcaFabDemoState = VcaFabVisualState | "selected" | "disabled";
-type PcpAiCardDemoId =
-  | "vca-case-study"
-  | "vca-job"
-  | "vca-handoff"
-  | "admin-attention"
-  | "admin-post-amplification"
-  | "admin-follower-growth"
-  | "admin-visitor-demographics"
-  | "admin-content-engagement"
-  | "admin-weekly-synthesis"
-  | "admin-inbox-context";
 
 const bookedMeetingPreview: BookedMeeting = {
   format: "Online meeting",
@@ -264,11 +249,11 @@ const chatContextOptions: ReadonlyArray<DemoOption<ComponentLibraryContext>> = [
 ];
 
 const chatContextDisplayOptions: ReadonlyArray<
-  DemoOption<ComponentLibraryContext> & Readonly<{ Icon: LucideIcon }>
+  DemoOption<ComponentLibraryContext> & Readonly<{ icon: IconName }>
 > = [
-  { label: "Mobile", value: "mobile", Icon: Smartphone },
-  { label: "Desktop collapsed", value: "collapsed", Icon: Monitor },
-  { label: "Desktop expanded", value: "expanded", Icon: Maximize2 },
+  { label: "Mobile", value: "mobile", icon: "phone-handset" },
+  { label: "Desktop collapsed", value: "collapsed", icon: "responsive" },
+  { label: "Desktop expanded", value: "expanded", icon: "maximize" },
 ];
 
 const shellDemoVersionOptions: ReadonlyArray<DemoOption<ShellDemoVersion>> = [
@@ -278,10 +263,10 @@ const shellDemoVersionOptions: ReadonlyArray<DemoOption<ShellDemoVersion>> = [
 ];
 
 const shellDemoDeviceOptions: ReadonlyArray<
-  DemoOption<ShellDemoDevice> & Readonly<{ Icon: LucideIcon }>
+  DemoOption<ShellDemoDevice> & Readonly<{ icon: IconName }>
 > = [
-  { label: "Desktop", value: "desktop", Icon: Monitor },
-  { label: "Mobile", value: "mobile", Icon: Smartphone },
+  { label: "Desktop", value: "desktop", icon: "responsive" },
+  { label: "Mobile", value: "mobile", icon: "phone-handset" },
 ];
 
 const shellDemoDesktopHeight = 820;
@@ -298,19 +283,6 @@ const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
   { label: "Focus", value: "focus-visible" },
   { label: "Disabled", value: "disabled" },
 ];
-const pcpAiCardDemoOptions: ReadonlyArray<DemoOption<PcpAiCardDemoId>> = [
-  { label: "Post proof", value: "vca-case-study" },
-  { label: "Job preview", value: "vca-job" },
-  { label: "Drafted message", value: "vca-handoff" },
-  { label: "Attention digest", value: "admin-attention" },
-  { label: "Post amplification", value: "admin-post-amplification" },
-  { label: "Follower growth", value: "admin-follower-growth" },
-  { label: "Visitor demographics", value: "admin-visitor-demographics" },
-  { label: "Content engagement", value: "admin-content-engagement" },
-  { label: "Weekly synthesis", value: "admin-weekly-synthesis" },
-  { label: "Inbox context", value: "admin-inbox-context" },
-];
-
 const genericShellDemoContent: ShellDemoContent = {
   title: "AI assistant",
   assistantMessage: "I can help answer questions and guide next steps.",
@@ -544,7 +516,6 @@ function ChatContextControl({
       >
         {chatContextDisplayOptions.map((option) => {
           const isSelected = option.value === value;
-          const ContextIcon = option.Icon;
 
           return (
             <button
@@ -570,7 +541,7 @@ function ChatContextControl({
               }
               onClick={() => onChange(option.value)}
             >
-              <ContextIcon aria-hidden="true" size={16} strokeWidth={2} />
+              <Icon name={option.icon} size="small" />
             </button>
           );
         })}
@@ -876,7 +847,6 @@ function DemoDeviceControl({
       >
         {shellDemoDeviceOptions.map((option) => {
           const isSelected = option.value === value;
-          const DeviceIcon = option.Icon;
 
           return (
             <button
@@ -902,7 +872,7 @@ function DemoDeviceControl({
               }
               onClick={() => onChange(option.value)}
             >
-              <DeviceIcon aria-hidden="true" size={16} strokeWidth={2} />
+              <Icon name={option.icon} size="small" />
             </button>
           );
         })}
@@ -2412,7 +2382,7 @@ export function VcaFabSwappableMarkPreview() {
   );
 }
 
-function PcpAiCardFrame({
+function PcpContextPreviewFrame({
   children,
   wide = false,
 }: Readonly<{ children: ReactNode; wide?: boolean }>) {
@@ -2428,78 +2398,16 @@ function PcpAiCardFrame({
   );
 }
 
-function PcpAdminAttentionFrame({ children }: Readonly<{ children: ReactNode }>) {
+export function PcpVcaSidePanelShellPreview({
+  kind,
+}: Readonly<{ kind: PremiumCompanyPagesVcaSidePanelPreviewKind }>) {
   return (
-    <div className="w-full max-w-[720px] rounded-sm bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background p-xxl">
-      {children}
-    </div>
-  );
-}
-
-function renderPcpAiCardDemo(cardId: PcpAiCardDemoId) {
-  if (cardId === "vca-case-study") {
-    return <PcpVcaCaseStudyCardPreview />;
-  }
-
-  if (cardId === "vca-job") {
-    return <PcpVcaJobCardPreview />;
-  }
-
-  if (cardId === "vca-handoff") {
-    return <PcpVcaHandoffCardPreview />;
-  }
-
-  if (cardId === "admin-attention") {
-    return <PcpAdminAttentionCardsPreview />;
-  }
-
-  if (cardId === "admin-inbox-context") {
-    return <PcpInboxAiContextStripPreview />;
-  }
-
-  const insightIdByCardId: Record<
-    Exclude<
-      PcpAiCardDemoId,
-      | "vca-case-study"
-      | "vca-job"
-      | "vca-handoff"
-      | "admin-attention"
-      | "admin-inbox-context"
-    >,
-    AdminUc5InsightId
-  > = {
-    "admin-post-amplification": "post-amplification",
-    "admin-follower-growth": "follower-growth",
-    "admin-visitor-demographics": "visitor-demographics",
-    "admin-content-engagement": "content-engagement",
-    "admin-weekly-synthesis": "weekly-synthesis",
-  };
-
-  return (
-    <PcpAdminInsightResponseCardPreview insightId={insightIdByCardId[cardId]} />
-  );
-}
-
-export function PcpAiCardsDemo() {
-  const [cardId, setCardId] =
-    useState<PcpAiCardDemoId>("vca-case-study");
-
-  return (
-    <ComponentDemoSection
-      controls={
-        <SelectControl
-          label="Card"
-          value={cardId}
-          options={pcpAiCardDemoOptions}
-          onChange={setCardId}
-        />
-      }
-      previewClassName="w-full"
-    >
-      <div className="flex w-full justify-center">
-        {renderPcpAiCardDemo(cardId)}
-      </div>
-    </ComponentDemoSection>
+    <SidePanelContextFrame context="collapsed">
+      <PremiumCompanyPagesVcaSidePanelPreview
+        kind={kind}
+        variant="collapsed"
+      />
+    </SidePanelContextFrame>
   );
 }
 
@@ -2669,59 +2577,11 @@ export function PcpInsightCardSystemPreview() {
   );
 }
 
-export function PcpVcaCaseStudyCardPreview() {
-  return (
-    <PcpAiCardFrame>
-      <PremiumCompanyPagesVcaPostProofCardPreview />
-    </PcpAiCardFrame>
-  );
-}
-
-export function PcpVcaJobCardPreview() {
-  return (
-    <PcpAiCardFrame>
-      <PremiumCompanyPagesVcaJobPreviewCardPreview />
-    </PcpAiCardFrame>
-  );
-}
-
-export function PcpVcaHandoffCardPreview() {
-  return (
-    <PcpAiCardFrame>
-      <PremiumCompanyPagesVcaHandoffCardPreview />
-    </PcpAiCardFrame>
-  );
-}
-
-export function PcpAdminAttentionCardsPreview() {
-  const [activeInsightId, setActiveInsightId] =
-    useState<AdminUc5InsightId | null>("post-amplification");
-
-  return (
-    <PcpAdminAttentionFrame>
-      <AdminPerformanceDigestCard
-        activeInsightId={activeInsightId}
-        onInsightSelect={(insight) => setActiveInsightId(insight.id)}
-      />
-    </PcpAdminAttentionFrame>
-  );
-}
-
-export function PcpAdminInsightResponseCardPreview({
-  insightId,
-}: Readonly<{ insightId: AdminUc5InsightId }>) {
-  return (
-    <PcpAiCardFrame wide>
-      <AdminUc5InsightResponseCardPreview insightId={insightId} />
-    </PcpAiCardFrame>
-  );
-}
-
 export function PcpInboxAiContextStripPreview() {
   return (
-    <PcpAiCardFrame wide>
+    <PcpContextPreviewFrame wide>
       <PremiumCompanyPagesInboxContextStripPreview />
-    </PcpAiCardFrame>
+    </PcpContextPreviewFrame>
   );
 }
 

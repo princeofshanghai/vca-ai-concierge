@@ -4,7 +4,14 @@ import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 
-import { MetricDelta, type MetricTone } from "./Metric";
+import {
+  DataCardFooter,
+  DataCardHeader,
+  DataCardSection,
+  DataCardShell,
+  DataMetricSummary,
+} from "./DataCard";
+import { type MetricTone } from "./Metric";
 
 export type AudienceFitAvatar = Readonly<{
   label?: string;
@@ -13,8 +20,9 @@ export type AudienceFitAvatar = Readonly<{
 
 export type AudienceFitSegment = Readonly<{
   detail?: ReactNode;
+  dimension?: ReactNode;
   label: ReactNode;
-  value: ReactNode;
+  value?: ReactNode;
   valueTone?: "default" | "positive" | "negative";
 }>;
 
@@ -92,51 +100,31 @@ export function AudienceFit({
     metricValue || metricLabel || trend || hasMetricTrend;
 
   return (
-    <article
+    <DataCardShell
       {...props}
-      className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
-        className,
-      )}
-      data-response-block="AudienceFit"
+      block="AudienceFit"
+      className={className}
     >
+      {title ? <DataCardHeader title={title} /> : null}
       {hasMetricSummary ? (
-        <div className="min-w-0">
-          {title ? (
-            <h3 className="text-control-md text-text">{title}</h3>
+        <div className={cx("min-w-0", title ? "mt-lg" : "")}>
+          <DataMetricSummary
+            delta={trendDelta}
+            deltaContext={trendContext}
+            label={metricLabel}
+            tone={trendTone}
+            value={metricValue}
+          />
+          {!hasMetricTrend && trend ? (
+            <p className="mt-xs text-body-xs text-text-meta">{trend}</p>
           ) : null}
-          <div className={cx("flex items-start gap-sm", title ? "mt-md" : "")}>
-            {metricValue ? (
-              <p className="shrink-0 text-heading-xl tracking-normal text-text">
-                {metricValue}
-              </p>
-            ) : null}
-            <div className="min-w-0 pt-[3px]">
-              {metricLabel ? (
-                <p className="max-w-[220px] text-body-sm text-text-meta">
-                  {metricLabel}
-                </p>
-              ) : null}
-              {hasMetricTrend ? (
-                <MetricDelta
-                  className="mt-xs"
-                  delta={trendDelta}
-                  deltaContext={trendContext}
-                  tone={trendTone}
-                />
-              ) : trend ? (
-                <p className="mt-xs text-body-xs text-text-meta">{trend}</p>
-              ) : null}
-            </div>
-          </div>
           {summary ? (
             <p className="mt-md text-body-sm text-text">{summary}</p>
           ) : null}
         </div>
       ) : (
-        <div className="min-w-0">
-          <h3 className="text-control-md text-text">{title}</h3>
-          <div className="mt-md">
+        <div className={cx("min-w-0", title ? "mt-lg" : "")}>
+          <div>
             <AudienceAvatars avatars={avatars} />
           </div>
           {summary ? (
@@ -144,50 +132,79 @@ export function AudienceFit({
           ) : null}
         </div>
       )}
-      <dl className="mt-xl divide-y divide-border-faint border-t border-border-faint">
-        {segments.map((segment, index) => (
-          <div
-            className="flex min-w-0 items-start justify-between gap-lg py-lg first:pt-lg last:pb-0"
-            key={`${String(segment.label)}-${index}`}
-          >
-            <div className="min-w-0">
-              <dt className="text-control-sm text-text">{segment.label}</dt>
-              {segment.detail ? (
-                <dd className="mt-xxs text-body-sm text-text-meta">
-                  {segment.detail}
-                </dd>
-              ) : null}
-            </div>
-            <dd
-              className={cx(
-                "shrink-0 text-control-sm",
-                getValueToneClass(segment.valueTone),
-              )}
-            >
-              {segment.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <DataCardSection className="pt-sm">
+        <dl className="divide-y divide-border-faint">
+          {segments.map((segment, index) => {
+            const hasValue =
+              segment.value !== null &&
+              segment.value !== undefined &&
+              segment.value !== "";
+
+            return (
+              <div
+                className={cx(
+                  "flex min-w-0 items-start gap-lg py-md first:pt-md last:pb-0",
+                  hasValue ? "justify-between" : "",
+                )}
+                key={`${String(segment.label)}-${index}`}
+              >
+                <div className="min-w-0">
+                  {segment.dimension ? (
+                    <dt className="text-body-xs text-text-meta">
+                      {segment.dimension}
+                    </dt>
+                  ) : null}
+                  <dt
+                    className={cx(
+                      "text-control-sm text-text",
+                      segment.dimension ? "mt-xxs" : "",
+                    )}
+                  >
+                    {segment.label}
+                  </dt>
+                  {segment.detail ? (
+                    <dd className="mt-xxs text-body-sm text-text-meta">
+                      {segment.detail}
+                    </dd>
+                  ) : null}
+                </div>
+                {hasValue ? (
+                  <dd
+                    className={cx(
+                      "shrink-0 text-control-sm",
+                      getValueToneClass(segment.valueTone),
+                    )}
+                  >
+                    {segment.value}
+                  </dd>
+                ) : null}
+              </div>
+            );
+          })}
+        </dl>
+      </DataCardSection>
       {actionVariant === "link" ? (
-        <button
-          className="mt-lg inline-flex items-center gap-xs text-control-sm text-action transition-colors duration-150 ease-out hover:text-action-hover hover:underline hover:underline-offset-2"
-          onClick={onActionSelect}
-          type="button"
-        >
-          <span>{actionLabel}</span>
-          <Icon name="arrow-right" size="small" />
-        </button>
+        <DataCardFooter>
+          <button
+            className="inline-flex items-center gap-xs text-control-sm text-action transition-colors duration-150 ease-out hover:text-action-hover hover:underline hover:underline-offset-2"
+            onClick={onActionSelect}
+            type="button"
+          >
+            <span>{actionLabel}</span>
+            <Icon name="arrow-right" size="small" />
+          </button>
+        </DataCardFooter>
       ) : (
-        <Button
-          className="mt-xl"
-          onClick={onActionSelect}
-          size="small"
-          variant="secondary"
-        >
-          {actionLabel}
-        </Button>
+        <DataCardFooter>
+          <Button
+            onClick={onActionSelect}
+            size="small"
+            variant="secondary"
+          >
+            {actionLabel}
+          </Button>
+        </DataCardFooter>
       )}
-    </article>
+    </DataCardShell>
   );
 }

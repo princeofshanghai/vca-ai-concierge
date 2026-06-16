@@ -9,7 +9,6 @@ const placeholderStories = {
   "1b": "Story 1b",
   "1c": "Story 1c",
   "2": "Story 2",
-  "3": "Story 3",
 } as const;
 
 type PremiumCompanyPagesStoryId = keyof typeof placeholderStories;

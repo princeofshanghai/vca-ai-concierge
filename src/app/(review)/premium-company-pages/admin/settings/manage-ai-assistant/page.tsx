@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PremiumCompanyPagesAdminAiAssistantSettingsPage } from "@/components/premium-company-pages";
+import { PremiumCompanyPagesAdminAiAssistantSettingsPage } from "@/components/premium-company-pages/premium-company-pages-page";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({

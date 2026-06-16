@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PremiumSurveyPage } from "@/components/premium";
+import { PremiumSurveyPage } from "@/components/premium/premium-survey-page";
 import { createPageMetadata } from "@/lib/metadata";
 import { getPremiumShellMode } from "@/lib/premium-shell";
 

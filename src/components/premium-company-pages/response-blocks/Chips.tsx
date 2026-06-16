@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from "react";
 
-import { Prompt } from "@/components/chat";
+import { Prompt } from "@/components/chat/chat-ui";
 import { Icon, type IconName } from "@/components/primitives/icon";
 
 export type ChipPrompt =

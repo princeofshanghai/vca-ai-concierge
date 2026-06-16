@@ -20,6 +20,8 @@ type TodayActionCardInlineAction = Readonly<{
 
 export type TodayActionCardProps = Readonly<{
   badge?: TodayActionCardBadge;
+  cardHref?: string;
+  cardLabel?: string;
   className?: string;
   description: ReactNode;
   dismissLabel: string;
@@ -34,13 +36,27 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-function renderInlineAction(action: TodayActionCardInlineAction) {
-  const className =
-    "font-semibold text-action transition-colors hover:text-action-hover";
+function renderInlineAction(
+  action: TodayActionCardInlineAction,
+  cardHref?: string,
+) {
+  const textClassName = "font-semibold text-action";
+  const actionClassName = cx(
+    "relative z-20 transition-colors hover:text-action-hover",
+    textClassName,
+  );
+
+  if (action.href && action.href === cardHref && !action.onSelect) {
+    return <span className={textClassName}>{action.label}</span>;
+  }
 
   if (action.href) {
     return (
-      <Link className={className} href={action.href} onClick={action.onSelect}>
+      <Link
+        className={actionClassName}
+        href={action.href}
+        onClick={action.onSelect}
+      >
         {action.label}
       </Link>
     );
@@ -48,7 +64,7 @@ function renderInlineAction(action: TodayActionCardInlineAction) {
 
   return (
     <button
-      className={className}
+      className={actionClassName}
       onClick={action.onSelect}
       type="button"
     >
@@ -59,7 +75,7 @@ function renderInlineAction(action: TodayActionCardInlineAction) {
 
 function renderPrimaryAction(action: TodayActionCardInlineAction) {
   const className = getButtonClassName({
-    className: "mt-md self-start sm:ml-lg sm:mt-0 sm:self-center",
+    className: "relative z-20 mt-md self-start sm:ml-lg sm:mt-0 sm:self-center",
     size: "small",
   });
 
@@ -87,8 +103,30 @@ function renderBadge(badge: TodayActionCardBadge) {
   );
 }
 
+function renderCardLink({
+  cardHref,
+  cardLabel,
+}: Readonly<{
+  cardHref?: string;
+  cardLabel?: string;
+}>) {
+  if (!cardHref || !cardLabel) {
+    return null;
+  }
+
+  return (
+    <Link
+      aria-label={cardLabel}
+      className="absolute inset-0 z-10 rounded-xs outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+      href={cardHref}
+    />
+  );
+}
+
 export function TodayActionCard({
   badge,
+  cardHref,
+  cardLabel,
   className,
   description,
   dismissLabel,
@@ -103,9 +141,11 @@ export function TodayActionCard({
       <article
         className={cx(
           "group relative flex w-full min-w-0 flex-col gap-sm rounded-xs border border-border-faint bg-background px-lg py-lg pr-xxl text-left outline-none transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-faint-hover hover:shadow-raised-soft focus-within:ring-4 focus-within:ring-action-focus-ring sm:pr-[72px]",
+          cardHref && "cursor-pointer",
           className,
         )}
       >
+        {renderCardLink({ cardHref, cardLabel })}
         {renderBadge(badge)}
         <div className="flex min-w-0 items-start gap-md">
           <div className="flex size-6 shrink-0 items-center justify-center">
@@ -118,7 +158,7 @@ export function TodayActionCard({
               {inlineAction ? (
                 <>
                   {" "}
-                  {renderInlineAction(inlineAction)}
+                  {renderInlineAction(inlineAction, cardHref)}
                 </>
               ) : null}
             </p>
@@ -126,7 +166,7 @@ export function TodayActionCard({
         </div>
         {primaryAction ? renderPrimaryAction(primaryAction) : null}
         <GhostIconButton
-          className="absolute right-xs top-xs"
+          className="absolute right-xs top-xs z-20"
           icon="close"
           label={dismissLabel}
           onClick={onDismiss}
@@ -146,9 +186,11 @@ export function TodayActionCard({
           : primaryAction
           ? "flex-col gap-md sm:flex-row sm:items-center sm:pr-[72px]"
           : "items-center",
+        cardHref && "cursor-pointer",
         className,
       )}
     >
+      {renderCardLink({ cardHref, cardLabel })}
       {visual ? (
         <div className="flex shrink-0 items-center justify-center">
           {visual}
@@ -164,14 +206,14 @@ export function TodayActionCard({
           {inlineAction ? (
             <>
               {" "}
-              {renderInlineAction(inlineAction)}
+              {renderInlineAction(inlineAction, cardHref)}
             </>
           ) : null}
         </p>
       </div>
       {primaryAction ? renderPrimaryAction(primaryAction) : null}
       <GhostIconButton
-        className="absolute right-xs top-xs"
+        className="absolute right-xs top-xs z-20"
         icon="close"
         label={dismissLabel}
         onClick={onDismiss}

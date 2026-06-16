@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useState,
   type ReactNode,
@@ -12,17 +11,14 @@ import {
   ChatResponseAttachment,
   ChatResponseBlock,
   ChatThinkingMessage,
+} from "@/components/chat/chat-ui";
+import {
+  CHAT_ASSISTANT_THINKING_DELAY_MS,
   prefersReducedMotion,
-  useChatAssistantStream,
   type ChatMessageStreamStatus,
-} from "@/components/chat";
+} from "@/components/chat/chat-motion";
 
-import { Text as ResponseText } from "./response-blocks";
-
-type ScriptedAssistantResponse = Readonly<{
-  id: string;
-  text: string;
-}>;
+import { Text as ResponseText } from "./response-blocks/Text";
 
 export type ScriptedResponseAttachment = Readonly<{
   id: string;
@@ -47,6 +43,7 @@ export type ScriptedResponseTurnProps = Readonly<{
 }>;
 
 const ATTACHMENT_REVEAL_INTERVAL_MS = 220;
+const completedResponseTurnKeys = new Set<string>();
 
 export function ScriptedResponseTurn({
   id,
@@ -55,7 +52,7 @@ export function ScriptedResponseTurn({
   animate = true,
   ...props
 }: ScriptedResponseTurnProps) {
-  const turnKey = `${id}\u0000${text}\u0000${animate ? "animated" : "static"}`;
+  const turnKey = `${id}\u0000${text}`;
 
   return (
     <ScriptedResponseTurnContent
@@ -88,59 +85,56 @@ function ScriptedResponseTurnContent({
   stopSignal = 0,
   animate,
 }: ScriptedResponseTurnContentProps) {
-  const [pendingResponse, setPendingResponse] =
-    useState<ScriptedAssistantResponse | null>(() =>
-      animate ? { id, text } : null,
-    );
+  const responseKey = `${id}\u0000${text}`;
+  const [shouldAnimateResponse] = useState(
+    () => animate && !completedResponseTurnKeys.has(responseKey),
+  );
   const [streamStatus, setStreamStatus] =
     useState<ChatMessageStreamStatus>(() =>
-      animate ? "thinking" : "complete",
+      shouldAnimateResponse ? "thinking" : "complete",
     );
-  const [streamText, setStreamText] = useState(() => (animate ? "" : text));
+  const [streamText, setStreamText] = useState(() =>
+    shouldAnimateResponse ? "" : text,
+  );
   const [visibleAttachmentCount, setVisibleAttachmentCount] = useState(() =>
-    animate ? 0 : attachments.length,
+    shouldAnimateResponse ? 0 : attachments.length,
   );
   const [isStopped, setIsStopped] = useState(false);
   const attachmentCount = attachments.length;
-  const renderedAttachmentCount = animate
+  const renderedAttachmentCount = shouldAnimateResponse
     ? Math.min(visibleAttachmentCount, attachmentCount)
     : attachmentCount;
-  const streamPendingResponse = animate ? pendingResponse : null;
   const isBusy =
-    animate &&
+    shouldAnimateResponse &&
     !isStopped &&
-    (pendingResponse !== null ||
-      streamStatus === "thinking" ||
-      streamStatus === "streaming" ||
-      renderedAttachmentCount < attachmentCount);
+    (streamStatus === "thinking" || renderedAttachmentCount < attachmentCount);
 
-  const handleStreamStart = useCallback(() => {
-    setStreamStatus("streaming");
-    setStreamText("");
-  }, []);
+  useEffect(() => {
+    if (!shouldAnimateResponse || streamStatus !== "thinking") {
+      return;
+    }
 
-  const handleStreamText = useCallback(
-    (_response: ScriptedAssistantResponse, visibleText: string) => {
-      setStreamText(visibleText);
-    },
-    [],
-  );
-
-  const handleComplete = useCallback(
-    (response: ScriptedAssistantResponse) => {
-      setPendingResponse(null);
+    const revealDelay = prefersReducedMotion()
+      ? 0
+      : CHAT_ASSISTANT_THINKING_DELAY_MS;
+    const revealTimer = window.setTimeout(() => {
       setStreamStatus("complete");
-      setStreamText(response.text);
-    },
-    [],
-  );
+      setStreamText(text);
+      completedResponseTurnKeys.add(responseKey);
+    }, revealDelay);
 
-  useChatAssistantStream({
-    pendingResponse: streamPendingResponse,
-    onStreamStart: handleStreamStart,
-    onStreamText: handleStreamText,
-    onComplete: handleComplete,
-  });
+    return () => {
+      window.clearTimeout(revealTimer);
+    };
+  }, [responseKey, shouldAnimateResponse, streamStatus, text]);
+
+  useEffect(() => {
+    if (streamStatus !== "complete" || isStopped) {
+      return;
+    }
+
+    completedResponseTurnKeys.add(responseKey);
+  }, [isStopped, responseKey, streamStatus]);
 
   useEffect(() => {
     if (stopSignal === 0 || !isBusy) {
@@ -148,7 +142,6 @@ function ScriptedResponseTurnContent({
     }
 
     const stopTimer = window.setTimeout(() => {
-      setPendingResponse(null);
       setIsStopped(true);
       setStreamStatus("complete");
       setVisibleAttachmentCount(0);
@@ -160,7 +153,7 @@ function ScriptedResponseTurnContent({
   }, [isBusy, stopSignal]);
 
   useEffect(() => {
-    if (!animate || streamStatus !== "complete" || isStopped) {
+    if (!shouldAnimateResponse || streamStatus !== "complete" || isStopped) {
       return;
     }
 
@@ -182,10 +175,10 @@ function ScriptedResponseTurnContent({
       window.clearTimeout(timer);
     };
   }, [
-    animate,
     attachmentCount,
     isStopped,
     renderedAttachmentCount,
+    shouldAnimateResponse,
     streamStatus,
   ]);
 
@@ -207,8 +200,7 @@ function ScriptedResponseTurnContent({
     };
   }, [id, isBusy, onBusyChange]);
 
-  const displayedText =
-    isStopped || streamStatus === "streaming" ? streamText : text;
+  const displayedText = isStopped ? streamText : text;
   const textNode =
     renderText?.({
       text: displayedText,

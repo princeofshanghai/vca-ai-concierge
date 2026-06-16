@@ -4,7 +4,7 @@ import {
   CHAT_ASSISTANT_STREAM_WORD_FADE_MS,
   splitIntoStreamChunks,
   type ChatMessageStreamStatus,
-} from "@/components/chat";
+} from "@/components/chat/chat-motion";
 
 type TextTone = "default" | "insight";
 

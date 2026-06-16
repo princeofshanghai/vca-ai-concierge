@@ -4,7 +4,7 @@ import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 
-export type PageIdentityCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
+export type CompanyCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
   actionLabel?: ReactNode;
   followers?: ReactNode;
   industry: ReactNode;
@@ -17,7 +17,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-export function PageIdentityCard({
+export function CompanyCard({
   actionLabel = "Follow",
   className,
   followers,
@@ -26,13 +26,13 @@ export function PageIdentityCard({
   name,
   onAction,
   ...props
-}: PageIdentityCardProps) {
+}: CompanyCardProps) {
   const nameText = typeof name === "string" ? name : undefined;
 
   return (
     <article
       {...props}
-      data-response-block="PageIdentityCard"
+      data-response-block="CompanyCard"
       className={cx(
         "flex w-[176px] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint sm:w-[188px]",
         className,

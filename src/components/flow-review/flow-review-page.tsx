@@ -6,7 +6,7 @@ import {
   ChatThread,
   Prompt,
   RecommendationCard,
-} from "@/components/chat";
+} from "@/components/chat/chat-ui";
 import { Button } from "@/components/primitives/button";
 import {
   STARTER_PROMPTS,

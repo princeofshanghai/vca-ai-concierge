@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { LandingPage } from "@/components/landing";
+import { LandingPage } from "@/components/landing/landing-page";
 import { getMediumFlowReview } from "@/lib/conversation-flows";
 import { getHiringShellMode } from "@/lib/hiring-shell";
 import { createPageMetadata } from "@/lib/metadata";

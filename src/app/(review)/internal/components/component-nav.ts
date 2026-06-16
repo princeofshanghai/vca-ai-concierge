@@ -130,11 +130,25 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/premium-company-page/vca-fab",
           },
           {
-            id: "premium-company-page-ai-cards",
-            title: "AI cards",
+            id: "premium-company-page-side-panel",
+            title: "Side panel",
             description:
-              "Collects PCP AI cards from VCA conversation, admin attention, AI insight, and inbox context moments.",
-            href: "/internal/components/premium-company-page/ai-cards",
+              "Shows PCP detail panels inside the VCA chat shell.",
+            href: "/internal/components/premium-company-page/side-panel",
+          },
+          {
+            id: "premium-company-page-entity-cards",
+            title: "Entity cards",
+            description:
+              "Shows reusable product, post, job, people, company, and carousel cards used inside PCP responses.",
+            href: "/internal/components/premium-company-page/entity-cards",
+          },
+          {
+            id: "premium-company-page-data-cards",
+            title: "Data cards",
+            description:
+              "Shows reusable metric, trend, comparison, audience, and content evidence cards used inside PCP responses.",
+            href: "/internal/components/premium-company-page/data-cards",
           },
           {
             id: "premium-company-page-insight-cards",
@@ -142,13 +156,6 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Showcases the reusable dashboard insight card system, routing rule, and six card types.",
             href: "/internal/components/premium-company-page/insight-cards",
-          },
-          {
-            id: "premium-company-page-response-system",
-            title: "Response system",
-            description:
-              "Showcases the PCP VCA response grammar, block anatomy, entity variants, and visitor signal tiers.",
-            href: "/internal/components/premium-company-page/response-system",
           },
         ],
       },

@@ -17,15 +17,17 @@ import {
   ChatMessage,
   ChatMessageFeedbackFlow,
   ChatPanel,
-  ChatSidePanel,
-  ChatSidePanelLayout,
   ChatThread,
   Prompt,
   RecommendationCard,
-  useChatLatestMessageAnchor,
   type ChatHeaderIdentity,
   type ChatPanelVariant,
-} from "@/components/chat";
+} from "@/components/chat/chat-ui";
+import { useChatLatestMessageAnchor } from "@/components/chat/chat-motion";
+import {
+  ChatSidePanel,
+  ChatSidePanelLayout,
+} from "@/components/chat/chat-side-panel";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";

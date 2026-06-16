@@ -5,8 +5,8 @@ import {
   isPremiumReviewFlowId,
   premiumConversationFlows,
   premiumReviewFlowIds,
-  PremiumSurveyPage,
-} from "@/components/premium";
+} from "@/components/premium/premium-concierge-flows";
+import { PremiumSurveyPage } from "@/components/premium/premium-survey-page";
 import { createPageMetadata } from "@/lib/metadata";
 import { getPremiumShellMode } from "@/lib/premium-shell";
 

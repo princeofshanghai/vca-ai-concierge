@@ -35,6 +35,7 @@ export {
   getStreamDelay,
   prefersReducedMotion,
   splitIntoStreamChunks,
+  startClassedViewTransition,
   startChatPanelViewTransition,
   supportsViewTransitions,
   useChatAssistantStream,

@@ -33,6 +33,7 @@ export type VcaFabProps = Omit<
   isOpen?: boolean;
   position?: "fixed" | "static";
   selected?: boolean;
+  showVisitorPresenceBadge?: boolean;
   adminTone?: VcaFabAdminTone;
   variant?: VcaFabVariant;
   visualState?: VcaFabVisualState;
@@ -164,6 +165,7 @@ export const VcaFab = forwardRef<HTMLButtonElement, VcaFabProps>(
       isOpen = false,
       position = "fixed",
       selected = false,
+      showVisitorPresenceBadge = true,
       adminTone = "default",
       variant = "visitor",
       visualState = "default",
@@ -250,7 +252,7 @@ export const VcaFab = forwardRef<HTMLButtonElement, VcaFabProps>(
               <DefaultVcaFabMark />
             )}
           </button>
-          {!isAdmin && !children ? (
+          {!isAdmin && !children && showVisitorPresenceBadge ? (
             <VisitorVcaFabPresenceBadge disabled={disabled} />
           ) : null}
         </span>

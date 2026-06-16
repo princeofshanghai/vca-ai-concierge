@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from "react";
 
-import { Prompt } from "@/components/chat";
+import { Prompt } from "@/components/chat/chat-ui";
 
 export type FabPromptStackItem<TValue extends string = string> = Readonly<{
   id: string;

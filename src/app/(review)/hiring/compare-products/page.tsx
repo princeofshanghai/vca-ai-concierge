@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { HiringBlankPage } from "@/components/landing";
+import { HiringBlankPage } from "@/components/landing/hiring-blank-page";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({

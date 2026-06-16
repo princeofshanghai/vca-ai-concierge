@@ -76,24 +76,46 @@ type ViewTransitionDocument = Document & {
   startViewTransition: (callback: () => void) => ViewTransition;
 };
 
-export function startChatPanelViewTransition(callback: () => void): boolean {
+function normalizeViewTransitionClassNames(
+  classNames: string | ReadonlyArray<string>,
+) {
+  return typeof classNames === "string" ? [classNames] : [...classNames];
+}
+
+export function startClassedViewTransition(
+  callback: () => void,
+  classNames: string | ReadonlyArray<string> = [],
+): boolean {
   if (!supportsViewTransitions()) {
     return false;
   }
 
-  document.documentElement.classList.add(CHAT_PANEL_VIEW_TRANSITION_CLASS);
+  const transitionClassNames = normalizeViewTransitionClassNames(classNames);
+
+  if (transitionClassNames.length > 0) {
+    document.documentElement.classList.add(...transitionClassNames);
+  }
 
   const transition = (document as ViewTransitionDocument).startViewTransition(
     callback,
   );
 
   const clearTransitionClass = () => {
-    document.documentElement.classList.remove(CHAT_PANEL_VIEW_TRANSITION_CLASS);
+    if (transitionClassNames.length > 0) {
+      document.documentElement.classList.remove(...transitionClassNames);
+    }
   };
 
   transition.finished.then(clearTransitionClass, clearTransitionClass);
 
   return true;
+}
+
+export function startChatPanelViewTransition(callback: () => void): boolean {
+  return startClassedViewTransition(
+    callback,
+    CHAT_PANEL_VIEW_TRANSITION_CLASS,
+  );
 }
 
 export function splitIntoStreamChunks(text: string): Array<string> {

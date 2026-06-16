@@ -6,8 +6,9 @@ import { Icon, type IconName } from "@/components/primitives/icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 
 export type PersonCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
-  actionIcon?: IconName;
+  actionIcon?: IconName | null;
   actionLabel?: ReactNode;
+  actionTrailingIcon?: IconName | null;
   avatarSrc?: string;
   followers?: ReactNode;
   headline: ReactNode;
@@ -24,6 +25,7 @@ function cx(...classes: Array<string | false | null | undefined>) {
 export function PersonCard({
   actionIcon = "add",
   actionLabel = "Follow",
+  actionTrailingIcon,
   avatarSrc,
   className,
   followers,
@@ -35,13 +37,20 @@ export function PersonCard({
   ...props
 }: PersonCardProps) {
   const nameText = typeof name === "string" ? name : undefined;
+  const shouldShowExternalActionIcon =
+    typeof actionLabel === "string" &&
+    actionLabel.toLocaleLowerCase() === "view profile";
+  const resolvedActionTrailingIcon =
+    actionTrailingIcon === undefined && shouldShowExternalActionIcon
+      ? "link-external"
+      : actionTrailingIcon;
 
   return (
     <article
       {...props}
       data-response-block="PersonCard"
       className={cx(
-        "flex w-[176px] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint sm:w-[188px]",
+        "flex w-[200px] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint",
         className,
       )}
     >
@@ -65,9 +74,16 @@ export function PersonCard({
       <Button
         aria-label={nameText ? `${String(actionLabel)} ${nameText}` : undefined}
         className="mt-lg w-full"
-        leadingIcon={<Icon name={actionIcon} size="small" />}
+        leadingIcon={
+          actionIcon ? <Icon name={actionIcon} size="small" /> : undefined
+        }
         onClick={onAction}
         size="small"
+        trailingIcon={
+          resolvedActionTrailingIcon ? (
+            <Icon name={resolvedActionTrailingIcon} size="small" />
+          ) : undefined
+        }
         variant="secondary"
       >
         {actionLabel}

@@ -21,27 +21,29 @@ import {
   ChatPanel,
   ChatResponseAttachment,
   ChatResponseBlock,
-  ChatSidePanelLayout,
   ChatThinkingMessage,
   ChatThread,
   Prompt,
   RecommendationCard,
-  supportsViewTransitions,
+  type ChatPanelVariant,
+} from "@/components/chat/chat-ui";
+import { ChatSidePanelLayout } from "@/components/chat/chat-side-panel";
+import {
+  startClassedViewTransition,
   useChatAssistantStream,
   useChatLatestMessageAnchor,
   type ChatMessageStreamStatus,
-  type ChatPanelVariant,
-} from "@/components/chat";
+} from "@/components/chat/chat-motion";
 import {
   SchedulePanel,
   ScheduledSpecialistCard,
   type BookedMeeting,
   type HighValueRecommendationState,
-} from "@/components/flow-review";
+} from "@/components/flow-review/flow-review-chat-panel";
 import { Button } from "@/components/primitives/button";
 import { IdleSessionPrompt } from "@/components/primitives/idle-session-prompt";
 import { InterimLoadingState } from "@/components/primitives/interim-loading-state";
-import { useReviewShellState } from "@/components/review-shell";
+import { useReviewShellState } from "@/components/review-shell/review-shell-state";
 import { HIRING_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import {
   STARTER_PROMPTS,
@@ -80,10 +82,6 @@ type ConciergePanelProps = Readonly<{
   onSidePanelOpenChange?: (open: boolean) => void;
   confirmationDialog?: ReactNode;
 }>;
-
-type ViewTransitionDocument = Document & {
-  startViewTransition: (callback: () => void) => unknown;
-};
 
 type ConciergeMessage = Readonly<{
   kind: "message";
@@ -180,18 +178,29 @@ function formatIdleTime(totalSeconds: number) {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+const liveFlowKeywordRoutes: ReadonlyArray<
+  Readonly<{
+    flowId: FlowReviewId;
+    keywords: ReadonlyArray<string>;
+  }>
+> = [
+  {
+    flowId: "medium",
+    keywords: ["sales", "contact"],
+  },
+  {
+    flowId: "low",
+    keywords: ["recruiter", "features"],
+  },
+];
+
 function selectLiveFlowId(userMessage: string): FlowReviewId {
   const message = userMessage.toLowerCase();
+  const route = liveFlowKeywordRoutes.find(({ keywords }) =>
+    keywords.some((keyword) => message.includes(keyword)),
+  );
 
-  if (message.includes("sales") || message.includes("contact")) {
-    return "medium";
-  }
-
-  if (message.includes("recruiter") || message.includes("features")) {
-    return "low";
-  }
-
-  return "high";
+  return route?.flowId ?? "high";
 }
 
 function createSurfaceItem(
@@ -621,14 +630,13 @@ export function ConciergePanel({
     }
 
     const preparingTimer = window.setTimeout(() => {
-      if (!supportsViewTransitions()) {
+      if (
+        !startClassedViewTransition(() => {
+          flushSync(() => startChat(preparingLead));
+        })
+      ) {
         startChat(preparingLead);
-        return;
       }
-
-      (document as ViewTransitionDocument).startViewTransition(() => {
-        flushSync(() => startChat(preparingLead));
-      });
     }, PREPARING_CHAT_DELAY_MS);
 
     return () => {
@@ -641,14 +649,13 @@ export function ConciergePanel({
       onConversationStart?.();
       resetIdleSession();
 
-      if (!supportsViewTransitions()) {
+      if (
+        !startClassedViewTransition(() => {
+          flushSync(() => setPreparingLead(result));
+        })
+      ) {
         setPreparingLead(result);
-        return;
       }
-
-      (document as ViewTransitionDocument).startViewTransition(() => {
-        flushSync(() => setPreparingLead(result));
-      });
     },
     [onConversationStart, resetIdleSession],
   );

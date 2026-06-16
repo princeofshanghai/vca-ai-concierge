@@ -8,15 +8,20 @@ import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
 
 import {
-  CHAT_PANEL_TRAY_TRANSITION_MS,
   ChatTray,
-  startChatPanelViewTransition,
   type ChatHeaderIdentity,
   type ChatPanelVariant,
+} from "@/components/chat/chat-ui";
+import {
+  CHAT_PANEL_TRAY_TRANSITION_MS,
+  startChatPanelViewTransition,
   useChatPanelPresence,
-} from "@/components/chat";
-import { FlowReviewChatPanel } from "@/components/flow-review";
-import { ConciergePanel, type ContactSalesEntry } from "@/components/onboarding";
+} from "@/components/chat/chat-motion";
+import { FlowReviewChatPanel } from "@/components/flow-review/flow-review-chat-panel";
+import {
+  ConciergePanel,
+  type ContactSalesEntry,
+} from "@/components/onboarding/concierge-panel";
 import { Button } from "@/components/primitives/button";
 import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog";
 import type { FlowReview } from "@/lib/conversation-flows";

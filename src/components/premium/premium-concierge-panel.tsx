@@ -23,11 +23,13 @@ import {
   ChatThinkingMessage,
   ChatThread,
   Prompt,
+  type ChatPanelVariant,
+} from "@/components/chat/chat-ui";
+import {
   useChatAssistantStream,
   useChatLatestMessageAnchor,
   type ChatMessageStreamStatus,
-  type ChatPanelVariant,
-} from "@/components/chat";
+} from "@/components/chat/chat-motion";
 import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
@@ -91,6 +93,49 @@ type PremiumTypedIntent =
   | "trial"
   | "unsure"
   | "general";
+const premiumTypedIntentRules: ReadonlyArray<
+  Readonly<{
+    intent: Exclude<PremiumTypedIntent, "general">;
+    pattern: RegExp;
+  }>
+> = [
+  {
+    intent: "trial",
+    pattern: /\b(trial|free|cancel|price|cost|pay|billing)\b/,
+  },
+  {
+    intent: "features",
+    pattern:
+      /\b(feature|features|include|included|inmail|inmails|boost|boosts|insight|insights)\b/,
+  },
+  {
+    intent: "compare",
+    pattern: /\b(compare|difference|versus| vs |which plan)\b/,
+  },
+  {
+    intent: "mismatch",
+    pattern:
+      /\b(wrong|off|not right|doesn't|doesnt|don't|dont|not really|no\b|mismatch)\b/,
+  },
+  {
+    intent: "career",
+    pattern:
+      /\b(job|jobs|career|hired|hiring manager|recruiter|interview|application|applying)\b/,
+  },
+  {
+    intent: "hiring",
+    pattern: /\b(hire|hiring|applicant|candidate|candidates|recruit)\b/,
+  },
+  {
+    intent: "business-growth",
+    pattern:
+      /\b(client|clients|customer|customers|lead|leads|sales|sell|selling|visibility|brand|network|networking|business|growth)\b/,
+  },
+  {
+    intent: "unsure",
+    pattern: /\b(not sure|unsure|help|recommend|pick|choose|confused)\b/,
+  },
+];
 
 type PremiumPendingAssistantResponse = Readonly<{
   id: string;
@@ -292,56 +337,11 @@ function buildPremiumPromptResponse({
 
 function getPremiumTypedIntent(message: string): PremiumTypedIntent {
   const normalizedMessage = message.toLowerCase();
+  const matchingRule = premiumTypedIntentRules.find((rule) =>
+    rule.pattern.test(normalizedMessage),
+  );
 
-  if (/\b(trial|free|cancel|price|cost|pay|billing)\b/.test(normalizedMessage)) {
-    return "trial";
-  }
-
-  if (
-    /\b(feature|features|include|included|inmail|inmails|boost|boosts|insight|insights)\b/.test(
-      normalizedMessage,
-    )
-  ) {
-    return "features";
-  }
-
-  if (/\b(compare|difference|versus| vs |which plan)\b/.test(normalizedMessage)) {
-    return "compare";
-  }
-
-  if (
-    /\b(wrong|off|not right|doesn't|doesnt|don't|dont|not really|no\b|mismatch)\b/.test(
-      normalizedMessage,
-    )
-  ) {
-    return "mismatch";
-  }
-
-  if (
-    /\b(job|jobs|career|hired|hiring manager|recruiter|interview|application|applying)\b/.test(
-      normalizedMessage,
-    )
-  ) {
-    return "career";
-  }
-
-  if (/\b(hire|hiring|applicant|candidate|candidates|recruit)\b/.test(normalizedMessage)) {
-    return "hiring";
-  }
-
-  if (
-    /\b(client|clients|customer|customers|lead|leads|sales|sell|selling|visibility|brand|network|networking|business|growth)\b/.test(
-      normalizedMessage,
-    )
-  ) {
-    return "business-growth";
-  }
-
-  if (/\b(not sure|unsure|help|recommend|pick|choose|confused)\b/.test(normalizedMessage)) {
-    return "unsure";
-  }
-
-  return "general";
+  return matchingRule?.intent ?? "general";
 }
 
 function buildPremiumTypedResponse({

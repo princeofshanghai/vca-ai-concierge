@@ -5,7 +5,7 @@ import {
   type PremiumCompanyPagesMemberStory,
   type VcaMemberIntent,
   type VcaShellMode,
-} from "@/components/premium-company-pages";
+} from "@/components/premium-company-pages/premium-company-pages-member-page";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({

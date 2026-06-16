@@ -3,6 +3,10 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { Entity } from "@/components/primitives/entity";
 
 import { pcpCompanyProfile } from "../persona";
+import {
+  DataCardHeader,
+  DataCardShell,
+} from "./DataCard";
 
 export type CompareRowVisual = Readonly<{
   kind: "avatar" | "company-logo";
@@ -123,19 +127,13 @@ export function Compare({
       : 0;
 
   return (
-    <article
+    <DataCardShell
       {...props}
-      data-response-block="Compare"
-      className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
-        className,
-      )}
+      block="Compare"
+      className={className}
     >
-      <div className="mb-xl space-y-xs">
-        {title ? <h3 className="text-control-md text-text">{title}</h3> : null}
-        <p className="text-body-sm text-text">{dimension}</p>
-      </div>
-      <div className="grid gap-md">
+      <DataCardHeader context={dimension} title={title} />
+      <div className="mt-xl grid gap-xs">
         {sortedRows.map((row, index) => {
           const { detail, isYou, name, value } = row;
           const barLayout = getBarLayout(value, maxPositive, maxNegative, zeroX);
@@ -145,20 +143,24 @@ export function Compare({
             <div
               key={`${name}-${index}`}
               className={cx(
-                "grid min-h-10 grid-cols-[minmax(0,1fr)_minmax(72px,1fr)_auto] items-center gap-md rounded-xs px-md py-sm",
-                isYou ? "bg-surface-tint" : "",
+                "grid min-h-11 grid-cols-[minmax(0,1fr)_minmax(96px,1fr)_minmax(44px,auto)] items-center gap-lg rounded-sm px-md py-sm",
+                isYou ? "bg-background-neutral-soft" : "",
               )}
             >
               <div className="flex min-w-0 items-center gap-md">
                 {renderVisual(row)}
                 <div className="min-w-0">
-                  <p className="truncate text-body-sm text-text">{name}</p>
+                  <p className="truncate text-control-sm text-text">{name}</p>
                   {detail ? (
                     <p className="text-body-xs text-text-meta">{detail}</p>
                   ) : null}
                 </div>
               </div>
-              <div className="relative h-5">
+              <div className="relative h-5 min-w-[96px]">
+                <span
+                  aria-hidden="true"
+                  className="absolute left-0 top-1/2 h-1.5 w-full -translate-y-1/2 rounded-round bg-border-faint"
+                />
                 {hasNegativeAndPositive ? (
                   <span
                     aria-hidden="true"
@@ -169,7 +171,7 @@ export function Compare({
                 <span
                   aria-hidden="true"
                   className={cx(
-                    "absolute top-1/2 h-2 -translate-y-1/2 rounded-round",
+                    "absolute top-1/2 h-1.5 -translate-y-1/2 rounded-round",
                     isNegative ? "bg-negative" : "bg-action",
                   )}
                   style={{
@@ -180,7 +182,7 @@ export function Compare({
               </div>
               <p
                 className={cx(
-                  "text-right text-body-sm font-semibold",
+                  "text-right text-control-sm",
                   isNegative ? "text-negative" : "text-text",
                 )}
               >
@@ -190,6 +192,6 @@ export function Compare({
           );
         })}
       </div>
-    </article>
+    </DataCardShell>
   );
 }

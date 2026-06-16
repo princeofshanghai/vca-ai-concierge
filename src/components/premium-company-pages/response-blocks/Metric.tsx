@@ -2,6 +2,11 @@ import type { HTMLAttributes, ReactNode } from "react";
 
 import { Icon } from "@/components/primitives/icon";
 
+import {
+  DataCardHeader,
+  DataCardShell,
+} from "./DataCard";
+
 export type MetricTone = "positive" | "negative" | "neutral";
 
 export type MetricItem = Readonly<{
@@ -26,14 +31,6 @@ const toneClasses: Record<MetricTone, string> = {
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
-}
-
-function getGridClassName(itemCount: number) {
-  if (itemCount === 1) {
-    return "";
-  }
-
-  return itemCount === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3";
 }
 
 export function MetricValue({
@@ -110,18 +107,13 @@ export function MetricDelta({
 
 export function Metric({ title, items, className, ...props }: MetricProps) {
   return (
-    <article
+    <DataCardShell
       {...props}
-      data-response-block="Metric"
-      className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
-        className,
-      )}
+      block="Metric"
+      className={className}
     >
-      {title ? (
-        <h3 className="mb-xl text-control-md text-text">{title}</h3>
-      ) : null}
-      <div className={cx("grid gap-lg", getGridClassName(items.length))}>
+      <DataCardHeader title={title} />
+      <div className={cx("divide-y divide-border-faint", title ? "mt-xl" : "")}>
         {items.map((item, index) => {
           const {
             value,
@@ -137,24 +129,26 @@ export function Metric({ title, items, className, ...props }: MetricProps) {
           return (
             <div
               key={`${String(label)}-${index}`}
-              className="min-w-0"
+              className="flex min-w-0 items-start justify-between gap-xl py-md first:pt-0 last:pb-0"
             >
-              {showValue ? (
-                <p>
-                  <MetricValue unit={unit} value={value} />
+              <div className="min-w-0">
+                {showValue ? (
+                  <p>
+                    <MetricValue unit={unit} value={value} />
+                  </p>
+                ) : null}
+                <p
+                  className={cx(
+                    "text-body-sm text-text-meta",
+                    showValue ? "mt-xxs" : "",
+                  )}
+                >
+                  {label}
                 </p>
-              ) : null}
-              <p
-                className={cx(
-                  "text-body-sm text-text",
-                  showValue ? "mt-xxs" : "",
-                )}
-              >
-                {label}
-              </p>
+              </div>
               {showDelta ? (
                 <MetricDelta
-                  className="mt-xs"
+                  className="shrink-0 whitespace-nowrap pt-xs text-right"
                   delta={delta}
                   deltaContext={deltaContext}
                   tone={tone}
@@ -164,6 +158,6 @@ export function Metric({ title, items, className, ...props }: MetricProps) {
           );
         })}
       </div>
-    </article>
+    </DataCardShell>
   );
 }

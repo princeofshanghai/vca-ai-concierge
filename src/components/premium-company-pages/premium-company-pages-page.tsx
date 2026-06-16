@@ -3,8 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  useCallback,
-  useEffect,
   useId,
   useRef,
   useState,
@@ -14,7 +12,8 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-import { type ChatPanelVariant } from "@/components/chat";
+import { startClassedViewTransition } from "@/components/chat/chat-motion";
+import { Prompt, type ChatPanelVariant } from "@/components/chat/chat-ui";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
@@ -42,6 +41,19 @@ import {
   pcpVcaScenario,
   pcpVisitorPersona,
 } from "./persona";
+import {
+  ADMIN_SETTINGS_HREF,
+  assistantColorOptions,
+  assistantDefaultColor,
+  defaultKnowledgeLinks,
+  premiumRailItems,
+  primaryRailItems,
+  railItemHrefs,
+  secondaryRailItems,
+  settingsRows,
+  type AssistantColorOption,
+  type SettingsRowData,
+} from "./premium-company-pages-admin-data";
 import { GlobalInboxTray } from "./global-inbox-tray";
 import {
   InsightCard,
@@ -63,48 +75,10 @@ import {
 } from "./premium-company-pages-admin-uc5-data";
 import { FabPromptStack } from "./fab-prompt-stack";
 import { TodayActionCard } from "./today-action-card";
+import { useHorizontalCarousel } from "./use-horizontal-carousel";
 import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
-const ADMIN_DASHBOARD_HREF = "/premium-company-pages/admin";
-const ADMIN_ANALYTICS_HREF = "/premium-company-pages/admin/analytics";
-const ADMIN_INBOX_HREF = "/premium-company-pages/admin/inbox";
-const ADMIN_SETTINGS_HREF = "/premium-company-pages/admin/settings";
-const ADMIN_AI_ASSISTANT_SETTINGS_HREF =
-  "/premium-company-pages/admin/settings/manage-ai-assistant";
-const VELORA_AI_ACCENT = "#2AA986";
-
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (updateCallback: () => void) => {
-    finished: Promise<void>;
-  };
-};
-
-const primaryRailItems = [
-  "Dashboard",
-  "Page posts",
-  "Analytics",
-  "Feed",
-  "Activity",
-  "Inbox",
-  "Edit Page",
-];
-
-const secondaryRailItems = ["Services", "Products", "Jobs"];
-
-const railItemHrefs: Partial<Record<string, string>> = {
-  Analytics: ADMIN_ANALYTICS_HREF,
-  Dashboard: ADMIN_DASHBOARD_HREF,
-  Inbox: ADMIN_INBOX_HREF,
-  Settings: ADMIN_SETTINGS_HREF,
-};
-
-const premiumRailItems: Array<{ label: string; icon?: IconName }> = [
-  { label: "Premium features" },
-  { label: "Advertise today", icon: "radar-screen" },
-  { label: "Invite to follow" },
-  { label: "Settings" },
-];
 
 type PerformanceCardData = Readonly<{
   title: string;
@@ -127,13 +101,6 @@ type InboxThreadData = Readonly<{
   vca?: boolean;
 }>;
 
-type SettingsRowData = Readonly<{
-  title: string;
-  description: string;
-  badge?: string;
-  href?: string;
-}>;
-
 type AnalyticsTabId =
   | "content"
   | "visitors"
@@ -147,6 +114,7 @@ type AnalyticsTrendTone = "negative" | "positive";
 
 type AnalyticsHighlightData = Readonly<{
   label: string;
+  tone?: AnalyticsTrendTone;
   value: string;
   delta: string;
 }>;
@@ -293,11 +261,37 @@ type RecentPostData =
   | RecentKudosPostData
   | RecentVideoPostData;
 
-type RecentPostCarouselState = Readonly<{
-  activeDotIndex: number;
-  canGoNext: boolean;
-  canGoPrevious: boolean;
+type PremiumCompanyPagesAdminStory =
+  | "current"
+  | "old";
+
+type AnalyticsContextualPrompt =
+  | Readonly<{
+      insightId: AdminUc5InsightId;
+      label: string;
+      type: "insight";
+    }>
+  | Readonly<{
+      label: string;
+      type: "self-initiated";
+      view: AdminUc5SelfInitiatedView;
+    }>;
+
+type AnalyticsContextualPromptHandlers = Readonly<{
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onSelfInitiatedViewSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
 }>;
+
+type AnalyticsContextualPromptSlotProps =
+  Partial<AnalyticsContextualPromptHandlers> &
+    Readonly<{
+      contextualPrompts?: ReadonlyArray<AnalyticsContextualPrompt>;
+      flush?: boolean;
+      showDivider?: boolean;
+    }>;
 
 const performanceCards: Array<PerformanceCardData> = [
   {
@@ -307,34 +301,34 @@ const performanceCards: Array<PerformanceCardData> = [
   },
   {
     title: "Search appearances",
-    value: "81",
+    value: "2,640",
     delta: "15%",
     deltaMeta: "last 7 days",
     deltaTone: "negative",
   },
   {
     title: "New followers",
-    value: "25",
+    value: "420",
     delta: "8%",
     deltaMeta: "last 7 days",
     deltaTone: "positive",
   },
   {
     title: "Visitors from audiences",
-    value: "4.5k",
+    value: "18.4K",
     label: "Premium insight",
     premium: true,
   },
   {
     title: "Post impressions",
-    value: "986",
+    value: "38.4K",
     delta: "15%",
     deltaMeta: "last 7 days",
     deltaTone: "positive",
   },
   {
     title: "Page visitors",
-    value: "81",
+    value: "4,280",
     delta: "15%",
     deltaMeta: "last 7 days",
     deltaTone: "negative",
@@ -347,13 +341,13 @@ const recentPosts: ReadonlyArray<RecentPostData> = [
     body: "What benefits teams should validate before a mid-year platform migration: eligibility data, carrier file readiness, employee communications, and open enrollment timing.",
     id: "migration-readiness",
     kind: "image",
-    metric: "Get up to 12K more impressions by boosting",
+    metric: "Get up to 52K more impressions by boosting",
     image: "recent-post-checklist.png",
     imageAlt: "Checklist illustration with a red check mark and pencil",
     linkTitle: "Benefits migration readiness checklist",
     linkMeta: "veloracloud.com",
-    reactions: "152",
-    comments: "18 Comments",
+    reactions: "1,248",
+    comments: "146 Comments",
     reactionTypes: ["interest", "like"],
     timestamp: "5d ago",
   },
@@ -363,10 +357,10 @@ const recentPosts: ReadonlyArray<RecentPostData> = [
     illustrationAlt: "People celebrating a workplace kudos moment",
     illustrationSrc: "/assets/sdui/illustrations/illustration.svg",
     kind: "kudos",
-    metric: "Get up to 10K more impressions by boosting",
+    metric: "Get up to 48K more impressions by boosting",
     recipient: "Aarti Korapati",
-    reactions: "860",
-    comments: "90 Comments",
+    reactions: "2,840",
+    comments: "318 Comments",
     reactionTypes: ["interest", "like", "praise"],
     timestamp: "1w ago",
   },
@@ -374,25 +368,25 @@ const recentPosts: ReadonlyArray<RecentPostData> = [
     body: "Best practices for measuring results: start with one goal, track the same metrics weekly, and compare changes against a clear baseline.",
     id: "operating-question",
     kind: "image",
-    metric: "Get up to 7K more impressions by boosting",
+    metric: "Get up to 35K more impressions by boosting",
     image: "recent-post-analytics-results.png",
     imageAlt: "3D analytics dashboard with charts and data visualizations",
-    reactions: "240",
-    comments: "50 Comments",
+    reactions: "1,760",
+    comments: "204 Comments",
     reactionTypes: ["empathy", "interest", "praise"],
     timestamp: "2w ago",
   },
   {
     body: "We worked with Veno for a few years on this project and one thing we will never forget is how quickly their team rallied around employee experience.",
     caption: "The best way to learn something new is",
-    comments: "13 Comments",
+    comments: "86 Comments",
     id: "live-demo-video",
     image: "member/post-image-2.png",
     imageAlt: "Video preview for a Velora customer story",
     kind: "video",
     liveTime: "5:30 PM",
-    metric: "Get up to 8K more impressions by boosting",
-    reactions: "120",
+    metric: "Get up to 42K more impressions by boosting",
+    reactions: "940",
     reactionTypes: ["interest", "like", "maybe", "praise"],
     timeLabel: "0:50 / 3:17",
     timestamp: "3w ago",
@@ -469,45 +463,6 @@ const inboxThreads: ReadonlyArray<InboxThreadData> = [
   },
 ];
 
-const settingsRows: ReadonlyArray<SettingsRowData> = [
-  {
-    title: "Manage admins",
-    description: "Control who manages your page",
-  },
-  {
-    title: "Manage restricted members",
-    description: "See all the restricted members",
-  },
-  {
-    title: "Manage following",
-    description: "See all the pages your page follows",
-  },
-  {
-    title: "Inbox settings",
-    description:
-      "Choose whether members can message the page and select conversation topics",
-  },
-  {
-    title: "Manage AI assistant",
-    description: "Turn on and manage your Page's AI assistant",
-    badge: "New",
-    href: ADMIN_AI_ASSISTANT_SETTINGS_HREF,
-  },
-  {
-    title: "Job posting",
-    description: "Manage who can post jobs and how jobs are shared on your page",
-  },
-  {
-    title: "Verification controls",
-    description:
-      "Review or change the ways members can verify their association with your organization",
-  },
-  {
-    title: "Deactivate page",
-    description: "Take your page down",
-  },
-];
-
 const analyticsTabs: ReadonlyArray<Readonly<{
   id: AnalyticsTabId;
   label: string;
@@ -524,22 +479,23 @@ const analyticsTabs: ReadonlyArray<Readonly<{
 const analyticsHighlights: ReadonlyArray<AnalyticsHighlightData> = [
   {
     label: "Impressions",
-    value: "8,920",
+    tone: "negative",
+    value: "64,800",
     delta: "18.4%",
   },
   {
     label: "Reactions",
-    value: "486",
+    value: "3,420",
     delta: "12.7%",
   },
   {
     label: "Comments",
-    value: "128",
+    value: "640",
     delta: "9.3%",
   },
   {
     label: "Reposts",
-    value: "42",
+    value: "216",
     delta: "15.6%",
   },
 ];
@@ -549,20 +505,20 @@ const VISITOR_ANALYTICS_DATE_RANGE = "May 11, 2026 - Jun 9, 2026";
 const visitorHighlights: ReadonlyArray<VisitorHighlightData> = [
   {
     label: "Page views",
-    value: "507",
+    value: "8,740",
     delta: "28%",
     tone: "positive",
   },
   {
     label: "Unique visitors",
-    value: "150",
+    value: "3,180",
     delta: "20.2%",
     tone: "negative",
   },
   {
     label: "Custom button clicks",
-    value: "0",
-    delta: "100%",
+    value: "126",
+    delta: "33%",
     tone: "negative",
   },
 ];
@@ -597,37 +553,37 @@ const visitorProfiles: ReadonlyArray<VisitorProfileData> = [
 const visitorDemographics: ReadonlyArray<VisitorDemographicRowData> = [
   {
     label: "Human Resources",
-    count: "211",
+    count: "1,323",
     percentage: "41.6",
     barPercent: 100,
   },
   {
     label: "Operations",
-    count: "109",
+    count: "684",
     percentage: "21.5",
     barPercent: 52,
   },
   {
     label: "Information Technology",
-    count: "28",
+    count: "175",
     percentage: "5.5",
     barPercent: 13,
   },
   {
     label: "Product Management",
-    count: "23",
+    count: "143",
     percentage: "4.5",
     barPercent: 11,
   },
   {
     label: "Business Development",
-    count: "20",
+    count: "124",
     percentage: "3.9",
     barPercent: 9,
   },
   {
     label: "Marketing",
-    count: "19",
+    count: "118",
     percentage: "3.7",
     barPercent: 9,
   },
@@ -638,15 +594,15 @@ const COMPETITOR_ANALYTICS_DATE_RANGE = "May 11, 2026 - Jun 9, 2026";
 const competitorHighlights: ReadonlyArray<CompetitorHighlightData> = [
   {
     label: "Comments on posts",
-    value: "39",
-    delta: "96.8%",
+    value: "640",
+    delta: "61%",
     tone: "negative",
     context: "vs competitors",
   },
   {
     label: "New followers",
-    value: "11",
-    delta: "100%",
+    value: "420",
+    delta: "67%",
     tone: "negative",
     context: "vs competitors",
   },
@@ -656,43 +612,43 @@ const competitorGrowthRows: ReadonlyArray<CompetitorGrowthRowData> = [
   {
     rank: 1,
     company: pcpCompetitorNames[0],
-    followers: "64,280 followers",
-    newFollowers: { value: "82", delta: "24%", tone: "positive" },
+    followers: "128K followers",
+    newFollowers: { value: "1,280", delta: "24%", tone: "positive" },
     posts: { value: "22", delta: "83.3%", tone: "positive" },
-    comments: { value: "146", delta: "18.7%", tone: "positive" },
-    commentsPerDay: { value: "18", delta: "63.6%", tone: "positive" },
-    reactions: { value: "1.8K", delta: "32.4%", tone: "positive" },
+    comments: { value: "4,850", delta: "18.7%", tone: "positive" },
+    commentsPerDay: { value: "162", delta: "63.6%", tone: "positive" },
+    reactions: { value: "42.8K", delta: "32.4%", tone: "positive" },
   },
   {
     rank: 2,
     company: pcpCompetitorNames[1],
-    followers: "42,910 followers",
-    newFollowers: { value: "64", delta: "12.5%", tone: "positive" },
+    followers: "104K followers",
+    newFollowers: { value: "940", delta: "12.5%", tone: "positive" },
     posts: { value: "18", delta: "50%", tone: "positive" },
-    comments: { value: "118", delta: "6.8%", tone: "positive" },
-    commentsPerDay: { value: "14", delta: "27.3%", tone: "positive" },
-    reactions: { value: "1.2K", delta: "18.6%", tone: "positive" },
+    comments: { value: "3,620", delta: "6.8%", tone: "positive" },
+    commentsPerDay: { value: "121", delta: "27.3%", tone: "positive" },
+    reactions: { value: "31.6K", delta: "18.6%", tone: "positive" },
   },
   {
     rank: 3,
     company: pcpCompetitorNames[2],
-    followers: "28,740 followers",
-    newFollowers: { value: "41", delta: "7.3%", tone: "positive" },
+    followers: "91K followers",
+    newFollowers: { value: "610", delta: "7.3%", tone: "positive" },
     posts: { value: "15", delta: "25%", tone: "positive" },
-    comments: { value: "74", delta: "28.8%", tone: "negative" },
-    commentsPerDay: { value: "7", delta: "36.4%", tone: "negative" },
-    reactions: { value: "684", delta: "9.2%", tone: "positive" },
+    comments: { value: "1,980", delta: "28.8%", tone: "negative" },
+    commentsPerDay: { value: "66", delta: "36.4%", tone: "negative" },
+    reactions: { value: "18.4K", delta: "9.2%", tone: "positive" },
   },
   {
     rank: 4,
     company: pcpCompanyProfile.name,
     followers: pcpCompanyProfile.followers,
     isYou: true,
-    newFollowers: { value: "29", delta: "64.6%", tone: "negative" },
+    newFollowers: { value: "420", delta: "64.6%", tone: "negative" },
     posts: { value: "12", delta: "45.5%", tone: "negative" },
-    comments: { value: "39", delta: "73.3%", tone: "negative" },
-    commentsPerDay: { value: "11", delta: "38.9%", tone: "negative" },
-    reactions: { value: "486", delta: "73%", tone: "negative" },
+    comments: { value: "640", delta: "73.3%", tone: "negative" },
+    commentsPerDay: { value: "21", delta: "38.9%", tone: "negative" },
+    reactions: { value: "9.2K", delta: "73%", tone: "negative" },
   },
 ];
 
@@ -706,8 +662,8 @@ const competitorPosts: ReadonlyArray<CompetitorPostData> = [
     meta: "Checklist - 8 min read",
     image: "member/post-image-2.png",
     imageAlt: "Open enrollment planning post preview",
-    reactions: "1,284",
-    comments: "117 comments - 52 reposts",
+    reactions: "8,420",
+    comments: "640 comments - 218 reposts",
   },
   {
     company: pcpCompetitorNames[1],
@@ -718,8 +674,8 @@ const competitorPosts: ReadonlyArray<CompetitorPostData> = [
     meta: "Document - 6 pages",
     image: "feed-post-content.png",
     imageAlt: "Benefits analytics post preview",
-    reactions: "936",
-    comments: "84 comments - 31 reposts",
+    reactions: "6,780",
+    comments: "512 comments - 174 reposts",
   },
   {
     company: pcpCompetitorNames[2],
@@ -730,8 +686,8 @@ const competitorPosts: ReadonlyArray<CompetitorPostData> = [
     meta: "Case study - 5 min read",
     image: "member/post-image-1.png",
     imageAlt: "Benefits operations dashboard post preview",
-    reactions: "642",
-    comments: "48 comments - 18 reposts",
+    reactions: "4,260",
+    comments: "288 comments - 96 reposts",
   },
 ];
 
@@ -765,42 +721,42 @@ const contentEngagementRows: ReadonlyArray<ContentEngagementRowData> = [
     postedBy: pcpAdminPersona.name,
     date: "6/8/2026",
     boostEstimate: "Get up to 120,000 more impressions by boosting this post.",
-    reactions: "184",
-    comments: "36",
-    reposts: "18",
-    follows: "24",
-    engagementRate: "7.8%",
+    reactions: "1,240",
+    comments: "146",
+    reposts: "64",
+    follows: "118",
+    engagementRate: "8.2%",
   },
   {
     title: "Carrier file readiness checklist for enterprise benefits teams",
     postedBy: "Velora",
     date: "6/6/2026",
-    reactions: "132",
-    comments: "28",
-    reposts: "12",
-    follows: "19",
-    engagementRate: "6.4%",
+    reactions: "980",
+    comments: "112",
+    reposts: "46",
+    follows: "94",
+    engagementRate: "7.1%",
   },
   {
     title: "What breaks first when benefits teams migrate mid-year?",
     postedBy: pcpAdminPersona.name,
     date: "6/3/2026",
     boostEstimate: "Get up to 84,000 more impressions by boosting this post.",
-    reactions: "96",
-    comments: "17",
-    reposts: "9",
-    follows: "13",
-    engagementRate: "5.9%",
+    reactions: "720",
+    comments: "84",
+    reposts: "31",
+    follows: "58",
+    engagementRate: "6.3%",
   },
   {
     title: "Eligibility cleanup should not require five spreadsheets",
     postedBy: "Velora",
     date: "5/30/2026",
-    reactions: "74",
-    comments: "11",
-    reposts: "5",
-    follows: "8",
-    engagementRate: "4.6%",
+    reactions: "540",
+    comments: "62",
+    reposts: "24",
+    follows: "42",
+    engagementRate: "5.2%",
   },
 ];
 
@@ -847,7 +803,7 @@ const contentAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
 const competitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
   {
     dismissLabel: "Dismiss competitor growth insight",
-    evidence: "82 new followers this month vs. Velora's 29.",
+    evidence: "1,280 new followers this month vs. Velora's 420.",
     headline: `${pcpCompetitorNames[0]} is pulling ahead in follower growth`,
     insightId: "competitor-growth",
     question: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
@@ -859,12 +815,192 @@ const competitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> =
   },
 ];
 
+const wipContentPromptRows: ReadonlyArray<AnalyticsContextualPrompt> = [
+  {
+    label: "What should I post next?",
+    type: "self-initiated",
+    view: "next-focus",
+  },
+];
+
+const wipContentHighlightsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
+  [
+    {
+      label: "Why are post impressions down?",
+      type: "self-initiated",
+      view: "post-impressions",
+    },
+  ];
+
+const wipVisitorHighlightsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
+  [
+    {
+      label: "How can I get more custom button clicks?",
+      type: "self-initiated",
+      view: "custom-button-clicks",
+    },
+  ];
+
+const wipVisitorDemographicsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
+  [
+    {
+      label: "How can I reach more visitors like this?",
+      type: "self-initiated",
+      view: "visitor-audience",
+    },
+  ];
+
+const dashboardVisitorPromptRows: ReadonlyArray<AnalyticsContextualPrompt> = [
+  {
+    label: "Which visitors look most relevant?",
+    type: "self-initiated",
+    view: "relevant-visitors",
+  },
+  {
+    label: "What kinds of visitors am I attracting?",
+    type: "self-initiated",
+    view: "visitor-audience",
+  },
+];
+
+const wipCompetitorGrowthPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
+  [
+    {
+      insightId: "competitor-growth",
+      label: "Why are competitors gaining followers faster?",
+      type: "insight",
+    },
+  ];
+
+const wipCompetitorPostsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> = [
+  {
+    label: "What should I post next?",
+    type: "self-initiated",
+    view: "next-focus",
+  },
+];
+
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
 function assetSrc(path: string) {
   return path.startsWith("/") ? path : `${ASSET_ROOT}/${path}`;
+}
+
+function getRailItemHrefForStory(
+  label: string,
+  story: PremiumCompanyPagesAdminStory,
+) {
+  const href = railItemHrefs[label];
+
+  if (!href) {
+    return href;
+  }
+
+  if (story === "old") {
+    if (label === "Dashboard") {
+      return "/premium-company-pages/admin/old";
+    }
+
+    if (label === "Analytics") {
+      return "/premium-company-pages/admin/old/analytics";
+    }
+  }
+
+  return href;
+}
+
+function ContextualAiPromptRow({
+  flush = false,
+  onInsightSelect,
+  onSelfInitiatedViewSelect,
+  prompts,
+  showDivider = true,
+}: AnalyticsContextualPromptHandlers &
+  Readonly<{
+    flush?: boolean;
+    prompts: ReadonlyArray<AnalyticsContextualPrompt>;
+    showDivider?: boolean;
+  }>) {
+  if (prompts.length === 0) {
+    return null;
+  }
+
+  function handlePromptSelect(prompt: string) {
+    const selectedPrompt = prompts.find((item) => item.label === prompt);
+
+    if (!selectedPrompt) {
+      return;
+    }
+
+    if (selectedPrompt.type === "insight") {
+      onInsightSelect({
+        id: selectedPrompt.insightId,
+        prompt: selectedPrompt.label,
+      });
+
+      return;
+    }
+
+    onSelfInitiatedViewSelect(selectedPrompt.view, selectedPrompt.label);
+  }
+
+  return (
+    <div
+      className={cx(
+        showDivider && "border-t border-border-faint",
+        flush ? "px-0 py-0" : "px-lg py-md",
+      )}
+    >
+      <div className="flex flex-wrap items-start gap-sm">
+        {prompts.map((prompt) => (
+          <Prompt
+            className="md:max-w-none"
+            key={prompt.label}
+            onPromptSelect={handlePromptSelect}
+            prompt={prompt.label}
+          >
+            <span className="inline-flex min-w-0 items-center gap-xs">
+              <Icon
+                aria-hidden="true"
+                className="shrink-0 text-premium-inbug [&&]:size-4"
+                name="signal-ai"
+                size="small"
+              />
+              <span className="min-w-0 font-semibold">{prompt.label}</span>
+            </span>
+          </Prompt>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ContextualAiPromptSlot({
+  contextualPrompts,
+  flush,
+  onInsightSelect,
+  onSelfInitiatedViewSelect,
+  showDivider,
+}: AnalyticsContextualPromptSlotProps) {
+  if (
+    !contextualPrompts?.length ||
+    !onInsightSelect ||
+    !onSelfInitiatedViewSelect
+  ) {
+    return null;
+  }
+
+  return (
+    <ContextualAiPromptRow
+      flush={flush}
+      onInsightSelect={onInsightSelect}
+      onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      prompts={contextualPrompts}
+      showDivider={showDivider}
+    />
+  );
 }
 
 function PremiumMark({
@@ -919,10 +1055,12 @@ function InlineAction({ children }: Readonly<{ children: string }>) {
 function RailSection({
   items,
   activeItem,
+  story,
   withPremiumIcon = false,
 }: Readonly<{
   items: ReadonlyArray<string | { label: string; icon?: IconName }>;
   activeItem?: string;
+  story: PremiumCompanyPagesAdminStory;
   withPremiumIcon?: boolean;
 }>) {
   return (
@@ -931,7 +1069,7 @@ function RailSection({
         const label = typeof item === "string" ? item : item.label;
         const icon = typeof item === "string" ? undefined : item.icon;
         const active = activeItem === label;
-        const href = railItemHrefs[label];
+        const href = getRailItemHrefForStory(label, story);
         const itemClassName = cx(
           "flex min-h-10 w-full items-center gap-sm px-xxl py-sm text-left text-control-md transition-colors hover:bg-background-transparent-hover",
           active
@@ -976,7 +1114,13 @@ function RailSection({
   );
 }
 
-function PageRail({ activeItem }: Readonly<{ activeItem: string }>) {
+function PageRail({
+  activeItem,
+  story,
+}: Readonly<{
+  activeItem: string;
+  story: PremiumCompanyPagesAdminStory;
+}>) {
   return (
     <aside className="overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="relative p-lg pt-stack">
@@ -1042,11 +1186,15 @@ function PageRail({ activeItem }: Readonly<{ activeItem: string }>) {
         </div>
       </div>
 
-      <RailSection activeItem={activeItem} items={primaryRailItems} />
+      <RailSection
+        activeItem={activeItem}
+        items={primaryRailItems}
+        story={story}
+      />
       <div className="mx-xxl my-sm h-px bg-border-faint" />
-      <RailSection items={secondaryRailItems} />
+      <RailSection items={secondaryRailItems} story={story} />
       <div className="mx-xxl my-sm h-px bg-border-faint" />
-      <RailSection items={premiumRailItems} withPremiumIcon />
+      <RailSection items={premiumRailItems} story={story} withPremiumIcon />
     </aside>
   );
 }
@@ -1212,16 +1360,6 @@ function ReactionSummary({
       <span>{comments}</span>
     </div>
   );
-}
-
-function getRecentPostScrollStep(container: HTMLElement) {
-  const card = container.querySelector<HTMLElement>("[data-recent-post-card]");
-
-  if (!card) {
-    return RECENT_POST_CARD_SCROLL_STEP_FALLBACK;
-  }
-
-  return card.getBoundingClientRect().width + 16;
 }
 
 function RecentPostBoostHeader({ metric }: Readonly<{ metric: string }>) {
@@ -1823,47 +1961,15 @@ function SettingsContent() {
 
 type AssistantCalendarProvider = "google" | "outlook";
 
-type AssistantColorOption = Readonly<{
-  id: string;
-  label: string;
-  value: string;
-}>;
-
 type StatusChipTone = "neutral" | "positive";
 
-const assistantColorOptions: ReadonlyArray<AssistantColorOption> = [
-  { id: "red", label: "Red", value: "#D11124" },
-  { id: "orange", label: "Orange", value: "#F28C28" },
-  { id: "yellow", label: "Yellow", value: "#F4B400" },
-  { id: "green", label: "Green", value: VELORA_AI_ACCENT },
-  { id: "teal", label: "Teal", value: "#00A3A3" },
-  { id: "blue", label: "Blue", value: "#0A66C2" },
-  { id: "purple", label: "Purple", value: "#8E3FF2" },
-  { id: "gray", label: "Gray", value: "#56687A" },
-];
-
-const assistantDefaultColor =
-  assistantColorOptions.find((option) => option.id === "green") ??
-  assistantColorOptions[0];
-
-const showVisitorAssistantColorPicker = false;
+const showVisitorAssistantColorPicker = true;
 
 const defaultAssistantInstructions = `# Velora visitor assistant
 
 - Keep answers concise and professional.
 - Use Velora's Page, website, and uploaded files.
 - Do not make pricing, legal, or medical commitments.`;
-
-const additionalKnowledgeLinks: ReadonlyArray<string> = [
-  "https://help.velora.com/faqs",
-  "https://www.velora.com/resources",
-  "https://www.velora.com/customers",
-];
-
-const defaultKnowledgeLinks: ReadonlyArray<string> = [
-  "https://www.velora.com",
-  ...additionalKnowledgeLinks,
-];
 
 function SettingsDetailHeader() {
   return (
@@ -2237,6 +2343,7 @@ function VisitorAssistantFabPreview({
         borderHoverColor={color.value}
         label="Visitor assistant color preview"
         position="static"
+        showVisitorPresenceBadge={false}
         variant="visitor"
       />
     </div>
@@ -2365,20 +2472,31 @@ function AiAssistantSettingsPlaceholderContent() {
 function DashboardContent({
   activeInsightId,
   onDigestInsightSelect,
+  onSelfInitiatedViewSelect,
   story,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onDigestInsightSelect: (insight: AdminUc5InsightSelection) => void;
-  story: PremiumCompanyPagesDashboardStory;
+  onSelfInitiatedViewSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
+  story: PremiumCompanyPagesAdminStory;
 }>) {
   const [performanceCardPageIndex, setPerformanceCardPageIndex] = useState(0);
-  const recentPostsCarouselRef = useRef<HTMLDivElement | null>(null);
-  const [recentPostCarouselState, setRecentPostCarouselState] =
-    useState<RecentPostCarouselState>({
-      activeDotIndex: 0,
-      canGoNext: recentPosts.length > 1,
-      canGoPrevious: false,
-    });
+  const {
+    activeDotIndex: recentPostActiveDotIndex,
+    canGoNext: canGoNextRecentPost,
+    canGoPrevious: canGoPreviousRecentPost,
+    scrollNext: scrollToNextRecentPost,
+    scrollPrevious: scrollToPreviousRecentPost,
+    scrollRef: recentPostsCarouselRef,
+    updateScrollState: updateRecentPostCarouselState,
+  } = useHorizontalCarousel<HTMLDivElement>({
+    fallbackStep: RECENT_POST_CARD_SCROLL_STEP_FALLBACK,
+    itemCount: recentPosts.length,
+    itemSelector: "[data-recent-post-card]",
+  });
   const performanceCardPageCount = Math.ceil(
     performanceCards.length / PERFORMANCE_CARDS_VISIBLE_COUNT,
   );
@@ -2403,59 +2521,6 @@ function DashboardContent({
     );
   }
 
-  const updateRecentPostCarouselState = useCallback(() => {
-    const container = recentPostsCarouselRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    const maxScrollLeft = Math.max(
-      container.scrollWidth - container.clientWidth,
-      0,
-    );
-    const activeDotIndex =
-      maxScrollLeft > 0
-        ? Math.round((container.scrollLeft / maxScrollLeft) * (recentPosts.length - 1))
-        : 0;
-
-    setRecentPostCarouselState({
-      activeDotIndex,
-      canGoNext: container.scrollLeft < maxScrollLeft - 1,
-      canGoPrevious: container.scrollLeft > 1,
-    });
-  }, []);
-
-  useEffect(() => {
-    updateRecentPostCarouselState();
-
-    window.addEventListener("resize", updateRecentPostCarouselState);
-
-    return () => {
-      window.removeEventListener("resize", updateRecentPostCarouselState);
-    };
-  }, [updateRecentPostCarouselState]);
-
-  function scrollRecentPosts(direction: "next" | "previous") {
-    const container = recentPostsCarouselRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    const step = getRecentPostScrollStep(container);
-    const maxScrollLeft = Math.max(
-      container.scrollWidth - container.clientWidth,
-      0,
-    );
-    const nextScrollLeft =
-      direction === "next"
-        ? Math.min(container.scrollLeft + step, maxScrollLeft)
-        : Math.max(container.scrollLeft - step, 0);
-
-    container.scrollTo({ behavior: "smooth", left: nextScrollLeft });
-  }
-
   return (
     <div className="min-w-0 space-y-md">
       <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
@@ -2473,7 +2538,8 @@ function DashboardContent({
             <AdminPerformanceDigestCard
               activeInsightId={activeInsightId}
               onInsightSelect={onDigestInsightSelect}
-              showAssistantSetupAction={story === "default"}
+              showAssistantSetupAction={story === "current"}
+              showFollowerGrowthInsight={story === "old"}
             />
           </div>
         </div>
@@ -2518,6 +2584,18 @@ function DashboardContent({
                 />
               ))}
             </div>
+
+            {story === "current" ? (
+              <div className="mt-lg">
+                <ContextualAiPromptSlot
+                  contextualPrompts={dashboardVisitorPromptRows}
+                  flush
+                  onInsightSelect={onDigestInsightSelect}
+                  onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+                  showDivider={false}
+                />
+              </div>
+            ) : null}
           </section>
 
           <section>
@@ -2533,11 +2611,11 @@ function DashboardContent({
                 </p>
               </div>
               <CarouselControls
-                canGoNext={recentPostCarouselState.canGoNext}
-                canGoPrevious={recentPostCarouselState.canGoPrevious}
+                canGoNext={canGoNextRecentPost}
+                canGoPrevious={canGoPreviousRecentPost}
                 nextLabel="Next posts"
-                onNext={() => scrollRecentPosts("next")}
-                onPrevious={() => scrollRecentPosts("previous")}
+                onNext={scrollToNextRecentPost}
+                onPrevious={scrollToPreviousRecentPost}
                 previousLabel="Previous posts"
               />
             </div>
@@ -2557,7 +2635,7 @@ function DashboardContent({
                 <span
                   className={cx(
                     "size-[6px] rounded-round",
-                    index === recentPostCarouselState.activeDotIndex
+                    index === recentPostActiveDotIndex
                       ? "bg-text"
                       : "border border-border-subtle",
                   )}
@@ -2672,7 +2750,7 @@ function AnalyticsControlsCard({
   );
 }
 
-function HighlightsCard() {
+function HighlightsCard(props: AnalyticsContextualPromptSlotProps = {}) {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
@@ -2689,11 +2767,15 @@ function HighlightsCard() {
               <h3 className="mt-xxs text-body-sm text-text-meta">
                 {highlight.label}
               </h3>
-              <AnalyticsTrend value={highlight.delta} />
+              <AnalyticsTrend
+                tone={highlight.tone}
+                value={highlight.delta}
+              />
             </article>
           ))}
         </div>
       </div>
+      <ContextualAiPromptSlot {...props} />
     </AnalyticsCard>
   );
 }
@@ -2841,7 +2923,7 @@ function ImpressionsChart() {
               x="58"
               y={y + 4}
             >
-              {[2000, 1500, 1000, 500, 0][index]}
+              {[80000, 60000, 40000, 20000, 0][index]}
             </text>
           </g>
         ))}
@@ -2908,7 +2990,7 @@ function MetricsCard() {
         <ImpressionsChart />
 
         <div className="mt-lg">
-          <ChartLegendRow label="Organic" value="8,920" />
+          <ChartLegendRow label="Organic" value="64,800" />
           <ChartLegendRow dashed label="Sponsored" value="0" />
         </div>
       </div>
@@ -2916,7 +2998,9 @@ function MetricsCard() {
   );
 }
 
-function VisitorHighlightsCard() {
+function VisitorHighlightsCard(
+  props: AnalyticsContextualPromptSlotProps = {},
+) {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
@@ -2941,6 +3025,7 @@ function VisitorHighlightsCard() {
           ))}
         </div>
       </div>
+      <ContextualAiPromptSlot {...props} />
     </AnalyticsCard>
   );
 }
@@ -3003,7 +3088,7 @@ function VisitorMetricsChart() {
               x="58"
               y={y + 4}
             >
-              {[100, 75, 50, 25, 0][index]}
+              {[10000, 7500, 5000, 2500, 0][index]}
             </text>
           </g>
         ))}
@@ -3105,8 +3190,8 @@ function VisitorMetricsCard() {
         <VisitorMetricsChart />
 
         <div className="mt-lg">
-          <VisitorDeviceLegendRow label="Desktop" value="436" />
-          <VisitorDeviceLegendRow dashed label="Mobile" value="71" />
+          <VisitorDeviceLegendRow label="Desktop" value="7,520" />
+          <VisitorDeviceLegendRow dashed label="Mobile" value="1,220" />
         </div>
       </div>
     </AnalyticsCard>
@@ -3172,7 +3257,9 @@ function WhoVisitedYourPageCard() {
   );
 }
 
-function VisitorDemographicsCard() {
+function VisitorDemographicsCard(
+  props: AnalyticsContextualPromptSlotProps = {},
+) {
   return (
     <AnalyticsCard className="overflow-hidden">
       <div className="px-lg py-lg">
@@ -3218,6 +3305,7 @@ function VisitorDemographicsCard() {
           Show all
         </GhostButton>
       </div>
+      <ContextualAiPromptSlot {...props} />
     </AnalyticsCard>
   );
 }
@@ -3367,7 +3455,7 @@ function CompetitorMetricCell({
   );
 }
 
-function CompetitorGrowthTable() {
+function CompetitorGrowthTable(props: AnalyticsContextualPromptSlotProps = {}) {
   return (
     <AnalyticsCard>
       <div className="px-lg pb-xxl pt-lg">
@@ -3444,6 +3532,7 @@ function CompetitorGrowthTable() {
           </tbody>
         </table>
       </div>
+      <ContextualAiPromptSlot {...props} />
     </AnalyticsCard>
   );
 }
@@ -3487,7 +3576,9 @@ function CompetitorPostCard({
   );
 }
 
-function TrendingCompetitorPostsCard() {
+function TrendingCompetitorPostsCard(
+  props: AnalyticsContextualPromptSlotProps = {},
+) {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
@@ -3509,6 +3600,7 @@ function TrendingCompetitorPostsCard() {
           ))}
         </div>
       </div>
+      <ContextualAiPromptSlot {...props} />
     </AnalyticsCard>
   );
 }
@@ -3575,7 +3667,7 @@ function ContentBoostUpsellBanner({
   );
 }
 
-function ContentEngagementTable() {
+function ContentEngagementTable(props: AnalyticsContextualPromptSlotProps = {}) {
   return (
     <AnalyticsCard>
       <div className="flex flex-wrap items-center justify-between gap-md px-lg pb-xxl pt-[16px]">
@@ -3658,6 +3750,7 @@ function ContentEngagementTable() {
           </tbody>
         </table>
       </div>
+      <ContextualAiPromptSlot {...props} />
     </AnalyticsCard>
   );
 }
@@ -3665,9 +3758,18 @@ function ContentEngagementTable() {
 function ContentAnalyticsPanel({
   activeInsightId,
   onInsightSelect,
+  onSelfInitiatedViewSelect,
+  showKeyInsights,
+  showWipPrompts,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onSelfInitiatedViewSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
+  showKeyInsights: boolean;
+  showWipPrompts: boolean;
 }>) {
   return (
     <div
@@ -3676,16 +3778,28 @@ function ContentAnalyticsPanel({
       id="premium-company-pages-analytics-content-panel"
       role="tabpanel"
     >
-      <AnalyticsKeyInsightsCard
-        activeInsightId={activeInsightId}
-        insights={contentAnalyticsInsightCards}
-        onInsightSelect={onInsightSelect}
-        sectionId="analytics-content-ai-insights"
-      />
+      {showKeyInsights ? (
+        <AnalyticsKeyInsightsCard
+          activeInsightId={activeInsightId}
+          insights={contentAnalyticsInsightCards}
+          onInsightSelect={onInsightSelect}
+          sectionId="analytics-content-ai-insights"
+        />
+      ) : null}
       <AnalyticsControlsCard />
-      <HighlightsCard />
+      <HighlightsCard
+        contextualPrompts={
+          showWipPrompts ? wipContentHighlightsPromptRows : undefined
+        }
+        onInsightSelect={onInsightSelect}
+        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      />
       <MetricsCard />
-      <ContentEngagementTable />
+      <ContentEngagementTable
+        contextualPrompts={showWipPrompts ? wipContentPromptRows : undefined}
+        onInsightSelect={onInsightSelect}
+        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      />
     </div>
   );
 }
@@ -3693,9 +3807,18 @@ function ContentAnalyticsPanel({
 function VisitorAnalyticsPanel({
   activeInsightId,
   onInsightSelect,
+  onSelfInitiatedViewSelect,
+  showKeyInsights,
+  showWipPrompts,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onSelfInitiatedViewSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
+  showKeyInsights: boolean;
+  showWipPrompts: boolean;
 }>) {
   return (
     <div
@@ -3704,17 +3827,31 @@ function VisitorAnalyticsPanel({
       id="premium-company-pages-analytics-visitors-panel"
       role="tabpanel"
     >
-      <AnalyticsKeyInsightsCard
-        activeInsightId={activeInsightId}
-        insights={visitorAnalyticsInsightCards}
-        onInsightSelect={onInsightSelect}
-        sectionId="analytics-visitors-ai-insights"
-      />
+      {showKeyInsights ? (
+        <AnalyticsKeyInsightsCard
+          activeInsightId={activeInsightId}
+          insights={visitorAnalyticsInsightCards}
+          onInsightSelect={onInsightSelect}
+          sectionId="analytics-visitors-ai-insights"
+        />
+      ) : null}
       <AnalyticsControlsCard dateRange={VISITOR_ANALYTICS_DATE_RANGE} />
-      <VisitorHighlightsCard />
+      <VisitorHighlightsCard
+        contextualPrompts={
+          showWipPrompts ? wipVisitorHighlightsPromptRows : undefined
+        }
+        onInsightSelect={onInsightSelect}
+        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      />
       <VisitorMetricsCard />
       <WhoVisitedYourPageCard />
-      <VisitorDemographicsCard />
+      <VisitorDemographicsCard
+        contextualPrompts={
+          showWipPrompts ? wipVisitorDemographicsPromptRows : undefined
+        }
+        onInsightSelect={onInsightSelect}
+        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      />
     </div>
   );
 }
@@ -3722,9 +3859,18 @@ function VisitorAnalyticsPanel({
 function CompetitorAnalyticsPanel({
   activeInsightId,
   onInsightSelect,
+  onSelfInitiatedViewSelect,
+  showKeyInsights,
+  showWipPrompts,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onSelfInitiatedViewSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
+  showKeyInsights: boolean;
+  showWipPrompts: boolean;
 }>) {
   return (
     <div
@@ -3733,17 +3879,31 @@ function CompetitorAnalyticsPanel({
       id="premium-company-pages-analytics-competitors-panel"
       role="tabpanel"
     >
-      <AnalyticsKeyInsightsCard
-        activeInsightId={activeInsightId}
-        insights={competitorAnalyticsInsightCards}
-        onInsightSelect={onInsightSelect}
-        sectionId="analytics-competitors-ai-insights"
-      />
+      {showKeyInsights ? (
+        <AnalyticsKeyInsightsCard
+          activeInsightId={activeInsightId}
+          insights={competitorAnalyticsInsightCards}
+          onInsightSelect={onInsightSelect}
+          sectionId="analytics-competitors-ai-insights"
+        />
+      ) : null}
       <CompetitorIntroCard />
       <CompetitorTrackingNoticeCard />
       <CompetitorHighlightsCard />
-      <CompetitorGrowthTable />
-      <TrendingCompetitorPostsCard />
+      <CompetitorGrowthTable
+        contextualPrompts={
+          showWipPrompts ? wipCompetitorGrowthPromptRows : undefined
+        }
+        onInsightSelect={onInsightSelect}
+        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      />
+      <TrendingCompetitorPostsCard
+        contextualPrompts={
+          showWipPrompts ? wipCompetitorPostsPromptRows : undefined
+        }
+        onInsightSelect={onInsightSelect}
+        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      />
       <CompetitiveTipsCard />
     </div>
   );
@@ -3769,13 +3929,22 @@ function EmptyAnalyticsPanel({
 function AnalyticsContent({
   activeInsightId,
   onInsightSelect,
+  onSelfInitiatedViewSelect,
+  story,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onSelfInitiatedViewSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
+  story: PremiumCompanyPagesAdminStory;
 }>) {
   const [activeTabId, setActiveTabId] = useState<AnalyticsTabId>("content");
   const activeTab =
     analyticsTabs.find((tab) => tab.id === activeTabId) ?? analyticsTabs[0];
+  const showKeyInsights = story === "old";
+  const showWipPrompts = story === "current";
 
   return (
     <div className="min-w-0 space-y-md">
@@ -3803,16 +3972,25 @@ function AnalyticsContent({
         <ContentAnalyticsPanel
           activeInsightId={activeInsightId}
           onInsightSelect={onInsightSelect}
+          onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+          showKeyInsights={showKeyInsights}
+          showWipPrompts={showWipPrompts}
         />
       ) : activeTabId === "visitors" ? (
         <VisitorAnalyticsPanel
           activeInsightId={activeInsightId}
           onInsightSelect={onInsightSelect}
+          onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+          showKeyInsights={showKeyInsights}
+          showWipPrompts={showWipPrompts}
         />
       ) : activeTabId === "competitors" ? (
         <CompetitorAnalyticsPanel
           activeInsightId={activeInsightId}
           onInsightSelect={onInsightSelect}
+          onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+          showKeyInsights={showKeyInsights}
+          showWipPrompts={showWipPrompts}
         />
       ) : (
         <EmptyAnalyticsPanel tab={activeTab} />
@@ -3824,15 +4002,17 @@ function AnalyticsContent({
 function PremiumCompanyPagesAdminShell({
   activeItem,
   children,
+  story,
 }: Readonly<{
   activeItem: string;
   children: ReactNode;
+  story: PremiumCompanyPagesAdminStory;
 }>) {
   return (
     <main className="min-h-dvh bg-background-neutral-soft text-text">
       <LinkedInGlobalNavigation profileSrc={pcpAdminPersona.avatarSrc} />
       <div className="mx-auto grid w-full max-w-[1145px] gap-lg px-lg pb-[112px] pt-xxl lg:grid-cols-[225px_minmax(0,888px)] lg:gap-[32px] lg:px-0 lg:py-xxl">
-        <PageRail activeItem={activeItem} />
+        <PageRail activeItem={activeItem} story={story} />
         {children}
       </div>
     </main>
@@ -3844,8 +4024,13 @@ type PremiumCompanyPagesAdminVcaShellProps = Readonly<{
   children: (props: {
     activeInsightId: AdminUc5InsightId | null;
     onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+    onSelfInitiatedViewSelect: (
+      view: AdminUc5SelfInitiatedView,
+      prompt?: string,
+    ) => void;
   }) => ReactNode;
   initialAgentOpen?: boolean;
+  story?: PremiumCompanyPagesAdminStory;
   turnIdPrefix: string;
 }>;
 
@@ -3889,6 +4074,7 @@ function PremiumCompanyPagesAdminVcaShell({
   activeItem,
   children,
   initialAgentOpen = false,
+  story = "current",
   turnIdPrefix,
 }: PremiumCompanyPagesAdminVcaShellProps) {
   const agentPanelId = useId();
@@ -3900,6 +4086,8 @@ function PremiumCompanyPagesAdminVcaShell({
     useState<AdminUc5InsightSelection | null>(null);
   const [initialSelfInitiatedView, setInitialSelfInitiatedView] =
     useState<AdminUc5SelfInitiatedView | null>(null);
+  const [initialSelfInitiatedPrompt, setInitialSelfInitiatedPrompt] =
+    useState<string | undefined>(undefined);
   const [agentDraft, setAgentDraft] = useState("");
   const [agentThreadTurns, setAgentThreadTurns] = useState<
     ReadonlyArray<AdminUc5ThreadTurn>
@@ -3914,30 +4102,23 @@ function PremiumCompanyPagesAdminVcaShell({
   }
 
   function runAdminMessagingSurfaceTransition(updateSurfaceState: () => void) {
-    const viewTransitionDocument = document as ViewTransitionDocument;
-
-    if (typeof viewTransitionDocument.startViewTransition !== "function") {
+    if (
+      !startClassedViewTransition(
+        () => {
+          flushSync(updateSurfaceState);
+        },
+        "pcp-messaging-surface-transition",
+      )
+    ) {
       updateSurfaceState();
-      return;
     }
-
-    const transitionClassName = "pcp-messaging-surface-transition";
-
-    document.documentElement.classList.add(transitionClassName);
-
-    const transition = viewTransitionDocument.startViewTransition(() => {
-      flushSync(updateSurfaceState);
-    });
-
-    void transition.finished.finally(() => {
-      document.documentElement.classList.remove(transitionClassName);
-    });
   }
 
   function handleInsightSelect(insight: AdminUc5InsightSelection) {
     runAdminMessagingSurfaceTransition(() => {
       setActiveInsight(insight);
       setInitialSelfInitiatedView(null);
+      setInitialSelfInitiatedPrompt(undefined);
       setAgentThreadTurns([]);
       setAgentDraft("");
       setAgentPanelVariant("collapsed");
@@ -3949,6 +4130,7 @@ function PremiumCompanyPagesAdminVcaShell({
     runAdminMessagingSurfaceTransition(() => {
       setActiveInsight(null);
       setInitialSelfInitiatedView(null);
+      setInitialSelfInitiatedPrompt(undefined);
       setAgentThreadTurns([]);
       setAgentDraft("");
       setAgentPanelVariant("collapsed");
@@ -3956,10 +4138,14 @@ function PremiumCompanyPagesAdminVcaShell({
     });
   }
 
-  function handleOpenSelfInitiatedView(view: AdminUc5SelfInitiatedView) {
+  function handleOpenSelfInitiatedView(
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) {
     runAdminMessagingSurfaceTransition(() => {
       setActiveInsight(null);
       setInitialSelfInitiatedView(view);
+      setInitialSelfInitiatedPrompt(prompt);
       setAgentThreadTurns([]);
       setAgentDraft("");
       setAgentPanelVariant("collapsed");
@@ -3973,6 +4159,7 @@ function PremiumCompanyPagesAdminVcaShell({
       setAgentPanelVariant("collapsed");
       setAgentDraft("");
       setInitialSelfInitiatedView(null);
+      setInitialSelfInitiatedPrompt(undefined);
     });
   }
 
@@ -3992,6 +4179,10 @@ function PremiumCompanyPagesAdminVcaShell({
 
   function handleAgentDraftChange(event: ChangeEvent<HTMLTextAreaElement>) {
     setAgentDraft(event.currentTarget.value);
+  }
+
+  function handleAgentDraftClear() {
+    setAgentDraft("");
   }
 
   function handleAgentFollowUpSelect(followUp: AdminUc5FollowUp) {
@@ -4033,10 +4224,11 @@ function PremiumCompanyPagesAdminVcaShell({
 
   return (
     <>
-      <PremiumCompanyPagesAdminShell activeItem={activeItem}>
+      <PremiumCompanyPagesAdminShell activeItem={activeItem} story={story}>
         {children({
           activeInsightId: isAgentOpen ? activeInsight?.id ?? null : null,
           onInsightSelect: handleInsightSelect,
+          onSelfInitiatedViewSelect: handleOpenSelfInitiatedView,
         })}
       </PremiumCompanyPagesAdminShell>
 
@@ -4082,12 +4274,14 @@ function PremiumCompanyPagesAdminVcaShell({
             <AdminUc5AgentPanel
               activeInsight={activeInsight}
               draft={agentDraft}
+              initialSelfInitiatedPrompt={initialSelfInitiatedPrompt}
               initialSelfInitiatedView={initialSelfInitiatedView}
               panelId={agentPanelId}
               threadTurns={agentThreadTurns}
               variant={agentPanelVariant}
               onClose={handleCloseAgent}
               onDraftChange={handleAgentDraftChange}
+              onDraftClear={handleAgentDraftClear}
               onFollowUpSelect={handleAgentFollowUpSelect}
               onSend={handleAgentSend}
               onVariantToggle={handleToggleAgentPanelVariant}
@@ -4099,11 +4293,6 @@ function PremiumCompanyPagesAdminVcaShell({
   );
 }
 
-type PremiumCompanyPagesDashboardStory =
-  | "default"
-  | "dashboard-entry"
-  | "cold-start";
-
 type PremiumCompanyPagesPageProps = Readonly<{
   initialAgentOpen?: boolean;
   story?: string;
@@ -4111,12 +4300,12 @@ type PremiumCompanyPagesPageProps = Readonly<{
 
 function getPremiumCompanyPagesDashboardStory(
   story: string | undefined,
-): PremiumCompanyPagesDashboardStory {
-  if (story === "dashboard-entry" || story === "cold-start") {
-    return story;
+): PremiumCompanyPagesAdminStory {
+  if (story === "dashboard-entry" || story === "cold-start" || story === "old") {
+    return "old";
   }
 
-  return "default";
+  return "current";
 }
 
 export function PremiumCompanyPagesPage({
@@ -4129,12 +4318,14 @@ export function PremiumCompanyPagesPage({
     <PremiumCompanyPagesAdminVcaShell
       activeItem="Dashboard"
       initialAgentOpen={initialAgentOpen}
+      story={dashboardStory}
       turnIdPrefix="admin-uc5-turn"
     >
-      {({ activeInsightId, onInsightSelect }) => (
+      {({ activeInsightId, onInsightSelect, onSelfInitiatedViewSelect }) => (
         <DashboardContent
           activeInsightId={activeInsightId}
           onDigestInsightSelect={onInsightSelect}
+          onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
           story={dashboardStory}
         />
       )}
@@ -4146,6 +4337,7 @@ export function PremiumCompanyPagesAdminInboxPage() {
   return (
     <PremiumCompanyPagesAdminVcaShell
       activeItem="Inbox"
+      story="current"
       turnIdPrefix="admin-inbox-turn"
     >
       {() => <InboxContent />}
@@ -4157,6 +4349,7 @@ export function PremiumCompanyPagesAdminSettingsPage() {
   return (
     <PremiumCompanyPagesAdminVcaShell
       activeItem="Settings"
+      story="current"
       turnIdPrefix="admin-settings-turn"
     >
       {() => <SettingsContent />}
@@ -4168,6 +4361,7 @@ export function PremiumCompanyPagesAdminAiAssistantSettingsPage() {
   return (
     <PremiumCompanyPagesAdminVcaShell
       activeItem="Settings"
+      story="current"
       turnIdPrefix="admin-ai-assistant-settings-turn"
     >
       {() => <AiAssistantSettingsPlaceholderContent />}
@@ -4175,16 +4369,25 @@ export function PremiumCompanyPagesAdminAiAssistantSettingsPage() {
   );
 }
 
-export function PremiumCompanyPagesAdminAnalyticsPage() {
+export function PremiumCompanyPagesAdminAnalyticsPage({
+  story,
+}: Readonly<{
+  story?: string;
+}> = {}) {
+  const adminStory = getPremiumCompanyPagesDashboardStory(story);
+
   return (
     <PremiumCompanyPagesAdminVcaShell
       activeItem="Analytics"
+      story={adminStory}
       turnIdPrefix="admin-analytics-turn"
     >
-      {({ activeInsightId, onInsightSelect }) => (
+      {({ activeInsightId, onInsightSelect, onSelfInitiatedViewSelect }) => (
         <AnalyticsContent
           activeInsightId={activeInsightId}
           onInsightSelect={onInsightSelect}
+          onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+          story={adminStory}
         />
       )}
     </PremiumCompanyPagesAdminVcaShell>

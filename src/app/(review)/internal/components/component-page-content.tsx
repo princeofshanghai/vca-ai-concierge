@@ -12,7 +12,7 @@ import {
   ChatThread,
   Prompt,
   RecommendationCard,
-} from "@/components/chat";
+} from "@/components/chat/chat-ui";
 import {
   HighValueMatchCardPreview,
   HighValueSchedulePanelPreview,
@@ -20,10 +20,8 @@ import {
   type BookedMeeting,
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
-} from "@/components/flow-review";
-import {
-  premiumConversationFlows,
-} from "@/components/premium";
+} from "@/components/flow-review/flow-review-chat-panel";
+import { premiumConversationFlows } from "@/components/premium/premium-concierge-flows";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
@@ -57,25 +55,26 @@ import { Tag } from "@/components/primitives/tag";
 import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
+import { AudienceFit as ResponseAudienceFit } from "@/components/premium-company-pages/response-blocks/AudienceFit";
 import {
-  AudienceFit as ResponseAudienceFit,
-  Chips as ResponseChips,
-  ContentList as ResponseContentList,
-  Compare as ResponseCompare,
-  Draft as ResponseDraft,
-  Entity as ResponseEntity,
-  Metric as ResponseMetric,
-  MetricWithTrend as ResponseMetricWithTrend,
-  PageIdentityCard as ResponsePageIdentityCard,
-  PersonCard as ResponsePersonCard,
-  PostCompact as ResponsePostCompact,
-  ResponseRail,
-  Text as ResponseText,
-  TextRecommendationList as ResponseTextRecommendationList,
-  Trend as ResponseTrend,
-} from "@/components/premium-company-pages/response-blocks";
+  ChatCardActions,
+  ChatCardMedia,
+  ChatCardShell,
+  JobCard as ResponseJobCard,
+  PostCard as ResponsePostCard,
+  ProductCard as ResponseProductCard,
+  ReactionSummary,
+} from "@/components/premium-company-pages/response-blocks/ChatCards";
+import { Compare as ResponseCompare } from "@/components/premium-company-pages/response-blocks/Compare";
+import { ContentList as ResponseContentList } from "@/components/premium-company-pages/response-blocks/ContentList";
+import { ConversionPath as ResponseConversionPath } from "@/components/premium-company-pages/response-blocks/ConversionPath";
+import { Metric as ResponseMetric } from "@/components/premium-company-pages/response-blocks/Metric";
+import { MetricWithTrend as ResponseMetricWithTrend } from "@/components/premium-company-pages/response-blocks/MetricWithTrend";
+import { CompanyCard as ResponseCompanyCard } from "@/components/premium-company-pages/response-blocks/CompanyCard";
+import { PersonCard as ResponsePersonCard } from "@/components/premium-company-pages/response-blocks/PersonCard";
+import { ResponseRail } from "@/components/premium-company-pages/response-blocks/ResponseRail";
+import { Trend as ResponseTrend } from "@/components/premium-company-pages/response-blocks/Trend";
 import {
-  pcpAdminScenario,
   pcpCompanyProfile,
   pcpCompetitorNames,
   pcpProofSnippets,
@@ -88,15 +87,10 @@ import {
   PremiumFabDemo,
   PremiumFabReviewPreview,
   PremiumPlanCardDemo,
-  PcpAdminAttentionCardsPreview,
-  PcpAdminInsightResponseCardPreview,
-  PcpAiCardsDemo,
   PcpInboxAiContextStripPreview,
   PcpInsightCardSystemPreview,
   PcpTodayActionCardsPreview,
-  PcpVcaCaseStudyCardPreview,
-  PcpVcaHandoffCardPreview,
-  PcpVcaJobCardPreview,
+  PcpVcaSidePanelShellPreview,
   SduiBadgeDemo,
   SduiButtonDemo,
   SduiButtonIconDemo,
@@ -1194,85 +1188,352 @@ function PremiumCompanyPageVcaFabPage({
       <PreviewSection title="Visitor and admin marks">
         <VcaFabSwappableMarkPreview />
       </PreviewSection>
+      <PreviewSection
+        title="Visitor prompt card"
+        description="Opening-state prompt card used to help a Page visitor start a VCA conversation."
+      >
+        <PreviewCard title="Opening prompts">
+          <PcpVisitorPromptCardPreview />
+        </PreviewCard>
+      </PreviewSection>
     </ComponentPageShell>
   );
 }
 
-const pcpAdminInsightResponseExamples = [
+function PcpVisitorPromptCardPreview() {
+  return (
+    <section className="max-w-[360px] rounded-sm border border-border-faint bg-background p-lg shadow-raised-faint">
+      <h3 className="text-heading-lg text-text">{pcpVcaScenario.openingTitle}</h3>
+      <p className="mt-xs text-body-sm text-text">
+        {pcpVcaScenario.openingSubcopy}
+      </p>
+      <div className="mt-lg flex flex-col items-start gap-sm">
+        {pcpVcaScenario.visitorPrompts.map((prompt) => (
+          <Prompt
+            className="w-fit max-w-full"
+            key={prompt.id}
+            prompt={prompt.label}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const pcpSidePanelExamples = [
   {
-    title: "Post amplification",
-    insightId: "post-amplification",
+    title: "Post detail",
+    kind: "post",
   },
   {
-    title: "Follower growth",
-    insightId: "follower-growth",
+    title: "Job detail",
+    kind: "job",
   },
   {
-    title: "Visitor demographics",
-    insightId: "visitor-demographics",
-  },
-  {
-    title: "Content engagement",
-    insightId: "content-engagement",
-  },
-  {
-    title: "Weekly synthesis",
-    insightId: "weekly-synthesis",
+    title: "Product detail",
+    kind: "product",
   },
 ] as const;
 
-function PremiumCompanyPageAiCardsPage({
+function PremiumCompanyPageSidePanelPage({
   item,
 }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium Company Page">
       <PreviewSection
-        title="Demo"
-        description="Picker for the AI-related PCP cards shown in visitor VCA, admin attention, admin AI response, and inbox context moments."
+        title="Chat shell examples"
+        description="PCP detail panels open inside the VCA shell so the chat history stays visible beside the focused content."
       >
-        <PcpAiCardsDemo />
-      </PreviewSection>
-
-      <PreviewSection title="Visitor VCA conversation cards">
         <PreviewMomentStack>
-          <PreviewMoment>
-            <PreviewExampleHeading>Post proof</PreviewExampleHeading>
-            <PcpVcaCaseStudyCardPreview />
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Job preview</PreviewExampleHeading>
-            <PcpVcaJobCardPreview />
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Drafted message handoff</PreviewExampleHeading>
-            <PcpVcaHandoffCardPreview />
-          </PreviewMoment>
-        </PreviewMomentStack>
-      </PreviewSection>
-
-      <PreviewSection
-        title="Admin attention cards"
-        description="The cards and rows from the dashboard's What needs your attention today section."
-      >
-        <PcpAdminAttentionCardsPreview />
-      </PreviewSection>
-
-      <PreviewSection title="Admin AI response cards">
-        <PreviewMomentStack>
-          {pcpAdminInsightResponseExamples.map(({ insightId, title }) => (
-            <PreviewMoment key={insightId}>
+          {pcpSidePanelExamples.map(({ kind, title }) => (
+            <PreviewMoment key={kind}>
               <PreviewExampleHeading>{title}</PreviewExampleHeading>
-              <PcpAdminInsightResponseCardPreview insightId={insightId} />
+              <PcpVcaSidePanelShellPreview kind={kind} />
             </PreviewMoment>
           ))}
         </PreviewMomentStack>
       </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function PremiumCompanyPageEntityCardsPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium Company Page">
+      <PreviewSection
+        title="Building blocks"
+        description="Atomic pieces for PCP entity cards. These represent nouns like products, posts, jobs, people, and companies inside AI responses."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Shell + actions</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ChatCardShell>
+                <div className="space-y-md p-xl">
+                  <h3 className="text-heading-md text-text">Card shell</h3>
+                  <p className="text-body-sm-open text-text">
+                    Standard border, radius, width, and raised-faint shadow for
+                    reusable PCP entity cards.
+                  </p>
+                </div>
+                <ChatCardActions
+                  actions={[
+                    {
+                      label: "Primary action",
+                      variant: "secondary",
+                    },
+                  ]}
+                />
+              </ChatCardShell>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+
+          <PreviewMoment>
+            <PreviewExampleHeading>Media + passive reactions</PreviewExampleHeading>
+            <div className="grid gap-lg lg:grid-cols-2">
+              <ChatThreadReferenceFrame context="collapsed">
+                <ChatCardShell>
+                  <div className="space-y-md p-xl">
+                    <ChatCardMedia
+                      alt="Placeholder media"
+                      placeholderLabel="Placeholder media"
+                    />
+                    <p className="text-body-sm-open text-text">
+                      Inset media keeps the card padding visible.
+                    </p>
+                  </div>
+                </ChatCardShell>
+              </ChatThreadReferenceFrame>
+              <ChatThreadReferenceFrame context="collapsed">
+                <ChatCardShell>
+                  <ChatCardMedia
+                    alt="Full-bleed post media"
+                    fullBleed
+                    src={postPreviewImageSrc}
+                  />
+                  <div className="py-sm">
+                    <ReactionSummary
+                      comments="36 comments"
+                      reactions="1,284"
+                      reposts="18 reposts"
+                    />
+                  </div>
+                </ChatCardShell>
+              </ChatThreadReferenceFrame>
+            </div>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
 
       <PreviewSection
-        title="Admin inbox AI context"
-        description="Recommended inclusion: this is the downstream context card that explains the Cheri high-intent signal after the dashboard attention card."
+        title="Product cards"
+        description="Public product references for visitor answers. Product cards do not include company identity or social actions."
       >
-        <PcpInboxAiContextStripPreview />
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Image + CTA</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseProductCard
+                actions={[{ label: "View product", variant: "secondary" }]}
+                body="Give employees one place to compare plans, enroll in benefits, update dependents, and see what needs attention before deadlines."
+                imageAlt="Velora Dashboard product preview"
+                imageSrc="/assets/premium-company-pages/member/velora-dashboard-product.png"
+                title="Velora Dashboard"
+                type="Employee benefits portal"
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>No image</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseProductCard
+                actions={[{ label: "View product", variant: "secondary" }]}
+                body="Keep employees informed with timely reminders, clear next steps, and answers to common benefits questions during enrollment windows."
+                title="Velora Guidance"
+                type="Employee communications"
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Post cards"
+        description="Post cards reuse the same header, two-line body, full-bleed media, link preview, and passive engagement row. They never render Like, Comment, Repost, or Send controls."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Media + CTA</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponsePostCard
+                actions={[{ label: "View post", variant: "secondary" }]}
+                authorLogoClassName={veloraLogoTileClassName}
+                authorLogoSrc={pcpCompanyProfile.logoSrc}
+                authorLogoStyle={veloraLogoTileStyle}
+                authorName={pcpCompanyProfile.name}
+                comments={pcpProofSnippets.postCommentLabel}
+                followerCount={pcpCompanyProfile.followers}
+                imageAlt={pcpProofSnippets.postImageAlt}
+                imageSrc={postPreviewImageSrc}
+                reactions={pcpProofSnippets.postEngagement}
+                reposts={`${pcpProofSnippets.postRepostCount} reposts`}
+                snippet="A 12,000-employee retailer simplified carrier coordination before open enrollment by keeping eligibility cleanup, carrier files, and employee communications in one workflow."
+                timestamp="35m"
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Post with title preview + CTA</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponsePostCard
+                actions={[{ label: "View post", variant: "secondary" }]}
+                authorLogoClassName={veloraLogoTileClassName}
+                authorLogoSrc={pcpCompanyProfile.logoSrc}
+                authorLogoStyle={veloraLogoTileStyle}
+                authorName={pcpCompanyProfile.name}
+                comments="18 comments"
+                followerCount={pcpCompanyProfile.followers}
+                imageAlt="Placeholder preview for an open enrollment readiness post"
+                linkMeta={pcpCompanyProfile.name}
+                linkTitle="Open enrollment readiness checklist for enterprise HR teams"
+                reactions="216"
+                snippet="Open enrollment readiness starts before plan changes are announced. Here are a few ways benefits teams can keep the launch on track."
+                timestamp="35m"
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Job cards"
+        description="Job cards are intentionally narrow so multiple jobs can sit inside a response rail without stretching the chat panel."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Single job</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseJobCard
+                actions={[{ label: "View job", variant: "secondary" }]}
+                alumni="1,412 school alumni work here"
+                alumniImageSrc={schoolAlumniImageSrc}
+                company={pcpCompanyProfile.name}
+                location="San Francisco, CA"
+                logoClassName={veloraLogoTileClassName}
+                logoSrc={pcpCompanyProfile.logoSrc}
+                logoStyle={veloraLogoTileStyle}
+                timestamp="2 days ago"
+                title="Benefits Implementation Consultant"
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>In carousel</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseRail aria-label="Open roles">
+                {[
+                  "Benefits Implementation Consultant",
+                  "Carrier Integrations Lead",
+                  "Product Designer, Admin Experience",
+                ].map((title, index) => (
+                  <ResponseJobCard
+                    actions={[{ label: "View job", variant: "secondary" }]}
+                    alumni="1,412 school alumni work here"
+                    alumniImageSrc={schoolAlumniImageSrc}
+                    company={pcpCompanyProfile.name}
+                    key={title}
+                    location="San Francisco, CA"
+                    logoClassName={veloraLogoTileClassName}
+                    logoSrc={pcpCompanyProfile.logoSrc}
+                    logoStyle={veloraLogoTileStyle}
+                    timestamp={index === 1 ? "1 week ago" : "2 days ago"}
+                    title={title}
+                  />
+                ))}
+              </ResponseRail>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="People cards"
+        description="People cards can stand alone or sit inside a ResponseRail. The optional tag is for high-level visitor insight, not follower counts."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Standalone</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponsePersonCard
+                actionIcon={null}
+                actionLabel="View profile"
+                avatarSrc={chatCardPeople[0].avatarSrc}
+                headline={chatCardPeople[0].headline}
+                name={chatCardPeople[0].name}
+                tag={chatCardPeople[0].tag}
+                tagTone="supportive-4"
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>In carousel</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseRail aria-label="Relevant visitors">
+                {chatCardPeople.map((person) => (
+                  <ResponsePersonCard
+                    actionIcon={null}
+                    actionLabel="View profile"
+                    avatarSrc={person.avatarSrc}
+                    headline={person.headline}
+                    key={person.name}
+                    name={person.name}
+                    tag={person.tag}
+                    tagTone="supportive-4"
+                  />
+                ))}
+              </ResponseRail>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Company card"
+        description="Company cards are compact company references for carousel layouts. Keep broader company/event cards undefined until a prototype flow actually needs them."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Standalone</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseCompanyCard
+                followers={pcpCompanyProfile.followers}
+                industry={pcpCompanyProfile.industry}
+                logoSrc={pcpCompanyProfile.logoSrc}
+                name={pcpCompanyProfile.name}
+              />
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>In carousel</PreviewExampleHeading>
+            <ChatThreadReferenceFrame context="collapsed">
+              <ResponseRail aria-label="Related pages">
+                <ResponseCompanyCard
+                  followers={pcpCompanyProfile.followers}
+                  industry={pcpCompanyProfile.industry}
+                  logoSrc={pcpCompanyProfile.logoSrc}
+                  name={pcpCompanyProfile.name}
+                />
+                <ResponseCompanyCard
+                  followers="32,840 followers"
+                  industry="Benefits administration software"
+                  name={benefitHubName}
+                />
+              </ResponseRail>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1326,6 +1587,13 @@ function PremiumCompanyPageInsightCardsPage({
       </PreviewSection>
 
       <PreviewSection
+        title="Admin inbox AI context"
+        description="Downstream context shown in the inbox after an insight or attention card explains why a lead matters."
+      >
+        <PcpInboxAiContextStripPreview />
+      </PreviewSection>
+
+      <PreviewSection
         title="Story 1a stack"
         description="For Story 1a, the AI anomaly ranks first and generic product actions remain below it for contrast. Resolved or dismissed cards leave the stack."
       >
@@ -1356,6 +1624,10 @@ const cheriAvatarSrc = "/assets/premium-company-pages/member/cheri-sparks.png";
 const postPreviewImageSrc = "/assets/premium-company-pages/member/media-1.png";
 const schoolAlumniImageSrc =
   "/assets/premium-company-pages/member/school-alumni-spartan.png";
+const veloraLogoTileClassName = "bg-[#ACF5B3]";
+const veloraLogoTileStyle = {
+  backgroundColor: "#ACF5B3",
+};
 const followerGrowthAxisTicks = ["May 5", "May 19", "Jun 2"] as const;
 const followerGrowthTrendValues = [
   94,
@@ -1374,29 +1646,24 @@ const followerGrowthTrendAnnotation = {
   label: "",
   tone: "negative",
 } as const;
-const aggregateAvatarSrcs = [
-  "/assets/premium-company-pages/avatar-1.png",
-  "/assets/premium-company-pages/avatar-2.png",
-  "/assets/premium-company-pages/avatar-3.png",
-] as const;
-const responseRailPeople = [
+const chatCardPeople = [
   {
-    name: pcpCompanyProfile.adminName,
-    headline: pcpCompanyProfile.adminTitle,
-    followers: "8,412 followers",
-    avatarSrc: pcpCompanyProfile.adminAvatarSrc,
+    name: pcpVisitorPersona.name,
+    headline: "VP of HR · Arbor Retail Group",
+    tag: "Returned this week",
+    avatarSrc: cheriAvatarSrc,
   },
   {
-    name: "Avery Chen",
-    headline: "Head of Carrier Integrations",
-    followers: "3,284 followers",
-    avatarSrc: "/assets/premium-company-pages/avatar-2.png",
+    name: "Priya Shah",
+    headline: "Director of Benefits · Calico Health Network",
+    tag: "Viewed multiple posts",
+    avatarSrc: "/assets/premium-company-pages/avatar-3.png",
   },
   {
     name: "Marcus Lee",
-    headline: "Benefits Implementation Lead",
-    followers: "2,981 followers",
-    avatarSrc: "/assets/premium-company-pages/avatar-3.png",
+    headline: "People Operations Lead · Northstar Retail",
+    tag: "Opened your Page twice",
+    avatarSrc: "/assets/premium-company-pages/avatar-1.png",
   },
 ] as const;
 
@@ -1421,126 +1688,9 @@ function ResponseSystemStack({
   );
 }
 
-function RuleTile({
-  title,
-  children,
-}: Readonly<{
-  title: string;
-  children: ReactNode;
-}>) {
-  return (
-    <div className="rounded-sm border border-border-faint bg-background p-lg">
-      <h3 className="text-body-sm font-medium text-text">{title}</h3>
-      <p className="mt-xs text-body-sm-open text-text-meta">{children}</p>
-    </div>
-  );
-}
-
-function ResponseSystemGrammarExample() {
-  return (
-    <div className="grid gap-xl lg:grid-cols-2">
-      <div className="space-y-lg">
-        <RuleTile title="Insight">
-          A plain-language takeaway opens the response. It is always a Text
-          block.
-        </RuleTile>
-        <RuleTile title="Evidence">
-          Two or three structured blocks prove the claim without turning the
-          answer into a dashboard.
-        </RuleTile>
-        <RuleTile title="Action">
-          The final block gives the next move. For non-terminal turns, that is
-          Chips.
-        </RuleTile>
-      </div>
-      <ResponseSystemStack>
-        <ResponseText tone="insight">
-          Follower growth dropped 18% this month because Velora went quiet after
-          a strong open enrollment post.
-        </ResponseText>
-        <ResponseMetricWithTrend
-          annotation={followerGrowthTrendAnnotation}
-          axisTicks={followerGrowthAxisTicks}
-          delta="18%"
-          deltaContext="vs last month"
-          title="Follower growth"
-          tone="negative"
-          unit="new followers this month"
-          value="+86"
-          values={followerGrowthTrendValues}
-        />
-        <ResponseChips
-          prompts={[
-            "What should I post this week?",
-            "Which content drove follows?",
-          ]}
-        />
-      </ResponseSystemStack>
-    </div>
-  );
-}
-
-function ResponseSystemRules() {
-  return (
-    <div className="grid gap-md md:grid-cols-2 lg:grid-cols-4">
-      <RuleTile title="Open with Text">
-        Every response starts with the insight in prose before evidence appears.
-      </RuleTile>
-      <RuleTile title="Keep evidence small">
-        Use two or three evidence blocks per turn. Prefer a crisp stack over a
-        dense report.
-      </RuleTile>
-      <RuleTile title="Advice stays in Text">
-        Recommendations are the agent&apos;s opinion. Render them as prose or a
-        light numbered list, not as a separate evidence card.
-      </RuleTile>
-      <RuleTile title="Never nest blocks">
-        Metric, Trend, Compare, ContentList, Entity, Draft, and Chips stay as
-        siblings.
-      </RuleTile>
-      <RuleTile title="Respect audience">
-        Visitors get Text, Draft, and relevant public entities. Admins get the
-        full block library.
-      </RuleTile>
-    </div>
-  );
-}
-
-function ResponseSystemBlockCatalog() {
+function DataCardsCatalog() {
   return (
     <PreviewMomentStack>
-      <PreviewMoment>
-        <PreviewExampleHeading>Text</PreviewExampleHeading>
-        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
-          Text carries the agent&apos;s opinion, including light numbered
-          recommendations. Data and evidence move into blocks.
-        </p>
-        <ResponseSystemStack>
-          <ResponseText tone="insight">
-            <p>
-              Benefits leaders are finding Velora, but the Page needs a clearer
-              weekly content rhythm.
-            </p>
-            <ResponseTextRecommendationList
-              items={[
-                {
-                  action: "Post 3x this week",
-                  reason: "even short posts keep Velora in the feed.",
-                },
-                {
-                  action: "Lead with open enrollment deadlines",
-                  reason: "that is what brought your strongest visitors.",
-                },
-                {
-                  action: "Re-run the top post",
-                  reason: "it is still the strongest performer.",
-                },
-              ]}
-            />
-          </ResponseText>
-        </ResponseSystemStack>
-      </PreviewMoment>
-
       <PreviewMoment>
         <PreviewExampleHeading>Metric</PreviewExampleHeading>
         <ResponseSystemStack>
@@ -1548,24 +1698,24 @@ function ResponseSystemBlockCatalog() {
             title="Monthly summary"
             items={[
               {
-                value: "312",
+                value: "8,740",
                 label: "Visitors",
-                delta: "18",
+                delta: "18%",
                 deltaContext: "vs last month",
                 tone: "negative",
               },
               {
-                value: "29",
+                value: "420",
                 label: "New followers",
                 delta: "11%",
-                deltaContext: "vs last week",
+                deltaContext: "vs last month",
                 tone: "negative",
               },
               {
-                value: "48,218",
+                value: "86,420",
                 label: "Follower total",
-                delta: "29",
-                deltaContext: "this week",
+                delta: "420",
+                deltaContext: "this month",
                 tone: "positive",
               },
             ]}
@@ -1606,7 +1756,7 @@ function ResponseSystemBlockCatalog() {
             title="Follower growth"
             tone="negative"
             unit="new followers this month"
-            value="+86"
+            value="+420"
             values={followerGrowthTrendValues}
           />
         </ResponseSystemStack>
@@ -1651,44 +1801,74 @@ function ResponseSystemBlockCatalog() {
       </PreviewMoment>
 
       <PreviewMoment>
+        <PreviewExampleHeading>ConversionPath</PreviewExampleHeading>
+        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
+          ConversionPath shows where Page attention turns into a concrete action.
+          Keep the recommendation in the AI response; use the card for the
+          measurable path.
+        </p>
+        <ResponseSystemStack>
+          <ResponseConversionPath
+            context="This month"
+            steps={[
+              {
+                label: "Page views",
+                value: "8,740",
+                delta: "28%",
+                deltaContext: "this month",
+                tone: "positive",
+              },
+              {
+                label: "Unique visitors",
+                value: "3,180",
+                delta: "20.2%",
+                deltaContext: "this month",
+                tone: "negative",
+              },
+              {
+                label: "Custom button clicks",
+                value: "126",
+                delta: "33%",
+                deltaContext: "this month",
+                tone: "negative",
+              },
+            ]}
+            summaryLabel="visitor-to-button click rate"
+            summaryValue="4%"
+            title="Button conversion path"
+          />
+        </ResponseSystemStack>
+      </PreviewMoment>
+
+      <PreviewMoment>
         <PreviewExampleHeading>AudienceFit</PreviewExampleHeading>
         <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
           AudienceFit summarizes which visitor groups are showing up after the
-          agent explains the main audience-match signal.
+          agent explains the main audience-match signal. Segment labels should
+          use LinkedIn demographic dimensions, not invented audience buckets.
         </p>
         <ResponseSystemStack>
           <ResponseAudienceFit
-            avatars={[
-              {
-                label: "Priya Shah",
-                src: "/assets/premium-company-pages/avatar-3.png",
-              },
-              {
-                label: "Dana Kim",
-                src: "/assets/premium-company-pages/avatar-2.png",
-              },
-              {
-                label: "Morgan Lee",
-                src: "/assets/premium-company-pages/avatar-1.png",
-              },
-            ]}
+            metricLabel="match your target audience"
+            metricValue="64%"
             segments={[
               {
-                label: "HR leaders",
-                detail: "Largest viewer group",
+                label: "Human Resources · Director+",
                 value: "38%",
               },
               {
-                label: "Benefits operations",
-                detail: "Viewed readiness content",
-                value: "16%",
+                label: "Insurance & Healthcare",
+                value: "31%",
               },
               {
-                label: "People operations",
-                detail: "Growing share of Page viewers",
-                value: "10%",
+                label: "10,001+ employees",
+                value: "44%",
+                valueTone: "positive",
               },
             ]}
+            trendContext="vs last month"
+            trendDelta="12 pts"
+            trendTone="positive"
           />
         </ResponseSystemStack>
       </PreviewMoment>
@@ -1708,8 +1888,8 @@ function ResponseSystemBlockCatalog() {
                   "/assets/premium-company-pages/member/post-image-1.png",
                 thumbnailAlt: "Carrier coordination post preview",
                 metrics: [
-                  { label: "Engagement rate", value: "4.8%" },
-                  { label: "Impressions", value: "1,688" },
+                  { label: "Engagement rate", value: "8.2%" },
+                  { label: "Impressions", value: "18.4K" },
                 ],
               },
               {
@@ -1718,8 +1898,8 @@ function ResponseSystemBlockCatalog() {
                   "/assets/premium-company-pages/member/post-image-2.png",
                 thumbnailAlt: "Open enrollment checklist post preview",
                 metrics: [
-                  { label: "Engagement rate", value: "4.2%" },
-                  { label: "Impressions", value: "1,204" },
+                  { label: "Engagement rate", value: "7.1%" },
+                  { label: "Impressions", value: "14.2K" },
                 ],
               },
             ]}
@@ -1727,449 +1907,20 @@ function ResponseSystemBlockCatalog() {
           />
         </ResponseSystemStack>
       </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>Draft</PreviewExampleHeading>
-        <ResponseSystemStack>
-          <ResponseDraft
-            message={pcpVcaScenario.handoffMessage}
-            recipient={`To ${pcpCompanyProfile.adminName} at ${pcpCompanyProfile.name}`}
-          />
-        </ResponseSystemStack>
-      </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>Chips</PreviewExampleHeading>
-        <ResponseSystemStack>
-          <ResponseChips
-            prompts={[
-              "Why did followers drop?",
-              "Show me competitor content",
-              "Draft the Cheri story",
-            ]}
-          />
-        </ResponseSystemStack>
-      </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>ResponseRail + identity cards</PreviewExampleHeading>
-        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
-          ResponseRail is the reusable horizontal-scroll wrapper for future
-          multi-card responses. PersonCard and PageIdentityCard are the first
-          card types using it.
-        </p>
-        <div className="grid gap-lg xl:grid-cols-3">
-          <div className="space-y-sm">
-            <PreviewExampleHeading level="h4">
-              Collapsed chat width
-            </PreviewExampleHeading>
-            <ChatThreadReferenceFrame context="collapsed">
-              <ResponseRail
-                aria-label="People on this Page"
-                title={
-                  <>
-                    <Icon name="people" size="small" />
-                    <span>People on this Page</span>
-                  </>
-                }
-              >
-                {responseRailPeople.map((person) => (
-                  <ResponsePersonCard
-                    avatarSrc={person.avatarSrc}
-                    followers={person.followers}
-                    headline={person.headline}
-                    key={person.name}
-                    name={person.name}
-                  />
-                ))}
-              </ResponseRail>
-            </ChatThreadReferenceFrame>
-          </div>
-          <div className="space-y-sm">
-            <PreviewExampleHeading level="h4">
-              Expanded chat width
-            </PreviewExampleHeading>
-            <ChatThreadReferenceFrame context="expanded">
-              <ResponseRail
-                aria-label="People on this Page"
-                title={
-                  <>
-                    <Icon name="people" size="small" />
-                    <span>People on this Page</span>
-                  </>
-                }
-              >
-                {responseRailPeople.map((person) => (
-                  <ResponsePersonCard
-                    avatarSrc={person.avatarSrc}
-                    followers={person.followers}
-                    headline={person.headline}
-                    key={person.name}
-                    name={person.name}
-                  />
-                ))}
-              </ResponseRail>
-            </ChatThreadReferenceFrame>
-          </div>
-          <div className="space-y-sm">
-            <PreviewExampleHeading level="h4">
-              Page identity card
-            </PreviewExampleHeading>
-            <ChatThreadReferenceFrame context="collapsed">
-              <ResponseRail
-                aria-label="Page identity"
-                title={
-                  <>
-                    <Icon name="company" size="small" />
-                    <span>Page identity</span>
-                  </>
-                }
-              >
-                <ResponsePageIdentityCard
-                  followers={pcpCompanyProfile.followers}
-                  industry={pcpCompanyProfile.industry}
-                  logoSrc={pcpCompanyProfile.logoSrc}
-                  name={pcpCompanyProfile.name}
-                />
-              </ResponseRail>
-            </ChatThreadReferenceFrame>
-          </div>
-        </div>
-      </PreviewMoment>
     </PreviewMomentStack>
   );
 }
 
-function ResponseEntityActionPairs() {
-  return (
-    <PreviewMomentStack>
-      <PreviewMoment>
-        <PreviewExampleHeading>Post</PreviewExampleHeading>
-        <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
-          Compact is for admin recognize-and-act reference contexts. Full Post
-          is for visitor reading contexts.
-        </p>
-        <div className="grid gap-lg xl:grid-cols-3">
-          <div className="space-y-sm">
-            <PreviewExampleHeading level="h4">Full visitor</PreviewExampleHeading>
-            <ResponseEntity
-              actions={[{ label: "View post" }, { label: "Follow" }]}
-              audience="visitor"
-              commentCount="3"
-              engagement="134"
-              followerCount={pcpCompanyProfile.followers}
-              logoSrc={pcpCompanyProfile.logoSrc}
-              name={pcpCompanyProfile.name}
-              previewImageSrc={postPreviewImageSrc}
-              repostCount="3"
-              snippet={pcpProofSnippets.postSummary}
-              timestamp="3d"
-              variant="post"
-            />
-          </div>
-          <div className="space-y-sm">
-            <PreviewExampleHeading level="h4">Full admin</PreviewExampleHeading>
-            <ResponseEntity
-              actions={[
-                { label: "Boost", icon: "trending" },
-                { label: "Replicate" },
-                { label: "View" },
-              ]}
-              audience="admin"
-              commentCount="3"
-              engagement="134"
-              followerCount={pcpCompanyProfile.followers}
-              logoSrc={pcpCompanyProfile.logoSrc}
-              name={pcpCompanyProfile.name}
-              previewImageSrc={postPreviewImageSrc}
-              reactions={["like", "support", "interest"]}
-              repostCount="3"
-              snippet={pcpProofSnippets.postSummary}
-              timestamp="3d"
-              variant="post"
-            />
-          </div>
-          <div className="space-y-sm">
-            <PreviewExampleHeading level="h4">
-              Compact reference
-            </PreviewExampleHeading>
-            <ResponsePostCompact
-              author={benefitHubName}
-              meta="421 reactions · 1w"
-              text="5 things to lock down before open enrollment opens. Number 4 is the one…"
-              thumbnailAlt={`${benefitHubName} checklist post thumbnail`}
-              thumbnailSrc={postPreviewImageSrc}
-            />
-          </div>
-        </div>
-      </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>Job</PreviewExampleHeading>
-        <div className="grid gap-lg lg:grid-cols-2">
-          <ResponseEntity
-            actions={[{ label: "Apply" }, { label: "Save" }]}
-            alumni="1,412 school alumni work here"
-            alumniImageSrc={schoolAlumniImageSrc}
-            audience="visitor"
-            company={pcpCompanyProfile.name}
-            location="San Francisco, CA"
-            logoSrc={pcpCompanyProfile.logoSrc}
-            name="Senior Benefits Implementation Consultant"
-            title="Senior Benefits Implementation Consultant"
-            variant="job"
-          />
-          <ResponseEntity
-            actions={[{ label: "Promote job" }, { label: "Share as post" }]}
-            alumni="1,412 school alumni work here"
-            alumniImageSrc={schoolAlumniImageSrc}
-            audience="admin"
-            company={pcpCompanyProfile.name}
-            location="San Francisco, CA"
-            logoSrc={pcpCompanyProfile.logoSrc}
-            name="Senior Benefits Implementation Consultant"
-            title="Senior Benefits Implementation Consultant"
-            variant="job"
-          />
-        </div>
-      </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>Person</PreviewExampleHeading>
-        <div className="grid gap-lg lg:grid-cols-2">
-          <RuleTile title="Visitor side">
-            Person cards do not render for visitors. The visitor experience uses
-            Text and Draft, plus public Post, Job, Company, Event, or Page people
-            summaries.
-          </RuleTile>
-          <ResponseEntity
-            actions={[{ label: "View message" }, { label: "Profile" }]}
-            audience="admin"
-            avatarSrc={cheriAvatarSrc}
-            connectionDegree="1st"
-            headline="VP of HR · Arbor Retail Group"
-            name={pcpVisitorPersona.name}
-            signal={{
-              tier: "tier-1",
-              label: "High intent",
-              quote:
-                "I'm exploring Velora for HR and benefits operations after seeing the Arbor Retail Group post.",
-              detail: pcpAdminScenario.leadSummary,
-            }}
-            variant="person"
-          />
-        </div>
-      </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>Company</PreviewExampleHeading>
-        <div className="grid gap-lg lg:grid-cols-2">
-          <ResponseEntity
-            actions={[{ label: "Follow" }, { label: "View page" }]}
-            audience="visitor"
-            category="Benefits administration software"
-            followerCount="48,218 followers"
-            logoSrc={pcpCompanyProfile.logoSrc}
-            name={pcpCompanyProfile.name}
-            variant="company"
-          />
-          <ResponseEntity
-            actions={[
-              { label: "See what's working" },
-              { label: "View page" },
-            ]}
-            audience="admin"
-            category="Benefits administration software"
-            followerCount="82 new followers"
-            name={benefitHubName}
-            stats={[
-              { label: "Posts per week", value: "5" },
-              { label: "New followers", value: "82" },
-              { label: "Comments per day", value: "18" },
-            ]}
-            variant="company"
-          />
-        </div>
-      </PreviewMoment>
-
-      <PreviewMoment>
-        <PreviewExampleHeading>Event</PreviewExampleHeading>
-        <div className="grid gap-lg lg:grid-cols-2">
-          <ResponseEntity
-            actions={[{ label: "Attend" }, { label: "View event" }]}
-            attendance="1,284 attendees"
-            audience="visitor"
-            date={{ month: "JUN", day: "24" }}
-            name="Open enrollment carrier coordination workshop"
-            variant="event"
-          />
-          <ResponseEntity
-            actions={[{ label: "Promote" }, { label: "Share" }]}
-            attendance="1,284 attendees"
-            audience="admin"
-            date={{ month: "JUN", day: "24" }}
-            name="Open enrollment carrier coordination workshop"
-            variant="event"
-          />
-        </div>
-      </PreviewMoment>
-    </PreviewMomentStack>
-  );
-}
-
-function VisitorSignalTierExamples() {
-  return (
-    <div className="grid gap-lg lg:grid-cols-3">
-      <ResponseEntity
-        actions={[{ label: "View message" }, { label: "Profile" }]}
-        audience="admin"
-        avatarSrc={cheriAvatarSrc}
-        connectionDegree="1st"
-        headline="VP of HR · Arbor Retail Group"
-        name="Cheri Sparks"
-        signal={{
-          tier: "tier-1",
-          label: "Tier 1 · High intent",
-          quote:
-            "I'm exploring Velora for HR and benefits operations after seeing the Arbor Retail Group post.",
-          detail: "Amber signal: she did something.",
-        }}
-        variant="person"
-      />
-      <ResponseEntity
-        actions={[
-          { label: "View profile" },
-          { label: "See what they viewed" },
-        ]}
-        audience="admin"
-        connectionDegree="2nd"
-        headline="Director, Benefits · Northstar Health"
-        name="Priya Shah"
-        signal={{
-          tier: "tier-2",
-          label: "Tier 2 · Strong fit",
-          detail:
-            "Blue signal: he matches the ICP, but has not taken an outreach-worthy action.",
-        }}
-        variant="person"
-      />
-      <ResponseEntity
-        actions={[{ label: "Break down by role" }]}
-        audience="admin"
-        headline="Aggregate visitor pattern"
-        name="Benefits leaders"
-        signal={{
-          tier: "tier-3",
-          label: "Tier 3 · Aggregate",
-          count: "43 visitors",
-          avatars: aggregateAvatarSrcs,
-          detail:
-            "64% of people who viewed your Page are in HR, benefits, or people operations roles.",
-        }}
-        variant="person"
-      />
-    </div>
-  );
-}
-
-function StoryCompositionExamples() {
-  return (
-    <div className="grid gap-xl lg:grid-cols-2">
-      <ResponseSystemStack>
-        <PreviewExampleHeading>Story 1a · Anomaly</PreviewExampleHeading>
-        <ResponseText tone="insight">
-          Follower growth dropped 18% — here&apos;s why.
-        </ResponseText>
-        <ResponseMetricWithTrend
-          annotation={followerGrowthTrendAnnotation}
-          axisTicks={followerGrowthAxisTicks}
-          delta="18%"
-          deltaContext="vs last month"
-          title="Follower growth"
-          tone="negative"
-          unit="new followers this month"
-          value="+86"
-          values={followerGrowthTrendValues}
-        />
-        <ResponseChips prompts={["What changed?", "What should I post?"]} />
-      </ResponseSystemStack>
-
-      <ResponseSystemStack>
-        <PreviewExampleHeading>Story 3 · Lead arrives</PreviewExampleHeading>
-        <ResponseEntity
-          actions={[{ label: "View message" }, { label: "Profile" }]}
-          audience="admin"
-          avatarSrc={cheriAvatarSrc}
-          connectionDegree="1st"
-          headline="VP of HR · Arbor Retail Group"
-          name={pcpVisitorPersona.name}
-          signal={{
-            tier: "tier-1",
-            label: "High intent",
-            quote:
-              "I'm exploring Velora for HR and benefits operations after seeing the Arbor Retail Group post.",
-          }}
-          variant="person"
-        />
-        <ResponseText>
-          Cheri viewed Velora&apos;s Arbor Retail Group post, explored whether
-          Velora is relevant for HR and benefits operations, and sent Rose a
-          drafted message.
-        </ResponseText>
-        <ResponseDraft
-          message={pcpAdminScenario.suggestedReply}
-          recipient={`Reply to ${pcpVisitorPersona.name}`}
-        />
-        <ResponseChips
-          prompts={["Prep Rose for the reply", "Draft a follow-up post"]}
-        />
-      </ResponseSystemStack>
-    </div>
-  );
-}
-
-function PremiumCompanyPageResponseSystemPage({
+function PremiumCompanyPageDataCardsPage({
   item,
 }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium Company Page">
       <PreviewSection
-        title="Insight → Evidence → Action"
-        description="The composition grammar every PCP VCA response follows."
+        title="Data cards"
+        description="Reusable structured evidence cards for metrics, trends, comparisons, conversion paths, audience segments, and content patterns inside PCP AI responses."
       >
-        <ResponseSystemGrammarExample />
-      </PreviewSection>
-
-      <PreviewSection title="System rules">
-        <ResponseSystemRules />
-      </PreviewSection>
-
-      <PreviewSection
-        title="Block catalog"
-        description="Each block is shown as a standalone response unit assembled from existing primitives and tokens."
-      >
-        <ResponseSystemBlockCatalog />
-      </PreviewSection>
-
-      <PreviewSection
-        title="Entity variants"
-        description="The same entity anatomy supports visitor and admin contexts; only the action row changes."
-      >
-        <ResponseEntityActionPairs />
-      </PreviewSection>
-
-      <PreviewSection
-        title="Visitor signal tiers"
-        description="Tier 1 stays amber, Tier 2 is blue, and Tier 3 is aggregate-only."
-      >
-        <VisitorSignalTierExamples />
-      </PreviewSection>
-
-      <PreviewSection
-        title="Story compositions"
-        description="Full response stacks using the source-system grammar without nested blocks."
-      >
-        <StoryCompositionExamples />
+        <DataCardsCatalog />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -3137,12 +2888,14 @@ export function ComponentPageContent({
       return <PremiumConciergePanelPage item={item} />;
     case "premium-company-page-vca-fab":
       return <PremiumCompanyPageVcaFabPage item={item} />;
-    case "premium-company-page-ai-cards":
-      return <PremiumCompanyPageAiCardsPage item={item} />;
+    case "premium-company-page-side-panel":
+      return <PremiumCompanyPageSidePanelPage item={item} />;
+    case "premium-company-page-entity-cards":
+      return <PremiumCompanyPageEntityCardsPage item={item} />;
+    case "premium-company-page-data-cards":
+      return <PremiumCompanyPageDataCardsPage item={item} />;
     case "premium-company-page-insight-cards":
       return <PremiumCompanyPageInsightCardsPage item={item} />;
-    case "premium-company-page-response-system":
-      return <PremiumCompanyPageResponseSystemPage item={item} />;
     case "sdui-nav-link-item-horizontal":
       return <SduiNavLinkItemHorizontalPage item={item} />;
     case "sdui-tab-item-horizontal":

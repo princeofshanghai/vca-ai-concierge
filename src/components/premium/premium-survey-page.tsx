@@ -4,10 +4,12 @@ import { useCallback, useEffect, useId, useState } from "react";
 
 import {
   ChatTray,
-  startChatPanelViewTransition,
   type ChatPanelVariant,
+} from "@/components/chat/chat-ui";
+import {
+  startChatPanelViewTransition,
   useChatPanelPresence,
-} from "@/components/chat";
+} from "@/components/chat/chat-motion";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";

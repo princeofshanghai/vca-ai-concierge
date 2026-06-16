@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { ProjectChooserPage } from "@/components/project-chooser";
+import { ProjectChooserPage } from "@/components/project-chooser/project-chooser-page";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({

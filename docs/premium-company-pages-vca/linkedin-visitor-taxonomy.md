@@ -55,7 +55,7 @@ Good:
 
 - `Director`
 - `VP`
-- `Human Resources · Director+`
+- `Director+`
 
 Avoid:
 
@@ -148,24 +148,28 @@ Example:
 ```text
 64% of people who viewed your Page match Velora's target audience, up from 52% last month.
 
-That match is based on LinkedIn demographic signals like job function, seniority, industry, company size, and location.
+The strongest signals are job function, seniority, and company size.
 
-The biggest shift is quality: more visitors are in Human Resources roles at Director+ seniority, and more are coming from companies with 10,001+ employees.
+More visitors now match Velora's core audience profile: Human Resources roles, Director+ seniority, and companies with 10,001+ employees.
 ```
 
 ## Card Copy Guidance
 
 Use taxonomy-based labels in structured cards:
 
-- `Human Resources · Director+`
-- `Insurance · Hospital & Health Care`
-- `10,001+ employees`
+- `Job function` / `Human Resources`
+- `Seniority` / `Director+`
+- `Industry` / `Insurance · Hospital & Health Care`
+- `Company size` / `10,001+ employees`
+- `Job function` / `38% Human Resources visitors`
 
 Avoid domain-specific invented labels in card rows:
 
 - `Benefits operations`
 - `People operations`
 - `Carrier coordination`
+
+For compact Audience cards, prefer one demographic dimension per row. If the percentage would be ambiguous as a right-aligned value, make the row label a short evidence sentence such as `38% Human Resources visitors`. Combined labels like `Human Resources · Director+` are acceptable when defining a specific audience segment, but they can be harder to scan when mixed with single-dimension rows.
 
 ## Person Card Guidance
 

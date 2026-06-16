@@ -1,10 +1,14 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
 import {
-  MetricDelta,
-  MetricValue,
   type MetricTone,
 } from "./Metric";
+import {
+  DataCardHeader,
+  DataCardSection,
+  DataCardShell,
+  DataMetricSummary,
+} from "./DataCard";
 import {
   TrendChart,
   type TrendAnnotation,
@@ -23,10 +27,6 @@ export type MetricWithTrendProps = HTMLAttributes<HTMLElement> & {
   values: ReadonlyArray<number>;
 };
 
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export function MetricWithTrend({
   annotation,
   axisTicks,
@@ -41,30 +41,27 @@ export function MetricWithTrend({
   ...props
 }: MetricWithTrendProps) {
   return (
-    <article
+    <DataCardShell
       {...props}
-      data-response-block="MetricWithTrend"
-      className={cx(
-        "w-full rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint",
-        className,
-      )}
+      block="MetricWithTrend"
+      className={className}
     >
-      <h3 className="text-control-md text-text">{title}</h3>
-      <div className="mt-md flex min-w-0 flex-wrap items-baseline gap-sm">
-        <MetricValue unit={unit} value={value} />
-        <MetricDelta
-          delta={delta}
-          deltaContext={deltaContext}
-          tone={tone}
-        />
-      </div>
-      <div className="mt-xl">
+      <DataCardHeader title={title} />
+      <DataMetricSummary
+        className="mt-lg"
+        delta={delta}
+        deltaContext={deltaContext}
+        label={unit}
+        tone={tone}
+        value={value}
+      />
+      <DataCardSection>
         <TrendChart
           annotation={annotation}
           axisTicks={axisTicks}
           values={values}
         />
-      </div>
-    </article>
+      </DataCardSection>
+    </DataCardShell>
   );
 }
