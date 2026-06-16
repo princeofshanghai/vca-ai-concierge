@@ -36,7 +36,7 @@ export { PostCompact } from "./PostCompact";
 export type { PostCompactProps } from "./PostCompact";
 export { ResponseRail } from "./ResponseRail";
 export type { ResponseRailProps } from "./ResponseRail";
-export { Text } from "./Text";
+export { StreamingText, Text } from "./Text";
 export { TextRecommendationList } from "./Text";
 export type {
   TextProps,

@@ -94,7 +94,7 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
       {
         prompt: "Who would this reach?",
         response:
-          "The strongest audience fit is HR, benefits, and people operations leaders at enterprise companies. They are already showing up in your visitor data around open enrollment and carrier coordination content.",
+          "The strongest audience fit is Human Resources visitors at Director+ seniority from enterprise companies. They are already showing up in your visitor data across Insurance, Hospital & Health Care, and Retail companies.",
       },
       {
         prompt: "Explore boost options",
@@ -130,19 +130,19 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
   "visitor-demographics": {
     id: "visitor-demographics",
     icon: "analytics",
-    label: "Benefits leaders are finding your Page",
-    value: "64% of people who viewed your Page match your target audience",
-    query: "Who is visiting Velora's Page?",
+    label: "Your Page is reaching more relevant visitors",
+    value: "64% of visitors match your target audience",
+    query: "Show insights about my page visitors",
     followUps: [
       {
         prompt: "Are these the right people for Velora?",
         response:
-          "Yes. The strongest visitor groups look like the people Velora is built to help: HR, benefits, and people operations leaders managing carrier complexity, eligibility cleanup, and open enrollment readiness.",
+          "Yes. The strongest visitor groups match Velora's target audience using LinkedIn demographic fields: Human Resources job function, Director+ seniority, Insurance and Hospital & Health Care industries, and 10,001+ employee companies.",
       },
       {
         prompt: "How do I reach more of them?",
         response:
-          "Post more open enrollment and carrier-readiness scenarios, then consider boosting the Arbor Retail Group proof to HR and benefits leaders at large employers.",
+          "Post more content for Human Resources leaders at large employers, then consider boosting the Arbor Retail Group proof to Director+ audiences in Insurance, Hospital & Health Care, and Retail.",
       },
     ],
   },
@@ -161,7 +161,7 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
       {
         prompt: "Break down by audience",
         response:
-          "The strongest engagement is coming from HR, benefits, and people operations visitors. The content appears to resonate most when it names a specific operational moment like carrier readiness, eligibility cleanup, or open enrollment preparation.",
+          "The strongest engagement is coming from Human Resources visitors at Director+ seniority. The content appears to resonate most with visitors from large Insurance, Hospital & Health Care, and Retail companies.",
       },
       {
         prompt: "What themes are emerging?",
@@ -244,15 +244,15 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
   {
     label: "Job function",
     rows: [
-      { label: "Human resources", percentage: 46 },
-      { label: "Benefits operations", percentage: 22 },
+      { label: "Human Resources", percentage: 46 },
+      { label: "Operations", percentage: 22 },
     ],
   },
   {
     label: "Industry",
     rows: [
       { label: "Retail", percentage: 31 },
-      { label: "Healthcare", percentage: 18 },
+      { label: "Hospital & Health Care", percentage: 18 },
     ],
   },
   {
@@ -265,8 +265,8 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
   {
     label: "Seniority",
     rows: [
-      { label: "Director+", percentage: 68 },
-      { label: "VP / CHRO", percentage: 24 },
+      { label: "Director", percentage: 44 },
+      { label: "VP", percentage: 24 },
     ],
   },
 ];

@@ -28,6 +28,7 @@ import {
   RecommendationCard,
   supportsViewTransitions,
   useChatAssistantStream,
+  useChatLatestMessageAnchor,
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
@@ -365,6 +366,9 @@ export function ConciergePanel({
     null,
   );
   const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
+  const [latestUserMessageAnchorKey, setLatestUserMessageAnchorKey] = useState<
+    string | null
+  >(null);
   const [isIdlePromptOpen, setIsIdlePromptOpen] = useState(false);
   const [idleRemainingSeconds, setIdleRemainingSeconds] = useState(
     IDLE_SESSION_SECONDS,
@@ -395,6 +399,15 @@ export function ConciergePanel({
         isMessageItem(message) &&
         (message.status === "thinking" || message.status === "streaming"),
     );
+  const {
+    hasLatestBelow,
+    handleScroll: handleLatestScroll,
+    scrollToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: chatBodyRef,
+    anchorKey: latestUserMessageAnchorKey,
+    contentKey: messages,
+  });
 
   const createMessageId = useCallback((prefix: string) => {
     const id = `${prefix}-${nextMessageIdRef.current}`;
@@ -504,15 +517,8 @@ export function ConciergePanel({
   }, [scheduledSpecialistState]);
 
   useEffect(() => {
-    const chatBody = chatBodyRef.current;
-
-    if (!chatBody) {
-      return;
-    }
-
-    chatBody.scrollTop = chatBody.scrollHeight;
-    setHasChatBodyScrolled(chatBody.scrollTop > 0);
-  }, [messages, isSchedulePanelOpen]);
+    handleLatestScroll();
+  }, [handleLatestScroll, isSchedulePanelOpen]);
 
   const resetIdleSession = useCallback(() => {
     setIsIdlePromptOpen(false);
@@ -691,16 +697,19 @@ export function ConciergePanel({
         return;
       }
 
+      const userMessageId = createMessageId("user");
+
       setMessages((currentMessages) => [
         ...currentMessages,
         {
           kind: "message",
-          id: createMessageId("user"),
+          id: userMessageId,
           role: "user",
           content: text,
           status: "complete",
         },
       ]);
+      setLatestUserMessageAnchorKey(userMessageId);
       setDraft("");
       const nextFlowId = liveFlowId ?? selectLiveFlowId(text);
       const nextTurn = getNextScriptedAssistantTurn({
@@ -796,6 +805,8 @@ export function ConciergePanel({
   );
 
   function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
+    handleLatestScroll();
+
     const nextHasScrolled = event.currentTarget.scrollTop > 0;
 
     setHasChatBodyScrolled((currentHasScrolled) =>
@@ -989,17 +1000,24 @@ export function ConciergePanel({
             chatBodyRef={chatBodyRef}
             history={thread}
             onChatBodyScroll={handleChatBodyScroll}
+            onJumpToLatest={scrollToLatest}
             sidePanel={
               <SchedulePanel
                 onBack={handleBackToChat}
                 onBook={handleBookMeeting}
               />
             }
+            showJumpToLatest={hasLatestBelow}
             variant={variant}
           />
         ) : (
           <>
-            <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
+            <ChatBody
+              ref={chatBodyRef}
+              onJumpToLatest={scrollToLatest}
+              onScroll={handleChatBodyScroll}
+              showJumpToLatest={hasLatestBelow}
+            >
               {thread}
             </ChatBody>
             <ChatComposer

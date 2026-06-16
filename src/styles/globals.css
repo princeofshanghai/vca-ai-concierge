@@ -117,6 +117,8 @@
     --figma-color-border-color-border-faint-active
   );
   --design-color-label: var(--figma-color-label-color-label);
+  --design-color-label-hover: var(--figma-color-label-color-label-hover);
+  --design-color-label-active: var(--figma-color-label-color-label-active);
   --design-color-label-disabled: var(--figma-color-label-color-label-disabled);
   --design-color-icon: var(--figma-color-icon-color-icon);
   --design-color-icon-hover: var(--figma-color-icon-color-icon-hover);
@@ -615,6 +617,8 @@
   --color-border-faint-hover: var(--design-color-border-faint-hover);
   --color-border-faint-active: var(--design-color-border-faint-active);
   --color-label: var(--design-color-label);
+  --color-label-hover: var(--design-color-label-hover);
+  --color-label-active: var(--design-color-label-active);
   --color-label-disabled: var(--design-color-label-disabled);
   --color-icon: var(--design-color-icon);
   --color-icon-hover: var(--design-color-icon-hover);
@@ -1524,7 +1528,7 @@ html.pcp-messaging-surface-transition::view-transition-group(
   overflow: clip;
   border-radius: var(--design-rounded-sm);
   background: var(--color-background);
-  box-shadow: var(--shadow-raised-faint-upward);
+  box-shadow: var(--shadow-raised-faint);
 }
 
 html.pcp-messaging-surface-transition::view-transition-image-pair(

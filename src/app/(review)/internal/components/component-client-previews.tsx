@@ -2318,6 +2318,25 @@ export function VcaFabReviewPreview() {
   );
 }
 
+export function VcaFabPresenceBadgeExplorationPreview() {
+  return (
+    <div className="flex flex-wrap items-start gap-xl">
+      <div className="space-y-xs">
+        <p className="text-body-xs text-text-meta">Visitor FAB</p>
+        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+          <VcaFab
+            accentColor="#2AA986"
+            borderColor="#2AA986"
+            borderHoverColor="#2AA986"
+            onClick={() => {}}
+            position="static"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function VcaFabStatesPreview() {
   return (
     <div className="flex flex-wrap items-start gap-xl">
@@ -2357,6 +2376,18 @@ export function VcaFabSwappableMarkPreview() {
         <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
           <VcaFab
             accentColor="#2AA986"
+            label="Open assistant"
+            onClick={() => {}}
+            position="static"
+            variant="admin"
+          />
+        </div>
+      </div>
+      <div className="space-y-xs">
+        <p className="text-body-xs text-text-meta">Gold admin mark</p>
+        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+          <VcaFab
+            adminTone="gold"
             label="Open assistant"
             onClick={() => {}}
             position="static"

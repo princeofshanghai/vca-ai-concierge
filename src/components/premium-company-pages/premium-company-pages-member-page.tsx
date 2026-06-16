@@ -25,6 +25,7 @@ import {
   ChatTray,
   ChatThread,
   Prompt,
+  useChatLatestMessageAnchor,
   type ChatHeaderIdentity,
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
@@ -40,6 +41,10 @@ import { OverlayButtonIcon } from "@/components/primitives/overlay-button-icon";
 import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
+import {
+  SduiReactionIcon,
+  type SduiReactionIconType,
+} from "@/components/primitives/reaction-icon";
 import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
@@ -48,22 +53,24 @@ import {
   PCP_MEMBER_ASSET_ROOT,
   pcpAdminPersona,
   pcpCompanyProfile,
-  pcpCompetitorNames,
   pcpProofSnippets,
   pcpVcaScenario,
   pcpVisitorPersona,
 } from "./persona";
+import { FabPromptStack } from "./fab-prompt-stack";
 import { GlobalInboxTray } from "./global-inbox-tray";
 import {
   Draft as ResponseDraft,
   Entity as ResponseEntity,
   PersonCard as ResponsePersonCard,
   ResponseRail,
+  StreamingText as ResponseStreamingText,
 } from "./response-blocks";
 import { ScriptedResponseTurn } from "./scripted-response-turn";
 import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_MEMBER_ASSET_ROOT;
+const VELORA_VISITOR_ASSISTANT_COLOR = "#2AA986";
 
 const pageTabs = [
   "Home",
@@ -89,48 +96,160 @@ const sideJobs = [
   "Product Designer, Admin Experience",
 ];
 
-const affiliatedPages = [...pcpCompetitorNames];
+const promotedJobs = [
+  "Senior Customer Success Manager, Enterprise",
+  "Product Marketing Lead, Benefits Platform",
+  "Solutions Consultant, Carrier Partnerships",
+];
+
+const affiliatedPages = [
+  "Velora Invoicing",
+  "Velora for Small Business",
+  "Velora for Influencers",
+] as const;
 
 const overviewHighlights = [
   {
-    title: "Verified benefits administration platform",
+    title: "Top 10 HR platforms to watch",
     date: "January 2025",
-    image: pcpCompanyProfile.logoSrc,
+    image: "top-10-hr-platforms.png",
   },
   {
-    title: "Built for enterprise HR teams managing carrier complexity",
+    title: "Winner - Most Innovative HR Startups",
     date: "June 2024",
-    image: pcpCompanyProfile.logoSrc,
+    image: "innovative-startups.png",
   },
 ];
 
-const posts = [
+type VisitorPostData = Readonly<{
+  body: string;
+  comments: string;
+  id: string;
+  image: string;
+  imageAlt: string;
+  linkMeta?: string;
+  linkTitle?: string;
+  reactions: string;
+  reactionTypes: ReadonlyArray<SduiReactionIconType>;
+  reposts?: string;
+  title: string;
+}>;
+
+type VisitorProductData = Readonly<{
+  body: string;
+  id: string;
+  image?: string;
+  imageAlt?: string;
+  title: string;
+  type: string;
+}>;
+
+type VcaPostDetail = Readonly<{
+  body: ReadonlyArray<string>;
+  commentLabel: string;
+  dateLabel: string;
+  engagement: string;
+  image?: string;
+  imageAlt: string;
+  title: string;
+}>;
+
+const posts: ReadonlyArray<VisitorPostData> = [
   {
-    title: pcpProofSnippets.postTitle,
     body: "A 12,000-employee retailer simplified carrier coordination before open enrollment by keeping eligibility cleanup, carrier files, and employee communications in one workflow.",
-    image: "post-image-1.png",
-    stats: `${pcpProofSnippets.postEngagement} reactions`,
+    comments: `${pcpProofSnippets.postCommentCount} comments`,
+    id: "carrier-coordination",
+    image: "post-customer-conversation.jpg",
+    imageAlt: "Two professionals discussing work on a laptop",
+    reactions: pcpProofSnippets.postEngagement,
+    reactionTypes: ["like", "empathy", "interest"],
+    reposts: "76 reposts",
+    title: pcpProofSnippets.postTitle,
   },
   {
-    title: "Three signs your benefits workflow has outgrown spreadsheets.",
     body: "If every carrier, plan, and employee population has a different tracker, your team needs a system that keeps decisions, files, and communications in one place.",
+    comments: "1 comment",
+    id: "workflow-signs",
     image: "post-image-2.png",
-    stats: "42 comments",
+    imageAlt: "Benefits administrators reviewing open enrollment tasks",
+    linkMeta: pcpCompanyProfile.name,
+    linkTitle: "Three signs your benefits workflow has outgrown spreadsheets",
+    reactions: "37",
+    reactionTypes: ["like"],
+    title: "Three signs your benefits workflow has outgrown spreadsheets.",
+  },
+  {
+    body: "Open enrollment readiness starts before plan changes are announced. Here is how benefits teams can keep eligibility, carrier files, and employee communications aligned.",
+    comments: "18 comments",
+    id: "readiness-checklist",
+    image: "post-lightbulb-idea.png",
+    imageAlt: "Hand holding a lightbulb against a colorful background",
+    reactions: "216",
+    reactionTypes: ["like", "praise", "interest"],
+    reposts: "9 reposts",
+    title: "Open enrollment readiness checklist for enterprise HR teams.",
   },
 ];
 
-const products = [
+const vcaCaseStudyPostDetail: VcaPostDetail = {
+  body: pcpProofSnippets.postBody,
+  commentLabel: pcpProofSnippets.postCommentLabel,
+  dateLabel: pcpProofSnippets.postDateLabel,
+  engagement: pcpProofSnippets.postEngagement,
+  image: pcpProofSnippets.postImage,
+  imageAlt: pcpProofSnippets.postImageAlt,
+  title: pcpProofSnippets.postTitle,
+};
+
+const vcaReadinessPostDetail: VcaPostDetail = {
+  body: [
+    "Open enrollment readiness starts before plan changes are announced. Velora helps teams keep benefits tasks, employee communications, carrier files, and launch deadlines aligned before employees begin making plan decisions.",
+    "Teams can use the same workflow to see what is ready, what needs review, and where employees may need clearer next steps.",
+  ],
+  commentLabel: "18 comments",
+  dateLabel: "June 10, 2026",
+  engagement: "216",
+  imageAlt: "Placeholder preview for an open enrollment readiness post",
+  title: "Open enrollment readiness checklist for enterprise HR teams",
+};
+
+const visitorProducts: ReadonlyArray<VisitorProductData> = [
+  {
+    body: "Give employees one place to compare plans, enroll in benefits, update dependents, and see what needs attention before deadlines.",
+    id: "velora-dashboard",
+    image: "velora-dashboard-product.png",
+    imageAlt: "Velora Dashboard product preview",
+    title: "Velora Dashboard",
+    type: "Employee benefits portal",
+  },
+  {
+    body: "Help company admins monitor enrollment progress, carrier readiness, employee questions, and benefits operations trends in one view.",
+    id: "velora-analytics",
+    image: "service-dashboard-preview.png",
+    imageAlt: "Velora Analytics product preview",
+    title: "Velora Analytics",
+    type: "Admin analytics workspace",
+  },
+  {
+    body: "Keep employees informed with timely reminders, clear next steps, and answers to common benefits questions during enrollment windows.",
+    id: "velora-guidance",
+    title: "Velora Guidance",
+    type: "Employee communications",
+  },
+] as const;
+
+const services = [
   {
     title: "Open enrollment command center",
     type: "Benefits workflow",
     body: "Coordinate plan changes, employee communications, carrier readiness, and enrollment progress without recreating the same tracker every week.",
-    image: "product-image-1.png",
+    image: "service-whiteboard-session.png",
   },
   {
     title: "Carrier connection management",
     type: "Integrations workflow",
     body: "See which carrier files are validated, which exceptions need review, and which plan updates are ready before enrollment opens.",
-    image: "product-image-2.png",
+    image: "service-dashboard-preview.png",
   },
   {
     title: "Eligibility change tracking",
@@ -151,7 +270,7 @@ const serviceKeywords = [
 const leaders = [
   {
     name: pcpAdminPersona.name,
-    role: pcpAdminPersona.title,
+    role: "Marketing Manager",
     followers: "8,412 followers",
     image: pcpAdminPersona.avatarSrc,
   },
@@ -175,26 +294,47 @@ const leaders = [
   },
 ];
 
-const leaderPosts = [
+type LeaderPostData = Readonly<{
+  author: string;
+  avatar: string;
+  body: string;
+  commentCount: string;
+  image: string | null;
+  linkMeta?: string;
+  linkTitle?: string;
+  reactionCount: string;
+  reactionTypes: ReadonlyArray<SduiReactionIconType>;
+}>;
+
+const leaderPosts: ReadonlyArray<LeaderPostData> = [
   {
     author: pcpAdminPersona.name,
     avatar: pcpAdminPersona.avatarSrc,
-    body: "Benefits operations usually break down in one invisible place: enrollment starts, but eligibility data, carrier files, and employee communications do not match.",
+    body: "Growing teams usually hit the same challenge: work moves faster than visibility. The best systems make it easy to see what needs attention before small issues become big ones.",
+    commentCount: "36",
     image: null,
+    reactionCount: "1,284",
+    reactionTypes: ["like", "empathy", "interest"],
   },
   {
     author: "Avery Chen",
     avatar: `${PCP_ASSET_ROOT}/avatar-2.png`,
-    body: "Good benefits integrations are not about adding process. They are about making file readiness, exceptions, and carrier decisions clear before enrollment gets messy.",
+    body: "Good integrations should make work feel simpler, not heavier. The goal is fewer handoffs, clearer ownership, and less time spent chasing updates.",
+    commentCount: "18",
     image: "product-image-2.png",
+    reactionCount: "864",
+    reactionTypes: ["like", "praise", "interest"],
   },
   {
     author: "Marcus Lee",
     avatar: `${PCP_ASSET_ROOT}/avatar-3.png`,
-    body: "The best HR teams can answer three questions fast: which plans changed, which carrier files are ready, and which employee populations need attention.",
+    body: "The best teams do not just track activity. They look for patterns: what is getting easier, where people get stuck, and what to improve next.",
+    commentCount: "24",
     image: "product-image-1.png",
-    linkTitle: "How benefits teams reduce open enrollment surprises",
+    linkTitle: "A simple way to measure what's working",
     linkMeta: "Velora on LinkedIn - 7min...",
+    reactionCount: "942",
+    reactionTypes: ["like", "empathy", "praise"],
   },
 ];
 
@@ -240,6 +380,8 @@ type ViewTransitionDocument = Document & {
 type VcaConversationStage =
   | "opening"
   | "pageExplorerAnswered"
+  | "productProof"
+  | "productPostProof"
   | "postProof"
   | "caseStudyReturned"
   | "jobProof"
@@ -249,6 +391,8 @@ type VcaConversationStage =
   | "liveSupportConnected";
 type VcaAnimatedTurnId =
   | "member-vca-page-explorer-answer"
+  | "member-vca-product-proof"
+  | "member-vca-product-post-proof"
   | "member-vca-post-proof"
   | "member-vca-job-proof"
   | "member-vca-case-study-return"
@@ -276,6 +420,14 @@ function getActiveVcaAnimatedTurnId({
 
   if (conversationStage === "pageExplorerAnswered") {
     return "member-vca-page-explorer-answer";
+  }
+
+  if (conversationStage === "productProof") {
+    return "member-vca-product-proof";
+  }
+
+  if (conversationStage === "productPostProof") {
+    return "member-vca-product-post-proof";
   }
 
   if (conversationStage === "postProof") {
@@ -306,6 +458,15 @@ const vcaJobSeekerPrompts = [
   "Is this role remote?",
 ];
 const VCA_POST_RESPONSE = pcpVcaScenario.pageExplorerResponses.posts;
+const VCA_PRODUCT_RESPONSE =
+  "Yes. Velora Dashboard gives employees one place to manage benefits tasks on their own.\n\nThey can compare plans, enroll, update dependents, and track deadline-related next steps without waiting for an HR admin to point them to the right place.\n\nThis product looks like the best match for what you're asking about.";
+const VCA_PRODUCT_RESPONSE_HIGHLIGHTS = [
+  "Velora Dashboard",
+  "compare plans, enroll, update dependents",
+  "deadline-related next steps",
+] as const;
+const VCA_PRODUCT_POST_RESPONSE =
+  "A good place to start is open enrollment readiness.\n\nVelora's Page has a short post about keeping benefits tasks, employee communications, and carrier coordination in one workflow before enrollment begins.";
 const VCA_JOB_SEEKER_RESPONSE =
   "Yes - your HR operations background sounds relevant, especially if you've helped employees, benefits partners, or internal teams through setup, troubleshooting, and process changes. These roles connect customer conversations, benefits workflow setup, and cross-functional product feedback so HR teams get clear answers quickly.";
 const VCA_JOB_PROOF_INTRO =
@@ -353,6 +514,10 @@ const VCA_CASE_STUDY_RETURN_PROMPT = pcpVcaScenario.caseStudyReturnPrompt;
 const VCA_DRAFT_INTRO_PROMPT = "Draft message";
 const VCA_HANDOFF_OFFER = pcpVcaScenario.handoffOffer;
 const VCA_HANDOFF_MESSAGE = pcpVcaScenario.handoffMessage;
+const VCA_PRODUCT_HANDOFF_OFFER =
+  "I can't confirm carrier setup details from Velora's Page alone.\n\nThat usually depends on your current carriers, eligibility file process, and implementation timeline.\n\nIf you want, I can draft a short message to Velora so their team can answer with the right context.";
+const VCA_PRODUCT_HANDOFF_MESSAGE =
+  "Hi Rose - I'm exploring whether Velora Dashboard could help employees enroll in benefits on their own. I'm also curious whether it can work with our current carrier file and eligibility setup. Would love to connect with someone who can share more detail.";
 const LIVE_SUPPORT_CONNECT_DELAY_MS = 900;
 const PCP_LIVE_SUPPORT_AGENT = {
   name: "Maya R.",
@@ -363,6 +528,54 @@ const PCP_LIVE_SUPPORT_AGENT = {
 
 function normalizeVcaPromptText(prompt: string) {
   return prompt.trim().toLowerCase();
+}
+
+function isVcaProductQuestion(prompt: string | null | undefined) {
+  if (!prompt) {
+    return false;
+  }
+
+  const normalizedPrompt = normalizeVcaPromptText(prompt);
+
+  return (
+    normalizedPrompt.includes("enroll") ||
+    normalizedPrompt.includes("employee") ||
+    normalizedPrompt.includes("benefit") ||
+    normalizedPrompt.includes("self-service") ||
+    normalizedPrompt.includes("self service") ||
+    normalizedPrompt.includes("dashboard") ||
+    normalizedPrompt.includes("product")
+  );
+}
+
+function isVcaOpenEnrollmentReadinessQuestion(
+  prompt: string | null | undefined,
+) {
+  if (!prompt) {
+    return false;
+  }
+
+  const normalizedPrompt = normalizeVcaPromptText(prompt);
+
+  return (
+    normalizedPrompt.includes("open enrollment") ||
+    normalizedPrompt.includes("enrollment readiness") ||
+    normalizedPrompt.includes("get ready") ||
+    normalizedPrompt.includes("prepare") ||
+    normalizedPrompt.includes("readiness")
+  );
+}
+
+function getVcaHandoffOffer(visitorQuestion: string | null) {
+  return isVcaProductQuestion(visitorQuestion)
+    ? VCA_PRODUCT_HANDOFF_OFFER
+    : VCA_HANDOFF_OFFER;
+}
+
+function getVcaHandoffMessage(visitorQuestion: string | null) {
+  return isVcaProductQuestion(visitorQuestion)
+    ? VCA_PRODUCT_HANDOFF_MESSAGE
+    : VCA_HANDOFF_MESSAGE;
 }
 
 function getVcaVisitorPromptId(prompt: string): VcaVisitorPromptId | null {
@@ -441,25 +654,28 @@ const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
 function VeloraVcaLogoMark({
   showAiBadge = false,
   size = "small",
+  surface = "tile",
 }: Readonly<{
   showAiBadge?: boolean;
   size?: "small" | "medium" | "large";
+  surface?: "tile" | "bare";
 }>) {
   const markSizeClass =
     size === "large" ? "size-10" : size === "medium" ? "size-8" : "size-7";
   const badgeSizeClass = size === "large" ? "size-5" : "size-4";
+  const isBareSurface = surface === "bare";
 
   return (
-    <span
-      className={cx(
-        "relative inline-flex shrink-0",
-        markSizeClass,
-      )}
-    >
+    <span className={cx("relative inline-flex shrink-0", markSizeClass)}>
       <span
         className={cx(
-          "inline-flex size-full items-center justify-center overflow-hidden border border-border-faint bg-[#ACF5B3] p-[3px]",
-          VELORA_LOGO_AVATAR_RADIUS_CLASS,
+          "inline-flex size-full items-center justify-center overflow-hidden",
+          isBareSurface
+            ? "p-0"
+            : cx(
+                "border border-border-faint bg-[#ACF5B3] p-[3px]",
+                VELORA_LOGO_AVATAR_RADIUS_CLASS,
+              ),
         )}
       >
         <Image
@@ -473,9 +689,10 @@ function VeloraVcaLogoMark({
       {showAiBadge ? (
         <span
           className={cx(
-            "absolute -bottom-xxs -right-xxs inline-flex items-center justify-center rounded-round border-2 border-background bg-background text-ai-icon",
+            "absolute -bottom-xxs -right-xxs inline-flex items-center justify-center rounded-round border-2 border-background bg-background",
             badgeSizeClass,
           )}
+          style={{ color: VELORA_VISITOR_ASSISTANT_COLOR }}
         >
           <Icon className="[&&]:size-3" name="signal-ai" size="small" />
         </span>
@@ -517,15 +734,135 @@ function VcaUserMessage({
   );
 }
 
+function InlineVcaStreamingText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  return isStreaming ? <ResponseStreamingText text={text} /> : <>{text}</>;
+}
+
+function EmphasizedVcaText({
+  highlights,
+  isStreaming,
+  text,
+}: Readonly<{
+  highlights: ReadonlyArray<string>;
+  isStreaming: boolean;
+  text: string;
+}>) {
+  const pieces: Array<Readonly<{ text: string; highlight: boolean }>> = [];
+  let remainingText = text;
+
+  while (remainingText.length > 0) {
+    const nextMatch = highlights.reduce<{
+      phrase: string;
+      index: number;
+    } | null>((currentMatch, phrase) => {
+      const index = remainingText.indexOf(phrase);
+
+      if (index === -1) {
+        return currentMatch;
+      }
+
+      if (
+        currentMatch === null ||
+        index < currentMatch.index ||
+        (index === currentMatch.index &&
+          phrase.length > currentMatch.phrase.length)
+      ) {
+        return { phrase, index };
+      }
+
+      return currentMatch;
+    }, null);
+
+    if (!nextMatch) {
+      pieces.push({ text: remainingText, highlight: false });
+      break;
+    }
+
+    if (nextMatch.index > 0) {
+      pieces.push({
+        text: remainingText.slice(0, nextMatch.index),
+        highlight: false,
+      });
+    }
+
+    pieces.push({ text: nextMatch.phrase, highlight: true });
+    remainingText = remainingText.slice(
+      nextMatch.index + nextMatch.phrase.length,
+    );
+  }
+
+  return (
+    <>
+      {pieces.map((piece, index) =>
+        piece.highlight ? (
+          <strong className="font-semibold text-text" key={index}>
+            <InlineVcaStreamingText
+              isStreaming={isStreaming}
+              text={piece.text}
+            />
+          </strong>
+        ) : (
+          <InlineVcaStreamingText
+            isStreaming={isStreaming}
+            key={index}
+            text={piece.text}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
+function FormattedVcaAssistantText({
+  highlights = [],
+  streamStatus,
+  streamText,
+  text,
+}: Readonly<{
+  highlights?: ReadonlyArray<string>;
+  streamStatus: ChatMessageStreamStatus;
+  streamText: string;
+  text: string;
+}>) {
+  const isStreaming = streamStatus === "streaming";
+  const visibleText = isStreaming ? streamText : text;
+  const blocks = visibleText
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return (
+    <>
+      {blocks.map((block, index) => (
+        <p className={cx(index > 0 && "mt-md")} key={index}>
+          <EmphasizedVcaText
+            highlights={highlights}
+            isStreaming={isStreaming}
+            text={block}
+          />
+        </p>
+      ))}
+    </>
+  );
+}
+
 type VcaScriptedAssistantTurnProps = Omit<
   ComponentProps<typeof ScriptedResponseTurn>,
   "renderText"
 > & {
+  highlights?: ReadonlyArray<string>;
   timestamp: string;
 };
 
 function VcaScriptedAssistantTurn({
   attachments = [],
+  highlights,
   id,
   timestamp,
   ...props
@@ -550,11 +887,13 @@ function VcaScriptedAssistantTurn({
       attachments={attachmentsWithTimestamp}
       id={id}
       renderText={({ streamStatus, streamText, text }) => (
-        <VcaAssistantMessage
-          streamStatus={streamStatus}
-          streamText={streamText}
-        >
-          {text}
+        <VcaAssistantMessage>
+          <FormattedVcaAssistantText
+            highlights={highlights}
+            streamStatus={streamStatus}
+            streamText={streamText}
+            text={text}
+          />
         </VcaAssistantMessage>
       )}
     />
@@ -645,6 +984,94 @@ function VeloraLinkedInPostProofCard({
   );
 }
 
+function PostMediaPlaceholder({
+  className,
+  label,
+}: Readonly<{ className?: string; label: string }>) {
+  return (
+    <div
+      aria-label={label}
+      className={cx(
+        "flex items-center justify-center bg-background-neutral-soft text-icon",
+        className,
+      )}
+      role="img"
+    >
+      <Icon name="image" size="medium" />
+    </div>
+  );
+}
+
+function VeloraReadinessPostProofCard({
+  onViewPost,
+}: Readonly<{ onViewPost: () => void }>) {
+  return (
+    <button
+      aria-label={`View ${vcaReadinessPostDetail.title}`}
+      className="chat-message-enter w-full max-w-[24rem] overflow-hidden rounded-sm border border-ai-border bg-background text-left text-text shadow-raised-faint outline-none transition-colors duration-150 ease-out hover:border-action focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+      onClick={onViewPost}
+      type="button"
+    >
+      <div className="px-xl py-lg">
+        <p className="line-clamp-2 text-body-sm-open text-text">
+          Open enrollment readiness starts before plan changes are announced.
+          Here are a few ways benefits teams can keep the launch on track.
+        </p>
+      </div>
+      <PostMediaPlaceholder
+        className="aspect-[16/7] w-full"
+        label={vcaReadinessPostDetail.imageAlt}
+      />
+      <div className="bg-background-neutral-soft px-xl py-lg">
+        <h3 className="line-clamp-2 text-control-sm text-text">
+          {vcaReadinessPostDetail.title}
+        </h3>
+        <p className="mt-xxs text-body-sm text-text-meta">
+          {pcpCompanyProfile.name}
+        </p>
+      </div>
+    </button>
+  );
+}
+
+function VeloraProductResponseCard({
+  onViewProduct,
+  product,
+}: Readonly<{
+  onViewProduct: (product: VisitorProductData) => void;
+  product: VisitorProductData;
+}>) {
+  return (
+    <article className="chat-message-enter w-full max-w-[24rem] rounded-sm border border-ai-border bg-background p-xl text-text shadow-raised-faint">
+      <div className="space-y-xl">
+        {product.image ? (
+          <Image
+            alt={product.imageAlt ?? ""}
+            className="aspect-[16/7] w-full rounded-sm object-cover"
+            height={168}
+            src={assetSrc(product.image)}
+            width={384}
+          />
+        ) : null}
+        <div className="space-y-xs">
+          <h3 className="text-heading-md text-text">{product.title}</h3>
+          <p className="text-body-sm text-text-meta">{product.type}</p>
+        </div>
+        <p className="text-body-sm-open text-text">{product.body}</p>
+        <div className="border-t border-border-faint pt-lg">
+          <Button
+            onClick={() => onViewProduct(product)}
+            size="small"
+            variant="secondary"
+          >
+            View product
+          </Button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function VeloraPeopleSummaryCard() {
   return (
     <ResponseRail
@@ -672,7 +1099,8 @@ function VeloraPeopleSummaryCard() {
 
 function VeloraCaseStudySidePanel({
   onBack,
-}: Readonly<{ onBack: () => void }>) {
+  post,
+}: Readonly<{ onBack: () => void; post: VcaPostDetail }>) {
   return (
     <ChatSidePanel
       className="bg-background"
@@ -694,16 +1122,23 @@ function VeloraCaseStudySidePanel({
       onBack={onBack}
     >
       <article className="text-text">
-        <Image
-          alt={pcpProofSnippets.postImageAlt}
-          className="aspect-[16/7] w-full object-cover"
-          height={332}
-          src={assetSrc(pcpProofSnippets.postImage)}
-          width={760}
-        />
+        {post.image ? (
+          <Image
+            alt={post.imageAlt}
+            className="aspect-[16/7] w-full object-cover"
+            height={332}
+            src={assetSrc(post.image)}
+            width={760}
+          />
+        ) : (
+          <PostMediaPlaceholder
+            className="aspect-[16/7] w-full"
+            label={post.imageAlt}
+          />
+        )}
 
         <h1 className="mt-xl text-heading-lg text-text">
-          {pcpProofSnippets.postTitle}
+          {post.title}
         </h1>
 
         <div className="mt-lg flex items-start gap-md">
@@ -724,11 +1159,11 @@ function VeloraCaseStudySidePanel({
         </div>
 
         <p className="mt-xl text-body-sm text-text-meta">
-          {pcpProofSnippets.postDateLabel}
+          {post.dateLabel}
         </p>
 
         <div className="mt-xl space-y-md text-body-sm-open text-text">
-          {pcpProofSnippets.postBody.map((paragraph) => (
+          {post.body.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
         </div>
@@ -736,9 +1171,9 @@ function VeloraCaseStudySidePanel({
         <div className="mt-xl flex items-center justify-between border-t border-border-faint py-md text-body-sm text-text-meta">
           <span className="inline-flex min-w-0 items-center gap-sm">
             <ReactionPile />
-            <span>{pcpProofSnippets.postEngagement}</span>
+            <span>{post.engagement}</span>
           </span>
-          <span>{pcpProofSnippets.postCommentLabel}</span>
+          <span>{post.commentLabel}</span>
         </div>
       </article>
     </ChatSidePanel>
@@ -871,13 +1306,185 @@ function VeloraJobSidePanel({
   );
 }
 
+function ProductMediaPlaceholder({
+  className,
+  label,
+}: Readonly<{ className?: string; label: string }>) {
+  return (
+    <div
+      aria-label={label}
+      className={cx(
+        "flex items-center justify-center rounded-sm border border-border-faint bg-background-neutral-soft text-icon",
+        className,
+      )}
+      role="img"
+    >
+      <Icon name="image" size="medium" />
+    </div>
+  );
+}
+
+function ProductProofSummary() {
+  return (
+    <div className="mt-md flex flex-wrap items-center gap-x-xl gap-y-sm text-body-sm text-text-meta">
+      <div className="flex min-w-0 items-center gap-sm">
+        <span className="flex shrink-0 -space-x-[8px]">
+          {leaders.slice(0, 3).map((leader) => (
+            <Entity
+              className="border-2 border-background"
+              key={leader.name}
+              label={leader.name}
+              size={32}
+              src={assetSrc(leader.image)}
+            />
+          ))}
+        </span>
+        <span className="font-bold underline-offset-2 hover:underline">
+          Ask {pcpAdminPersona.firstName} and 3 others about this product
+        </span>
+      </div>
+
+      <div className="flex min-w-0 items-center gap-sm">
+        <Entity label="Flexis" shape="square" size={24} />
+        <span className="font-bold underline-offset-2 hover:underline">
+          Used by Flexis and 5 featured customers
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function VeloraProductSidePanel({
+  onBack,
+  product,
+}: Readonly<{
+  onBack: () => void;
+  product: VisitorProductData;
+}>) {
+  const productFeatures = [
+    "Compare plans",
+    "Enroll in benefits",
+    "Update dependents",
+    "Track deadlines",
+  ] as const;
+  const productDescription =
+    "Velora Dashboard gives employees one place to compare benefits options, enroll in coverage, update dependents, and keep track of what needs attention before enrollment deadlines. It is designed to make the employee experience feel guided and self-service, while helping HR teams reduce repetitive questions about where to go next.";
+
+  return (
+    <ChatSidePanel
+      className="bg-background [&_.chat-side-panel-x]:!bg-background"
+      contentClassName="mx-auto w-full max-w-[760px] pb-xl"
+      onBack={onBack}
+    >
+      <article className="text-text">
+        {product.image ? (
+          <Image
+            alt={product.imageAlt ?? ""}
+            className="aspect-[16/7] w-full rounded-sm object-cover"
+            height={332}
+            src={assetSrc(product.image)}
+            width={760}
+          />
+        ) : null}
+
+        <div className="-mt-[80px] ml-xxl">
+          <Entity
+            className={cx(
+              VELORA_LOGO_TILE_BACKGROUND_CLASS,
+              "border-[8px] border-background",
+            )}
+            label={pcpCompanyProfile.name}
+            shape="square"
+            size={128}
+            src={pcpCompanyProfile.logoSrc}
+            style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+          />
+        </div>
+
+        <div className="mt-xl min-w-0">
+          <h1 className="text-display-md text-text">{product.title}</h1>
+          <p className="mt-xs text-body-md text-text-meta">
+            <span className="font-bold">{product.type}</span> by{" "}
+            <span className="font-bold">{pcpCompanyProfile.name}</span>
+          </p>
+          <ProductProofSummary />
+        </div>
+
+        <section className="mt-xxl border-t border-border-faint pt-xxl">
+          <h2 className="text-heading-lg text-text">
+            What is {product.title}?
+          </h2>
+          <p className="mt-md text-body-sm-open text-text">
+            {productDescription}{" "}
+            <button className="font-semibold text-text" type="button">
+              ...see more
+            </button>
+          </p>
+        </section>
+
+        <section className="mt-xxl border-t border-border-faint pt-xxl">
+          <h2 className="text-heading-lg text-text">
+            Key things employees can do
+          </h2>
+          <div className="mt-lg grid gap-md sm:grid-cols-2">
+            {productFeatures.map((feature) => (
+              <div
+                className="flex min-h-[96px] items-center rounded-sm border border-border-faint bg-background px-xl py-lg"
+                key={feature}
+              >
+                <p className="text-control-sm text-text">{feature}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-xxl border-t border-border-faint pt-xxl">
+          <h2 className="text-heading-lg text-text">Product media</h2>
+          <ProductMediaPlaceholder
+            className="mt-lg aspect-video w-full"
+            label={`${product.title} media preview`}
+          />
+          <div className="mt-md grid grid-cols-3 gap-sm">
+            {[1, 2, 3].map((index) => (
+              <ProductMediaPlaceholder
+                className="aspect-video"
+                key={index}
+                label={`${product.title} media thumbnail ${index}`}
+              />
+            ))}
+          </div>
+        </section>
+
+        <div className="mt-xxl flex justify-end gap-sm border-t border-border-faint pt-lg">
+          <Button
+            className="px-pill-padding-inline"
+            size="medium"
+            trailingIcon={<Icon name="link-external" size="small" />}
+            variant="secondary"
+          >
+            Learn more
+          </Button>
+          <Button
+            className="px-pill-padding-inline"
+            size="medium"
+            variant="secondary"
+          >
+            View product page
+          </Button>
+        </div>
+      </article>
+    </ChatSidePanel>
+  );
+}
+
 function VcaHandoffCard({
+  message = VCA_HANDOFF_MESSAGE,
   onOpenMessage,
-}: Readonly<{ onOpenMessage: () => void }>) {
+}: Readonly<{ message?: string; onOpenMessage: () => void }>) {
   return (
     <ResponseDraft
       className="chat-message-enter max-w-[24rem]"
-      message={VCA_HANDOFF_MESSAGE}
+      message={message}
       onActionSelect={onOpenMessage}
       recipient={`To ${pcpCompanyProfile.adminName} at ${pcpCompanyProfile.name}`}
     />
@@ -958,16 +1565,12 @@ export function PremiumCompanyPagesVcaHandoffCardPreview() {
 function VeloraAiHeader({
   actionSize,
   onClose,
-  onMinimizeToTray,
   onVariantToggle,
-  showResponseTime,
   variant = "collapsed",
 }: Readonly<{
   actionSize: "small" | "medium";
   onClose: () => void;
-  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
-  showResponseTime: boolean;
   variant?: ChatPanelVariant;
 }>) {
   const variantAction =
@@ -987,27 +1590,14 @@ function VeloraAiHeader({
       className="flex min-h-[var(--design-layout-panel-header-height)] shrink-0 items-center justify-between border-b border-border-faint bg-background pl-[calc(var(--design-spacing-xxl)+env(safe-area-inset-left))] pr-[calc(var(--design-spacing-lg)+env(safe-area-inset-right))] transition-[background-color,border-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pl-xxl md:pr-lg"
     >
       <div className="flex min-w-0 items-center gap-sm py-sm">
-        <VeloraVcaLogoMark showAiBadge size="medium" />
+        <VeloraVcaLogoMark size="medium" />
         <div className="min-w-0">
           <h2 className="min-w-0 truncate text-heading-md text-text">
             Velora
           </h2>
-          {showResponseTime ? (
-            <p className="mt-xxs truncate text-body-xs text-text-meta">
-              Replies instantly
-            </p>
-          ) : null}
         </div>
       </div>
       <div className="flex items-center gap-0">
-        {onMinimizeToTray ? (
-          <GhostIconButton
-            label="Dock chat to tray"
-            icon="chevron-down"
-            size={actionSize}
-            onClick={onMinimizeToTray}
-          />
-        ) : null}
         {variantAction}
         <GhostIconButton
           label="Close chat"
@@ -1028,19 +1618,24 @@ function PremiumCompanyPagesVcaPanel({
   conversationStage,
   isCaseStudyOpen,
   isJobOpen,
+  isProductOpen,
   liveSupportMessages,
+  selectedProduct,
   selectedJob,
+  selectedPost,
   visitorPromptId,
   visitorQuestion,
+  productPostQuestion,
   followUpQuestion,
   onClose,
   onCloseCaseStudy,
   onCloseJob,
+  onCloseProduct,
   onDraftChange,
   onOpenCaseStudy,
   onOpenJob,
+  onOpenProduct,
   onOpenMessage,
-  onMinimizeToTray,
   onVariantToggle,
   onPromptSelect,
   onSend,
@@ -1052,27 +1647,31 @@ function PremiumCompanyPagesVcaPanel({
   conversationStage: VcaConversationStage;
   isCaseStudyOpen: boolean;
   isJobOpen: boolean;
+  isProductOpen: boolean;
   liveSupportMessages: ReadonlyArray<string>;
+  selectedProduct: VisitorProductData;
   selectedJob: VcaJobOpening;
+  selectedPost: VcaPostDetail;
   visitorPromptId: VcaVisitorPromptId | null;
   visitorQuestion: string | null;
+  productPostQuestion: string | null;
   followUpQuestion: string | null;
   onClose: () => void;
   onCloseCaseStudy: () => void;
   onCloseJob: () => void;
+  onCloseProduct: () => void;
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
-  onOpenCaseStudy: () => void;
+  onOpenCaseStudy: (post?: VcaPostDetail) => void;
   onOpenJob: (job: VcaJobOpening) => void;
+  onOpenProduct: (product: VisitorProductData) => void;
   onOpenMessage: () => void;
-  onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
   onPromptSelect: (prompt: string) => void;
   onSend: () => void;
 }>) {
   const headerActionSize = variant === "expanded" ? "medium" : "small";
-  const showHeaderResponseTime = true;
   const isJobSeekerIntent = memberIntent === "job-seeker";
-  const isDetailPanelOpen = isCaseStudyOpen || isJobOpen;
+  const isDetailPanelOpen = isCaseStudyOpen || isJobOpen || isProductOpen;
   const [firstLiveSupportMessage, ...liveSupportFollowUpMessages] =
     liveSupportMessages;
   const hasLiveSupportMessages = liveSupportMessages.length > 0;
@@ -1087,10 +1686,28 @@ function PremiumCompanyPagesVcaPanel({
   const hasStartedConversation =
     Boolean(visitorQuestion) || hasLiveSupportMessages;
   const hasFollowUp = Boolean(followUpQuestion);
+  const hasProductPostQuestion = Boolean(productPostQuestion);
+  const isProductFlow =
+    !isJobSeekerIntent && isVcaProductQuestion(visitorQuestion);
+  const handoffOffer = getVcaHandoffOffer(visitorQuestion);
+  const handoffMessage = getVcaHandoffMessage(visitorQuestion);
   const shouldShowProof =
+    !isProductFlow &&
     !isJobSeekerIntent &&
     (conversationStage === "postProof" ||
       conversationStage === "caseStudyReturned" ||
+      conversationStage === "handoffOffered" ||
+      conversationStage === "handoffOpened");
+  const shouldShowProductProof =
+    isProductFlow &&
+    (conversationStage === "productProof" ||
+      conversationStage === "productPostProof" ||
+      conversationStage === "handoffOffered" ||
+      conversationStage === "handoffOpened");
+  const shouldShowProductPostProof =
+    isProductFlow &&
+    hasProductPostQuestion &&
+    (conversationStage === "productPostProof" ||
       conversationStage === "handoffOffered" ||
       conversationStage === "handoffOpened");
   const shouldShowJobProof = conversationStage === "jobProof";
@@ -1121,6 +1738,36 @@ function PremiumCompanyPagesVcaPanel({
   const [stopSignal, setStopSignal] = useState(0);
   const isAssistantBusy = busyTurnIds.size > 0;
   const isComposerDisabled = isAssistantBusy || isLiveSupportConnecting;
+  const latestLiveSupportMessage =
+    liveSupportMessages[liveSupportMessages.length - 1];
+  const latestUserMessageAnchorKey = latestLiveSupportMessage
+    ? `live-support:${liveSupportMessages.length}:${latestLiveSupportMessage}`
+    : followUpQuestion
+      ? `follow-up:${followUpQuestion}`
+      : productPostQuestion
+        ? `product-post:${productPostQuestion}`
+        : visitorQuestion
+          ? `visitor:${visitorQuestion}`
+          : null;
+  const latestContentKey = `${conversationStage}:${visitorQuestion ?? ""}:${productPostQuestion ?? ""}:${followUpQuestion ?? ""}:${liveSupportMessages.length}:${busyTurnIds.size}:${isDetailPanelOpen}`;
+  const {
+    hasLatestBelow: hasMainLatestBelow,
+    handleScroll: handleMainLatestScroll,
+    scrollToLatest: scrollMainToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: chatBodyRef,
+    anchorKey: isDetailPanelOpen ? null : latestUserMessageAnchorKey,
+    contentKey: latestContentKey,
+  });
+  const {
+    hasLatestBelow: hasHistoryLatestBelow,
+    handleScroll: handleHistoryLatestScroll,
+    scrollToLatest: scrollHistoryToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: sidePanelHistoryRef,
+    anchorKey: isDetailPanelOpen ? latestUserMessageAnchorKey : null,
+    contentKey: latestContentKey,
+  });
   const activeAnimatedTurnId = getActiveVcaAnimatedTurnId({
     conversationStage,
     hasFollowUp,
@@ -1151,69 +1798,13 @@ function PremiumCompanyPagesVcaPanel({
     setBusyTurnIds(new Set());
   }, []);
   const handleVcaContentChange = useCallback(() => {
-    const scrollToBottom = () => {
-      const scrollContainer = isDetailPanelOpen
-        ? sidePanelHistoryRef.current
-        : chatBodyRef.current;
-
-      if (!scrollContainer) {
-        return;
-      }
-
-      scrollContainer.scrollTop = scrollContainer.scrollHeight;
-    };
-
-    scrollToBottom();
-    window.requestAnimationFrame(scrollToBottom);
-    window.setTimeout(scrollToBottom, 120);
-    window.setTimeout(scrollToBottom, 360);
-    window.setTimeout(scrollToBottom, 700);
-  }, [isDetailPanelOpen]);
-  useEffect(() => {
-    if (!isDetailPanelOpen) {
+    if (isDetailPanelOpen) {
+      handleHistoryLatestScroll();
       return;
     }
 
-    const scrollFrame = window.requestAnimationFrame(() => {
-      const historyPanel = sidePanelHistoryRef.current;
-
-      if (!historyPanel) {
-        return;
-      }
-
-      historyPanel.scrollTop = historyPanel.scrollHeight;
-    });
-
-    return () => {
-      window.cancelAnimationFrame(scrollFrame);
-    };
-  }, [
-    conversationStage,
-    followUpQuestion,
-    isDetailPanelOpen,
-    liveSupportMessages,
-    visitorQuestion,
-  ]);
-
-  useEffect(() => {
-    if (isDetailPanelOpen || conversationStage !== "caseStudyReturned") {
-      return;
-    }
-
-    const scrollFrame = window.requestAnimationFrame(() => {
-      const chatBody = chatBodyRef.current;
-
-      if (!chatBody) {
-        return;
-      }
-
-      chatBody.scrollTop = chatBody.scrollHeight;
-    });
-
-    return () => {
-      window.cancelAnimationFrame(scrollFrame);
-    };
-  }, [conversationStage, isDetailPanelOpen]);
+    handleMainLatestScroll();
+  }, [handleHistoryLatestScroll, handleMainLatestScroll, isDetailPanelOpen]);
 
   const thread = (
     <ChatThread aiDisclaimerHref="#">
@@ -1267,6 +1858,29 @@ function PremiumCompanyPagesVcaPanel({
             onContentChange={handleVcaContentChange}
             stopSignal={stopSignal}
             text={pageExplorerAnswer}
+            timestamp={getNextMessageTimestamp()}
+          />
+        ) : null}
+        {shouldShowProductProof ? (
+          <VcaScriptedAssistantTurn
+            animate={activeAnimatedTurnId === "member-vca-product-proof"}
+            attachments={[
+              {
+                id: "product-proof",
+                children: (
+                  <VeloraProductResponseCard
+                    onViewProduct={onOpenProduct}
+                    product={visitorProducts[0]}
+                  />
+                ),
+              },
+            ]}
+            highlights={VCA_PRODUCT_RESPONSE_HIGHLIGHTS}
+            id="member-vca-product-proof"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={VCA_PRODUCT_RESPONSE}
             timestamp={getNextMessageTimestamp()}
           />
         ) : null}
@@ -1349,6 +1963,36 @@ function PremiumCompanyPagesVcaPanel({
             timestamp={getNextMessageTimestamp()}
           />
         ) : null}
+        {hasProductPostQuestion && !isJobSeekerIntent ? (
+          <VcaStableUserMessage timestamp={getNextMessageTimestamp()}>
+            {productPostQuestion}
+          </VcaStableUserMessage>
+        ) : null}
+        {shouldShowProductPostProof ? (
+          <VcaScriptedAssistantTurn
+            animate={
+              activeAnimatedTurnId === "member-vca-product-post-proof"
+            }
+            attachments={[
+              {
+                id: "product-post-proof",
+                children: (
+                  <VeloraReadinessPostProofCard
+                    onViewPost={() =>
+                      onOpenCaseStudy(vcaReadinessPostDetail)
+                    }
+                  />
+                ),
+              },
+            ]}
+            id="member-vca-product-post-proof"
+            onBusyChange={handleScriptedTurnBusyChange}
+            onContentChange={handleVcaContentChange}
+            stopSignal={stopSignal}
+            text={VCA_PRODUCT_POST_RESPONSE}
+            timestamp={getNextMessageTimestamp()}
+          />
+        ) : null}
         {hasFollowUp && !isJobSeekerIntent ? (
           <VcaStableUserMessage timestamp={getNextMessageTimestamp()}>
             {followUpQuestion}
@@ -1384,18 +2028,32 @@ function PremiumCompanyPagesVcaPanel({
               attachments={[
                 {
                   id: "handoff-card",
-                  children: <VcaHandoffCard onOpenMessage={onOpenMessage} />,
+                  children: isProductFlow ? (
+                    <Prompt
+                      className="w-fit max-w-full self-start"
+                      onPromptSelect={onPromptSelect}
+                      prompt={VCA_DRAFT_INTRO_PROMPT}
+                    />
+                  ) : (
+                    <VcaHandoffCard
+                      message={handoffMessage}
+                      onOpenMessage={onOpenMessage}
+                    />
+                  ),
                 },
               ]}
               id="member-vca-handoff-offer"
               onBusyChange={handleScriptedTurnBusyChange}
               onContentChange={handleVcaContentChange}
               stopSignal={stopSignal}
-              text={VCA_HANDOFF_OFFER}
+              text={handoffOffer}
               timestamp={getNextMessageTimestamp()}
             />
           ) : (
-            <VcaHandoffCard onOpenMessage={onOpenMessage} />
+            <VcaHandoffCard
+              message={handoffMessage}
+              onOpenMessage={onOpenMessage}
+            />
           )
         ) : null}
       </div>
@@ -1419,7 +2077,6 @@ function PremiumCompanyPagesVcaPanel({
           actionSize={headerActionSize}
           identity={liveSupportHeaderIdentity}
           onClose={onClose}
-          onMinimizeToTray={onMinimizeToTray}
           onVariantToggle={onVariantToggle}
           variant={variant}
         />
@@ -1427,9 +2084,7 @@ function PremiumCompanyPagesVcaPanel({
         <VeloraAiHeader
           actionSize={headerActionSize}
           onClose={onClose}
-          onMinimizeToTray={onMinimizeToTray}
           onVariantToggle={onVariantToggle}
-          showResponseTime={showHeaderResponseTime}
           variant={variant}
         />
       )}
@@ -1438,18 +2093,36 @@ function PremiumCompanyPagesVcaPanel({
           chatBodyClassName="pb-[96px]"
           chatBodyRef={sidePanelHistoryRef}
           history={thread}
+          onChatBodyScroll={handleHistoryLatestScroll}
+          onJumpToLatest={scrollHistoryToLatest}
+          showJumpToLatest={hasHistoryLatestBelow}
           sidePanel={
-            isJobOpen ? (
+            isProductOpen ? (
+              <VeloraProductSidePanel
+                onBack={onCloseProduct}
+                product={selectedProduct}
+              />
+            ) : isJobOpen ? (
               <VeloraJobSidePanel job={selectedJob} onBack={onCloseJob} />
             ) : (
-              <VeloraCaseStudySidePanel onBack={onCloseCaseStudy} />
+              <VeloraCaseStudySidePanel
+                onBack={onCloseCaseStudy}
+                post={selectedPost}
+              />
             )
           }
           variant={variant}
         />
       ) : (
         <>
-          <ChatBody ref={chatBodyRef}>{thread}</ChatBody>
+          <ChatBody
+            ref={chatBodyRef}
+            onJumpToLatest={scrollMainToLatest}
+            onScroll={handleMainLatestScroll}
+            showJumpToLatest={hasMainLatestBelow}
+          >
+            {thread}
+          </ChatBody>
           <ChatComposer
             inputProps={{
               "aria-label": `Message ${pcpCompanyProfile.name} AI assistant`,
@@ -1471,18 +2144,6 @@ function PremiumCompanyPagesVcaPanel({
         </>
       )}
     </ChatPanel>
-  );
-}
-
-function HumanMessageDivider({ label }: Readonly<{ label: string }>) {
-  return (
-    <div className="flex items-center gap-lg py-md text-center">
-      <span className="h-px flex-1 bg-border-faint" />
-      <span className="shrink-0 text-body-xs uppercase tracking-[0.16em] text-text-meta">
-        {label}
-      </span>
-      <span className="h-px flex-1 bg-border-faint" />
-    </div>
   );
 }
 
@@ -1611,7 +2272,7 @@ function HumanCompanyMessagePanel({
     <aside
       aria-label={`${pcpCompanyProfile.name} human message thread`}
       className={cx(
-        "pcp-human-messaging-surface fixed bottom-0 z-40 hidden h-[min(calc(100dvh_-_96px),690px)] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint-upward transition-[height,width,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:flex",
+        "pcp-human-messaging-surface fixed bottom-0 z-40 hidden h-[min(calc(100dvh_-_96px),690px)] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint transition-[height,width,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:flex",
         className,
       )}
       style={style}
@@ -1665,58 +2326,17 @@ function HumanCompanyMessagePanel({
           <p className="mt-xxs text-body-xs text-text-meta">Other</p>
         </section>
 
-        <div className="px-lg">
-          <HumanMessageDivider label="May 18" />
-          <div className="space-y-xl pb-xl">
+        {sentMessage ? (
+          <div className="space-y-xl px-lg pb-xl">
             <HumanMessageEntry
               author={pcpVisitorPersona.name}
               avatarSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
-              time="4:02 PM"
+              time="Now"
             >
-              <p>Hi Velora,</p>
-              <p>
-                I found your Premium Company Page and saw your post about Arbor
-                Retail Group. I am interested in whether Velora could be
-                relevant for our HR and benefits operations.
-              </p>
-            </HumanMessageEntry>
-            <HumanMessageEntry
-              author={pcpVisitorPersona.name}
-              avatarSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
-              time="4:37 PM"
-            >
-              <p>Also curious whether this is the right place to ask.</p>
-            </HumanMessageEntry>
-            <HumanMessageEntry
-              author={pcpCompanyProfile.name}
-              avatarSrc={pcpCompanyProfile.logoSrc}
-              time="4:38 PM"
-            >
-              <p>Thanks for reaching out. A Velora admin can help here.</p>
+              <p>{sentMessage}</p>
             </HumanMessageEntry>
           </div>
-
-          <button
-            className="sticky bottom-lg ml-auto flex size-8 items-center justify-center rounded-round bg-action text-white shadow-raised-faint outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-            type="button"
-            aria-label="Jump to latest message"
-          >
-            <Icon name="arrow-down" size="small" />
-          </button>
-
-          <HumanMessageDivider label="Monday" />
-          {sentMessage ? (
-            <div className="space-y-xl pb-xl pt-lg">
-              <HumanMessageEntry
-                author={pcpVisitorPersona.name}
-                avatarSrc={assetSrc(pcpVisitorPersona.memberAvatar)}
-                time="Now"
-              >
-                <p>{sentMessage}</p>
-              </HumanMessageEntry>
-            </div>
-          ) : null}
-        </div>
+        ) : null}
       </div>
 
       <HumanMessageComposer
@@ -1781,7 +2401,10 @@ function PremiumMark({
   );
 }
 
-function CompanyLogo({ className }: Readonly<{ className?: string }>) {
+function CompanyLogo({
+  className,
+  innerStrokeClassName,
+}: Readonly<{ className?: string; innerStrokeClassName?: string }>) {
   return (
     <span
       className={cx(
@@ -1797,7 +2420,27 @@ function CompanyLogo({ className }: Readonly<{ className?: string }>) {
         src={pcpCompanyProfile.logoSrc}
         width={200}
       />
+      {innerStrokeClassName ? (
+        <span
+          aria-hidden="true"
+          className={cx("pointer-events-none absolute inset-0", innerStrokeClassName)}
+        />
+      ) : null}
     </span>
+  );
+}
+
+function HeroCarouselIndicator() {
+  return (
+    <div
+      aria-hidden="true"
+      className="inline-flex h-5 w-[87px] items-center gap-[6px] rounded-[20px] bg-white/20 px-[8px]"
+    >
+      <span className="h-[6px] w-6 rounded-round bg-white" />
+      {Array.from({ length: 4 }, (_, index) => (
+        <span className="size-[6px] rounded-round bg-white" key={index} />
+      ))}
+    </div>
   );
 }
 
@@ -1857,22 +2500,43 @@ function Hero({
   }
 
   return (
-    <section className="relative overflow-hidden bg-[#041838] text-white">
+    <section className="relative min-h-[640px] overflow-hidden bg-[#011536] text-white lg:h-[640px]">
       <Image
         alt=""
-        className="absolute inset-0 size-full object-cover"
-        height={2415}
+        className="absolute inset-0 size-full object-cover object-center"
+        height={640}
         priority
         src={pcpCompanyProfile.heroSrc}
-        width={3840}
+        width={1440}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#041838] via-[#041838]/35 to-black/15" />
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(177.5deg, rgba(1, 21, 54, 0) 6.43%, rgba(1, 21, 54, 0.441) 37.16%, rgba(1, 21, 54, 0.9) 61.24%)",
+        }}
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(180deg, transparent 0%, transparent 18%, rgba(0, 0, 0, 0.65) 48%, #000 100%)",
+          WebkitBackdropFilter: "blur(50px)",
+          backdropFilter: "blur(50px)",
+          background: "rgba(1, 21, 54, 0.01)",
+          maskImage:
+            "linear-gradient(180deg, transparent 0%, transparent 18%, rgba(0, 0, 0, 0.65) 48%, #000 100%)",
+        }}
+      />
 
-      <div className="relative min-h-[560px] px-lg sm:min-h-[520px]">
-        <div className="mx-auto flex min-h-[560px] w-full max-w-[1128px] flex-col justify-end gap-xxl pb-0 pt-stack sm:min-h-[520px]">
+      <div className="relative min-h-[640px] px-lg lg:h-full">
+        <div className="mx-auto flex min-h-[640px] w-full max-w-[1128px] flex-col justify-end gap-xxl pb-0 pt-stack lg:h-full lg:min-h-0">
           <div className="grid gap-xxl lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
             <div className="min-w-0 w-[min(100%,320px)] pb-xxl sm:w-auto sm:max-w-[720px]">
-              <CompanyLogo className="size-24 border-2 border-white shadow-raised-faint" />
+              <CompanyLogo
+                className="size-32 !rounded-[16px] shadow-raised-faint"
+                innerStrokeClassName="rounded-[16px] shadow-[inset_0_0_0_4px_#fff]"
+              />
               <div className="mt-lg flex flex-wrap items-center gap-xs">
                 <h1 className="text-display-xl text-[var(--figma-color-text-color-text-overlay)]">
                   {pcpCompanyProfile.name}
@@ -1918,7 +2582,7 @@ function Hero({
                   Follow
                 </Button>
                 <Button
-                  className="!border-[var(--figma-color-border-color-border-knockout)] !bg-transparent !text-[var(--figma-color-label-color-label-knockout)] hover:!border-[var(--figma-color-border-color-border-knockout-hover)] hover:!bg-[var(--figma-color-background-color-background-transparent-overlay-hover)] active:!border-[var(--figma-color-border-color-border-knockout-active)] active:!bg-[var(--figma-color-background-color-background-transparent-overlay-active)] active:!text-[var(--figma-color-label-color-label-knockout-active)]"
+                  className="!border-[var(--figma-color-border-color-border-knockout)] !bg-transparent !text-[var(--figma-color-label-color-label-knockout)] hover:!border-[var(--figma-color-border-color-border-knockout-hover)] hover:!bg-[var(--figma-color-background-color-background-transparent-overlay-hover)] hover:!shadow-[inset_0_0_0_1px_var(--figma-color-border-color-border-knockout-hover)] active:!border-[var(--figma-color-border-color-border-knockout-active)] active:!bg-[var(--figma-color-background-color-background-transparent-overlay-active)] active:!text-[var(--figma-color-label-color-label-knockout-active)] active:!shadow-none"
                   leadingIcon={
                     <Icon className="text-white" name="send" />
                   }
@@ -1932,7 +2596,7 @@ function Hero({
                     aria-controls={menuId}
                     aria-expanded={isMenuOpen}
                     aria-haspopup="menu"
-                    className="[&>span]:!border-[var(--figma-color-border-color-border-knockout)] [&>span]:!bg-transparent [&>span]:!text-[var(--figma-color-icon-color-icon-overlay)]"
+                    className="[&>span]:!border-[var(--figma-color-border-color-border-knockout)] [&>span]:!bg-transparent [&>span]:!text-[var(--figma-color-icon-color-icon-overlay)] [&>span]:group-hover:!shadow-[inset_0_0_0_1px_var(--figma-color-border-color-border-knockout-hover)] [&>span]:group-active:!shadow-none"
                     icon="overflow-web-ios"
                     label="More actions"
                     onClick={() =>
@@ -1970,27 +2634,38 @@ function Hero({
               </div>
             </div>
 
-            <aside className="mb-xxl w-[min(100%,320px)] rounded-sm bg-white/0 p-lg text-[var(--figma-color-text-color-text-overlay)] lg:w-auto lg:max-w-none">
-              <Icon className="text-[#ACF5B3]" name="quote" size="medium" />
-              <p className="mt-sm break-words text-body-md-open">
-                {pcpCompanyProfile.testimonial.quote}
-              </p>
-              <div className="mt-md flex items-center gap-sm">
-                <Entity
-                  label={pcpCompanyProfile.testimonial.author}
-                  size={32}
-                  src={pcpCompanyProfile.testimonial.avatarSrc}
+            <div className="mb-xxl flex w-[min(100%,320px)] flex-col items-start gap-[72px] text-[var(--figma-color-text-color-text-overlay)] lg:ml-auto lg:w-[320px] lg:items-end">
+              <HeroCarouselIndicator />
+              <aside className="w-full rounded-sm bg-white/0">
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  className="size-8"
+                  height={32}
+                  src={`${ASSET_ROOT}/quote.svg`}
+                  unoptimized
+                  width={32}
                 />
-                <div>
-                  <p className="text-control-md">
-                    {pcpCompanyProfile.testimonial.author}
-                  </p>
-                  <p className="text-supportive-s text-[var(--figma-color-text-color-text-overlay-hover)]">
-                    {pcpCompanyProfile.testimonial.role}
-                  </p>
+                <p className="mt-sm break-words text-body-md-open">
+                  {pcpCompanyProfile.testimonial.quote}
+                </p>
+                <div className="mt-md flex items-center gap-sm">
+                  <Entity
+                    label={pcpCompanyProfile.testimonial.author}
+                    size={32}
+                    src={pcpCompanyProfile.testimonial.avatarSrc}
+                  />
+                  <div>
+                    <p className="text-control-md">
+                      {pcpCompanyProfile.testimonial.author}
+                    </p>
+                    <p className="text-supportive-s text-[var(--figma-color-text-color-text-overlay-hover)]">
+                      {pcpCompanyProfile.testimonial.role}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </aside>
+              </aside>
+            </div>
           </div>
 
           <nav
@@ -2065,15 +2740,15 @@ function EntityPile({
   size = 24,
 }: Readonly<{ size?: 24 | 32 | 40 }>) {
   return (
-    <span className="flex shrink-0 items-center">
+    <span className="flex shrink-0 items-center gap-sm">
       {[
         `${PCP_ASSET_ROOT}/avatar-1.png`,
         `${PCP_ASSET_ROOT}/avatar-2.png`,
         `${PCP_ASSET_ROOT}/avatar-3.png`,
-      ].map((image, index) => (
+      ].map((image) => (
         <Entity
           key={image}
-          className={cx(index > 0 && "-ml-xs", "ring-2 ring-background")}
+          className="ring-2 ring-background"
           label=""
           size={size}
           src={assetSrc(image)}
@@ -2083,32 +2758,61 @@ function EntityPile({
   );
 }
 
-function ReactionPile() {
+const defaultReactionTypes: ReadonlyArray<SduiReactionIconType> = [
+  "like",
+  "empathy",
+  "interest",
+];
+
+function ReactionPile({
+  reactionTypes = defaultReactionTypes,
+}: Readonly<{ reactionTypes?: ReadonlyArray<SduiReactionIconType> }>) {
   return (
     <span className="flex items-center">
-      {["bg-action", "bg-caution", "bg-positive"].map((color, index) => (
-        <span
-          key={color}
-          className={cx(
-            "inline-flex size-4 items-center justify-center rounded-round border border-background text-[8px] text-white",
-            index > 0 && "-ml-xs",
-            color,
-          )}
-        >
-          <span className="size-1 rounded-round bg-current" />
-        </span>
+      {reactionTypes.map((reaction, index) => (
+        <SduiReactionIcon
+          className={index < reactionTypes.length - 1 ? "-mr-[4px]" : undefined}
+          decorative
+          key={`${reaction}-${index}`}
+          ring
+          size="xsmall"
+          type={reaction}
+        />
       ))}
     </span>
   );
 }
 
-function CarouselButton({ label }: Readonly<{ label: string }>) {
+function CarouselButton({
+  alignToContentEdge = false,
+  disabled = false,
+  direction = "next",
+  label,
+  onClick,
+}: Readonly<{
+  alignToContentEdge?: boolean;
+  disabled?: boolean;
+  direction?: "next" | "previous";
+  label: string;
+  onClick?: () => void;
+}>) {
   return (
     <OverlayButtonIcon
-      className="absolute right-xxl top-1/2 z-10 -translate-y-1/2 translate-x-1/2"
+      className={cx(
+        "absolute top-1/2 z-10 -translate-y-1/2",
+        direction === "next"
+          ? alignToContentEdge
+            ? "right-0 translate-x-1/2"
+            : "right-xxl translate-x-1/2"
+          : alignToContentEdge
+            ? "left-0 -translate-x-1/2"
+            : "left-xxl -translate-x-1/2",
+      )}
       color="white"
-      icon="chevron-right"
+      disabled={disabled}
+      icon={direction === "next" ? "chevron-right" : "chevron-left"}
       label={label}
+      onClick={onClick}
       size="small"
     />
   );
@@ -2123,11 +2827,13 @@ function OverviewCard() {
           <p className="line-clamp-3 pr-stack text-body-sm-open text-text">
             {pcpCompanyProfile.name} helps enterprise HR teams manage open
             enrollment, carrier connections, eligibility changes, and employee
-            benefits communications in one place. It is built for benefits
-            operations teams whose workflows have outgrown spreadsheets.
+            benefits communications in one place. Benefits operations teams use
+            Velora to validate employee data, coordinate plan changes, prepare
+            carrier files, and keep every stakeholder working from the same
+            source of truth across complex enrollment cycles.
           </p>
-          <span className="absolute bottom-0 right-0 bg-background pl-xs text-body-sm text-text-meta">
-            more
+          <span className="absolute bottom-0 right-0 bg-background pl-xxs text-body-sm-open text-text-meta">
+            ... more
           </span>
         </div>
       </div>
@@ -2138,15 +2844,13 @@ function OverviewCard() {
         <div className="grid gap-lg sm:grid-cols-2">
           {overviewHighlights.map((highlight) => (
             <article
-              className="flex min-w-0 items-start gap-sm rounded-sm border border-border-faint p-lg"
+              className="flex min-w-0 items-center gap-sm rounded-sm border border-border-faint p-lg"
               key={highlight.title}
             >
               <Entity
-                className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
                 label={highlight.title}
                 shape="square"
                 size={40}
-                style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
                 src={assetSrc(highlight.image)}
               />
               <div className="min-w-0 flex-1">
@@ -2169,7 +2873,7 @@ function OverviewCard() {
         </div>
       </div>
       <ModuleFooter>
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
           Show all
         </GhostButton>
       </ModuleFooter>
@@ -2187,7 +2891,7 @@ function FeaturedCard() {
             alt="Featured customer video"
             className="aspect-[16/9] w-full object-cover"
             height={410}
-            src={assetSrc("media-1.png")}
+            src={assetSrc("featured-workspace-video.jpg")}
             width={720}
           />
           <span className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
@@ -2201,14 +2905,16 @@ function FeaturedCard() {
         </p>
         <div className="mt-md grid gap-lg sm:grid-cols-2">
           <MiniContentCard
+            comments="115 comments"
             image="product-image-1.png"
-            title="When open enrollment starts, eligibility exceptions are what teams remember."
-            meta="9,430 - 115 comments"
+            reactions="9,430"
+            title="Velora partners with Northstar Labs to bring faster workplace tools to growing teams."
           />
           <MiniContentCard
+            comments="713 comments"
             image="product-image-2.png"
-            title="How an enterprise HR team stopped tracking carrier readiness in spreadsheets."
-            meta="12,430 - 713 comments"
+            reactions="12,430"
+            title="How Arbor Retail Group used Velora to simplify team planning and make decisions faster."
           />
         </div>
       </div>
@@ -2216,99 +2922,481 @@ function FeaturedCard() {
   );
 }
 
+const miniContentReactionTypes: ReadonlyArray<SduiReactionIconType> = [
+  "like",
+  "empathy",
+  "interest",
+];
+
 function MiniContentCard({
+  comments,
   image,
+  reactions,
   title,
-  meta,
-}: Readonly<{ image: string; title: string; meta: string }>) {
+}: Readonly<{
+  comments: string;
+  image: string;
+  reactions: string;
+  title: string;
+}>) {
   return (
-    <article className="flex min-w-0 gap-md overflow-hidden rounded-sm border border-border-faint p-md">
-      <Image
-        alt=""
-        className="size-[84px] shrink-0 rounded-xs object-cover"
-        height={84}
-        src={assetSrc(image)}
-        width={84}
-      />
-      <div className="min-w-0">
-        <p className="line-clamp-3 text-body-sm text-text">{title}</p>
-        <p className="mt-sm text-supportive-s text-text-meta">{meta}</p>
+    <article className="flex min-w-0 flex-col gap-[12px] overflow-hidden rounded-sm border border-border-faint p-[12px]">
+      <div className="flex min-w-0 items-start gap-[12px]">
+        <Image
+          alt=""
+          className="h-[86px] w-[84px] shrink-0 rounded-xs object-cover"
+          height={86}
+          src={assetSrc(image)}
+          width={84}
+        />
+        <div className="min-h-[86px] min-w-0 flex-1">
+          <p className="line-clamp-4 break-words text-body-sm-open text-text">
+            {title}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-sm">
+        <span className="flex items-center" aria-hidden="true">
+          {miniContentReactionTypes.map((reaction, index) => (
+            <SduiReactionIcon
+              className={
+                index < miniContentReactionTypes.length - 1
+                  ? "-mr-[4px]"
+                  : undefined
+              }
+              decorative
+              key={reaction}
+              ring
+              size="xsmall"
+              type={reaction}
+            />
+          ))}
+        </span>
+        <p className="flex items-center gap-xxs whitespace-nowrap text-supportive-s text-text-meta">
+          <span>{reactions}</span>
+          <span aria-hidden="true">&bull;</span>
+          <span>{comments}</span>
+        </p>
       </div>
     </article>
   );
 }
 
-function PostCard({
-  title,
-  body,
-  image,
-  stats,
+const VISITOR_POST_CARD_SCROLL_STEP_FALLBACK = 380;
+const VISITOR_PRODUCT_CARD_SCROLL_STEP_FALLBACK = 372;
+
+function getVisitorPostScrollStep(container: HTMLElement) {
+  const card = container.querySelector<HTMLElement>("[data-visitor-post-card]");
+
+  if (!card) {
+    return VISITOR_POST_CARD_SCROLL_STEP_FALLBACK;
+  }
+
+  return card.getBoundingClientRect().width + 16;
+}
+
+function getVisitorProductScrollStep(container: HTMLElement) {
+  const card = container.querySelector<HTMLElement>(
+    "[data-visitor-product-card]",
+  );
+
+  if (!card) {
+    return VISITOR_PRODUCT_CARD_SCROLL_STEP_FALLBACK;
+  }
+
+  return card.getBoundingClientRect().width + 16;
+}
+
+function VisitorPostReactions({
+  comments,
+  reactions,
+  reactionTypes,
+  reposts,
 }: Readonly<{
-  title: string;
-  body: string;
-  image: string;
-  stats: string;
+  comments: string;
+  reactions: string;
+  reactionTypes: ReadonlyArray<SduiReactionIconType>;
+  reposts?: string;
 }>) {
   return (
-    <article className="overflow-hidden rounded-sm border border-border-faint bg-background">
-      <div className="p-md">
-        <div className="flex items-start gap-sm">
-          <Entity
-            className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
-            label={pcpCompanyProfile.name}
-            shape="square"
-            size={40}
-            style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
-            src={pcpCompanyProfile.logoSrc}
+    <div className="flex min-h-5 items-center gap-xs px-md text-body-sm text-text-meta">
+      <span className="flex items-center" aria-hidden="true">
+        {reactionTypes.map((reaction, index) => (
+          <SduiReactionIcon
+            className={
+              index < reactionTypes.length - 1 ? "-mr-[4px]" : undefined
+            }
+            decorative
+            key={reaction}
+            ring
+            size="xsmall"
+            type={reaction}
           />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-control-sm text-text">
-              {pcpCompanyProfile.name}
-            </h3>
-            <p className="text-supportive-s text-text-meta">
-              {pcpCompanyProfile.followers}
-            </p>
-            <p className="text-supportive-s text-text-meta">11h</p>
+        ))}
+      </span>
+      <p className="flex min-w-0 items-center gap-xxs whitespace-nowrap">
+        <span>{reactions}</span>
+        <span aria-hidden="true">&middot;</span>
+        <span>{comments}</span>
+        {reposts ? (
+          <>
+            <span aria-hidden="true">&middot;</span>
+            <span>{reposts}</span>
+          </>
+        ) : null}
+      </p>
+    </div>
+  );
+}
+
+function VisitorPostActions() {
+  return (
+    <div className="grid min-h-12 grid-cols-4 text-icon">
+      {[
+        ["thumbs-up-outline", "Like"],
+        ["comment", "Comment"],
+        ["repost", "Repost"],
+        ["send", "Send"],
+      ].map(([icon, label]) => (
+        <button
+          className="inline-flex min-h-12 items-center justify-center rounded-xs text-icon transition-colors hover:bg-background-transparent-hover hover:text-icon-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          key={label}
+          type="button"
+        >
+          <Icon name={icon as IconName} size="small" />
+          <span className="sr-only">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function VisitorPostCard({ post }: Readonly<{ post: VisitorPostData }>) {
+  const hasLinkPreview = Boolean(post.linkTitle);
+
+  return (
+    <article
+      className="flex h-[540px] w-[364px] shrink-0 flex-col gap-sm overflow-hidden rounded-sm border border-border-faint bg-background"
+      data-visitor-post-card
+    >
+      <div className="flex flex-col gap-[12px] px-md pt-md">
+        <div className="flex min-h-12 items-start gap-sm">
+          <div className="flex min-w-0 flex-1 items-start gap-sm">
+            <Entity
+              className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+              label={pcpCompanyProfile.name}
+              shape="square"
+              size={32}
+              style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+              src={pcpCompanyProfile.logoSrc}
+            />
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-control-sm text-text">
+                {pcpCompanyProfile.name}
+              </h3>
+              <p className="truncate text-supportive-s text-text">
+                {pcpCompanyProfile.followers}
+              </p>
+              <p className="text-supportive-s text-text-meta">35m</p>
+            </div>
           </div>
           <Icon className="text-text-meta" name="overflow-web-ios" size="medium" />
         </div>
-        <p className="mt-md text-control-sm text-text">{title}</p>
-        <p className="mt-xs line-clamp-3 text-body-sm text-text">{body}</p>
+        <p className="line-clamp-3 whitespace-pre-wrap text-body-sm text-text">
+          {post.body}{" "}
+          <span className="text-text-meta">...more</span>
+        </p>
       </div>
-      <Image
-        alt=""
-        className="aspect-[16/9] w-full object-cover"
-        height={272}
-        src={assetSrc(image)}
-        width={484}
+
+      <div className="h-[299px] w-full shrink-0 overflow-hidden">
+        <Image
+          alt={post.imageAlt}
+          className={cx(
+            "w-full object-cover",
+            hasLinkPreview ? "h-[246px]" : "h-full",
+          )}
+          height={299}
+          src={assetSrc(post.image)}
+          width={364}
+        />
+        {hasLinkPreview ? (
+          <div className="flex h-[56px] flex-col gap-xxs bg-background-neutral-soft px-sm py-sm">
+            <p className="truncate text-control-sm text-text">
+              {post.linkTitle}
+            </p>
+            {post.linkMeta ? (
+              <p className="truncate text-supportive-s text-text-meta">
+                {post.linkMeta}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      <VisitorPostReactions
+        comments={post.comments}
+        reactions={post.reactions}
+        reactionTypes={post.reactionTypes}
+        reposts={post.reposts}
       />
-      <div className="flex items-center justify-between border-t border-border-faint px-md py-sm text-supportive-s text-text-meta">
-        <span>{stats}</span>
-        <span>1 comment</span>
+      <div className="px-md">
+        <div className="h-px bg-border-faint" />
       </div>
-      <div className="grid grid-cols-4 border-t border-border-faint text-text-meta">
-        {[
-          ["thumbs-up-outline", "Like"],
-          ["comment", "Comment"],
-          ["repost", "Repost"],
-          ["send", "Send"],
-        ].map(([icon, label]) => (
-          <button
-            key={label}
-            className="flex min-h-10 items-center justify-center gap-xs text-supportive-s hover:bg-background-transparent-hover"
-            type="button"
-          >
-            <Icon name={icon as IconName} size="small" />
-            <span className="hidden sm:inline">{label}</span>
-          </button>
-        ))}
+      <VisitorPostActions />
+    </article>
+  );
+}
+
+function PostsCard() {
+  const postsCarouselRef = useRef<HTMLDivElement | null>(null);
+  const [canAdvancePosts, setCanAdvancePosts] = useState(true);
+  const [canGoBackPosts, setCanGoBackPosts] = useState(false);
+
+  const updatePostsCarouselState = useCallback(() => {
+    const container = postsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const maxScrollLeft = Math.max(
+      container.scrollWidth - container.clientWidth,
+      0,
+    );
+
+    setCanAdvancePosts(container.scrollLeft < maxScrollLeft - 1);
+    setCanGoBackPosts(container.scrollLeft > 1);
+  }, []);
+
+  useEffect(() => {
+    updatePostsCarouselState();
+    window.addEventListener("resize", updatePostsCarouselState);
+
+    return () => {
+      window.removeEventListener("resize", updatePostsCarouselState);
+    };
+  }, [updatePostsCarouselState]);
+
+  function handleNextPost() {
+    const container = postsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const maxScrollLeft = Math.max(
+      container.scrollWidth - container.clientWidth,
+      0,
+    );
+
+    container.scrollTo({
+      behavior: "smooth",
+      left: Math.min(
+        container.scrollLeft + getVisitorPostScrollStep(container),
+        maxScrollLeft,
+      ),
+    });
+  }
+
+  function handlePreviousPost() {
+    const container = postsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTo({
+      behavior: "smooth",
+      left: Math.max(
+        container.scrollLeft - getVisitorPostScrollStep(container),
+        0,
+      ),
+    });
+  }
+
+  return (
+    <Card className="relative">
+      <ModuleHeader title="Posts" />
+      <div className="relative mt-md pb-md">
+        <div
+          className="ml-xxl flex gap-md overflow-hidden scroll-smooth py-xxs pr-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          onScroll={updatePostsCarouselState}
+          ref={postsCarouselRef}
+        >
+          {posts.map((post) => (
+            <VisitorPostCard key={post.id} post={post} />
+          ))}
+        </div>
+        {canGoBackPosts ? (
+          <CarouselButton
+            direction="previous"
+            label="View previous posts"
+            onClick={handlePreviousPost}
+          />
+        ) : null}
+        <CarouselButton
+          disabled={!canAdvancePosts}
+          label="View more posts"
+          onClick={handleNextPost}
+        />
+      </div>
+      <ModuleFooter>
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
+          Show all posts
+        </GhostButton>
+      </ModuleFooter>
+    </Card>
+  );
+}
+
+function VisitorProductCard({
+  product,
+}: Readonly<{ product: VisitorProductData }>) {
+  return (
+    <article
+      className="flex h-[432px] w-[340px] shrink-0 flex-col overflow-hidden rounded-sm border border-border-faint bg-background sm:w-[364px]"
+      data-visitor-product-card
+    >
+      {product.image ? (
+        <Image
+          alt={product.imageAlt ?? ""}
+          className="h-[176px] w-full shrink-0 object-cover"
+          height={176}
+          src={assetSrc(product.image)}
+          width={364}
+        />
+      ) : (
+        <div className="flex h-[176px] w-full shrink-0 items-center justify-center bg-surface-tint px-lg text-center">
+          <p className="max-w-[220px] text-heading-md text-text">
+            Benefits guidance for every enrollment moment
+          </p>
+        </div>
+      )}
+      <div className="flex min-h-0 flex-1 flex-col px-lg pb-lg pt-md">
+        <h3 className="line-clamp-2 text-heading-md text-text">
+          {product.title}
+        </h3>
+        <p className="mt-xxs text-body-sm text-text-meta">{product.type}</p>
+        <p className="mt-md line-clamp-5 text-body-sm-open text-text">
+          {product.body}
+        </p>
+        <Button
+          className="mt-auto w-full"
+          leadingIcon={<Icon name="add" />}
+          size="small"
+          variant="tertiary"
+        >
+          Add skill
+        </Button>
       </div>
     </article>
   );
 }
 
 function ProductsCard() {
-  const serviceGalleryImages = products.map((product) => product.image);
+  const productsCarouselRef = useRef<HTMLDivElement | null>(null);
+  const [canAdvanceProducts, setCanAdvanceProducts] = useState(true);
+  const [canGoBackProducts, setCanGoBackProducts] = useState(false);
+
+  const updateProductsCarouselState = useCallback(() => {
+    const container = productsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const maxScrollLeft = Math.max(
+      container.scrollWidth - container.clientWidth,
+      0,
+    );
+
+    setCanAdvanceProducts(container.scrollLeft < maxScrollLeft - 1);
+    setCanGoBackProducts(container.scrollLeft > 1);
+  }, []);
+
+  useEffect(() => {
+    updateProductsCarouselState();
+    window.addEventListener("resize", updateProductsCarouselState);
+
+    return () => {
+      window.removeEventListener("resize", updateProductsCarouselState);
+    };
+  }, [updateProductsCarouselState]);
+
+  function handleNextProduct() {
+    const container = productsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const maxScrollLeft = Math.max(
+      container.scrollWidth - container.clientWidth,
+      0,
+    );
+
+    container.scrollTo({
+      behavior: "smooth",
+      left: Math.min(
+        container.scrollLeft + getVisitorProductScrollStep(container),
+        maxScrollLeft,
+      ),
+    });
+  }
+
+  function handlePreviousProduct() {
+    const container = productsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    container.scrollTo({
+      behavior: "smooth",
+      left: Math.max(
+        container.scrollLeft - getVisitorProductScrollStep(container),
+        0,
+      ),
+    });
+  }
+
+  return (
+    <Card className="relative">
+      <ModuleHeader title="Products" />
+      <div className="relative mt-md pb-md">
+        <div
+          className="ml-xxl flex gap-md overflow-hidden scroll-smooth py-xxs pr-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          onScroll={updateProductsCarouselState}
+          ref={productsCarouselRef}
+        >
+          {visitorProducts.map((product) => (
+            <VisitorProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        {canGoBackProducts ? (
+          <CarouselButton
+            direction="previous"
+            label="View previous products"
+            onClick={handlePreviousProduct}
+          />
+        ) : null}
+        <CarouselButton
+          disabled={!canAdvanceProducts}
+          label="View more products"
+          onClick={handleNextProduct}
+        />
+      </div>
+      <ModuleFooter>
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
+          Show all
+        </GhostButton>
+      </ModuleFooter>
+    </Card>
+  );
+}
+
+function ServicesCard() {
+  const serviceGalleryImages = services.map((service) => service.image);
   const serviceNames = serviceKeywords.join(" · ");
 
   return (
@@ -2328,7 +3416,7 @@ function ProductsCard() {
               />
             ))}
           </div>
-          <CarouselButton label="View more service images" />
+          <CarouselButton alignToContentEdge label="View more service images" />
         </div>
 
         <div className="mt-md flex justify-center gap-md" aria-hidden="true">
@@ -2362,7 +3450,7 @@ function ProductsCard() {
         </div>
       </div>
       <ModuleFooter>
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
           Show all services
         </GhostButton>
       </ModuleFooter>
@@ -2374,29 +3462,42 @@ function LeaderCard({
   leader,
 }: Readonly<{ leader: (typeof leaders)[number] }>) {
   return (
-    <article className="flex min-w-[160px] flex-1 flex-col items-center rounded-md border border-border-faint p-md text-center">
+    <article className="flex h-full min-w-[160px] flex-1 flex-col items-center rounded-md border border-border-faint p-md text-center">
       <Entity
         label={leader.name}
         size={80}
         src={assetSrc(leader.image)}
       />
-      <div className="mt-md min-h-[63px]">
+      <div className="mt-md flex min-h-[96px] w-full flex-col items-center">
         <p className="truncate text-control-md text-text">{leader.name}</p>
-        <p className="mt-xxs text-body-sm text-text-meta">{leader.role}</p>
-        <p className="mt-sm text-supportive-s text-text-meta">
+        <p className="mt-xxs line-clamp-2 text-body-sm text-text-meta">
+          {leader.role}
+        </p>
+        <p className="mt-auto text-supportive-s text-text-meta">
           {leader.followers}
         </p>
       </div>
-      <Button className="mt-md w-full" size="small" variant="tertiary">
+      <Button
+        className="mt-md w-full"
+        leadingIcon={<Icon name="add" />}
+        size="small"
+        variant="tertiary"
+      >
         Follow
       </Button>
     </article>
   );
 }
 
-function LeaderPostCard({
-  post,
-}: Readonly<{ post: (typeof leaderPosts)[number] }>) {
+function LeaderPostCard({ post }: Readonly<{ post: LeaderPostData }>) {
+  const hasLinkPreview = Boolean(post.linkTitle);
+  const bodyClampClass = hasLinkPreview
+    ? "line-clamp-1"
+    : post.image
+      ? "line-clamp-2"
+      : "line-clamp-4";
+  const imageHeightClass = hasLinkPreview ? "h-[96px]" : "h-[128px]";
+
   return (
     <article className="flex h-[324px] min-w-[236px] flex-1 flex-col overflow-hidden rounded-sm border border-border-faint">
       <div className="flex items-start gap-sm px-md py-md">
@@ -2414,11 +3515,13 @@ function LeaderPostCard({
         </div>
         <Icon className="text-icon" name="overflow-web-ios" size="small" />
       </div>
-      <p className="line-clamp-4 px-md text-body-sm text-text">{post.body}</p>
+      <p className={cx(bodyClampClass, "px-md text-body-sm text-text")}>
+        {post.body}
+      </p>
       {post.image ? (
         <Image
           alt=""
-          className="mt-sm h-[96px] w-full object-cover"
+          className={cx("mt-sm w-full object-cover", imageHeightClass)}
           height={112}
           src={assetSrc(post.image)}
           width={240}
@@ -2433,9 +3536,10 @@ function LeaderPostCard({
         </div>
       ) : null}
       <div className="mt-auto flex items-center gap-xs px-md py-sm text-supportive-s text-text-meta">
-        <ReactionPile />
-        <span>[X]</span>
-        <span>[X] comments</span>
+        <ReactionPile reactionTypes={post.reactionTypes} />
+        <span>{post.reactionCount}</span>
+        <span aria-hidden="true">&middot;</span>
+        <span>{post.commentCount} comments</span>
       </div>
       <div className="grid grid-cols-4 border-t border-border-faint px-xs">
         {[
@@ -2477,7 +3581,7 @@ function LeadersCard() {
               <LeaderPostCard key={post.author} post={post} />
             ))}
           </div>
-          <CarouselButton label="View more leader posts" />
+          <CarouselButton alignToContentEdge label="View more leader posts" />
         </div>
         <p className="mt-md flex items-center gap-xs text-supportive-s text-text-meta">
           <PremiumChipSmall />
@@ -2485,7 +3589,7 @@ function LeadersCard() {
         </p>
       </div>
       <ModuleFooter>
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
           Show all leaders
         </GhostButton>
       </ModuleFooter>
@@ -2500,10 +3604,10 @@ function EventCard() {
       <div className="p-xxl">
         <article className="flex flex-col gap-lg rounded-sm border border-border-faint p-xxl sm:flex-row">
           <Image
-            alt=""
+            alt="Audience watching a speaker at a Velora event"
             className="aspect-video min-w-0 flex-1 rounded-xs object-cover"
             height={220}
-            src={assetSrc("event-launch.png")}
+            src={assetSrc("event-fireside-chat.jpg")}
             width={360}
           />
           <div className="flex min-w-0 flex-1 flex-col gap-lg">
@@ -2515,7 +3619,7 @@ function EventCard() {
                 Thu, 06/18/2026, 5:00 PM
               </p>
               <h3 className="text-control-md text-text">
-                Live workshop: carrier coordination before open enrollment
+                Fireside chat with CEO James Li
               </h3>
               <p className="text-body-sm text-text">
                 Hosted by {pcpCompanyProfile.name}
@@ -2577,7 +3681,7 @@ function RecentJobOpeningsCard() {
           ))}
         </div>
         <ModuleFooter>
-          <GhostButton icon="arrow-right" iconAtEnd size="small">
+          <GhostButton icon="arrow-right" iconAtEnd size="medium">
             Show all 2 jobs
           </GhostButton>
         </ModuleFooter>
@@ -2592,30 +3696,30 @@ function LifeAtVeloraCard() {
       <ModuleHeader title={`Life at ${pcpCompanyProfile.name}`} />
       <div className="grid gap-lg p-xxl sm:grid-cols-2">
         <Image
-          alt=""
+          alt="Velora teammates collaborating in a meeting room"
           className="aspect-video w-full rounded-xs object-cover"
           height={260}
-          src={assetSrc("media-2.png")}
+          src={assetSrc("life-at-velora-team.jpg")}
           width={460}
         />
         <div>
           <h3 className="text-control-md text-text">
-            Built around benefits operations complexity
+            Building thoughtful software for enterprise teams
           </h3>
           <p className="mt-xs text-body-sm-open text-text">
-            {pcpCompanyProfile.name} helps HR teams connect eligibility data,
-            carrier readiness, employee communications, and enrollment reporting
-            in one place.
+            Founded in 2019, {pcpCompanyProfile.name} creates benefits
+            administration software for companies managing complex people
+            operations at scale.
           </p>
           <p className="text-body-sm-open text-text">
-            The Velora team builds for benefits teams that need clarity before
-            open enrollment without adding another spreadsheet or operations
-            layer.
+            The team works across product, engineering, design, and customer
+            partnerships with a practical, collaborative culture focused on
+            solving real operational problems.
           </p>
         </div>
       </div>
       <ModuleFooter>
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
           Show all
         </GhostButton>
       </ModuleFooter>
@@ -2632,36 +3736,37 @@ function PremiumInsightsCard() {
       />
       <div className="grid gap-xxl p-xxl md:grid-cols-[300px_minmax(0,1fr)_minmax(0,1fr)]">
         <div>
-          <h3 className="text-control-md text-text">Visitor interest trends</h3>
+          <h3 className="text-control-md text-text">
+            The latest hiring trends
+          </h3>
           <TrendGraph />
         </div>
         <div>
-          <h3 className="text-control-md text-text">Consultation intent</h3>
+          <h3 className="text-control-md text-text">Growth trends</h3>
           <div className="mt-md flex items-center gap-xs">
-            <Icon className="rotate-180 text-positive" name="caret" size="small" />
-            <p className="text-heading-xl text-text">18%</p>
+            <Icon className="text-positive" name="caret-up" size="small" />
+            <p className="text-heading-xl text-text">3%</p>
           </div>
-          <p className="text-supportive-s text-text-meta">CTA click lift</p>
+          <p className="text-supportive-s text-text-meta">Employee growth</p>
           <p className="mt-md text-supportive-s text-text-meta">
-            And more visitor-to-lead signals
+            And more hiring trends
           </p>
         </div>
         <div>
-          <h3 className="text-control-md text-text">18 qualified visitors</h3>
-          <div className="mt-lg flex items-center">
+          <h3 className="text-control-md text-text">12 recent senior hires</h3>
+          <div className="mt-lg flex items-center gap-sm">
             <EntityPile size={40} />
-            <span className="-ml-xs inline-flex size-10 items-center justify-center rounded-round border border-border-faint bg-background text-body-sm text-text-meta">
+            <span className="inline-flex size-10 items-center justify-center rounded-round border border-border-faint bg-background text-body-sm text-text-meta">
               +9
             </span>
           </div>
           <p className="mt-lg text-supportive-s text-text-meta">
-            Including HR leaders and benefits operations leads from target
-            accounts
+            Including Zuberi Idowu and 11 others
           </p>
         </div>
       </div>
       <ModuleFooter>
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
           Show all Premium insights
         </GhostButton>
       </ModuleFooter>
@@ -2749,9 +3854,10 @@ function TrendGraph() {
         <polyline
           fill="none"
           points="0,48 48,36 96,32 144,20 192,30 240,14 300,26"
-          stroke="var(--figma-color-positive-color-positive)"
+          stroke="currentColor"
           strokeLinecap="round"
           strokeLinejoin="round"
+          strokeOpacity="0.9"
           strokeWidth="1.5"
         />
         <text fill="currentColor" fontSize="12" x="8" y="88">
@@ -2824,20 +3930,40 @@ function MemberFooter() {
 function PromotedCard() {
   return (
     <Card>
-      <div className="flex items-center justify-between border-b border-border-faint p-md">
-        <p className="text-supportive-s text-text-meta">Promoted</p>
-        <Icon name="overflow-web-ios" size="small" />
-      </div>
-      <div className="space-y-lg p-md">
-        {sideJobs.slice(0, 3).map((job) => (
+      <div className="space-y-md p-md">
+        <div className="flex justify-end">
+          <span className="inline-flex items-center gap-xxs rounded-xs bg-tag-default-background px-sm py-xxs text-supportive-s text-text-meta">
+            Promoted
+            <Icon name="overflow-web-ios" size="small" />
+          </span>
+        </div>
+
+        <div className="flex items-center gap-sm">
+          <Entity
+            label={pcpVisitorPersona.name}
+            size={32}
+            src={assetSrc(pcpVisitorPersona.memberAvatar)}
+          />
+          <p className="min-w-0 text-supportive-s text-text">
+            {pcpVisitorPersona.firstName}, explore jobs at{" "}
+            <span className="text-supportive-s-strong">
+              {pcpCompanyProfile.name}
+            </span>
+          </p>
+        </div>
+
+        {promotedJobs.map((job) => (
           <div key={job} className="flex gap-sm">
             <Entity
+              className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
               label={pcpCompanyProfile.name}
               shape="square"
-              size={32}
+              size={40}
+              style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+              src={pcpCompanyProfile.logoSrc}
             />
-            <div>
-              <p className="text-control-sm text-text">{job}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-control-sm text-text">{job}</p>
               <p className="text-supportive-s text-text-meta">
                 {pcpCompanyProfile.location}
               </p>
@@ -2845,7 +3971,7 @@ function PromotedCard() {
           </div>
         ))}
         <Button className="w-full" size="small" variant="tertiary">
-          See more roles
+          See more jobs
         </Button>
       </div>
     </Card>
@@ -2859,7 +3985,7 @@ function SideListCard({
   type = "page",
 }: Readonly<{
   title: string;
-  items: Array<string>;
+  items: ReadonlyArray<string>;
   actionLabel: string;
   type?: "page" | "role";
 }>) {
@@ -2867,31 +3993,43 @@ function SideListCard({
     <Card>
       <div className="p-lg">
         <h2 className="text-heading-sm text-text">{title}</h2>
-        <div className="mt-md space-y-lg">
-          {items.map((item) => (
-            <div key={item} className="flex items-start gap-sm">
-              <Entity
-                label={type === "role" ? pcpCompanyProfile.name : item}
-                shape="square"
-                size={40}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-control-sm text-text">{item}</p>
-                <p className="text-supportive-s text-text-meta">
-                  {type === "role"
-                    ? pcpCompanyProfile.location
-                    : "Benefits administration software"}
-                </p>
-                <Button className="mt-sm" size="small" variant="tertiary">
-                  {type === "role" ? "View role" : "Follow"}
-                </Button>
+        <div className="mt-lg space-y-lg">
+          {items.map((item) => {
+            const isRole = type === "role";
+
+            return (
+              <div key={item} className="flex items-start gap-sm">
+                <Entity
+                  className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                  label={isRole ? pcpCompanyProfile.name : item}
+                  shape="square"
+                  size={40}
+                  src={pcpCompanyProfile.logoSrc}
+                  style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-control-sm text-text">{item}</p>
+                  <p className="text-supportive-s text-text-meta">
+                    {isRole
+                      ? pcpCompanyProfile.location
+                      : "Software Development"}
+                  </p>
+                  <Button
+                    className="mt-sm"
+                    leadingIcon={!isRole ? <Icon name="add" /> : undefined}
+                    size="small"
+                    variant="tertiary"
+                  >
+                    {isRole ? "View role" : "Follow"}
+                  </Button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       <div className="flex justify-center border-t border-border-faint">
-        <GhostButton icon="arrow-right" iconAtEnd size="small">
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
           {actionLabel}
         </GhostButton>
       </div>
@@ -2945,6 +4083,8 @@ function PremiumCompanyPagesSeparateMemberPage({
     useState<VcaVisitorPromptId | null>(null);
   const [vcaVisitorQuestion, setVcaVisitorQuestion] =
     useState<string | null>(null);
+  const [vcaProductPostQuestion, setVcaProductPostQuestion] =
+    useState<string | null>(null);
   const [vcaFollowUpQuestion, setVcaFollowUpQuestion] =
     useState<string | null>(null);
   const [vcaLiveSupportMessages, setVcaLiveSupportMessages] = useState<
@@ -2955,10 +4095,18 @@ function PremiumCompanyPagesSeparateMemberPage({
   const [humanSentMessage, setHumanSentMessage] = useState<string | null>(null);
   const [isCaseStudyOpen, setIsCaseStudyOpen] = useState(false);
   const [isJobOpen, setIsJobOpen] = useState(false);
+  const [isProductOpen, setIsProductOpen] = useState(false);
   const [selectedVcaJob, setSelectedVcaJob] = useState<VcaJobOpening>(
     vcaJobOpenings[0],
   );
+  const [selectedVcaProduct, setSelectedVcaProduct] =
+    useState<VisitorProductData>(visitorProducts[0]);
+  const [selectedVcaPost, setSelectedVcaPost] =
+    useState<VcaPostDetail>(vcaCaseStudyPostDetail);
   const [isGlobalInboxExpanded, setIsGlobalInboxExpanded] = useState(false);
+  const vcaFabHoverPrompts = isJobSeekerIntent
+    ? vcaJobSeekerPrompts.map((label) => ({ label }))
+    : vcaOpeningPrompts;
   const isVcaOpen = aiSurfaceState === "open";
   const isVcaEntryVisible = aiSurfaceState === "docked";
   const isHumanMessagePanelOpen = humanSurfaceState === "open";
@@ -2995,7 +4143,10 @@ function PremiumCompanyPagesSeparateMemberPage({
     "md:right-[var(--pcp-ai-tray-right)]";
   const vcaFloatingDesktopRightClass = "md:right-6";
   const isExpandedVcaSurface =
-    vcaPanelVariant === "expanded" || isCaseStudyOpen || isJobOpen;
+    vcaPanelVariant === "expanded" ||
+    isCaseStudyOpen ||
+    isJobOpen ||
+    isProductOpen;
   const vcaTrayIdentity: ChatHeaderIdentity =
     vcaConversationStage === "liveSupportConnected"
       ? {
@@ -3006,7 +4157,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       : {
           type: "ai",
           title: pcpCompanyProfile.name,
-          icon: <VeloraVcaLogoMark showAiBadge />,
+          icon: <VeloraVcaLogoMark />,
         };
   const shouldShowGlobalInboxTray =
     !isExpandedVcaSurface && !(isFabEntryMode && isVcaOpen);
@@ -3014,7 +4165,7 @@ function PremiumCompanyPagesSeparateMemberPage({
     isExpandedVcaSurface
       ? cx(
           "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),860px)] md:-translate-x-1/2 md:-translate-y-1/2",
-          isCaseStudyOpen || isJobOpen
+          isCaseStudyOpen || isJobOpen || isProductOpen
             ? "md:w-[min(calc(100vw_-_48px),var(--design-layout-side-panel-expanded-surface-width))]"
             : "md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))]",
         )
@@ -3035,22 +4186,27 @@ function PremiumCompanyPagesSeparateMemberPage({
     setVcaConversationStage("opening");
     setVcaVisitorPromptId(null);
     setVcaVisitorQuestion(null);
+    setVcaProductPostQuestion(null);
     setVcaFollowUpQuestion(null);
     setVcaLiveSupportMessages([]);
     setVcaDraft("");
+    setSelectedVcaPost(vcaCaseStudyPostDetail);
     setIsCaseStudyOpen(false);
     setIsJobOpen(false);
+    setIsProductOpen(false);
   }
 
   function startVcaLiveSupportFlow(message: string) {
     setVcaVisitorPromptId(null);
     setVcaVisitorQuestion(null);
+    setVcaProductPostQuestion(null);
     setVcaFollowUpQuestion(null);
     setVcaLiveSupportMessages([message]);
     setVcaConversationStage("liveSupportConnecting");
     setVcaDraft("");
     setIsCaseStudyOpen(false);
     setIsJobOpen(false);
+    setIsProductOpen(false);
     setVcaPanelVariant("collapsed");
   }
 
@@ -3060,6 +4216,18 @@ function PremiumCompanyPagesSeparateMemberPage({
       message,
     ]);
     setVcaDraft("");
+  }
+
+  function startVcaProductFlow(question: string) {
+    setVcaVisitorQuestion(question);
+    setVcaVisitorPromptId(null);
+    setVcaProductPostQuestion(null);
+    setVcaFollowUpQuestion(null);
+    setVcaConversationStage("productProof");
+    setVcaDraft("");
+    setIsCaseStudyOpen(false);
+    setIsJobOpen(false);
+    setIsProductOpen(false);
   }
 
   useEffect(() => {
@@ -3130,22 +4298,11 @@ function PremiumCompanyPagesSeparateMemberPage({
         setVcaPanelVariant("collapsed");
         setIsCaseStudyOpen(false);
         setIsJobOpen(false);
+        setIsProductOpen(false);
         setHumanSurfaceState((currentState) =>
           currentState === "closed" ? "closed" : "docked",
         );
         setAiSurfaceState("open");
-      },
-      getBackgroundTrayTransitionClass(),
-    );
-  }
-
-  function handleMinimizeVcaToTray() {
-    runMessagingSurfaceTransition(
-      () => {
-        setVcaPanelVariant("collapsed");
-        setIsCaseStudyOpen(false);
-        setIsJobOpen(false);
-        setAiSurfaceState("docked");
       },
       getBackgroundTrayTransitionClass(),
     );
@@ -3156,6 +4313,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       setVcaPanelVariant("expanded");
       setIsCaseStudyOpen(false);
       setIsJobOpen(false);
+      setIsProductOpen(false);
       setHumanSurfaceState((currentState) =>
         currentState === "closed" ? "closed" : "docked",
       );
@@ -3166,15 +4324,20 @@ function PremiumCompanyPagesSeparateMemberPage({
   function handleToggleVcaPanelVariant() {
     setIsCaseStudyOpen(false);
     setIsJobOpen(false);
+    setIsProductOpen(false);
     setVcaPanelVariant((currentVariant) =>
       currentVariant === "expanded" ? "collapsed" : "expanded",
     );
   }
 
-  function handleOpenVcaCaseStudy() {
+  function handleOpenVcaCaseStudy(
+    post: VcaPostDetail = vcaCaseStudyPostDetail,
+  ) {
     runMessagingSurfaceTransition(() => {
+      setSelectedVcaPost(post);
       setIsCaseStudyOpen(true);
       setIsJobOpen(false);
+      setIsProductOpen(false);
       setVcaPanelVariant("expanded");
     });
   }
@@ -3183,6 +4346,7 @@ function PremiumCompanyPagesSeparateMemberPage({
     runMessagingSurfaceTransition(() => {
       setIsCaseStudyOpen(false);
       setIsJobOpen(false);
+      setIsProductOpen(false);
       setVcaPanelVariant("collapsed");
       setVcaConversationStage((currentStage) =>
         currentStage === "postProof" ? "caseStudyReturned" : currentStage,
@@ -3195,6 +4359,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       setSelectedVcaJob(job);
       setIsCaseStudyOpen(false);
       setIsJobOpen(true);
+      setIsProductOpen(false);
       setVcaPanelVariant("expanded");
     });
   }
@@ -3202,6 +4367,23 @@ function PremiumCompanyPagesSeparateMemberPage({
   function handleCloseVcaJob() {
     runMessagingSurfaceTransition(() => {
       setIsJobOpen(false);
+      setVcaPanelVariant("collapsed");
+    });
+  }
+
+  function handleOpenVcaProduct(product: VisitorProductData) {
+    runMessagingSurfaceTransition(() => {
+      setSelectedVcaProduct(product);
+      setIsCaseStudyOpen(false);
+      setIsJobOpen(false);
+      setIsProductOpen(true);
+      setVcaPanelVariant("expanded");
+    });
+  }
+
+  function handleCloseVcaProduct() {
+    runMessagingSurfaceTransition(() => {
+      setIsProductOpen(false);
       setVcaPanelVariant("collapsed");
     });
   }
@@ -3222,6 +4404,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       setVcaPanelVariant("collapsed");
       setIsCaseStudyOpen(false);
       setIsJobOpen(false);
+      setIsProductOpen(false);
       resetVcaConversation();
       if (!humanSentMessage) {
         setHumanDraft("");
@@ -3236,8 +4419,9 @@ function PremiumCompanyPagesSeparateMemberPage({
       setVcaPanelVariant("collapsed");
       setIsCaseStudyOpen(false);
       setIsJobOpen(false);
+      setIsProductOpen(false);
       if (!humanSentMessage) {
-        setHumanDraft(VCA_HANDOFF_MESSAGE);
+        setHumanDraft(getVcaHandoffMessage(vcaVisitorQuestion));
       }
       setAiSurfaceState("docked");
       setHumanSurfaceState("open");
@@ -3269,6 +4453,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       setVcaPanelVariant("collapsed");
       setIsCaseStudyOpen(false);
       setIsJobOpen(false);
+      setIsProductOpen(false);
       setVcaConversationStage("handoffOpened");
       setAiSurfaceState((currentState) =>
         currentState === "closed" ? "closed" : "docked",
@@ -3297,6 +4482,7 @@ function PremiumCompanyPagesSeparateMemberPage({
       setVcaVisitorQuestion(
         prompt === VCA_JOB_SEEKER_CHIP ? VCA_JOB_SEEKER_QUESTION : prompt,
       );
+      setVcaProductPostQuestion(null);
       setVcaFollowUpQuestion(null);
       setVcaConversationStage("jobProof");
       return;
@@ -3305,6 +4491,11 @@ function PremiumCompanyPagesSeparateMemberPage({
     const promptId = getVcaVisitorPromptId(prompt);
 
     if (prompt === VCA_DRAFT_INTRO_PROMPT) {
+      if (isVcaProductQuestion(vcaVisitorQuestion)) {
+        handleOpenVcaHandoffMessage();
+        return;
+      }
+
       setVcaConversationStage("handoffOffered");
       return;
     }
@@ -3312,8 +4503,38 @@ function PremiumCompanyPagesSeparateMemberPage({
     if (promptId === "jobs") {
       setVcaVisitorQuestion(prompt);
       setVcaVisitorPromptId(promptId);
+      setVcaProductPostQuestion(null);
       setVcaFollowUpQuestion(null);
       setVcaConversationStage("jobProof");
+      return;
+    }
+
+    if (vcaConversationStage === "productProof") {
+      if (isVcaOpenEnrollmentReadinessQuestion(prompt)) {
+        setVcaProductPostQuestion(prompt);
+        setVcaFollowUpQuestion(null);
+        setVcaConversationStage("productPostProof");
+        return;
+      }
+
+      setVcaProductPostQuestion(null);
+      setVcaFollowUpQuestion(prompt);
+      setVcaConversationStage("handoffOffered");
+      return;
+    }
+
+    if (vcaConversationStage === "productPostProof") {
+      setVcaFollowUpQuestion(prompt);
+      setVcaConversationStage("handoffOffered");
+      return;
+    }
+
+    if (
+      (vcaConversationStage === "opening" ||
+        vcaConversationStage === "pageExplorerAnswered") &&
+      isVcaProductQuestion(prompt)
+    ) {
+      startVcaProductFlow(prompt);
       return;
     }
 
@@ -3326,6 +4547,7 @@ function PremiumCompanyPagesSeparateMemberPage({
     if (vcaConversationStage === "opening") {
       setVcaVisitorQuestion(prompt);
       setVcaVisitorPromptId(promptId);
+      setVcaProductPostQuestion(null);
 
       if (promptId && promptId !== "posts") {
         setVcaConversationStage("pageExplorerAnswered");
@@ -3339,6 +4561,7 @@ function PremiumCompanyPagesSeparateMemberPage({
     if (vcaConversationStage === "pageExplorerAnswered") {
       setVcaVisitorQuestion(prompt);
       setVcaVisitorPromptId(promptId);
+      setVcaProductPostQuestion(null);
 
       if (promptId && promptId !== "posts") {
         setVcaConversationStage("pageExplorerAnswered");
@@ -3357,6 +4580,23 @@ function PremiumCompanyPagesSeparateMemberPage({
 
     setVcaFollowUpQuestion(prompt);
     setVcaConversationStage("handoffOffered");
+  }
+
+  function handleVcaFabPromptSelect(prompt: string) {
+    runMessagingSurfaceTransition(
+      () => {
+        setVcaPanelVariant("collapsed");
+        setIsCaseStudyOpen(false);
+        setIsJobOpen(false);
+        setIsProductOpen(false);
+        setHumanSurfaceState((currentState) =>
+          currentState === "closed" ? "closed" : "docked",
+        );
+        setAiSurfaceState("open");
+        handleVcaPromptSelect(prompt);
+      },
+      getBackgroundTrayTransitionClass(),
+    );
   }
 
   function handleVcaSend() {
@@ -3382,6 +4622,7 @@ function PremiumCompanyPagesSeparateMemberPage({
 
     if (isJobSeekerIntent) {
       setVcaVisitorQuestion(trimmedDraft);
+      setVcaProductPostQuestion(null);
       setVcaFollowUpQuestion(null);
       setVcaConversationStage("jobProof");
       setVcaDraft("");
@@ -3393,9 +4634,42 @@ function PremiumCompanyPagesSeparateMemberPage({
     if (promptId === "jobs") {
       setVcaVisitorQuestion(trimmedDraft);
       setVcaVisitorPromptId(promptId);
+      setVcaProductPostQuestion(null);
       setVcaFollowUpQuestion(null);
       setVcaConversationStage("jobProof");
       setVcaDraft("");
+      return;
+    }
+
+    if (vcaConversationStage === "productProof") {
+      if (isVcaOpenEnrollmentReadinessQuestion(trimmedDraft)) {
+        setVcaProductPostQuestion(trimmedDraft);
+        setVcaFollowUpQuestion(null);
+        setVcaConversationStage("productPostProof");
+        setVcaDraft("");
+        return;
+      }
+
+      setVcaProductPostQuestion(null);
+      setVcaFollowUpQuestion(trimmedDraft);
+      setVcaConversationStage("handoffOffered");
+      setVcaDraft("");
+      return;
+    }
+
+    if (vcaConversationStage === "productPostProof") {
+      setVcaFollowUpQuestion(trimmedDraft);
+      setVcaConversationStage("handoffOffered");
+      setVcaDraft("");
+      return;
+    }
+
+    if (
+      (vcaConversationStage === "opening" ||
+        vcaConversationStage === "pageExplorerAnswered") &&
+      isVcaProductQuestion(trimmedDraft)
+    ) {
+      startVcaProductFlow(trimmedDraft);
       return;
     }
 
@@ -3405,6 +4679,7 @@ function PremiumCompanyPagesSeparateMemberPage({
     ) {
       setVcaVisitorQuestion(trimmedDraft);
       setVcaVisitorPromptId(promptId);
+      setVcaProductPostQuestion(null);
       setVcaFollowUpQuestion(null);
 
       if (promptId && promptId !== "posts") {
@@ -3478,18 +4753,34 @@ function PremiumCompanyPagesSeparateMemberPage({
 
       {isVcaEntryVisible && isFabEntryMode ? (
         <div
-          className="pcp-ai-messaging-surface fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-vca-fab-bottom)]"
+          className="pcp-ai-messaging-surface group fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-vca-fab-bottom)]"
           style={vcaFabStyle}
         >
           {isFabIconEntryMode ? (
-            <VcaFab
-              chatPanelId={vcaPanelId}
-              isOpen={false}
-              label={`Open ${pcpCompanyProfile.name} assistant`}
-              onClick={handleOpenVcaFromTray}
-              position="static"
-              variant="visitor"
-            />
+            <>
+              <FabPromptStack
+                items={vcaFabHoverPrompts.map((prompt) => ({
+                  id: prompt.label,
+                  prompt: prompt.label,
+                  value: prompt.label,
+                }))}
+                onPromptSelect={handleVcaFabPromptSelect}
+              />
+              <VcaFab
+                accentColor={VELORA_VISITOR_ASSISTANT_COLOR}
+                borderColor={VELORA_VISITOR_ASSISTANT_COLOR}
+                borderHoverColor={VELORA_VISITOR_ASSISTANT_COLOR}
+                chatPanelId={vcaPanelId}
+                className="hover:-translate-y-px hover:scale-[1.04] hover:shadow-raised-soft active:translate-y-0 active:scale-[1.02] motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100"
+                isOpen={false}
+                label={`Open ${pcpCompanyProfile.name} assistant`}
+                onClick={handleOpenVcaFromTray}
+                position="static"
+                variant="visitor"
+              >
+                <VeloraVcaLogoMark size="large" surface="bare" />
+              </VcaFab>
+            </>
           ) : (
             <Button
               aria-controls={vcaPanelId}
@@ -3567,18 +4858,23 @@ function PremiumCompanyPagesSeparateMemberPage({
               followUpQuestion={vcaFollowUpQuestion}
               isCaseStudyOpen={isCaseStudyOpen}
               isJobOpen={isJobOpen}
+              isProductOpen={isProductOpen}
               liveSupportMessages={vcaLiveSupportMessages}
               memberIntent={memberIntent}
+              productPostQuestion={vcaProductPostQuestion}
               selectedJob={selectedVcaJob}
+              selectedPost={selectedVcaPost}
+              selectedProduct={selectedVcaProduct}
               surfaceMode={isFabEntryMode ? "fab" : "tray"}
               visitorPromptId={vcaVisitorPromptId}
               onCloseCaseStudy={handleCloseVcaCaseStudy}
               onCloseJob={handleCloseVcaJob}
+              onCloseProduct={handleCloseVcaProduct}
               onClose={handleCloseVca}
               onDraftChange={handleVcaDraftChange}
-              onMinimizeToTray={handleMinimizeVcaToTray}
               onOpenCaseStudy={handleOpenVcaCaseStudy}
               onOpenJob={handleOpenVcaJob}
+              onOpenProduct={handleOpenVcaProduct}
               onOpenMessage={handleOpenVcaHandoffMessage}
               onVariantToggle={handleToggleVcaPanelVariant}
               onPromptSelect={handleVcaPromptSelect}
@@ -3590,26 +4886,13 @@ function PremiumCompanyPagesSeparateMemberPage({
         </>
       ) : null}
 
-      <div className="mx-auto grid max-w-[1128px] gap-xxl px-lg py-md lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="mx-auto grid max-w-[1128px] gap-xxl px-lg py-md xl:px-0 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-md">
           <OverviewCard />
           <FeaturedCard />
-          <Card>
-            <ModuleHeader title="Posts" />
-            <div className="px-xxl pb-xl pt-lg">
-              <div className="grid gap-lg md:grid-cols-2">
-                {posts.map((post) => (
-                  <PostCard key={post.title} {...post} />
-                ))}
-              </div>
-            </div>
-            <ModuleFooter>
-              <GhostButton icon="arrow-right" iconAtEnd size="small">
-                Show all posts
-              </GhostButton>
-            </ModuleFooter>
-          </Card>
+          <PostsCard />
           <ProductsCard />
+          <ServicesCard />
           <LeadersCard />
           <EventCard />
           <RecentJobOpeningsCard />

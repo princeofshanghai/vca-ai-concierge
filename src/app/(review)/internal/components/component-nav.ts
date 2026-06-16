@@ -296,6 +296,18 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           },
         ],
       },
+      {
+        title: "Illustrations",
+        items: [
+          {
+            id: "sdui-illustrations",
+            title: "Illustrations",
+            description:
+              "Displays SDUI microspot and scene illustration assets.",
+            href: "/internal/components/sdui/illustrations",
+          },
+        ],
+      },
     ],
   },
 ];

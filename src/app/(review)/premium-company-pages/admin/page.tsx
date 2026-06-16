@@ -25,5 +25,10 @@ export default async function PremiumCompanyPagesAdminRoute({
   const { story } = await searchParams;
   const storyParam = getStoryParam(story);
 
-  return <PremiumCompanyPagesPage key={storyParam ?? "dashboard"} />;
+  return (
+    <PremiumCompanyPagesPage
+      key={storyParam ?? "dashboard"}
+      story={storyParam}
+    />
+  );
 }

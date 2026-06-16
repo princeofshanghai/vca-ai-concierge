@@ -16,6 +16,7 @@ import {
   ChatPanel,
   ChatThread,
   Prompt,
+  useChatLatestMessageAnchor,
   type ChatPanelVariant,
 } from "@/components/chat";
 import { Button } from "@/components/primitives/button";
@@ -33,6 +34,7 @@ import {
   PersonCard as ResponsePersonCard,
   PostCompact as ResponsePostCompact,
   ResponseRail,
+  StreamingText as ResponseStreamingText,
   Text as ResponseText,
   TextRecommendationList as ResponseTextRecommendationList,
 } from "@/components/premium-company-pages/response-blocks";
@@ -47,6 +49,7 @@ import {
 } from "./persona";
 import { ScriptedResponseTurn } from "./scripted-response-turn";
 import { TodayActionCard } from "./today-action-card";
+import { PcpAdminGoldAiMark } from "./vca-fab";
 import {
   adminUc5CompetitorRows,
   adminUc5DemographicGroups,
@@ -74,6 +77,9 @@ const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
   backgroundColor: "#ACF5B3",
 };
 const CHERI_SPARKS_AVATAR = pcpVisitorPersona.avatar;
+const ADMIN_AI_ASSISTANT_SETTINGS_HREF =
+  "/premium-company-pages/admin/settings/manage-ai-assistant";
+const ASSISTANT_SETUP_CARD_ID = "assistant-setup";
 const STORY_1A_CARD_ID = "story-1a-follower-growth";
 const STORY_1A_FOLLOWER_GROWTH_PROMPT =
   "How do I recover my follower growth?";
@@ -114,6 +120,7 @@ export type AdminUc5ThreadTurn = Readonly<{
 type AdminPerformanceDigestCardProps = Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  showAssistantSetupAction?: boolean;
 }>;
 
 type AdminUc5SelfInitiatedTurn = Readonly<{
@@ -122,6 +129,7 @@ type AdminUc5SelfInitiatedTurn = Readonly<{
 }>;
 
 type AdminAttentionCardId =
+  | typeof ASSISTANT_SETUP_CARD_ID
   | typeof STORY_1A_CARD_ID
   | typeof AUTO_INVITE_CARD_ID
   | typeof FOLLOW_PAGES_CARD_ID;
@@ -143,11 +151,61 @@ type AdminUc5AgentPanelProps = Readonly<{
 export type AdminUc5SelfInitiatedView =
   | "page-performance"
   | "competitors"
-  | "visitor-audience";
+  | "visitor-audience"
+  | "page-engagement";
 
 const ADMIN_PAGE_PERFORMANCE_PROMPT = "How is my page performing this month?";
 const ADMIN_COMPETITORS_PROMPT = "How are my competitors doing?";
-const ADMIN_VISITOR_AUDIENCE_PROMPT = "Who's been visiting my page?";
+const ADMIN_VISITOR_AUDIENCE_PROMPT =
+  "Show insights about my page visitors";
+const ADMIN_PAGE_PERFORMANCE_RESPONSE_TEXT = `Your Page is performing well on content engagement, but growth is not keeping pace with competitors.
+
+Impressions, reactions, comments, and reposts are all up this month. Your strongest post reached a 7.8% engagement rate, which suggests practical open enrollment and carrier-readiness content is resonating.
+
+The main gap is distribution. Page views are up, but unique visitors are down, custom button clicks are at 0, and Velora added 29 new followers compared with ${pcpCompetitorNames[0]}'s 82. That suggests the content is resonating with people who see it, but the Page needs more reach and clearer conversion paths.`;
+const ADMIN_PAGE_PERFORMANCE_RESPONSE_HIGHLIGHTS = [
+  "content engagement",
+  "growth is not keeping pace with competitors",
+  "7.8% engagement rate",
+  "Page views are up",
+  "unique visitors are down",
+  `29 new followers compared with ${pcpCompetitorNames[0]}'s 82`,
+] as const;
+const VISITOR_AUDIENCE_RESPONSE_TEXT = `Your Page is reaching more relevant visitors this month.
+
+64% of people who viewed your Page match Velora's target audience, up from 52% last month. That match is based on LinkedIn demographic signals like job function, seniority, industry, company size, and location.
+
+The biggest shift is quality: more visitors are in Human Resources roles at Director+ seniority, and more are coming from companies with 10,001+ employees. That suggests your Page is reaching people who are more likely to evaluate Velora, not just browse it.`;
+const VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS = [
+  "64%",
+  "up from 52% last month",
+  "Human Resources roles at Director+ seniority",
+  "10,001+ employees",
+] as const;
+const ADMIN_PAGE_ENGAGEMENT_PROMPT = "How can I boost my page engagement?";
+const ADMIN_PAGE_ENGAGEMENT_RESPONSE_TEXT = `You can boost Page engagement by posting consistently, starting conversations, and using stronger visuals. You can also read more engagement best practices in the LinkedIn Page growth guide.
+
+Post consistently
+
+Companies that post weekly see 2x higher engagement. When someone engages with your post, invite them to follow your Page to grow your audience even faster.
+
+Engage with your community
+
+Ask thoughtful questions and respond to comments. Engagement with followers builds trust and helps you stay top of mind.
+
+Use compelling visuals
+
+Posts with images get 2x more comments; video drives 5x more engagement. Add photos, videos, or graphics that show your business, team, or customers in action.
+
+Would you like me to help you draft a new post?`;
+const ADMIN_PAGE_ENGAGEMENT_GUIDE_LINK_TEXT = "LinkedIn Page growth guide";
+const ADMIN_PAGE_ENGAGEMENT_FINAL_PROMPT_TEXT =
+  "Would you like me to help you draft a new post?";
+const ADMIN_PAGE_ENGAGEMENT_SECTION_TITLES = [
+  "Post consistently",
+  "Engage with your community",
+  "Use compelling visuals",
+] as const;
 
 export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   Readonly<{
@@ -166,6 +224,10 @@ export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   {
     id: "competitors",
     prompt: ADMIN_COMPETITORS_PROMPT,
+  },
+  {
+    id: "page-engagement",
+    prompt: ADMIN_PAGE_ENGAGEMENT_PROMPT,
   },
 ] as const;
 
@@ -197,10 +259,15 @@ function getSelfInitiatedViewForPrompt(
 
   if (
     prompt === ADMIN_VISITOR_AUDIENCE_PROMPT ||
+    prompt === "Who's been visiting my page?" ||
     prompt === "Who's been visiting my Page?" ||
     prompt === "Who's been visiting?"
   ) {
     return "visitor-audience";
+  }
+
+  if (prompt === ADMIN_PAGE_ENGAGEMENT_PROMPT) {
+    return "page-engagement";
   }
 
   return null;
@@ -268,6 +335,7 @@ function MetricTrend({
 export function AdminPerformanceDigestCard({
   activeInsightId,
   onInsightSelect,
+  showAssistantSetupAction = false,
 }: AdminPerformanceDigestCardProps) {
   const [resolvedCardIds, setResolvedCardIds] = useState<
     ReadonlySet<AdminAttentionCardId>
@@ -304,7 +372,21 @@ export function AdminPerformanceDigestCard({
       </div>
 
       <div className="mt-xxl space-y-md">
-        {!resolvedCardIds.has(STORY_1A_CARD_ID) ? (
+        {showAssistantSetupAction ? (
+          !resolvedCardIds.has(ASSISTANT_SETUP_CARD_ID) ? (
+            <TodayActionCard
+              badge={{ label: "Premium", tone: "premium" }}
+              description="Engage visitors with instant replies using content you control."
+              dismissLabel="Dismiss AI assistant setup action"
+              headline="Set up your AI assistant"
+              inlineAction={{
+                href: ADMIN_AI_ASSISTANT_SETTINGS_HREF,
+                label: "Set up",
+              }}
+              onDismiss={() => resolveCard(ASSISTANT_SETUP_CARD_ID)}
+            />
+          ) : null
+        ) : !resolvedCardIds.has(STORY_1A_CARD_ID) ? (
           <InsightCard
             active={activeInsightId === "follower-growth"}
             action={{
@@ -351,19 +433,6 @@ export function AdminPerformanceDigestCard({
         ) : null}
       </div>
     </section>
-  );
-}
-
-function VeloraLogo({ size = 40 }: Readonly<{ size?: 32 | 40 | 48 }>) {
-  return (
-    <Entity
-      className={VELORA_LOGO_TILE_BACKGROUND_CLASS}
-      label={pcpCompanyProfile.name}
-      shape="square"
-      size={size}
-      src={pcpCompanyProfile.logoSrc}
-      style={VELORA_LOGO_TILE_BACKGROUND_STYLE}
-    />
   );
 }
 
@@ -420,23 +489,28 @@ export function AdminUc5AgentPanel({
     : null;
   const headerActionSize = variant === "expanded" ? "medium" : "small";
   const isAssistantBusy = busyTurnIds.size > 0;
+  const latestSelfInitiatedTurn =
+    selfInitiatedTurns[selfInitiatedTurns.length - 1];
+  const latestThreadTurn = threadTurns[threadTurns.length - 1];
+  const latestUserMessageAnchorKey = latestThreadTurn
+    ? `turn:${latestThreadTurn.id}`
+    : latestSelfInitiatedTurn
+      ? `self-initiated:${latestSelfInitiatedTurn.id}`
+      : activeInsight
+        ? `active-insight:${activeInsight.id}:${activeInsight.prompt}`
+        : null;
+  const {
+    hasLatestBelow,
+    handleScroll: handleLatestScroll,
+    scrollToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: chatBodyRef,
+    anchorKey: latestUserMessageAnchorKey,
+    contentKey: `${activeInsight?.id ?? "none"}:${selfInitiatedTurns.length}:${threadTurns.length}:${busyTurnIds.size}`,
+  });
   const handleThreadContentChange = useCallback(() => {
-    const scrollToBottom = () => {
-      const chatBody = chatBodyRef.current;
-
-      if (!chatBody) {
-        return;
-      }
-
-      chatBody.scrollTo({ top: chatBody.scrollHeight });
-    };
-
-    scrollToBottom();
-    window.requestAnimationFrame(scrollToBottom);
-    window.setTimeout(scrollToBottom, 120);
-    window.setTimeout(scrollToBottom, 360);
-    window.setTimeout(scrollToBottom, 700);
-  }, []);
+    handleLatestScroll();
+  }, [handleLatestScroll]);
   const handleScriptedTurnBusyChange = useCallback(
     (turnId: string, isBusy: boolean) => {
       setBusyTurnIds((currentTurnIds) => {
@@ -481,136 +555,185 @@ export function AdminUc5AgentPanel({
     },
     [handleSelfInitiatedViewSelect],
   );
+  const isStartSurfaceVisible =
+    !activeInsight &&
+    selfInitiatedTurns.length === 0 &&
+    threadTurns.length === 0;
 
   return (
     <ChatPanel
-      aria-label="Velora AI"
+      aria-label="Assistant"
       className="!h-full !w-full !rounded-none shadow-raised-faint md:!h-full md:!w-full md:!rounded-sm"
       id={panelId}
       variant={variant}
     >
       <ChatHeader
         actionSize={headerActionSize}
-        identity={{
-          type: "ai",
-          title: "Velora AI",
-          icon: <VeloraLogo size={32} />,
-        }}
+        centerContent={
+          isStartSurfaceVisible ? undefined : <PcpAdminGoldAiMark />
+        }
         onClose={onClose}
-        onMinimizeToTray={onClose}
         onVariantToggle={onVariantToggle}
+        showAiMark={false}
+        transparent={isStartSurfaceVisible}
         variant={variant}
       />
-      <ChatBody ref={chatBodyRef}>
-        <ChatThread>
-          <div className="flex flex-col gap-lg">
-            {activeInsight && activeInsightData ? (
-              <ActiveInsightThread
-                insight={activeInsightData}
-                onBusyChange={handleScriptedTurnBusyChange}
-                onContentChange={handleThreadContentChange}
-                onFollowUpSelect={onFollowUpSelect}
-                prompt={activeInsight.prompt}
-                stopSignal={stopSignal}
-              />
-            ) : selfInitiatedTurns.length > 0 ? (
-              selfInitiatedTurns.map((turn) => {
-                if (turn.view === "page-performance") {
-                  return (
-                    <SelfInitiatedPerformanceThread
-                      key={turn.id}
-                      onBusyChange={handleScriptedTurnBusyChange}
-                      onContentChange={handleThreadContentChange}
-                      onPromptSelect={handleSelfInitiatedPromptSelect}
-                      stopSignal={stopSignal}
-                      turnId={turn.id}
-                    />
-                  );
-                }
+      {isStartSurfaceVisible ? (
+        <AdminAssistantStartSurface
+          draft={draft}
+          onDraftChange={onDraftChange}
+          onPromptSelect={handleSelfInitiatedViewSelect}
+          onSend={onSend}
+        />
+      ) : (
+        <>
+          <ChatBody
+            ref={chatBodyRef}
+            onJumpToLatest={scrollToLatest}
+            onScroll={handleLatestScroll}
+            showJumpToLatest={hasLatestBelow}
+          >
+            <ChatThread>
+              <div className="flex flex-col gap-lg">
+                {activeInsight && activeInsightData ? (
+                  <ActiveInsightThread
+                    insight={activeInsightData}
+                    onBusyChange={handleScriptedTurnBusyChange}
+                    onContentChange={handleThreadContentChange}
+                    onFollowUpSelect={onFollowUpSelect}
+                    prompt={activeInsight.prompt}
+                    stopSignal={stopSignal}
+                  />
+                ) : selfInitiatedTurns.length > 0 ? (
+                  selfInitiatedTurns.map((turn) => {
+                    if (turn.view === "page-performance") {
+                      return (
+                        <SelfInitiatedPerformanceThread
+                          key={turn.id}
+                          onBusyChange={handleScriptedTurnBusyChange}
+                          onContentChange={handleThreadContentChange}
+                          onPromptSelect={handleSelfInitiatedPromptSelect}
+                          stopSignal={stopSignal}
+                          turnId={turn.id}
+                        />
+                      );
+                    }
 
-                if (turn.view === "competitors") {
-                  return (
-                    <SelfInitiatedCompetitorsThread
-                      key={turn.id}
-                      onBusyChange={handleScriptedTurnBusyChange}
-                      onContentChange={handleThreadContentChange}
-                      onPromptSelect={handleSelfInitiatedPromptSelect}
-                      stopSignal={stopSignal}
-                      turnId={turn.id}
-                    />
-                  );
-                }
+                    if (turn.view === "competitors") {
+                      return (
+                        <SelfInitiatedCompetitorsThread
+                          key={turn.id}
+                          onBusyChange={handleScriptedTurnBusyChange}
+                          onContentChange={handleThreadContentChange}
+                          onPromptSelect={handleSelfInitiatedPromptSelect}
+                          stopSignal={stopSignal}
+                          turnId={turn.id}
+                        />
+                      );
+                    }
 
-                return (
-                  <SelfInitiatedVisitorAudienceThread
+                    if (turn.view === "page-engagement") {
+                      return (
+                        <SelfInitiatedPageEngagementThread
+                          key={turn.id}
+                          onBusyChange={handleScriptedTurnBusyChange}
+                          onContentChange={handleThreadContentChange}
+                          stopSignal={stopSignal}
+                          turnId={turn.id}
+                        />
+                      );
+                    }
+
+                    return (
+                      <SelfInitiatedVisitorAudienceThread
+                        key={turn.id}
+                        onBusyChange={handleScriptedTurnBusyChange}
+                        onContentChange={handleThreadContentChange}
+                        stopSignal={stopSignal}
+                        turnId={turn.id}
+                      />
+                    );
+                  })
+                ) : null}
+
+                {threadTurns.map((turn) => (
+                  <FollowUpTurn
                     key={turn.id}
                     onBusyChange={handleScriptedTurnBusyChange}
                     onContentChange={handleThreadContentChange}
                     stopSignal={stopSignal}
-                    turnId={turn.id}
+                    turn={turn}
                   />
-                );
-              })
-            ) : threadTurns.length === 0 ? (
-              <WelcomeThread onPromptSelect={handleSelfInitiatedViewSelect} />
-            ) : null}
-
-            {threadTurns.map((turn) => (
-              <FollowUpTurn
-                key={turn.id}
-                onBusyChange={handleScriptedTurnBusyChange}
-                onContentChange={handleThreadContentChange}
-                stopSignal={stopSignal}
-                turn={turn}
-              />
-            ))}
-          </div>
-        </ChatThread>
-      </ChatBody>
-      <ChatComposer
-        inputProps={{
-          "aria-label": "Message Velora AI",
-          onChange: onDraftChange,
-          placeholder: "Send message",
-          disabled: isAssistantBusy,
-          value: draft,
-        }}
-        isResponding={isAssistantBusy}
-        onSend={onSend}
-        onStopResponse={handleStopAssistantResponse}
-        sendDisabled={isAssistantBusy}
-        showAttachAction={false}
-        showDictationAction={false}
-        showTopDivider
-        showVoiceMode={false}
-        variant="collapsed"
-      />
+                ))}
+              </div>
+            </ChatThread>
+          </ChatBody>
+          <ChatComposer
+            inputProps={{
+              "aria-label": "Message Page assistant",
+              onChange: onDraftChange,
+              placeholder: "Send message",
+              disabled: isAssistantBusy,
+              value: draft,
+            }}
+            isResponding={isAssistantBusy}
+            onSend={onSend}
+            onStopResponse={handleStopAssistantResponse}
+            sendDisabled={isAssistantBusy}
+            showAttachAction={false}
+            showDictationAction={false}
+            showTopDivider
+            showVoiceMode={false}
+            variant="collapsed"
+          />
+        </>
+      )}
     </ChatPanel>
   );
 }
 
-function WelcomeThread({
+function AdminAssistantStartSurface({
+  draft,
+  onDraftChange,
   onPromptSelect,
+  onSend,
 }: Readonly<{
+  draft: string;
+  onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onPromptSelect: (view: AdminUc5SelfInitiatedView) => void;
+  onSend: () => void;
 }>) {
   return (
-    <section className="flex w-full max-w-[var(--design-layout-chat-message-assistant-max)] flex-col items-start pb-xl pt-sm pr-sm">
-      <h2 className="text-heading-lg text-text">
-        Hi {pcpCompanyProfile.adminFirstName} 👋
-      </h2>
-      <p className="mt-xs text-body-sm text-text">
-        What would you like to look at?
-      </p>
-      <div className="mt-lg flex flex-col gap-sm">
-        {ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => (
-          <Prompt
-            className="w-fit max-w-full self-start"
-            key={item.id}
-            onPromptSelect={() => onPromptSelect(item.id)}
-            prompt={item.prompt}
+    <section className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto px-lg pb-[120px] pt-xxl md:px-xxl">
+      <div className="flex w-full flex-col items-center">
+        <PcpAdminGoldAiMark className="size-14" />
+        <h2 className="mt-lg text-heading-lg text-text">Page assistant</h2>
+        <div className="mt-xl w-full max-w-[var(--design-layout-panel-content-max)]">
+          <ChatComposer
+            className="!min-h-0 !border-t-0 !px-0 !pb-0 !pt-0 md:!px-0 md:!pb-0 md:!pt-0"
+            inputProps={{
+              "aria-label": "Ask Page assistant",
+              onChange: onDraftChange,
+              placeholder: "Ask a question...",
+              value: draft,
+            }}
+            onSend={onSend}
+            showAttachAction={false}
+            showDictationAction={false}
+            showVoiceMode={false}
+            variant="collapsed"
           />
-        ))}
+        </div>
+        <div className="mt-xl flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col items-start gap-sm">
+          {ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => (
+            <Prompt
+              className="w-fit max-w-full self-start"
+              key={item.id}
+              onPromptSelect={() => onPromptSelect(item.id)}
+              prompt={item.prompt}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -631,32 +754,34 @@ function SelfInitiatedPerformanceThread({
 }>) {
   return (
     <>
-      <ChatMessage role="user">How is my page performing this month?</ChatMessage>
+      <ChatMessage role="user">{ADMIN_PAGE_PERFORMANCE_PROMPT}</ChatMessage>
       <ScriptedResponseTurn
         attachments={[
           {
-            id: "metrics",
+            id: "content-metrics",
             children: (
               <ResponseMetric
+                title="Content engagement"
                 items={[
                   {
-                    value: "+212",
-                    label: "New followers",
-                    delta: "12%",
-                    deltaContext: "vs last mo",
+                    value: "8,920",
+                    label: "Impressions",
+                    delta: "18.4%",
+                    deltaContext: "this month",
                     tone: "positive",
                   },
                   {
-                    value: "1,204",
-                    label: "Page visits",
-                    delta: "19%",
-                    deltaContext: "vs last mo",
+                    value: "486",
+                    label: "Reactions",
+                    delta: "12.7%",
+                    deltaContext: "this month",
                     tone: "positive",
                   },
                   {
-                    value: "4.6%",
-                    label: "Engagement rate",
-                    delta: "0.8 pts",
+                    value: "128",
+                    label: "Comments",
+                    delta: "9.3%",
+                    deltaContext: "this month",
                     tone: "positive",
                   },
                 ]}
@@ -664,51 +789,40 @@ function SelfInitiatedPerformanceThread({
             ),
           },
           {
-            id: "competitor-comparison",
+            id: "follower-growth-comparison",
             children: (
               <ResponseCompare
-                dimension="Follower growth this month"
+                dimension="New followers in the last 30 days"
                 rows={[
                   {
                     name: pcpCompetitorNames[0],
-                    value: 18,
-                    valueLabel: "+18%",
+                    value: 82,
+                    valueLabel: "82",
                     visual: {
                       kind: "company-logo",
                     },
                   },
                   {
-                    name: "Velora",
-                    value: 12,
-                    valueLabel: "+12%",
+                    name: pcpCompetitorNames[1],
+                    value: 64,
+                    valueLabel: "64",
+                    visual: {
+                      kind: "company-logo",
+                    },
+                  },
+                  {
+                    name: pcpCompanyProfile.name,
+                    value: 29,
+                    valueLabel: "29",
                     isYou: true,
                     visual: {
                       kind: "company-logo",
                       src: pcpCompanyProfile.logoSrc,
                     },
                   },
-                  {
-                    name: pcpCompetitorNames[1],
-                    value: 4,
-                    valueLabel: "+4%",
-                    visual: {
-                      kind: "company-logo",
-                    },
-                  },
                 ]}
-                title="Competitor comparison"
+                title="Follower growth gap"
               />
-            ),
-          },
-          {
-            id: "performance-context",
-            children: (
-              <ResponseText className="chat-message-enter">
-                {pcpCompetitorNames[0]} grew faster — but they posted 3x as
-                much. Per post, your engagement is the strongest of the three. And the right
-                people are showing up: 68% of your visitors this month are HR
-                Director or above.
-              </ResponseText>
             ),
           },
           {
@@ -717,7 +831,7 @@ function SelfInitiatedPerformanceThread({
               <ResponseChips
                 onPromptSelect={onPromptSelect}
                 prompts={[
-                  "Who's been visiting?",
+                  ADMIN_VISITOR_AUDIENCE_PROMPT,
                   ADMIN_COMPETITORS_PROMPT,
                 ]}
               />
@@ -727,8 +841,14 @@ function SelfInitiatedPerformanceThread({
         id={`${turnId}-performance-summary`}
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <PagePerformanceResponseText
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
         stopSignal={stopSignal}
-        text="Strong month, Rose. Your follower growth recovered — and the open enrollment posts we talked about last month did the heavy lifting."
+        text={ADMIN_PAGE_PERFORMANCE_RESPONSE_TEXT}
       />
     </>
   );
@@ -870,32 +990,313 @@ function SelfInitiatedVisitorAudienceThread({
                     actionIcon="visibility"
                     actionLabel="View profile"
                     avatarSrc={visitor.avatarSrc}
-                    followers={visitor.context}
                     headline={visitor.headline}
                     key={visitor.name}
                     name={visitor.name}
+                    tag={visitor.tag}
+                    tagTone="supportive-4"
                   />
                 ))}
               </ResponseRail>
-            ),
-          },
-          {
-            id: "chips",
-            children: (
-              <ResponseChips
-                prompts={[
-                  "Break down by role",
-                  "What content drew them?",
-                ]}
-              />
             ),
           },
         ]}
         id={`${turnId}-visitor-audience`}
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <VisitorAudienceResponseText
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
         stopSignal={stopSignal}
-        text="1,204 people visited this month, and more of them match the audience Velora is built for."
+        text={VISITOR_AUDIENCE_RESPONSE_TEXT}
+      />
+    </>
+  );
+}
+
+function InlineStreamingText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  return isStreaming ? <ResponseStreamingText text={text} /> : <>{text}</>;
+}
+
+function EmphasizedStreamingText({
+  highlights = VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS,
+  isStreaming,
+  text,
+}: Readonly<{
+  highlights?: ReadonlyArray<string>;
+  isStreaming: boolean;
+  text: string;
+}>) {
+  const pieces: Array<Readonly<{ text: string; highlight: boolean }>> = [];
+  let remainingText = text;
+
+  while (remainingText.length > 0) {
+    const nextMatch = highlights.reduce<{
+      phrase: string;
+      index: number;
+    } | null>((currentMatch, phrase) => {
+      const index = remainingText.indexOf(phrase);
+
+      if (index === -1) {
+        return currentMatch;
+      }
+
+      if (
+        currentMatch === null ||
+        index < currentMatch.index ||
+        (index === currentMatch.index &&
+          phrase.length > currentMatch.phrase.length)
+      ) {
+        return { phrase, index };
+      }
+
+      return currentMatch;
+    }, null);
+
+    if (!nextMatch) {
+      pieces.push({ text: remainingText, highlight: false });
+      break;
+    }
+
+    if (nextMatch.index > 0) {
+      pieces.push({
+        text: remainingText.slice(0, nextMatch.index),
+        highlight: false,
+      });
+    }
+
+    pieces.push({ text: nextMatch.phrase, highlight: true });
+    remainingText = remainingText.slice(
+      nextMatch.index + nextMatch.phrase.length,
+    );
+  }
+
+  return (
+    <>
+      {pieces.map((piece, index) =>
+        piece.highlight ? (
+          <strong className="font-semibold text-text" key={index}>
+            <InlineStreamingText isStreaming={isStreaming} text={piece.text} />
+          </strong>
+        ) : (
+          <InlineStreamingText
+            isStreaming={isStreaming}
+            key={index}
+            text={piece.text}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
+function FormattedInsightResponseText({
+  highlights,
+  isStreaming,
+  text,
+}: Readonly<{
+  highlights: ReadonlyArray<string>;
+  isStreaming: boolean;
+  text: string;
+}>) {
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return (
+    <ResponseText className="chat-message-enter">
+      {blocks.map((block, index) => (
+        <p
+          className={cx(index === 0 && "font-semibold", index > 0 && "mt-md")}
+          key={index}
+        >
+          <EmphasizedStreamingText
+            highlights={highlights}
+            isStreaming={isStreaming}
+            text={block}
+          />
+        </p>
+      ))}
+    </ResponseText>
+  );
+}
+
+function VisitorAudienceResponseText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  return (
+    <FormattedInsightResponseText
+      highlights={VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS}
+      isStreaming={isStreaming}
+      text={text}
+    />
+  );
+}
+
+function PagePerformanceResponseText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  return (
+    <FormattedInsightResponseText
+      highlights={ADMIN_PAGE_PERFORMANCE_RESPONSE_HIGHLIGHTS}
+      isStreaming={isStreaming}
+      text={text}
+    />
+  );
+}
+
+function getPageEngagementBlockType(block: string) {
+  const trimmedBlock = block.trim();
+
+  if (
+    ADMIN_PAGE_ENGAGEMENT_SECTION_TITLES.some((sectionTitle) =>
+      sectionTitle.startsWith(trimmedBlock),
+    )
+  ) {
+    return "heading";
+  }
+
+  if (ADMIN_PAGE_ENGAGEMENT_FINAL_PROMPT_TEXT.startsWith(trimmedBlock)) {
+    return "final";
+  }
+
+  return "paragraph";
+}
+
+function PageEngagementIntroText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  const linkStartIndex = text.indexOf(ADMIN_PAGE_ENGAGEMENT_GUIDE_LINK_TEXT);
+
+  if (linkStartIndex === -1) {
+    return <InlineStreamingText isStreaming={isStreaming} text={text} />;
+  }
+
+  const beforeLink = text.slice(0, linkStartIndex);
+  const afterLink = text.slice(
+    linkStartIndex + ADMIN_PAGE_ENGAGEMENT_GUIDE_LINK_TEXT.length,
+  );
+
+  return (
+    <>
+      <InlineStreamingText isStreaming={isStreaming} text={beforeLink} />
+      <a
+        className="font-semibold text-action hover:underline"
+        href="#page-growth-guide"
+      >
+        {ADMIN_PAGE_ENGAGEMENT_GUIDE_LINK_TEXT}
+      </a>
+      <InlineStreamingText isStreaming={isStreaming} text={afterLink} />
+    </>
+  );
+}
+
+function PageEngagementResponseText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  const blocks = text
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  return (
+    <ResponseText className="chat-message-enter">
+      {blocks.map((block, index) => {
+        const blockType = getPageEngagementBlockType(block);
+        const previousBlock = blocks[index - 1] ?? "";
+        const previousBlockType = previousBlock
+          ? getPageEngagementBlockType(previousBlock)
+          : null;
+
+        if (blockType === "heading") {
+          return (
+            <h3 className="mt-md text-control-sm text-text" key={index}>
+              <InlineStreamingText isStreaming={isStreaming} text={block} />
+            </h3>
+          );
+        }
+
+        return (
+          <p
+            className={cx(
+              index > 0 &&
+                (previousBlockType === "heading" ? "mt-xxs" : "mt-md"),
+            )}
+            key={index}
+          >
+            {index === 0 ? (
+              <PageEngagementIntroText
+                isStreaming={isStreaming}
+                text={block}
+              />
+            ) : (
+              <InlineStreamingText isStreaming={isStreaming} text={block} />
+            )}
+          </p>
+        );
+      })}
+    </ResponseText>
+  );
+}
+
+function SelfInitiatedPageEngagementThread({
+  onBusyChange,
+  onContentChange,
+  stopSignal,
+  turnId,
+}: Readonly<{
+  onBusyChange?: (id: string, isBusy: boolean) => void;
+  onContentChange?: () => void;
+  stopSignal?: number;
+  turnId: string;
+}>) {
+  return (
+    <>
+      <ChatMessage role="user">{ADMIN_PAGE_ENGAGEMENT_PROMPT}</ChatMessage>
+      <ScriptedResponseTurn
+        attachments={[
+          {
+            id: "draft-post-prompt",
+            children: <ResponseChips prompts={["Draft post"]} />,
+          },
+        ]}
+        id={`${turnId}-page-engagement`}
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <PageEngagementResponseText
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
+        stopSignal={stopSignal}
+        text={ADMIN_PAGE_ENGAGEMENT_RESPONSE_TEXT}
       />
     </>
   );
@@ -1012,7 +1413,7 @@ function getActiveInsightIntro(insightId: AdminUc5InsightId) {
   }
 
   if (insightId === "visitor-demographics") {
-    return "The people finding Velora look close to the teams you're built for: HR, benefits, and people operations leaders managing carrier complexity, eligibility cleanup, and open enrollment readiness.";
+    return "The people finding Velora look close to your target audience: Human Resources visitors at Director+ seniority, especially from Insurance, Hospital & Health Care, and large enterprise companies.";
   }
 
   if (insightId === "content-engagement") {
@@ -1068,36 +1469,18 @@ const contentResonanceItems = [
   },
 ] as const;
 
-const visitorAudienceFitAvatars = [
-  {
-    label: "Priya Shah",
-    src: assetSrc("avatar-3.png"),
-  },
-  {
-    label: "Dana Kim",
-    src: assetSrc("avatar-2.png"),
-  },
-  {
-    label: "Morgan Lee",
-    src: assetSrc("avatar-1.png"),
-  },
-] as const;
-
 const visitorAudienceFitSegments = [
   {
-    label: "HR leaders",
-    detail: "Largest viewer group",
+    label: "Human Resources · Director+",
     value: "38%",
   },
   {
-    label: "Benefits operations",
-    detail: "Viewed readiness content",
-    value: "16%",
+    label: "Insurance · Hospital & Health Care",
+    value: "31%",
   },
   {
-    label: "People operations",
-    detail: "Growing share of Page viewers",
-    value: "10%",
+    label: "10,001+ employees",
+    value: "44%",
   },
 ] as const;
 
@@ -1105,26 +1488,26 @@ const visitorAudienceCards = [
   {
     name: pcpVisitorPersona.name,
     headline: `${pcpVisitorPersona.title} · ${pcpVisitorPersona.company}`,
-    context: "Retail · viewed carrier coordination post",
     avatarSrc: assetSrc(CHERI_SPARKS_AVATAR),
+    tag: "Returned this week",
   },
   {
     name: "Priya Shah",
     headline: "Director of Benefits · Calico Health Network",
-    context: "Healthcare · asked about carrier files",
     avatarSrc: assetSrc("avatar-3.png"),
+    tag: "Viewed multiple posts",
   },
   {
     name: "Dana Kim",
     headline: "VP People Operations · Arbor Retail Group",
-    context: "Retail · open enrollment coordination",
     avatarSrc: assetSrc("avatar-2.png"),
+    tag: "Recent visitor",
   },
   {
     name: "Morgan Lee",
-    headline: "HR Operations Lead · Meridian Logistics",
-    context: "Logistics · viewed eligibility cleanup content",
+    headline: "Director of Human Resources · Meridian Logistics",
     avatarSrc: assetSrc("avatar-1.png"),
+    tag: "Visited twice",
   },
 ] as const;
 
@@ -1531,8 +1914,14 @@ function VisitorAudienceFitThread({
         id="visitor-audience-fit-insight"
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <VisitorAudienceResponseText
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
         stopSignal={stopSignal}
-        text="Yes. 64% of people who viewed your Page this month work in HR, benefits, or people operations roles. That is the audience Velora is built for."
+        text={VISITOR_AUDIENCE_RESPONSE_TEXT}
       />
     </>
   );
@@ -1697,8 +2086,13 @@ function MetricRow({ metric }: Readonly<{ metric: AdminUc5Metric }>) {
 function VisitorAudienceFitResponse() {
   return (
     <ResponseAudienceFit
-      avatars={visitorAudienceFitAvatars}
+      actionLabel={`Go to Who's visited my page`}
+      metricLabel="match your target audience"
+      metricValue="64%"
       segments={visitorAudienceFitSegments}
+      trendContext="vs last month"
+      trendDelta="12 pts"
+      trendTone="positive"
     />
   );
 }

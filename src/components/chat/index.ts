@@ -38,6 +38,7 @@ export {
   startChatPanelViewTransition,
   supportsViewTransitions,
   useChatAssistantStream,
+  useChatLatestMessageAnchor,
   useChatPanelPresence,
   type ChatMessageStreamStatus,
   type ChatPanelPresence,

@@ -125,6 +125,7 @@ import {
   SharedShellHiringMicrositeDemo,
   SharedShellPremiumSurveyDemo,
   SharedSidePanelDemo,
+  VcaFabPresenceBadgeExplorationPreview,
   VcaFabReviewPreview,
   VcaFabStatesPreview,
   VcaFabSwappableMarkPreview,
@@ -222,6 +223,24 @@ const reactionIconPlaceholderExamples = [
     type: SduiReactionIconType;
   }>
 >;
+const sduiIllustrationCatalog = {
+  microspots: [
+    {
+      name: "Notepad Large",
+      src: "/assets/sdui/illustrations/notepad-large.svg",
+      width: 64,
+      height: 64,
+    },
+  ],
+  scenes: [
+    {
+      name: "Illustration",
+      src: "/assets/sdui/illustrations/illustration.svg",
+      width: 375,
+      height: 186,
+    },
+  ],
+} as const;
 const tagSizes = [
   { label: "Small", size: "small" },
   { label: "Medium", size: "medium" },
@@ -1165,6 +1184,9 @@ function PremiumCompanyPageVcaFabPage({
         <PreviewCard title="Default">
           <VcaFabReviewPreview />
         </PreviewCard>
+      </PreviewSection>
+      <PreviewSection title="Visitor presence badge">
+        <VcaFabPresenceBadgeExplorationPreview />
       </PreviewSection>
       <PreviewSection title="States">
         <VcaFabStatesPreview />
@@ -2487,6 +2509,68 @@ function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+type SduiIllustrationAsset =
+  (typeof sduiIllustrationCatalog)[keyof typeof sduiIllustrationCatalog][number];
+
+function SduiIllustrationAssetCard({
+  asset,
+  wide = false,
+}: Readonly<{
+  asset: SduiIllustrationAsset;
+  wide?: boolean;
+}>) {
+  return (
+    <article
+      className={[
+        "rounded-sm border border-border-faint bg-background p-lg",
+        wide ? "max-w-[560px]" : "max-w-[240px]",
+      ].join(" ")}
+    >
+      <div className="flex min-h-[180px] items-center justify-center rounded-xs bg-background-neutral-soft p-lg">
+        <Image
+          alt={asset.name}
+          className={wide ? "h-auto w-full max-w-[375px]" : "size-16"}
+          height={asset.height}
+          src={asset.src}
+          unoptimized
+          width={asset.width}
+        />
+      </div>
+      <p className="mt-md text-control-sm text-text">{asset.name}</p>
+      <p className="mt-xs break-all text-body-xs text-text-meta">
+        {asset.src}
+      </p>
+    </article>
+  );
+}
+
+function SduiIllustrationsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection
+        title="Microspots"
+        description="Compact SDUI illustration assets for small supporting moments."
+      >
+        <div className="grid gap-lg sm:grid-cols-2 lg:grid-cols-3">
+          {sduiIllustrationCatalog.microspots.map((asset) => (
+            <SduiIllustrationAssetCard asset={asset} key={asset.src} />
+          ))}
+        </div>
+      </PreviewSection>
+      <PreviewSection
+        title="Scenes"
+        description="Larger SDUI illustration assets for more expressive surfaces."
+      >
+        <div className="grid gap-lg">
+          {sduiIllustrationCatalog.scenes.map((asset) => (
+            <SduiIllustrationAssetCard asset={asset} key={asset.src} wide />
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SduiReactionIconsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
@@ -3081,6 +3165,8 @@ export function ComponentPageContent({
       return <SduiPillPage item={item} />;
     case "sdui-icon":
       return <SduiIconPage item={item} />;
+    case "sdui-illustrations":
+      return <SduiIllustrationsPage item={item} />;
     case "sdui-reaction-icons":
       return <SduiReactionIconsPage item={item} />;
     case "sdui-entity":

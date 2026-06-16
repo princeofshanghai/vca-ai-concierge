@@ -53,9 +53,9 @@ const variantClasses: Record<ButtonIconVariant, string> = {
   primary:
     "border-transparent bg-action text-on-action group-hover:bg-action-hover group-active:bg-action-active",
   secondary:
-    "border-action bg-background text-action group-hover:border-action-hover group-hover:bg-action-background-transparent-hover group-hover:text-action-hover group-active:border-action-active group-active:bg-action-background-transparent-active group-active:text-action-active",
+    "border-action bg-background text-action group-hover:border-action-hover group-hover:bg-action-background-transparent-hover group-hover:text-action-hover group-hover:shadow-[inset_0_0_0_1px_var(--color-action-hover)] group-active:border-action-active group-active:bg-action-background-transparent-active group-active:text-action-active group-active:shadow-none",
   tertiary:
-    "border-border-subtle bg-background text-text-meta group-hover:border-border-hover group-hover:bg-background-transparent-hover group-hover:text-text-hover group-active:border-border-active group-active:bg-background-transparent-active group-active:text-text-active",
+    "border-border bg-background text-label group-hover:border-border-hover group-hover:bg-background-transparent-hover group-hover:text-label-hover group-hover:shadow-[inset_0_0_0_1px_var(--color-border-hover)] group-active:border-border-active group-active:bg-background-transparent-active group-active:text-label-active group-active:shadow-none",
 };
 
 const staticStateClasses: Record<
@@ -69,16 +69,16 @@ const staticStateClasses: Record<
   },
   secondary: {
     hover:
-      "border-action-hover bg-action-background-transparent-hover text-action-hover",
+      "border-action-hover bg-action-background-transparent-hover text-action-hover shadow-[inset_0_0_0_1px_var(--color-action-hover)]",
     active:
-      "border-action-active bg-action-background-transparent-active text-action-active",
+      "border-action-active bg-action-background-transparent-active text-action-active shadow-none",
     "focus-visible": "ring-4 ring-action-focus-ring",
   },
   tertiary: {
     hover:
-      "border-border-hover bg-background-transparent-hover text-text-hover",
+      "border-border-hover bg-background-transparent-hover text-label-hover shadow-[inset_0_0_0_1px_var(--color-border-hover)]",
     active:
-      "border-border-active bg-background-transparent-active text-text-active",
+      "border-border-active bg-background-transparent-active text-label-active shadow-none",
     "focus-visible": "ring-4 ring-neutral-focus-ring",
   },
 };
@@ -139,7 +139,7 @@ export const ButtonIcon = forwardRef<HTMLButtonElement, ButtonIconProps>(
       >
         <span
           className={cx(
-            "inline-flex shrink-0 items-center justify-center rounded-round border transition-[background-color,border-color,color] duration-150 ease-out",
+            "inline-flex shrink-0 items-center justify-center rounded-round border shadow-none transition-[background-color,border-color,color,box-shadow] duration-150 ease-out",
             surfaceSizeClasses[size],
             isDisabled
               ? "border-transparent bg-background-disabled text-text-disabled"

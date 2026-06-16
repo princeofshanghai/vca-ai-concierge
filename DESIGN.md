@@ -424,21 +424,23 @@ components:
     backgroundColor: "{colors.action-background-transparent-hover}"
     textColor: "{colors.action-hover}"
     borderColor: "{colors.action-hover}"
+    hoverBorderWidth: 2px
   button-secondary-active:
     backgroundColor: "{colors.action-background-transparent-active}"
     textColor: "{colors.action-active}"
     borderColor: "{colors.action-active}"
   button-tertiary:
     backgroundColor: "{colors.background}"
-    textColor: "{colors.text-meta}"
-    borderColor: "{colors.border-subtle}"
+    textColor: "{colors.label}"
+    borderColor: "{colors.border}"
   button-tertiary-hover:
     backgroundColor: "{colors.background-transparent-hover}"
-    textColor: "{colors.text-hover}"
+    textColor: "{colors.label-hover}"
     borderColor: "{colors.border-hover}"
+    hoverBorderWidth: 2px
   button-tertiary-active:
     backgroundColor: "{colors.background-transparent-active}"
-    textColor: "{colors.text-active}"
+    textColor: "{colors.label-active}"
     borderColor: "{colors.border-active}"
   button-disabled:
     backgroundColor: "{colors.background-disabled}"

@@ -32,5 +32,10 @@ export type {
 export { TodayActionCard } from "./today-action-card";
 export type { TodayActionCardProps } from "./today-action-card";
 export type { AdminUc5InsightId } from "./premium-company-pages-admin-uc5-data";
-export { VcaFab } from "./vca-fab";
-export type { VcaFabProps, VcaFabVariant, VcaFabVisualState } from "./vca-fab";
+export { PcpAdminGoldAiMark, VcaFab } from "./vca-fab";
+export type {
+  VcaFabAdminTone,
+  VcaFabProps,
+  VcaFabVariant,
+  VcaFabVisualState,
+} from "./vca-fab";

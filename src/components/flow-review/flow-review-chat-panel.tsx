@@ -5,7 +5,6 @@ import {
   type UIEvent,
   useEffect,
   useId,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -23,6 +22,7 @@ import {
   ChatThread,
   Prompt,
   RecommendationCard,
+  useChatLatestMessageAnchor,
   type ChatHeaderIdentity,
   type ChatPanelVariant,
 } from "@/components/chat";
@@ -958,6 +958,14 @@ export function FlowReviewChatPanel({
   const isSchedulePanelOpen =
     isScheduledSpecialistFlow && scheduledSpecialistState === "scheduling";
   const shellVariant = variant;
+  const {
+    hasLatestBelow,
+    handleScroll: handleLatestScroll,
+    scrollToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: chatBodyRef,
+    contentKey: `${flow.id}:${isSchedulePanelOpen}:${scheduledSpecialistState}:${mediumAvailableHandoffState}`,
+  });
   const chatHeaderIdentity = useMemo<ChatHeaderIdentity | null>(
     () =>
       mediumAvailableHandoffState === "connected"
@@ -979,34 +987,6 @@ export function FlowReviewChatPanel({
       onHeaderIdentityChange?.(null);
     };
   }, [onHeaderIdentityChange]);
-
-  useLayoutEffect(() => {
-    const chatBody = chatBodyRef.current;
-
-    if (!chatBody) {
-      return;
-    }
-
-    chatBody.scrollTop = chatBody.scrollHeight;
-    setHasChatBodyScrolled(chatBody.scrollTop > 0);
-  }, [flow.title, isSchedulePanelOpen]);
-
-  useEffect(() => {
-    const scrollFrame = window.requestAnimationFrame(() => {
-      const chatBody = chatBodyRef.current;
-
-      if (!chatBody) {
-        return;
-      }
-
-      chatBody.scrollTop = chatBody.scrollHeight;
-      setHasChatBodyScrolled(chatBody.scrollTop > 0);
-    });
-
-    return () => {
-      window.cancelAnimationFrame(scrollFrame);
-    };
-  }, [flow.title, isSchedulePanelOpen]);
 
   useEffect(() => {
     if (scheduledSpecialistState !== "matching") {
@@ -1043,44 +1023,6 @@ export function FlowReviewChatPanel({
     };
   }, [onSidePanelOpenChange]);
 
-  useEffect(() => {
-    const shouldScrollScheduledSpecialist =
-      isScheduledSpecialistFlow && scheduledSpecialistState !== "initial";
-    const shouldScrollMediumAvailable =
-      mediumAvailableHandoffState !== "initial";
-
-    if (!shouldScrollScheduledSpecialist && !shouldScrollMediumAvailable) {
-      return;
-    }
-
-    const scrollFrame = window.requestAnimationFrame(() => {
-      const chatBody = chatBodyRef.current;
-
-      if (!chatBody) {
-        return;
-      }
-
-      chatBody.scrollTo({
-        top: chatBody.scrollHeight,
-        behavior:
-          isSchedulePanelOpen ||
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-      });
-      setHasChatBodyScrolled(chatBody.scrollTop > 0);
-    });
-
-    return () => {
-      window.cancelAnimationFrame(scrollFrame);
-    };
-  }, [
-    isScheduledSpecialistFlow,
-    isSchedulePanelOpen,
-    mediumAvailableHandoffState,
-    scheduledSpecialistState,
-  ]);
-
   function handleBookTime() {
     setScheduledSpecialistState("matching");
   }
@@ -1106,6 +1048,8 @@ export function FlowReviewChatPanel({
   }
 
   function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
+    handleLatestScroll();
+
     const nextHasScrolled = event.currentTarget.scrollTop > 0;
 
     setHasChatBodyScrolled((currentHasScrolled) =>
@@ -1198,14 +1142,21 @@ export function FlowReviewChatPanel({
           chatBodyRef={chatBodyRef}
           history={thread}
           onChatBodyScroll={handleChatBodyScroll}
+          onJumpToLatest={scrollToLatest}
           sidePanel={
             <SchedulePanel onBack={handleBackToChat} onBook={handleBookMeeting} />
           }
+          showJumpToLatest={hasLatestBelow}
           variant={variant}
         />
       ) : (
         <>
-          <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
+          <ChatBody
+            ref={chatBodyRef}
+            onJumpToLatest={scrollToLatest}
+            onScroll={handleChatBodyScroll}
+            showJumpToLatest={hasLatestBelow}
+          >
             {thread}
           </ChatBody>
           <ChatComposer

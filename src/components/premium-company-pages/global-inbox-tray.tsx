@@ -28,6 +28,7 @@ type GlobalInboxThread = Readonly<{
   avatar: string;
   active?: boolean;
   selected?: boolean;
+  unread?: boolean;
 }>;
 
 const globalInboxThreads: ReadonlyArray<GlobalInboxThread> = [
@@ -38,6 +39,7 @@ const globalInboxThreads: ReadonlyArray<GlobalInboxThread> = [
     time: "Jun 1",
     avatar: "velora-logo.png",
     selected: true,
+    unread: true,
   },
   {
     id: "cheri",
@@ -107,7 +109,7 @@ function GlobalInboxAvatar({
   className?: string;
   label: string;
   shape?: "circle" | "square";
-  size?: 32 | 40;
+  size?: 32 | 40 | 48;
   src: string;
   style?: CSSProperties;
 }>) {
@@ -149,13 +151,13 @@ export function GlobalInboxTray({
     <aside
       aria-label="Messaging inbox"
       className={cx(
-        "pcp-global-messaging-surface fixed bottom-0 right-6 z-50 hidden w-[288px] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint-upward transition-[height] duration-[var(--design-motion-duration-moderate)] ease-emphasized md:flex",
+        "pcp-global-messaging-surface fixed bottom-0 right-6 z-50 hidden w-[288px] flex-col overflow-hidden rounded-t-sm border border-b-0 border-border-faint bg-background text-text shadow-raised-faint transition-[height] duration-[var(--design-motion-duration-moderate)] ease-emphasized md:flex",
         isExpanded
           ? "h-[min(calc(100dvh_-_96px),690px)]"
           : "h-[var(--design-layout-chat-tray-height,48px)]",
       )}
     >
-      <div className="flex min-h-[var(--design-layout-chat-tray-height,48px)] items-center gap-sm border-b border-border-faint px-lg">
+      <div className="flex min-h-[var(--design-layout-chat-tray-height,48px)] items-center gap-sm border-b border-border-faint px-sm">
         <button
           aria-expanded={isExpanded}
           className="group flex min-w-0 flex-1 items-center gap-sm rounded-xs text-left outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
@@ -168,7 +170,7 @@ export function GlobalInboxTray({
             size={32}
             src={assetSrc(profileSrc)}
           />
-          <span className="min-w-0 truncate text-heading-md text-text">
+          <span className="min-w-0 truncate text-control-sm text-text">
             Messaging
           </span>
         </button>
@@ -195,7 +197,7 @@ export function GlobalInboxTray({
       {isExpanded ? (
         <div className="flex min-h-0 flex-1 flex-col">
           <button
-            className="flex min-h-[48px] items-center justify-between border-b border-border-faint px-lg text-left text-control-md text-text outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+            className="flex h-8 items-center justify-between border-b border-border-faint px-lg text-left text-control-sm text-text outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
             type="button"
           >
             <span>More inboxes</span>
@@ -203,7 +205,7 @@ export function GlobalInboxTray({
           </button>
 
           <div className="border-b border-border-faint px-lg py-sm">
-            <div className="flex h-10 items-center gap-sm rounded-xs bg-background-neutral-soft px-md text-text-meta">
+            <div className="flex h-8 items-center gap-sm rounded-xs bg-background-neutral-soft px-md text-text-meta">
               <Icon name="search" size="small" />
               <span className="min-w-0 flex-1 truncate text-body-sm">
                 Search messages
@@ -234,8 +236,9 @@ export function GlobalInboxTray({
           <div className="min-h-0 flex-1 overflow-y-auto">
             {globalInboxThreads.map((thread) => (
               <button
+                data-global-inbox-row
                 className={cx(
-                  "flex w-full items-start gap-sm border-b border-border-faint px-md py-sm text-left outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring",
+                  "flex h-[72px] min-h-[72px] w-full items-start gap-sm border-b border-border-faint px-md pb-md pt-sm text-left outline-none hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring",
                   thread.selected && "bg-action-background-transparent-hover",
                 )}
                 key={thread.name}
@@ -256,6 +259,7 @@ export function GlobalInboxTray({
                   }
                   label={thread.name}
                   shape={thread.id === "velora" ? "square" : "circle"}
+                  size={48}
                   src={assetSrc(thread.avatar)}
                   style={
                     thread.id === "velora"
@@ -263,16 +267,21 @@ export function GlobalInboxTray({
                       : undefined
                   }
                 />
-                <span className="min-w-0 flex-1">
+                <span className="flex min-w-0 flex-1 flex-col justify-center gap-xxs">
                   <span className="flex min-w-0 items-baseline justify-between gap-sm">
-                    <span className="truncate text-control-sm text-text">
+                    <span
+                      className={cx(
+                        "truncate text-body-sm text-text",
+                        thread.unread && "font-semibold",
+                      )}
+                    >
                       {thread.name}
                     </span>
                     <span className="shrink-0 text-body-xs text-text-meta">
                       {thread.time}
                     </span>
                   </span>
-                  <span className="mt-xxs block truncate text-body-sm text-text-meta">
+                  <span className="line-clamp-2 text-body-xs text-text-meta">
                     {thread.detail}
                   </span>
                 </span>

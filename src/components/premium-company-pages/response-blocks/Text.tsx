@@ -55,7 +55,7 @@ export function Text({
   );
 }
 
-function StreamingText({ text }: Readonly<{ text: string }>) {
+export function StreamingText({ text }: Readonly<{ text: string }>) {
   return (
     <>
       {splitIntoStreamChunks(text).map((chunk, index) => (

@@ -52,15 +52,16 @@ const staticStateClasses: Record<
   },
   secondary: {
     hover:
-      "border-action-hover bg-action-background-transparent-hover text-action-hover",
+      "border-action-hover bg-action-background-transparent-hover text-action-hover shadow-[inset_0_0_0_1px_var(--color-action-hover)]",
     active:
-      "border-action-active bg-action-background-transparent-active text-action-active",
+      "border-action-active bg-action-background-transparent-active text-action-active shadow-none",
     "focus-visible": "ring-4 ring-action-focus-ring",
   },
   tertiary: {
-    hover: "border-border-hover bg-background-transparent-hover text-text-hover",
+    hover:
+      "border-border-hover bg-background-transparent-hover text-label-hover shadow-[inset_0_0_0_1px_var(--color-border-hover)]",
     active:
-      "border-border-active bg-background-transparent-active text-text-active",
+      "border-border-active bg-background-transparent-active text-label-active shadow-none",
     "focus-visible": "ring-4 ring-neutral-focus-ring",
   },
 };
@@ -69,9 +70,9 @@ const variantClasses: Record<ButtonVariant, string> = {
   primary:
     "border-transparent bg-action text-on-action hover:bg-action-hover active:bg-action-active focus-visible:ring-4 focus-visible:ring-action-focus-ring",
   secondary:
-    "border-action bg-background text-action hover:border-action-hover hover:bg-action-background-transparent-hover hover:text-action-hover active:border-action-active active:bg-action-background-transparent-active active:text-action-active focus-visible:ring-4 focus-visible:ring-action-focus-ring",
+    "border-action bg-background text-action hover:border-action-hover hover:bg-action-background-transparent-hover hover:text-action-hover hover:shadow-[inset_0_0_0_1px_var(--color-action-hover)] active:border-action-active active:bg-action-background-transparent-active active:text-action-active active:shadow-none focus-visible:ring-4 focus-visible:ring-action-focus-ring",
   tertiary:
-    "border-border-subtle bg-background text-text-meta hover:border-border-hover hover:bg-background-transparent-hover hover:text-text-hover active:border-border-active active:bg-background-transparent-active active:text-text-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
+    "border-border bg-background text-label hover:border-border-hover hover:bg-background-transparent-hover hover:text-label-hover hover:shadow-[inset_0_0_0_1px_var(--color-border-hover)] active:border-border-active active:bg-background-transparent-active active:text-label-active active:shadow-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
 };
 
 function cx(...classes: Array<string | false | null | undefined>) {

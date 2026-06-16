@@ -21,7 +21,9 @@ export type ChatSidePanelLayoutProps = Readonly<{
   chatBodyClassName?: string;
   history: ReactNode;
   onChatBodyScroll?: UIEventHandler<HTMLDivElement>;
+  onJumpToLatest?: () => void;
   sidePanel: ReactNode;
+  showJumpToLatest?: boolean;
   variant?: ChatPanelVariant;
   className?: string;
 }>;
@@ -48,7 +50,9 @@ export function ChatSidePanelLayout({
   className,
   history,
   onChatBodyScroll,
+  onJumpToLatest,
   sidePanel,
+  showJumpToLatest,
   variant = "collapsed",
 }: ChatSidePanelLayoutProps) {
   return (
@@ -60,6 +64,8 @@ export function ChatSidePanelLayout({
         <ChatBody
           ref={chatBodyRef}
           onScroll={onChatBodyScroll}
+          onJumpToLatest={onJumpToLatest}
+          showJumpToLatest={showJumpToLatest}
           className={cx(
             "chat-side-panel-history",
             variant === "collapsed" &&

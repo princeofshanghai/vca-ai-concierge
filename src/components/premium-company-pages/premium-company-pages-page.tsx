@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -12,9 +14,9 @@ import {
 } from "react";
 import { flushSync } from "react-dom";
 
-import { Prompt, type ChatPanelVariant } from "@/components/chat";
+import { type ChatPanelVariant } from "@/components/chat";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { Button, getButtonClassName } from "@/components/primitives/button";
+import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
@@ -22,6 +24,11 @@ import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
+import {
+  SduiReactionIcon,
+  type SduiReactionIconType,
+} from "@/components/primitives/reaction-icon";
+import { TabItemHorizontal } from "@/components/primitives/tab-item-horizontal";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 
@@ -54,6 +61,8 @@ import {
   type AdminUc5InsightId,
   type AdminUc5InsightSelection,
 } from "./premium-company-pages-admin-uc5-data";
+import { FabPromptStack } from "./fab-prompt-stack";
+import { TodayActionCard } from "./today-action-card";
 import { VcaFab } from "./vca-fab";
 
 const ASSET_ROOT = PCP_ASSET_ROOT;
@@ -99,7 +108,7 @@ const premiumRailItems: Array<{ label: string; icon?: IconName }> = [
 
 type PerformanceCardData = Readonly<{
   title: string;
-  value: string;
+  value?: string;
   delta?: string;
   deltaMeta?: string;
   deltaTone?: "negative" | "positive";
@@ -146,11 +155,12 @@ type ContentEngagementRowData = Readonly<{
   title: string;
   postedBy: string;
   date: string;
-  type: string;
-  audience: string;
-  impressions: string;
-  views: string;
-  clicks: string;
+  boostEstimate?: string;
+  reactions: string;
+  comments: string;
+  reposts: string;
+  follows: string;
+  engagementRate: string;
 }>;
 
 type AnalyticsInsightCardData = Readonly<{
@@ -228,65 +238,172 @@ type CompetitiveTipData = Readonly<{
   title: string;
   description: string;
   action: string;
-  icon: IconName;
+  illustration: string;
+}>;
+
+type RecentPostBaseData = Readonly<{
+  body: string;
+  comments: string;
+  id: string;
+  metric: string;
+  reactionTypes?: ReadonlyArray<SduiReactionIconType>;
+  reactions: string;
+  timestamp: string;
+}>;
+
+type RecentImagePostData = RecentPostBaseData &
+  Readonly<{
+    image: string;
+    imageAlt: string;
+    kind: "image";
+    linkMeta?: string;
+    linkTitle?: string;
+  }>;
+
+type RecentKudosPostData = RecentPostBaseData &
+  Readonly<{
+    illustrationAlt: string;
+    illustrationSrc: string;
+    kind: "kudos";
+    recipient: string;
+  }>;
+
+type RecentVideoPostData = RecentPostBaseData &
+  Readonly<{
+    caption: string;
+    image: string;
+    imageAlt: string;
+    kind: "video";
+    liveTime: string;
+    timeLabel: string;
+  }>;
+
+type RecentEmptyPostData = Readonly<{
+  buttonLabel: string;
+  id: string;
+  illustrationAlt: string;
+  illustrationSrc: string;
+  kind: "empty";
+  message: string;
+}>;
+
+type RecentPostData =
+  | RecentEmptyPostData
+  | RecentImagePostData
+  | RecentKudosPostData
+  | RecentVideoPostData;
+
+type RecentPostCarouselState = Readonly<{
+  activeDotIndex: number;
+  canGoNext: boolean;
+  canGoPrevious: boolean;
 }>;
 
 const performanceCards: Array<PerformanceCardData> = [
   {
     title: "Who visited your Page",
-    value: "18",
     label: "Premium insight",
     premium: true,
   },
   {
-    title: "CTA clicks",
-    value: "42",
-    delta: "18% last 7 days",
-    deltaTone: "positive",
+    title: "Search appearances",
+    value: "81",
+    delta: "15%",
+    deltaMeta: "last 7 days",
+    deltaTone: "negative",
   },
   {
     title: "New followers",
-    value: "37",
-    delta: "8% last 7 days",
-    deltaTone: "positive",
-  },
-  {
-    title: "Post impressions",
-    value: "3,479",
-    delta: "115.6%",
+    value: "25",
+    delta: "8%",
     deltaMeta: "last 7 days",
     deltaTone: "positive",
   },
+  {
+    title: "Visitors from audiences",
+    value: "4.5k",
+    label: "Premium insight",
+    premium: true,
+  },
+  {
+    title: "Post impressions",
+    value: "986",
+    delta: "15%",
+    deltaMeta: "last 7 days",
+    deltaTone: "positive",
+  },
+  {
+    title: "Page visitors",
+    value: "81",
+    delta: "15%",
+    deltaMeta: "last 7 days",
+    deltaTone: "negative",
+  },
 ];
+const PERFORMANCE_CARDS_VISIBLE_COUNT = 4;
 
-const recentPosts = [
+const recentPosts: ReadonlyArray<RecentPostData> = [
   {
     body: "What benefits teams should validate before a mid-year platform migration: eligibility data, carrier file readiness, employee communications, and open enrollment timing.",
+    id: "migration-readiness",
+    kind: "image",
     metric: "Get up to 12K more impressions by boosting",
-    image: "member/post-image-1.png",
-    imageAlt: "Benefits team reviewing an implementation dashboard",
+    image: "recent-post-checklist.png",
+    imageAlt: "Checklist illustration with a red check mark and pencil",
     linkTitle: "Benefits migration readiness checklist",
     linkMeta: "veloracloud.com",
     reactions: "152",
     comments: "18 Comments",
+    reactionTypes: ["interest", "like"],
+    timestamp: "5d ago",
   },
   {
-    body: "Before and after: replacing carrier-by-carrier spreadsheets with one shared view of open issues, plan changes, and employee communication status.",
-    metric: "Get up to 9K more impressions by boosting",
-    image: "member/post-image-2.png",
-    imageAlt: "Benefits administrators reviewing open enrollment tasks",
-    linkTitle: "Open enrollment operations win",
-    linkMeta: "Arbor Retail Group",
+    body: "It has been awesome to see the growth our customers have experienced in the last 10 years, while keeping benefits support simple.",
+    id: "kudos-aarti",
+    illustrationAlt: "People celebrating a workplace kudos moment",
+    illustrationSrc: "/assets/sdui/illustrations/illustration.svg",
+    kind: "kudos",
+    metric: "Get up to 10K more impressions by boosting",
+    recipient: "Aarti Korapati",
     reactions: "860",
-    comments: "42 Comments",
+    comments: "90 Comments",
+    reactionTypes: ["interest", "like", "praise"],
+    timestamp: "1w ago",
   },
   {
-    body: "A short operating question for HR leaders: what breaks first when eligibility cleanup, carrier files, and employee communications are managed in separate systems?",
+    body: "Best practices for measuring results: start with one goal, track the same metrics weekly, and compare changes against a clear baseline.",
+    id: "operating-question",
+    kind: "image",
     metric: "Get up to 7K more impressions by boosting",
-    image: "feed-post-content.png",
-    imageAlt: "Benefits analytics post preview",
+    image: "recent-post-analytics-results.png",
+    imageAlt: "3D analytics dashboard with charts and data visualizations",
     reactions: "240",
-    comments: "12 Comments",
+    comments: "50 Comments",
+    reactionTypes: ["empathy", "interest", "praise"],
+    timestamp: "2w ago",
+  },
+  {
+    body: "We worked with Veno for a few years on this project and one thing we will never forget is how quickly their team rallied around employee experience.",
+    caption: "The best way to learn something new is",
+    comments: "13 Comments",
+    id: "live-demo-video",
+    image: "member/post-image-2.png",
+    imageAlt: "Video preview for a Velora customer story",
+    kind: "video",
+    liveTime: "5:30 PM",
+    metric: "Get up to 8K more impressions by boosting",
+    reactions: "120",
+    reactionTypes: ["interest", "like", "maybe", "praise"],
+    timeLabel: "0:50 / 3:17",
+    timestamp: "3w ago",
+  },
+  {
+    buttonLabel: "Start a post",
+    id: "all-caught-up",
+    illustrationAlt: "Notepad illustration",
+    illustrationSrc: "/assets/sdui/illustrations/notepad-large.svg",
+    kind: "empty",
+    message: "All caught up. Pages that post 2x a week grow 5x faster.",
   },
 ];
 
@@ -622,23 +739,23 @@ const competitiveTips: ReadonlyArray<CompetitiveTipData> = [
   {
     title: "Grow your audience",
     description:
-      "Invite relevant HR and benefits leaders who engaged with open enrollment content.",
+      "Increase reach by inviting relevant prospects to follow your Page.",
     action: "Invite to follow",
-    icon: "connection-add",
+    illustration: "invite-large.svg",
   },
   {
     title: "Drive more engagement",
     description:
-      "Post a short carrier-readiness checklist while competitors are publishing deadline content.",
+      "Posting at least 3x a week can help significantly increase engagement.",
     action: "Start a post",
-    icon: "compose",
+    illustration: "rocket-large.svg",
   },
   {
     title: "Follow peer Pages",
     description:
-      "Track similar benefits platforms to spot topics your audience is already responding to.",
+      "Get inspiration, join conversations, and get in front of more audiences.",
     action: "Find Pages to follow",
-    icon: "company",
+    illustration: "article-stack-large.svg",
   },
 ];
 
@@ -647,41 +764,43 @@ const contentEngagementRows: ReadonlyArray<ContentEngagementRowData> = [
     title: "How Arbor prepared 12,000 employees for open enrollment",
     postedBy: pcpAdminPersona.name,
     date: "6/8/2026",
-    type: "Article",
-    audience: "HR leaders",
-    impressions: "1,284",
-    views: "184",
-    clicks: "46",
+    boostEstimate: "Get up to 120,000 more impressions by boosting this post.",
+    reactions: "184",
+    comments: "36",
+    reposts: "18",
+    follows: "24",
+    engagementRate: "7.8%",
   },
   {
     title: "Carrier file readiness checklist for enterprise benefits teams",
     postedBy: "Velora",
     date: "6/6/2026",
-    type: "Document",
-    audience: "Benefits teams",
-    impressions: "986",
-    views: "132",
-    clicks: "31",
+    reactions: "132",
+    comments: "28",
+    reposts: "12",
+    follows: "19",
+    engagementRate: "6.4%",
   },
   {
     title: "What breaks first when benefits teams migrate mid-year?",
     postedBy: pcpAdminPersona.name,
     date: "6/3/2026",
-    type: "Image",
-    audience: "People leaders",
-    impressions: "812",
-    views: "-",
-    clicks: "34",
+    boostEstimate: "Get up to 84,000 more impressions by boosting this post.",
+    reactions: "96",
+    comments: "17",
+    reposts: "9",
+    follows: "13",
+    engagementRate: "5.9%",
   },
   {
     title: "Eligibility cleanup should not require five spreadsheets",
     postedBy: "Velora",
     date: "5/30/2026",
-    type: "Text",
-    audience: "HR operations",
-    impressions: "654",
-    views: "-",
-    clicks: "18",
+    reactions: "74",
+    comments: "11",
+    reposts: "5",
+    follows: "8",
+    engagementRate: "4.6%",
   },
 ];
 
@@ -689,7 +808,7 @@ const visitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
   {
     dismissLabel: "Dismiss audience insight",
     evidence:
-      "64% of people who viewed your Page work in HR, benefits, or people operations.",
+      "64% of visitors match your target audience by function, seniority, and industry.",
     headline: "Your page is reaching more relevant visitors",
     insightId: "visitor-demographics",
     question: "Is my Page reaching more relevant visitors?",
@@ -748,8 +867,20 @@ function assetSrc(path: string) {
   return path.startsWith("/") ? path : `${ASSET_ROOT}/${path}`;
 }
 
-function PremiumMark({ label }: Readonly<{ label?: string }>) {
-  return <PremiumChipSmall label={label} />;
+function PremiumMark({
+  label,
+  showText = false,
+}: Readonly<{ label?: string; showText?: boolean }>) {
+  if (!showText || !label) {
+    return <PremiumChipSmall label={label} />;
+  }
+
+  return (
+    <span className="inline-flex items-center gap-xs text-control-sm font-medium text-text">
+      <PremiumChipSmall label={label} />
+      <span>{label}</span>
+    </span>
+  );
 }
 
 function CompanyPremiumBug() {
@@ -802,7 +933,7 @@ function RailSection({
         const active = activeItem === label;
         const href = railItemHrefs[label];
         const itemClassName = cx(
-          "flex min-h-10 w-full items-center gap-sm px-xxl py-sm text-left text-control-sm transition-colors hover:bg-background-transparent-hover",
+          "flex min-h-10 w-full items-center gap-sm px-xxl py-sm text-left text-control-md transition-colors hover:bg-background-transparent-hover",
           active
             ? "border-l-2 border-positive pl-[22px] text-positive"
             : "text-label",
@@ -926,13 +1057,17 @@ function AvatarPile() {
       {["avatar-2.png", "avatar-1.png", "avatar-3.png"].map((avatar, index) => (
         <Entity
           key={avatar}
-          className={cx(index > 0 && "-ml-sm", "border border-background")}
+          className={cx(
+            index > 0 && "-ml-sm",
+            "relative border border-background",
+          )}
           label=""
           size={32}
           src={`${ASSET_ROOT}/${avatar}`}
+          style={{ zIndex: index + 1 }}
         />
       ))}
-      <span className="-ml-sm inline-flex size-8 items-center justify-center rounded-round border border-border-faint bg-background text-supportive-s text-text-meta">
+      <span className="relative z-10 -ml-sm inline-flex size-8 items-center justify-center rounded-round border border-border-faint bg-background text-supportive-s text-text-meta">
         +99
       </span>
     </div>
@@ -949,20 +1084,31 @@ function PerformanceCard({
   premium,
 }: PerformanceCardData) {
   return (
-    <article className="min-h-[128px] rounded-xs border border-border-faint bg-background p-md">
+    <article className="flex min-h-[106px] min-w-0 flex-col justify-start rounded-sm border border-border-faint bg-background p-md">
       {title === "Who visited your Page" ? <AvatarPile /> : null}
-      <p className="mt-xs text-heading-xl text-text">{value}</p>
-      <h3 className="text-control-sm text-action">{title}</h3>
+      {value ? (
+        <p className="text-heading-xl tracking-normal text-text">{value}</p>
+      ) : null}
+      <h3
+        className={cx("text-control-sm text-action", value ? "mt-xxs" : "mt-xs")}
+      >
+        {title}
+      </h3>
       {delta ? (
         <p
           className={cx(
-            "mt-xxs flex flex-wrap items-center gap-xxs text-supportive-s",
+            "mt-xs flex flex-wrap items-center gap-xs text-supportive-s",
             deltaTone === "positive" ? "text-positive" : "text-negative",
           )}
         >
-          <span>
-            {deltaTone === "positive" ? "+ " : "- "}
-            {delta}
+          <span className="inline-flex items-center gap-[1px]">
+            <Icon
+              aria-hidden="true"
+              className="shrink-0"
+              name={deltaTone === "positive" ? "caret-up" : "caret-down"}
+              size="small"
+            />
+            <span className="font-semibold">{delta}</span>
           </span>
           {deltaMeta ? (
             <span className="text-text-meta">{deltaMeta}</span>
@@ -970,7 +1116,7 @@ function PerformanceCard({
         </p>
       ) : null}
       {label ? (
-        <p className="mt-xxs flex items-center gap-xs text-supportive-s text-text-meta">
+        <p className="mt-xs flex items-center gap-xs text-supportive-s text-text-meta">
           {premium ? <PremiumMark label="Premium" /> : null}
           {label}
         </p>
@@ -980,22 +1126,36 @@ function PerformanceCard({
 }
 
 function CarouselControls({
+  canGoNext = true,
+  canGoPrevious = false,
   nextLabel,
+  onNext,
+  onPrevious,
   previousLabel,
-}: Readonly<{ nextLabel: string; previousLabel: string }>) {
+}: Readonly<{
+  canGoNext?: boolean;
+  canGoPrevious?: boolean;
+  nextLabel: string;
+  onNext?: () => void;
+  onPrevious?: () => void;
+  previousLabel: string;
+}>) {
   return (
-    <div className="hidden gap-xs sm:flex">
+    <div className="flex gap-xs">
       <ButtonIcon
-        disabled
+        disabled={!canGoPrevious}
         icon="chevron-left"
         label={previousLabel}
+        onClick={onPrevious}
         size="small"
         touchTarget={false}
         variant="tertiary"
       />
       <ButtonIcon
+        disabled={!canGoNext}
         icon="chevron-right"
         label={nextLabel}
+        onClick={onNext}
         size="small"
         touchTarget={false}
         variant="tertiary"
@@ -1004,16 +1164,48 @@ function CarouselControls({
   );
 }
 
+const defaultPostReactionTypes: ReadonlyArray<SduiReactionIconType> = [
+  "like",
+  "praise",
+  "interest",
+];
+const RECENT_POST_CARD_SCROLL_STEP_FALLBACK = 381;
+
+function getPostBodyPreview(body: string) {
+  const maxLength = 112;
+
+  if (body.length <= maxLength) {
+    return body;
+  }
+
+  const trimmedBody = body.slice(0, maxLength);
+  const lastSpaceIndex = trimmedBody.lastIndexOf(" ");
+
+  return trimmedBody.slice(0, lastSpaceIndex > 0 ? lastSpaceIndex : maxLength);
+}
+
 function ReactionSummary({
   comments,
+  reactionTypes = defaultPostReactionTypes,
   reactions,
-}: Readonly<{ comments: string; reactions: string }>) {
+}: Readonly<{
+  comments: string;
+  reactionTypes?: ReadonlyArray<SduiReactionIconType>;
+  reactions: string;
+}>) {
   return (
     <div className="flex items-center gap-xs text-supportive-s text-text-meta">
       <span className="flex items-center" aria-hidden="true">
-        <span className="block size-4 rounded-round border border-background bg-action" />
-        <span className="-ml-[5px] block size-4 rounded-round border border-background bg-positive" />
-        <span className="-ml-[5px] block size-4 rounded-round border border-background bg-caution" />
+        {reactionTypes.map((reaction, index) => (
+          <SduiReactionIcon
+            className={cx(index > 0 && "-ml-[6px]")}
+            decorative
+            key={reaction}
+            ring
+            size="xsmall"
+            type={reaction}
+          />
+        ))}
       </span>
       <span>{reactions}</span>
       <span aria-hidden="true">&middot;</span>
@@ -1022,85 +1214,233 @@ function ReactionSummary({
   );
 }
 
-function PostCard({
-  body,
-  comments,
-  image,
-  imageAlt,
-  linkMeta,
-  linkTitle,
-  metric,
-  reactions,
-}: Readonly<{
-  body: string;
-  comments: string;
-  image: string;
-  imageAlt: string;
-  linkMeta?: string;
-  linkTitle?: string;
-  metric: string;
-  reactions: string;
-}>) {
-  return (
-    <article className="flex h-[560px] w-[365px] shrink-0 flex-col overflow-hidden rounded-sm border border-border-faint bg-background">
-      <div className="grid min-h-[72px] grid-cols-[minmax(0,1fr)_auto] items-center gap-md border-b border-border-faint px-md py-sm">
-        <span className="inline-flex min-w-0 items-start gap-xs text-supportive-s-strong text-text">
-          <span className="line-clamp-2 min-w-0">{metric}</span>
-          <Icon
-            className="mt-xxs shrink-0 text-text-meta"
-            name="question"
-            size="small"
-          />
-        </span>
-        <Button size="small" variant="secondary">
-          Boost
-        </Button>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col px-md py-lg">
-        <div className="flex items-start gap-sm">
-          <Entity
-            className="bg-[#ACF5B3]"
-            label={pcpCompanyProfile.name}
-            shape="square"
-            size={40}
-            src={pcpCompanyProfile.logoSrc}
-            style={{ backgroundColor: "#ACF5B3" }}
-          />
-          <div className="min-w-0 flex-1">
-            <h3 className="text-control-sm text-text">
-              {pcpCompanyProfile.name}
-            </h3>
-            <p className="text-supportive-s text-text-meta">
-              {pcpCompanyProfile.followers}
-            </p>
-            <p className="text-supportive-s text-text-meta">Timestamp</p>
-          </div>
-          <Icon className="text-text-meta" name="overflow-web-ios" size="medium" />
-        </div>
+function getRecentPostScrollStep(container: HTMLElement) {
+  const card = container.querySelector<HTMLElement>("[data-recent-post-card]");
 
-        <p className="mt-md min-h-[42px] shrink-0 line-clamp-2 text-body-sm text-text">
-          {body}
+  if (!card) {
+    return RECENT_POST_CARD_SCROLL_STEP_FALLBACK;
+  }
+
+  return card.getBoundingClientRect().width + 16;
+}
+
+function RecentPostBoostHeader({ metric }: Readonly<{ metric: string }>) {
+  return (
+    <div
+      className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-md border-b border-border-faint px-md py-sm"
+      style={{
+        backgroundColor:
+          "var(--figma-color-container-color-background-container-tint, #F9FAFB)",
+      }}
+    >
+      <span className="inline-flex min-w-0 items-start gap-xs text-supportive-s-strong text-text">
+        <span className="line-clamp-2 min-w-0">{metric}</span>
+        <Icon
+          className="mt-xxs shrink-0 text-text-meta"
+          name="question"
+          size="small"
+        />
+      </span>
+      <Button size="small" variant="secondary">
+        Boost
+      </Button>
+    </div>
+  );
+}
+
+function RecentPostAuthor({ timestamp }: Readonly<{ timestamp: string }>) {
+  return (
+    <div className="flex items-start gap-sm">
+      <Entity
+        className="bg-[#ACF5B3]"
+        label={pcpCompanyProfile.name}
+        shape="square"
+        size={40}
+        src={pcpCompanyProfile.logoSrc}
+        style={{ backgroundColor: "#ACF5B3" }}
+      />
+      <div className="min-w-0 flex-1">
+        <h3 className="text-control-sm text-text">{pcpCompanyProfile.name}</h3>
+        <p className="text-supportive-s text-text-meta">
+          {pcpCompanyProfile.followers}
         </p>
+        <p className="text-supportive-s text-text-meta">{timestamp}</p>
+      </div>
+      <Icon className="text-text-meta" name="overflow-web-ios" size="medium" />
+    </div>
+  );
+}
+
+function RecentPostBody({ body }: Readonly<{ body: string }>) {
+  const bodyPreview = getPostBodyPreview(body);
+
+  return (
+    <p className="mt-md min-h-[36px] shrink-0 text-body-sm text-text">
+      <span className="line-clamp-2">
+        {bodyPreview}{" "}
+        <button
+          className="font-semibold text-text-meta transition-colors hover:text-action hover:underline"
+          type="button"
+        >
+          ...see more
+        </button>
+      </span>
+    </p>
+  );
+}
+
+function RecentImagePostContent({ post }: Readonly<{ post: RecentImagePostData }>) {
+  const hasLinkPreview = Boolean(post.linkTitle);
+
+  return (
+    <>
+      <div
+        className={cx(
+          "-mx-md mt-sm w-[calc(100%_+_(var(--spacing-md)_*_2))] shrink-0 overflow-hidden",
+          hasLinkPreview ? "h-[220px]" : "h-[270px]",
+        )}
+      >
         <Image
-          alt={imageAlt}
-          className="mt-sm h-[220px] w-full shrink-0 object-cover"
+          alt={post.imageAlt}
+          className="size-full object-cover"
           height={386}
-          src={`${ASSET_ROOT}/${image}`}
+          src={assetSrc(post.image)}
           width={514}
         />
-        {linkTitle ? (
-          <div className="min-h-[66px] bg-background-neutral-soft px-md py-sm">
-            <p className="text-control-sm text-text">{linkTitle}</p>
-            {linkMeta ? (
-              <p className="text-body-xs text-text-meta">{linkMeta}</p>
-            ) : null}
-          </div>
-        ) : (
-          <div className="min-h-[66px]" />
-        )}
       </div>
-      <div className="mt-auto border-t border-border-faint px-md py-sm">
-        <ReactionSummary comments={comments} reactions={reactions} />
+      {post.linkTitle ? (
+        <div className="-mx-md min-h-[52px] w-[calc(100%_+_(var(--spacing-md)_*_2))] bg-background-neutral-soft px-md py-sm">
+          <p className="text-control-sm text-text">{post.linkTitle}</p>
+          {post.linkMeta ? (
+            <p className="text-body-xs text-text-meta">{post.linkMeta}</p>
+          ) : null}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function RecentKudosPostContent({
+  post,
+}: Readonly<{ post: RecentKudosPostData }>) {
+  return (
+    <>
+      <div className="-mx-md mt-sm flex h-[270px] w-[calc(100%_+_(var(--spacing-md)_*_2))] shrink-0 flex-col items-center overflow-hidden bg-background pb-md text-center">
+        <Image
+          alt={post.illustrationAlt}
+          className="h-[186px] w-full object-cover"
+          height={186}
+          src={post.illustrationSrc}
+          unoptimized
+          width={375}
+        />
+        <div className="mt-md flex w-full flex-col items-center gap-sm">
+          <p className="text-control-sm text-text-meta">Kudos</p>
+          <p className="text-control-md text-text">{post.recipient}</p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function RecentVideoPostContent({
+  post,
+}: Readonly<{ post: RecentVideoPostData }>) {
+  return (
+    <>
+      <div className="relative mt-sm h-[272px] shrink-0 overflow-hidden bg-text">
+        <Image
+          alt={post.imageAlt}
+          className="size-full object-cover opacity-85"
+          height={386}
+          src={assetSrc(post.image)}
+          width={514}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/75" />
+        <div className="absolute left-sm top-sm inline-flex items-center gap-xxs rounded-xs bg-scrim px-sm py-xxs text-supportive-s-strong text-on-action">
+          <Icon aria-hidden="true" name="video-camera" size="small" />
+          <span>Live today</span>
+          <span aria-hidden="true">&middot;</span>
+          <span>{post.liveTime}</span>
+        </div>
+        <div className="absolute left-md right-md top-[140px] rounded-xs bg-scrim px-md py-sm text-center text-control-md text-on-action">
+          {post.caption}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 px-md pb-md text-on-action">
+          <div className="mb-sm h-1 rounded-round bg-white/30">
+            <div className="h-full w-1/2 rounded-round bg-on-action" />
+          </div>
+          <div className="flex items-center justify-between gap-md">
+            <div className="flex min-w-0 items-center gap-sm">
+              <Icon aria-hidden="true" name="play" size="medium" />
+              <Icon aria-hidden="true" name="volume-medium" size="medium" />
+              <span className="text-body-sm text-on-action">
+                {post.timeLabel}
+              </span>
+            </div>
+            <Icon aria-hidden="true" name="fullscreen-enter" size="medium" />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function RecentEmptyPostCard({ post }: Readonly<{ post: RecentEmptyPostData }>) {
+  return (
+    <article
+      className="flex h-[492px] w-[365px] shrink-0 snap-start flex-col justify-between rounded-sm border border-border-faint bg-background p-md"
+      data-recent-post-card
+    >
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-md text-center">
+        <Image
+          alt={post.illustrationAlt}
+          className="size-16"
+          height={64}
+          src={post.illustrationSrc}
+          unoptimized
+          width={64}
+        />
+        <p className="mt-lg max-w-[250px] text-body-sm text-text">
+          {post.message}
+        </p>
+      </div>
+      <Button
+        className="w-full"
+        leadingIcon={<Icon name="add" />}
+        size="small"
+        variant="secondary"
+      >
+        {post.buttonLabel}
+      </Button>
+    </article>
+  );
+}
+
+function PostCard({ post }: Readonly<{ post: RecentPostData }>) {
+  if (post.kind === "empty") {
+    return <RecentEmptyPostCard post={post} />;
+  }
+
+  return (
+    <article
+      className="flex h-[492px] w-[365px] shrink-0 snap-start flex-col overflow-hidden rounded-sm border border-border-faint bg-background"
+      data-recent-post-card
+    >
+      <RecentPostBoostHeader metric={post.metric} />
+      <div className="flex min-h-0 flex-1 flex-col px-md py-md">
+        <RecentPostAuthor timestamp={post.timestamp} />
+        <RecentPostBody body={post.body} />
+        {post.kind === "image" ? <RecentImagePostContent post={post} /> : null}
+        {post.kind === "kudos" ? <RecentKudosPostContent post={post} /> : null}
+        {post.kind === "video" ? <RecentVideoPostContent post={post} /> : null}
+        <div className="mt-auto pt-sm">
+          <ReactionSummary
+            comments={post.comments}
+            reactions={post.reactions}
+            reactionTypes={post.reactionTypes}
+          />
+        </div>
       </div>
     </article>
   );
@@ -1210,7 +1550,7 @@ function InboxProfileHeader() {
         <p className="text-body-md text-text">
           {vcaLeadBrief.role}
         </p>
-        <p className="mt-xs text-body-sm text-text-meta">
+        <p className="mt-xs text-body-md text-text-meta">
           Velora Page post follow-up
         </p>
       </div>
@@ -1233,7 +1573,7 @@ function TodayDivider() {
 
 function VcaInboxContextStrip() {
   return (
-    <div className="rounded-sm border border-ai-border bg-background p-lg shadow-raised-faint">
+    <div className="rounded-sm border border-ai-border bg-background p-lg">
       <div className="flex items-start justify-between gap-md">
         <div className="min-w-0">
           <div className="flex items-center gap-sm">
@@ -1367,10 +1707,10 @@ function InboxThreadDetail() {
     <section className="flex min-h-[760px] min-w-0 flex-col bg-background">
       <div className="flex min-h-[64px] items-center justify-between gap-md border-b border-border-faint px-lg py-sm">
         <div className="min-w-0">
-          <h2 className="truncate text-heading-sm text-text">
+          <h2 className="truncate text-heading-lg text-text">
             {vcaLeadBrief.buyer}
           </h2>
-          <p className="truncate text-body-sm text-text-meta">
+          <p className="truncate text-body-md text-text-meta">
             {vcaLeadBrief.role}
           </p>
         </div>
@@ -1396,7 +1736,7 @@ function InboxThreadDetail() {
 
 function InboxContent() {
   return (
-    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="flex min-h-[64px] flex-wrap items-center gap-md border-b border-border-faint px-lg py-sm">
         <h1 className="text-heading-lg text-text">Inbox</h1>
         <InboxSearchField />
@@ -1468,7 +1808,7 @@ function SettingsRow({ row }: Readonly<{ row: SettingsRowData }>) {
 
 function SettingsContent() {
   return (
-    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="border-b border-border-faint px-lg py-lg sm:px-xxl">
         <h1 className="text-heading-xl text-text">Settings</h1>
       </div>
@@ -1506,6 +1846,8 @@ const assistantDefaultColor =
   assistantColorOptions.find((option) => option.id === "green") ??
   assistantColorOptions[0];
 
+const showVisitorAssistantColorPicker = false;
+
 const defaultAssistantInstructions = `# Velora visitor assistant
 
 - Keep answers concise and professional.
@@ -1525,7 +1867,7 @@ const defaultKnowledgeLinks: ReadonlyArray<string> = [
 
 function SettingsDetailHeader() {
   return (
-    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="flex min-h-[72px] items-center gap-md px-lg py-lg sm:px-xxl">
         <Link
           aria-label="Back to Settings"
@@ -1575,12 +1917,12 @@ function SettingsCard({
   title: ReactNode;
 }>) {
   return (
-    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+    <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="flex flex-wrap items-start justify-between gap-md px-lg py-xl sm:px-xxl">
         <div className="min-w-0">
           <h2 className="text-heading-lg tracking-normal text-text">{title}</h2>
           {description ? (
-            <p className="mt-xxs max-w-[680px] text-body-sm text-text">
+            <p className="mt-xxs max-w-[680px] text-body-md text-text">
               {description}
             </p>
           ) : null}
@@ -1653,11 +1995,11 @@ function SetupRow({
     <div className="grid gap-lg border-t border-border-faint px-lg py-xl first:border-t-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-xxl sm:py-xxl">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-xs">
-          <h3 className="text-heading-md tracking-normal text-text">{title}</h3>
+          <h3 className="text-heading-lg tracking-normal text-text">{title}</h3>
           {required ? <StatusChip>Required</StatusChip> : null}
         </div>
         {description ? (
-          <p className="mt-xxs max-w-[620px] text-body-sm text-text">
+          <p className="mt-xxs max-w-[620px] text-body-md text-text">
             {description}
           </p>
         ) : null}
@@ -1723,10 +2065,10 @@ function KnowledgeSourcesRow({
     <div className="border-t border-border-faint px-lg py-xl first:border-t-0 sm:px-xxl sm:py-xxl">
       <div className="flex flex-col gap-lg sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="text-heading-md tracking-normal text-text">
+          <h3 className="text-heading-lg tracking-normal text-text">
             Knowledge sources
           </h3>
-          <p className="mt-xxs max-w-[620px] text-body-sm text-text">
+          <p className="mt-xxs max-w-[620px] text-body-md text-text">
             Choose the Page content, links, and files the assistant can use.
           </p>
         </div>
@@ -1782,10 +2124,10 @@ function AssistantInstructionsRow({
     <div className="border-t border-border-faint px-lg py-xl first:border-t-0 sm:px-xxl sm:py-xxl">
       <div className="flex flex-col gap-lg sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="text-heading-md tracking-normal text-text">
+          <h3 className="text-heading-lg tracking-normal text-text">
             Assistant instructions
           </h3>
-          <p className="mt-xxs max-w-[620px] text-body-sm text-text">
+          <p className="mt-xxs max-w-[620px] text-body-md text-text">
             Define tone, guardrails, and what the assistant should avoid.
           </p>
         </div>
@@ -1882,25 +2224,6 @@ function AssistantColorPicker({
   );
 }
 
-function AdminAssistantColorPreview({
-  color,
-}: Readonly<{
-  color: AssistantColorOption;
-}>) {
-  return (
-    <div className="inline-flex">
-      <VcaFab
-        accentColor={color.value}
-        borderColor={color.value}
-        borderHoverColor={color.value}
-        label="Admin assistant color preview"
-        position="static"
-        variant="admin"
-      />
-    </div>
-  );
-}
-
 function VisitorAssistantFabPreview({
   color,
 }: Readonly<{
@@ -1930,8 +2253,6 @@ function AiAssistantSettingsPlaceholderContent() {
   const [connectedCalendars, setConnectedCalendars] = useState<
     ReadonlySet<AssistantCalendarProvider>
   >(new Set());
-  const [adminSelectedColor, setAdminSelectedColor] =
-    useState(assistantDefaultColor);
   const [visitorSelectedColor, setVisitorSelectedColor] =
     useState(assistantDefaultColor);
 
@@ -1951,7 +2272,7 @@ function AiAssistantSettingsPlaceholderContent() {
   }
 
   return (
-    <div className="min-w-0 space-y-md">
+    <div className="min-w-0 space-y-lg">
       <SettingsDetailHeader />
 
       <SettingsCard
@@ -2011,15 +2332,17 @@ function AiAssistantSettingsPlaceholderContent() {
               </div>
             </SetupRow>
 
-            <SetupRow title="Pick color">
-              <div className="flex flex-col items-start gap-md">
-                <VisitorAssistantFabPreview color={visitorSelectedColor} />
-                <AssistantColorPicker
-                  selectedColor={visitorSelectedColor}
-                  onSelect={setVisitorSelectedColor}
-                />
-              </div>
-            </SetupRow>
+            {showVisitorAssistantColorPicker ? (
+              <SetupRow title="Pick color">
+                <div className="flex flex-col items-start gap-md">
+                  <VisitorAssistantFabPreview color={visitorSelectedColor} />
+                  <AssistantColorPicker
+                    selectedColor={visitorSelectedColor}
+                    onSelect={setVisitorSelectedColor}
+                  />
+                </div>
+              </SetupRow>
+            ) : null}
           </>
         ) : null}
       </SettingsCard>
@@ -2034,153 +2357,213 @@ function AiAssistantSettingsPlaceholderContent() {
           />
         }
         title="AI assistant for admins"
-      >
-        <SetupRow title="Pick color">
-          <div className="flex flex-col items-start gap-md">
-            <AdminAssistantColorPreview color={adminSelectedColor} />
-            <AssistantColorPicker
-              selectedColor={adminSelectedColor}
-              onSelect={setAdminSelectedColor}
-            />
-          </div>
-        </SetupRow>
-      </SettingsCard>
-    </div>
-  );
-}
-
-function VisitorAssistantAvailabilityBanner({
-  onDismiss,
-}: Readonly<{
-  onDismiss: () => void;
-}>) {
-  return (
-    <section className="relative min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
-      <GhostIconButton
-        className="absolute right-sm top-sm text-icon"
-        horizontalPadding={false}
-        icon="close"
-        label="Dismiss visitor assistant setup banner"
-        onClick={onDismiss}
-        touchTarget={false}
       />
-      <div className="flex flex-col gap-lg px-lg py-xl pr-stack sm:flex-row sm:items-center sm:justify-between sm:px-xxl sm:pr-[72px]">
-        <div className="min-w-0">
-          <NewFeatureTag />
-          <h2 className="mt-xs text-heading-lg tracking-normal text-text">
-            AI assistant is now available for your Page
-          </h2>
-          <p className="mt-xs max-w-[620px] text-body-sm text-text">
-            Help visitors get instant answers from approved Velora content you
-            control. <InlineAction>Learn more</InlineAction>
-          </p>
-        </div>
-        <Link
-          className={getButtonClassName({
-            className: "self-start sm:self-center",
-            size: "small",
-          })}
-          href={ADMIN_AI_ASSISTANT_SETTINGS_HREF}
-        >
-          Set up
-        </Link>
-      </div>
-    </section>
+    </div>
   );
 }
 
 function DashboardContent({
   activeInsightId,
   onDigestInsightSelect,
+  story,
 }: Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onDigestInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  story: PremiumCompanyPagesDashboardStory;
 }>) {
-  const [
-    isVisitorAssistantBannerDismissed,
-    setIsVisitorAssistantBannerDismissed,
-  ] = useState(false);
+  const [performanceCardPageIndex, setPerformanceCardPageIndex] = useState(0);
+  const recentPostsCarouselRef = useRef<HTMLDivElement | null>(null);
+  const [recentPostCarouselState, setRecentPostCarouselState] =
+    useState<RecentPostCarouselState>({
+      activeDotIndex: 0,
+      canGoNext: recentPosts.length > 1,
+      canGoPrevious: false,
+    });
+  const performanceCardPageCount = Math.ceil(
+    performanceCards.length / PERFORMANCE_CARDS_VISIBLE_COUNT,
+  );
+  const maxPerformanceCardPageIndex = Math.max(
+    performanceCardPageCount - 1,
+    0,
+  );
+  const performanceCardStartIndex =
+    performanceCardPageIndex * PERFORMANCE_CARDS_VISIBLE_COUNT;
+  const visiblePerformanceCards = performanceCards.slice(
+    performanceCardStartIndex,
+    performanceCardStartIndex + PERFORMANCE_CARDS_VISIBLE_COUNT,
+  );
+
+  function handlePreviousPerformanceCards() {
+    setPerformanceCardPageIndex((currentIndex) => Math.max(currentIndex - 1, 0));
+  }
+
+  function handleNextPerformanceCards() {
+    setPerformanceCardPageIndex((currentIndex) =>
+      Math.min(currentIndex + 1, maxPerformanceCardPageIndex),
+    );
+  }
+
+  const updateRecentPostCarouselState = useCallback(() => {
+    const container = recentPostsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const maxScrollLeft = Math.max(
+      container.scrollWidth - container.clientWidth,
+      0,
+    );
+    const activeDotIndex =
+      maxScrollLeft > 0
+        ? Math.round((container.scrollLeft / maxScrollLeft) * (recentPosts.length - 1))
+        : 0;
+
+    setRecentPostCarouselState({
+      activeDotIndex,
+      canGoNext: container.scrollLeft < maxScrollLeft - 1,
+      canGoPrevious: container.scrollLeft > 1,
+    });
+  }, []);
+
+  useEffect(() => {
+    updateRecentPostCarouselState();
+
+    window.addEventListener("resize", updateRecentPostCarouselState);
+
+    return () => {
+      window.removeEventListener("resize", updateRecentPostCarouselState);
+    };
+  }, [updateRecentPostCarouselState]);
+
+  function scrollRecentPosts(direction: "next" | "previous") {
+    const container = recentPostsCarouselRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    const step = getRecentPostScrollStep(container);
+    const maxScrollLeft = Math.max(
+      container.scrollWidth - container.clientWidth,
+      0,
+    );
+    const nextScrollLeft =
+      direction === "next"
+        ? Math.min(container.scrollLeft + step, maxScrollLeft)
+        : Math.max(container.scrollLeft - step, 0);
+
+    container.scrollTo({ behavior: "smooth", left: nextScrollLeft });
+  }
 
   return (
     <div className="min-w-0 space-y-md">
-      {!isVisitorAssistantBannerDismissed ? (
-        <VisitorAssistantAvailabilityBanner
-          onDismiss={() => setIsVisitorAssistantBannerDismissed(true)}
-        />
-      ) : null}
-
-      <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
-        <div className="bg-gradient-to-r from-premium-gradient-base-a via-premium-gradient-base-b to-background px-lg pb-[28px] pt-[40px] sm:px-xxl">
+      <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
+        <div
+          className="px-lg pb-[28px] pt-[40px] sm:px-xxl"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, #FFFFFF 100%), linear-gradient(270deg, var(--color-premium-gradient-base-b) 0%, var(--color-premium-gradient-base-a) 100%)",
+          }}
+        >
           <h1 className="text-display-md text-text">
-            Welcome back, {pcpAdminPersona.firstName}
+            Welcome back, {pcpCompanyProfile.name}
           </h1>
           <div className="mt-[40px]">
             <AdminPerformanceDigestCard
               activeInsightId={activeInsightId}
               onInsightSelect={onDigestInsightSelect}
+              showAssistantSetupAction={story === "default"}
             />
           </div>
         </div>
 
-        <div className="space-y-[40px] px-lg pb-xxl pt-[40px] sm:px-xxl">
+        <div className="space-y-[56px] px-lg pb-xxl pt-[40px] sm:px-xxl">
           <section>
             <div className="flex items-start justify-between gap-lg">
               <div>
-                <h2 className="text-heading-sm text-text">Track performance</h2>
-                <p className="mt-xs text-body-sm text-text-meta">
-                  Turn Page interest into qualified conversations with weekly
-                  visitor and intent insights.
+                <h2 className="text-heading-lg text-text">Track performance</h2>
+                <p className="mt-xs text-body-md text-text-meta">
+                  Grow your page 3x faster by leveraging insights and analytics.
                 </p>
               </div>
               <CarouselControls
+                canGoNext={
+                  performanceCardPageIndex < maxPerformanceCardPageIndex
+                }
+                canGoPrevious={performanceCardPageIndex > 0}
                 nextLabel="Next performance insights"
+                onNext={handleNextPerformanceCards}
+                onPrevious={handlePreviousPerformanceCards}
                 previousLabel="Previous performance insights"
               />
             </div>
 
             <div className="mt-lg grid gap-md sm:grid-cols-2 xl:grid-cols-4">
-              {performanceCards.map((card) => (
+              {visiblePerformanceCards.map((card) => (
                 <PerformanceCard key={card.title} {...card} />
               ))}
             </div>
 
             <div className="mt-md flex justify-center gap-md" aria-hidden="true">
-              <span className="size-[6px] rounded-round bg-text" />
-              <span className="size-[6px] rounded-round border border-border-subtle" />
+              {Array.from({ length: performanceCardPageCount }, (_, index) => (
+                <span
+                  className={cx(
+                    "size-[6px] rounded-round",
+                    index === performanceCardPageIndex
+                      ? "bg-text"
+                      : "border border-border-subtle",
+                  )}
+                  key={index}
+                />
+              ))}
             </div>
           </section>
 
           <section>
             <div className="flex items-start justify-between gap-lg">
               <div>
-                <h2 className="text-heading-sm text-text">
+                <h2 className="text-heading-lg text-text">
                   Manage recent posts
                 </h2>
-                <p className="mt-xs text-body-sm text-text-meta">
-                  Manage benefits administration content and amplify
-                  top-performing posts with boosting.{" "}
+                <p className="mt-xs text-body-md text-text-meta">
+                  Manage your page&apos;s content and amplify your reach with
+                  boosting.{" "}
                   <InlineAction>Learn more</InlineAction>
                 </p>
               </div>
               <CarouselControls
+                canGoNext={recentPostCarouselState.canGoNext}
+                canGoPrevious={recentPostCarouselState.canGoPrevious}
                 nextLabel="Next posts"
+                onNext={() => scrollRecentPosts("next")}
+                onPrevious={() => scrollRecentPosts("previous")}
                 previousLabel="Previous posts"
               />
             </div>
 
-            <div className="mt-lg flex gap-md overflow-hidden">
+            <div
+              className="mt-lg flex snap-x snap-mandatory gap-md overflow-hidden scroll-smooth pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              onScroll={updateRecentPostCarouselState}
+              ref={recentPostsCarouselRef}
+            >
               {recentPosts.map((post) => (
-                <PostCard key={post.body} {...post} />
+                <PostCard key={post.id} post={post} />
               ))}
             </div>
 
             <div className="mt-lg flex justify-center gap-md" aria-hidden="true">
-              <span className="size-[6px] rounded-round bg-text" />
-              <span className="size-[6px] rounded-round border border-border-subtle" />
-              <span className="size-[6px] rounded-round border border-border-subtle" />
-              <span className="size-[6px] rounded-round border border-border-subtle" />
-              <span className="size-[6px] rounded-round border border-border-subtle" />
-              <span className="size-[6px] rounded-round border border-border-subtle" />
+              {recentPosts.map((post, index) => (
+                <span
+                  className={cx(
+                    "size-[6px] rounded-round",
+                    index === recentPostCarouselState.activeDotIndex
+                      ? "bg-text"
+                      : "border border-border-subtle",
+                  )}
+                  key={post.id}
+                />
+              ))}
             </div>
 
             <div className="mt-lg flex justify-center border-t border-border-faint pt-md">
@@ -2205,22 +2588,13 @@ function AnalyticsTabButton({
   onSelect: (tabId: AnalyticsTabId) => void;
 }>) {
   return (
-    <button
+    <TabItemHorizontal
       aria-controls={`premium-company-pages-analytics-${tab.id}-panel`}
-      aria-selected={active}
-      className={cx(
-        "flex h-12 shrink-0 items-center border-b-2 px-md text-control-sm outline-none transition-colors focus-visible:ring-4 focus-visible:ring-action-focus-ring",
-        active
-          ? "border-positive text-positive"
-          : "border-transparent text-label hover:text-text",
-      )}
       id={`premium-company-pages-analytics-${tab.id}-tab`}
+      label={tab.label}
       onClick={() => onSelect(tab.id)}
-      role="tab"
-      type="button"
-    >
-      {tab.label}
-    </button>
+      selected={active}
+    />
   );
 }
 
@@ -2257,7 +2631,7 @@ function AnalyticsCard({
   return (
     <div
       className={cx(
-        "rounded-sm border border-border-faint bg-background shadow-raised-faint",
+        "rounded-sm border border-border-faint bg-background",
         className,
       )}
     >
@@ -2303,12 +2677,12 @@ function HighlightsCard() {
     <AnalyticsCard>
       <div className="px-lg py-lg">
         <div>
-          <h2 className="text-heading-sm text-text">Highlights</h2>
-          <p className="mt-xxs text-body-sm text-text-meta">
+          <h2 className="text-heading-lg text-text">Highlights</h2>
+          <p className="mt-xs text-body-sm text-text-meta">
             Data for 5/10/2026 - 6/8/2026
           </p>
         </div>
-        <div className="mt-lg grid gap-lg sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-xxl grid gap-lg sm:grid-cols-2 lg:grid-cols-4">
           {analyticsHighlights.map((highlight) => (
             <article key={highlight.label}>
               <p className="text-heading-xl text-text">{highlight.value}</p>
@@ -2371,13 +2745,13 @@ function AnalyticsKeyInsightsCard({
             size="small"
           />
           <h2
-            className="text-heading-sm text-text"
+            className="text-heading-lg text-text"
             id={headingId}
           >
             Key insights
           </h2>
         </div>
-        <div className="mt-lg grid gap-md">
+        <div className="mt-xxl grid gap-md">
           {visibleInsights.map((insight) => (
             <InsightCard
               active={activeInsightId === insight.insightId}
@@ -2416,16 +2790,20 @@ function ChartLegendRow({
   value: string;
 }>) {
   return (
-    <div className="grid min-h-10 grid-cols-[24px_minmax(0,1fr)_auto] items-center gap-sm border-t border-border-faint py-sm">
+    <div className="grid min-h-10 grid-cols-[24px_32px_minmax(0,1fr)_auto] items-center gap-sm border-t border-border-faint py-sm">
+      <span
+        aria-hidden="true"
+        className="inline-flex size-5 items-center justify-center rounded-xs bg-positive text-on-checked"
+      >
+        <Icon name="check" size="small" />
+      </span>
       <span
         aria-hidden="true"
         className={cx(
-          "inline-flex size-5 items-center justify-center rounded-xs",
-          dashed ? "border border-dashed border-positive" : "bg-positive text-on-checked",
+          "block h-0 w-6 border-t-2",
+          dashed ? "border-dashed border-positive" : "border-action",
         )}
-      >
-        {dashed ? null : <Icon name="check" size="small" />}
-      </span>
+      />
       <span className="min-w-0 truncate text-body-sm text-text-meta">
         {label}
       </span>
@@ -2436,7 +2814,7 @@ function ChartLegendRow({
 
 function ImpressionsChart() {
   return (
-    <div className="mt-lg overflow-x-auto pb-xs">
+    <div className="mt-xxl overflow-x-auto pb-xs">
       <svg
         aria-labelledby="velora-impressions-chart-title"
         className="min-w-[620px]"
@@ -2516,11 +2894,7 @@ function MetricsCard() {
       <div className="px-lg py-lg">
         <div className="flex flex-wrap items-start justify-between gap-md">
           <div>
-            <h2 className="text-heading-sm text-text">Metrics</h2>
-            <p className="mt-xs text-body-sm text-text-meta">
-              Reach patterns from HR leaders, benefits operators, and enterprise
-              people teams.
-            </p>
+            <h2 className="text-heading-lg text-text">Metrics</h2>
           </div>
           <button
             className="inline-flex min-h-8 items-center gap-xs rounded-round bg-positive px-md text-control-sm text-on-checked outline-none transition-colors hover:bg-positive-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
@@ -2547,7 +2921,7 @@ function VisitorHighlightsCard() {
     <AnalyticsCard>
       <div className="px-lg py-lg">
         <div className="flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">Visitor highlights</h2>
+          <h2 className="text-heading-lg text-text">Visitor highlights</h2>
           <Icon
             aria-hidden="true"
             className="text-text-meta"
@@ -2555,10 +2929,10 @@ function VisitorHighlightsCard() {
             size="small"
           />
         </div>
-        <div className="mt-lg grid gap-lg sm:grid-cols-3">
+        <div className="mt-xxl grid gap-lg sm:grid-cols-3">
           {visitorHighlights.map((highlight) => (
             <article key={highlight.label}>
-              <p className="text-heading-md text-text">{highlight.value}</p>
+              <p className="text-heading-xl text-text">{highlight.value}</p>
               <h3 className="mt-xxs text-body-sm text-text-meta">
                 {highlight.label}
               </h3>
@@ -2713,7 +3087,7 @@ function VisitorMetricsCard() {
     <AnalyticsCard>
       <div className="px-lg py-lg">
         <div className="flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">Visitor metrics</h2>
+          <h2 className="text-heading-lg text-text">Visitor metrics</h2>
           <Icon
             aria-hidden="true"
             className="text-text-meta"
@@ -2722,7 +3096,7 @@ function VisitorMetricsCard() {
           />
         </div>
 
-        <div className="mt-lg flex flex-wrap gap-sm">
+        <div className="mt-xxl flex flex-wrap gap-sm">
           <VisitorMetricFilterButton active label="Page views" />
           <VisitorMetricFilterButton active label="All pages" />
           <VisitorMetricFilterButton label="All filters" />
@@ -2743,10 +3117,10 @@ function VisitorProfileRow({
   visitor,
 }: Readonly<{ visitor: VisitorProfileData }>) {
   return (
-    <article className="grid grid-cols-[40px_minmax(0,1fr)] gap-md border-t border-border-faint px-lg py-lg first:border-t-0">
+    <article className="grid grid-cols-[48px_minmax(0,1fr)] gap-md border-t border-border-faint px-lg py-xxl first:border-t-0">
       <Entity
         label={visitor.name}
-        size={40}
+        size={48}
         src={assetSrc(visitor.avatar)}
       />
       <div className="min-w-0">
@@ -2765,10 +3139,10 @@ function VisitorProfileRow({
 function WhoVisitedYourPageCard() {
   return (
     <AnalyticsCard className="overflow-hidden border-t-4 border-t-premium-brand">
-      <div className="px-lg py-md">
-        <PremiumMark label="Premium" />
+      <div className="px-lg pb-xxl pt-lg">
+        <PremiumMark label="Premium" showText />
         <div className="mt-xs flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">
+          <h2 className="text-heading-lg text-text">
             Who&apos;s visited your Page
           </h2>
           <Icon
@@ -2778,7 +3152,7 @@ function WhoVisitedYourPageCard() {
             size="small"
           />
         </div>
-        <p className="mt-xxs text-body-sm text-text-meta">
+        <p className="mt-xs text-body-md text-text-meta">
           See one new page visitor each day.
         </p>
       </div>
@@ -2790,13 +3164,9 @@ function WhoVisitedYourPageCard() {
       </div>
 
       <div className="border-t border-border-faint px-lg py-md text-center">
-        <button
-          className="inline-flex items-center gap-xs text-control-sm text-label transition-colors hover:text-action hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
-          type="button"
-        >
-          <span>Show all visitors</span>
-          <Icon aria-hidden="true" name="arrow-right" size="small" />
-        </button>
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
+          Show all visitors
+        </GhostButton>
       </div>
     </AnalyticsCard>
   );
@@ -2807,7 +3177,7 @@ function VisitorDemographicsCard() {
     <AnalyticsCard className="overflow-hidden">
       <div className="px-lg py-lg">
         <div className="flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">Visitor demographics</h2>
+          <h2 className="text-heading-lg text-text">Visitor demographics</h2>
           <Icon
             aria-hidden="true"
             className="text-text-meta"
@@ -2816,17 +3186,17 @@ function VisitorDemographicsCard() {
           />
         </div>
         <button
-          className="mt-lg inline-flex min-h-8 items-center gap-xs rounded-round border border-border-subtle bg-background px-md text-control-sm text-label outline-none transition-colors hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+          className="mt-xxl inline-flex min-h-8 items-center gap-xs rounded-round border border-border-subtle bg-background px-md text-control-sm text-label outline-none transition-colors hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
           type="button"
         >
           <span>Job function</span>
           <Icon aria-hidden="true" name="chevron-down" size="small" />
         </button>
 
-        <div className="mt-lg space-y-lg">
+        <div className="mt-lg space-y-xl">
           {visitorDemographics.map((row) => (
             <div className="space-y-xs" key={row.label}>
-              <p className="text-supportive-s-strong text-text">
+              <p className="text-body-sm font-semibold text-text">
                 {row.label}
                 <span className="font-normal text-text-meta">
                   {" "}
@@ -2844,13 +3214,9 @@ function VisitorDemographicsCard() {
       </div>
 
       <div className="border-t border-border-faint px-lg py-md text-center">
-        <button
-          className="inline-flex items-center gap-xs text-control-sm text-label transition-colors hover:text-action hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
-          type="button"
-        >
-          <span>Show all</span>
-          <Icon aria-hidden="true" name="arrow-right" size="small" />
-        </button>
+        <GhostButton icon="arrow-right" iconAtEnd size="medium">
+          Show all
+        </GhostButton>
       </div>
     </AnalyticsCard>
   );
@@ -2882,12 +3248,12 @@ function CompetitorDateButton() {
 function CompetitorIntroCard() {
   return (
     <AnalyticsCard>
-      <div className="px-lg py-md">
-        <PremiumMark label="Premium" />
-        <h2 className="mt-xs text-heading-sm text-text">
+      <div className="px-lg pb-xxl pt-lg">
+        <PremiumMark label="Premium" showText />
+        <h2 className="mt-xs text-heading-lg text-text">
           Learn from other Pages
         </h2>
-        <p className="mt-xxs text-body-sm text-text-meta">
+        <p className="mt-xs text-body-sm text-text-meta">
           Stay ahead with competitor insights
         </p>
       </div>
@@ -2907,30 +3273,30 @@ function CompetitorIntroCard() {
 }
 
 function CompetitorTrackingNoticeCard() {
+  const [isDismissed, setIsDismissed] = useState(false);
+
+  if (isDismissed) {
+    return null;
+  }
+
   return (
-    <AnalyticsCard>
-      <div className="grid min-h-[72px] grid-cols-[40px_minmax(0,1fr)_auto] items-center gap-md px-lg py-md">
-        <span className="inline-flex size-10 items-center justify-center rounded-xs bg-surface-tint text-action">
-          <Icon aria-hidden="true" name="document-search" size="medium" />
-        </span>
-        <div className="min-w-0">
-          <h2 className="text-control-sm text-text">
-            Start tracking and benchmarking your Page&apos;s performance
-          </h2>
-          <p className="mt-xxs text-body-sm text-text-meta">
-            Edit your competitors list to track specific Pages on LinkedIn.{" "}
-            <span className="font-semibold text-action">Learn more</span>
-          </p>
-        </div>
-        <ButtonIcon
-          icon="close"
-          label="Dismiss competitor tracking notice"
-          size="small"
-          touchTarget={false}
-          variant="tertiary"
+    <TodayActionCard
+      description="Edit your competitors list to track specific Pages on LinkedIn."
+      dismissLabel="Dismiss competitor tracking notice"
+      headline="Start tracking and benchmarking your Page's performance"
+      inlineAction={{ label: "Learn more" }}
+      onDismiss={() => setIsDismissed(true)}
+      visual={
+        <Image
+          alt=""
+          aria-hidden="true"
+          className="size-12 shrink-0"
+          height={48}
+          src={assetSrc("ui-dashboard-large.svg")}
+          width={48}
         />
-      </div>
-    </AnalyticsCard>
+      }
+    />
   );
 }
 
@@ -2939,7 +3305,7 @@ function CompetitorHighlightsCard() {
     <AnalyticsCard>
       <div className="px-lg py-lg">
         <div className="flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">Competitor highlights</h2>
+          <h2 className="text-heading-lg text-text">Competitor highlights</h2>
           <Icon
             aria-hidden="true"
             className="text-text-meta"
@@ -2947,8 +3313,8 @@ function CompetitorHighlightsCard() {
             size="small"
           />
         </div>
-        <p className="mt-xxs text-body-sm text-text-meta">Last 30 days</p>
-        <div className="mt-lg grid gap-lg sm:grid-cols-2">
+        <p className="mt-xs text-body-sm text-text-meta">Last 30 days</p>
+        <div className="mt-xxl grid gap-lg sm:grid-cols-2">
           {competitorHighlights.map((highlight) => (
             <article key={highlight.label}>
               <p className="text-heading-md text-text">{highlight.value}</p>
@@ -3004,9 +3370,9 @@ function CompetitorMetricCell({
 function CompetitorGrowthTable() {
   return (
     <AnalyticsCard>
-      <div className="px-lg py-lg">
+      <div className="px-lg pb-xxl pt-lg">
         <div className="flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">Compare growth</h2>
+          <h2 className="text-heading-lg text-text">Compare growth</h2>
           <Icon
             aria-hidden="true"
             className="text-text-meta"
@@ -3014,7 +3380,7 @@ function CompetitorGrowthTable() {
             size="small"
           />
         </div>
-        <p className="mt-xxs text-body-sm text-text-meta">Last 30 days</p>
+        <p className="mt-xs text-body-sm text-text-meta">Last 30 days</p>
       </div>
 
       <div className="overflow-x-auto px-lg pb-lg">
@@ -3126,7 +3492,7 @@ function TrendingCompetitorPostsCard() {
     <AnalyticsCard>
       <div className="px-lg py-lg">
         <div className="flex items-center gap-xs">
-          <h2 className="text-heading-sm text-text">
+          <h2 className="text-heading-lg text-text">
             Trending competitor posts
           </h2>
           <Icon
@@ -3136,8 +3502,8 @@ function TrendingCompetitorPostsCard() {
             size="small"
           />
         </div>
-        <p className="mt-xxs text-body-sm text-text-meta">Last 30 days</p>
-        <div className="mt-lg grid gap-md">
+        <p className="mt-xs text-body-sm text-text-meta">Last 30 days</p>
+        <div className="mt-xxl grid gap-md">
           {competitorPosts.map((post) => (
             <CompetitorPostCard key={post.title} post={post} />
           ))}
@@ -3153,7 +3519,7 @@ function CompetitiveTipCard({
   tip: CompetitiveTipData;
 }>) {
   return (
-    <article className="grid min-h-[104px] grid-cols-[minmax(0,1fr)_56px] items-center gap-md rounded-xs border border-border-faint p-md">
+    <article className="grid min-h-[104px] grid-cols-[minmax(0,1fr)_64px] items-center gap-md rounded-xs border border-border-faint p-lg">
       <div className="min-w-0">
         <h3 className="text-control-sm text-text">{tip.title}</h3>
         <p className="mt-xxs text-body-sm text-text-meta">{tip.description}</p>
@@ -3161,9 +3527,14 @@ function CompetitiveTipCard({
           {tip.action}
         </Button>
       </div>
-      <span className="inline-flex size-14 items-center justify-center justify-self-end rounded-xs bg-surface-tint text-action">
-        <Icon aria-hidden="true" name={tip.icon} size="medium" />
-      </span>
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="size-16 shrink-0 justify-self-end object-contain"
+        height={64}
+        src={assetSrc(tip.illustration)}
+        width={64}
+      />
     </article>
   );
 }
@@ -3172,8 +3543,8 @@ function CompetitiveTipsCard() {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
-        <h2 className="text-heading-sm text-text">Tips to stay competitive</h2>
-        <div className="mt-lg grid gap-md">
+        <h2 className="text-heading-lg text-text">Tips to stay competitive</h2>
+        <div className="mt-xxl grid gap-md">
           {competitiveTips.map((tip) => (
             <CompetitiveTipCard key={tip.title} tip={tip} />
           ))}
@@ -3183,12 +3554,33 @@ function CompetitiveTipsCard() {
   );
 }
 
+function ContentBoostUpsellBanner({
+  estimate,
+}: Readonly<{ estimate: string }>) {
+  return (
+    <div className="mt-md flex flex-wrap items-center justify-between gap-md rounded-sm bg-surface-tint px-md py-sm text-text-meta">
+      <p className="min-w-[220px] flex-1 text-body-sm">
+        {estimate}{" "}
+        <Icon
+          aria-hidden="true"
+          className="inline-block align-[-2px] text-icon"
+          name="question"
+          size="small"
+        />
+      </p>
+      <Button size="small" variant="secondary">
+        Boost
+      </Button>
+    </div>
+  );
+}
+
 function ContentEngagementTable() {
   return (
     <AnalyticsCard>
-      <div className="flex flex-wrap items-center justify-between gap-md px-lg py-md">
+      <div className="flex flex-wrap items-center justify-between gap-md px-lg pb-xxl pt-[16px]">
         <div>
-          <h2 className="text-heading-sm text-text">Content engagement</h2>
+          <h2 className="text-heading-lg text-text">Content engagement</h2>
           <p className="mt-xs text-body-sm text-text-meta">
             Time range: May 26, 2026 - Jun 8, 2026
           </p>
@@ -3203,17 +3595,27 @@ function ContentEngagementTable() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-left">
+        <table className="w-full min-w-[840px] border-collapse text-left">
           <thead>
             <tr className="border-y border-border-faint bg-background-neutral-soft text-label-xs text-text-meta">
-              <th className="px-lg py-sm font-semibold">Post title</th>
-              <th className="px-md py-sm font-semibold">Post type</th>
-              <th className="px-md py-sm font-semibold">Audience</th>
-              <th className="px-md py-sm text-right font-semibold">
-                Impressions
+              <th className="w-[420px] px-lg py-[16px] font-semibold">
+                Post title
               </th>
-              <th className="px-md py-sm text-right font-semibold">Views</th>
-              <th className="px-lg py-sm text-right font-semibold">Clicks</th>
+              <th className="px-md py-[16px] text-right font-semibold">
+                Reactions
+              </th>
+              <th className="px-md py-[16px] text-right font-semibold">
+                Comments
+              </th>
+              <th className="px-md py-[16px] text-right font-semibold">
+                Reposts
+              </th>
+              <th className="px-md py-[16px] text-right font-semibold">
+                Follows
+              </th>
+              <th className="px-lg py-[16px] text-right font-semibold">
+                Engagement rate
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -3222,7 +3624,7 @@ function ContentEngagementTable() {
                 className="border-b border-border-faint align-top text-body-sm text-text"
                 key={row.title}
               >
-                <td className="max-w-[340px] px-lg py-md">
+                <td className="max-w-[440px] px-lg py-[32px]">
                   <button
                     className="line-clamp-2 text-left text-control-sm text-action hover:underline"
                     type="button"
@@ -3232,14 +3634,25 @@ function ContentEngagementTable() {
                   <p className="mt-xs text-body-xs text-text-meta">
                     Posted by {row.postedBy} &middot; {row.date}
                   </p>
+                  {row.boostEstimate ? (
+                    <ContentBoostUpsellBanner estimate={row.boostEstimate} />
+                  ) : null}
                 </td>
-                <td className="px-md py-md">{row.type}</td>
-                <td className="max-w-[180px] px-md py-md text-text-meta">
-                  {row.audience}
+                <td className="px-md py-[32px] text-right align-middle">
+                  {row.reactions}
                 </td>
-                <td className="px-md py-md text-right">{row.impressions}</td>
-                <td className="px-md py-md text-right">{row.views}</td>
-                <td className="px-lg py-md text-right">{row.clicks}</td>
+                <td className="px-md py-[32px] text-right align-middle">
+                  {row.comments}
+                </td>
+                <td className="px-md py-[32px] text-right align-middle">
+                  {row.reposts}
+                </td>
+                <td className="px-md py-[32px] text-right align-middle">
+                  {row.follows}
+                </td>
+                <td className="px-lg py-[32px] text-right align-middle">
+                  {row.engagementRate}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -3344,7 +3757,7 @@ function EmptyAnalyticsPanel({
   return (
     <section
       aria-labelledby={`premium-company-pages-analytics-${tab.id}-tab`}
-      className="min-h-[520px] rounded-sm border border-border-faint bg-background shadow-raised-faint"
+      className="min-h-[520px] rounded-sm border border-border-faint bg-background"
       id={`premium-company-pages-analytics-${tab.id}-panel`}
       role="tabpanel"
     >
@@ -3366,13 +3779,13 @@ function AnalyticsContent({
 
   return (
     <div className="min-w-0 space-y-md">
-      <section className="overflow-hidden rounded-sm border border-border-faint bg-background shadow-raised-faint">
+      <section className="overflow-hidden rounded-sm border border-border-faint bg-background">
         <div className="px-lg pt-lg">
-          <h1 className="text-heading-lg text-text">Analytics</h1>
+          <h1 className="text-heading-xl text-text">Analytics</h1>
         </div>
         <div
           aria-label="Analytics sections"
-          className="mt-sm flex overflow-x-auto px-sm"
+          className="mt-md flex overflow-x-auto px-sm"
           role="tablist"
         >
           {analyticsTabs.map((tab) => (
@@ -3452,18 +3865,16 @@ function AdminVcaFabEntry({
       className="pcp-ai-messaging-surface group fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
       style={style}
     >
-      <div className="pointer-events-none absolute bottom-full right-0 hidden translate-y-xs flex-col items-end gap-sm pb-sm opacity-0 transition-[opacity,transform] duration-150 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:flex">
-        {ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => (
-          <Prompt
-            className="w-max max-w-[calc(100vw-3rem)] self-end shadow-raised-faint [&>span]:whitespace-nowrap [&>span]:break-normal"
-            key={item.id}
-            onPromptSelect={() => onPromptSelect(item.id)}
-            prompt={item.prompt}
-          />
-        ))}
-      </div>
+      <FabPromptStack
+        items={ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => ({
+          id: item.id,
+          prompt: item.prompt,
+          value: item.id,
+        }))}
+        onPromptSelect={onPromptSelect}
+      />
       <VcaFab
-        accentColor={VELORA_AI_ACCENT}
+        adminTone="gold"
         chatPanelId={chatPanelId}
         label="Open Assistant"
         onClick={onOpen}
@@ -3688,13 +4099,32 @@ function PremiumCompanyPagesAdminVcaShell({
   );
 }
 
+type PremiumCompanyPagesDashboardStory =
+  | "default"
+  | "dashboard-entry"
+  | "cold-start";
+
 type PremiumCompanyPagesPageProps = Readonly<{
   initialAgentOpen?: boolean;
+  story?: string;
 }>;
+
+function getPremiumCompanyPagesDashboardStory(
+  story: string | undefined,
+): PremiumCompanyPagesDashboardStory {
+  if (story === "dashboard-entry" || story === "cold-start") {
+    return story;
+  }
+
+  return "default";
+}
 
 export function PremiumCompanyPagesPage({
   initialAgentOpen = false,
+  story,
 }: PremiumCompanyPagesPageProps) {
+  const dashboardStory = getPremiumCompanyPagesDashboardStory(story);
+
   return (
     <PremiumCompanyPagesAdminVcaShell
       activeItem="Dashboard"
@@ -3705,6 +4135,7 @@ export function PremiumCompanyPagesPage({
         <DashboardContent
           activeInsightId={activeInsightId}
           onDigestInsightSelect={onInsightSelect}
+          story={dashboardStory}
         />
       )}
     </PremiumCompanyPagesAdminVcaShell>

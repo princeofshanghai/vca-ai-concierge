@@ -3,6 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon, type IconName } from "@/components/primitives/icon";
+import { Tag, type TagTone } from "@/components/primitives/tag";
 
 export type PersonCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
   actionIcon?: IconName;
@@ -12,6 +13,8 @@ export type PersonCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
   headline: ReactNode;
   name: ReactNode;
   onAction?: () => void;
+  tag?: ReactNode;
+  tagTone?: TagTone;
 };
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -27,6 +30,8 @@ export function PersonCard({
   headline,
   name,
   onAction,
+  tag,
+  tagTone = "default",
   ...props
 }: PersonCardProps) {
   const nameText = typeof name === "string" ? name : undefined;
@@ -50,6 +55,11 @@ export function PersonCard({
         </p>
         {followers ? (
           <p className="mt-sm text-body-xs text-text-meta">{followers}</p>
+        ) : null}
+        {tag ? (
+          <Tag className="mt-sm max-w-full" size="small" tone={tagTone}>
+            {tag}
+          </Tag>
         ) : null}
       </div>
       <Button

@@ -36,6 +36,7 @@ export type ScriptedResponseTurnProps = Readonly<{
   attachments?: ReadonlyArray<ScriptedResponseAttachment>;
   renderText?: (options: {
     text: string;
+    fullText: string;
     streamStatus: ChatMessageStreamStatus;
     streamText: string;
   }) => ReactNode;
@@ -190,7 +191,13 @@ function ScriptedResponseTurnContent({
 
   useEffect(() => {
     onContentChange?.();
-  }, [isStopped, onContentChange, renderedAttachmentCount, streamStatus, streamText]);
+  }, [
+    isStopped,
+    onContentChange,
+    renderedAttachmentCount,
+    streamStatus,
+    streamText,
+  ]);
 
   useEffect(() => {
     onBusyChange?.(id, isBusy);
@@ -200,10 +207,12 @@ function ScriptedResponseTurnContent({
     };
   }, [id, isBusy, onBusyChange]);
 
-  const displayedText = isStopped ? streamText : text;
+  const displayedText =
+    isStopped || streamStatus === "streaming" ? streamText : text;
   const textNode =
     renderText?.({
       text: displayedText,
+      fullText: text,
       streamStatus,
       streamText,
     }) ?? (

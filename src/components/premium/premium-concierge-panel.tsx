@@ -24,6 +24,7 @@ import {
   ChatThread,
   Prompt,
   useChatAssistantStream,
+  useChatLatestMessageAnchor,
   type ChatMessageStreamStatus,
   type ChatPanelVariant,
 } from "@/components/chat";
@@ -592,6 +593,9 @@ export function PremiumConciergePanel({
   const [hasRecommendation, setHasRecommendation] = useState(false);
   const [typedTurnCount, setTypedTurnCount] = useState(0);
   const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
+  const [latestUserMessageAnchorKey, setLatestUserMessageAnchorKey] = useState<
+    string | null
+  >(null);
   const isAssistantBusy =
     pendingAssistantResponse !== null ||
     liveItems.some(
@@ -601,6 +605,15 @@ export function PremiumConciergePanel({
         (item.status === "thinking" || item.status === "streaming"),
     );
   const composerPlaceholder = "Send a message";
+  const {
+    hasLatestBelow,
+    handleScroll: handleLatestScroll,
+    scrollToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: chatBodyRef,
+    anchorKey: latestUserMessageAnchorKey,
+    contentKey: liveItems,
+  });
 
   const createLiveItemId = useCallback((prefix: string) => {
     liveItemIdRef.current += 1;
@@ -618,6 +631,7 @@ export function PremiumConciergePanel({
       const [firstAssistantMessage = "", ...remainingAssistantMessages] =
         response.messages;
       const assistantId = createLiveItemId("live-assistant");
+      const userMessageId = createLiveItemId("live-user");
       const remainingMessages = remainingAssistantMessages.map(
         (content): PremiumLiveMessage => ({
           id: createLiveItemId("live-assistant"),
@@ -636,7 +650,7 @@ export function PremiumConciergePanel({
         : undefined;
       const nextItems: Array<PremiumLiveItem> = [
         {
-          id: createLiveItemId("live-user"),
+          id: userMessageId,
           kind: "message",
           role: "user",
           content: userMessage,
@@ -652,6 +666,7 @@ export function PremiumConciergePanel({
       ];
 
       setLiveItems((currentItems) => [...currentItems, ...nextItems]);
+      setLatestUserMessageAnchorKey(userMessageId);
       setActivePrompts(null);
       setPendingAssistantResponse({
         id: assistantId,
@@ -833,17 +848,12 @@ export function PremiumConciergePanel({
   });
 
   useEffect(() => {
-    const chatBody = chatBodyRef.current;
-
-    if (!chatBody) {
-      return;
-    }
-
-    chatBody.scrollTo({ top: chatBody.scrollHeight });
-    setHasChatBodyScrolled(chatBody.scrollTop > 0);
-  }, [activePrompts, context, flow, hasLiveInteracted, liveItems]);
+    handleLatestScroll();
+  }, [activePrompts, context, flow, handleLatestScroll, hasLiveInteracted]);
 
   function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
+    handleLatestScroll();
+
     const nextHasScrolled = event.currentTarget.scrollTop > 0;
 
     setHasChatBodyScrolled((currentHasScrolled) =>
@@ -1015,7 +1025,12 @@ export function PremiumConciergePanel({
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
       />
-      <ChatBody ref={chatBodyRef} onScroll={handleChatBodyScroll}>
+      <ChatBody
+        ref={chatBodyRef}
+        onJumpToLatest={scrollToLatest}
+        onScroll={handleChatBodyScroll}
+        showJumpToLatest={hasLatestBelow}
+      >
         {flow ? (
           <ChatThread aria-label={`${flow.label} transcript`}>
             {flow.steps.map(renderConversationStep)}

@@ -26,6 +26,7 @@ import {
   type GhostIconButtonSize,
 } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName, type IconSize } from "@/components/primitives/icon";
+import { OverlayButtonIcon } from "@/components/primitives/overlay-button-icon";
 import { Pill } from "@/components/primitives/pill";
 import { PresenceBadge } from "@/components/primitives/presence-badge";
 import { TextArea } from "@/components/primitives/text-area";
@@ -81,6 +82,7 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   variant?: ChatPanelVariant;
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
+  centerContent?: ReactNode;
   actionSize?: GhostIconButtonSize;
   backLabel?: string;
   backIcon?: IconName;
@@ -124,6 +126,11 @@ type ChatThreadProps = HTMLAttributes<HTMLDivElement> & {
   aiDisclaimerHref?: string;
 };
 
+type ChatBodyProps = HTMLAttributes<HTMLDivElement> & {
+  showJumpToLatest?: boolean;
+  onJumpToLatest?: () => void;
+};
+
 type ChatMessageProps = HTMLAttributes<HTMLDivElement> & {
   role?: ChatMessageRole;
   authorName?: string;
@@ -151,6 +158,7 @@ export type PromptProps = Omit<
   prompt: string;
   children?: ReactNode;
   onPromptSelect?: (prompt: string) => void;
+  showNativeTooltip?: boolean;
   visualState?: PromptVisualState;
 };
 
@@ -379,7 +387,7 @@ export function ChatTray({
     <div
       {...props}
       className={cx(
-        "inline-flex h-[var(--design-layout-chat-tray-height)] w-[min(100%,var(--design-layout-chat-tray-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-lg py-0 text-left text-text shadow-raised-faint-upward transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
+        "inline-flex h-[var(--design-layout-chat-tray-height)] w-[min(100%,var(--design-layout-chat-tray-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-lg py-0 text-left text-text shadow-raised-faint transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
         className,
       )}
     >
@@ -545,6 +553,7 @@ export function ChatHeader({
   variant = "collapsed",
   identity,
   title,
+  centerContent,
   actionSize = "medium",
   className,
   backLabel = "Back",
@@ -598,13 +607,18 @@ export function ChatHeader({
     <header
       {...props}
       className={cx(
-        "flex h-[var(--design-layout-panel-header-height)] shrink-0 items-center justify-between pl-[calc(var(--design-spacing-xxl)+env(safe-area-inset-left))] pr-[calc(var(--design-spacing-lg)+env(safe-area-inset-right))] transition-[background-color,border-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pl-xxl md:pr-lg",
+        "relative flex h-[var(--design-layout-panel-header-height)] shrink-0 items-center justify-between pl-[calc(var(--design-spacing-xxl)+env(safe-area-inset-left))] pr-[calc(var(--design-spacing-lg)+env(safe-area-inset-right))] transition-[background-color,border-color] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none md:pl-xxl md:pr-lg",
         transparent
           ? "border-b border-transparent bg-transparent"
           : "border-b border-border-faint bg-background",
         className,
       )}
     >
+      {centerContent ? (
+        <div className="pointer-events-none absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+          {centerContent}
+        </div>
+      ) : null}
       {backAction ? (
         backAction
       ) : headerIdentity?.type === "ai" ? (
@@ -619,14 +633,14 @@ export function ChatHeader({
             >
               {headerIdentity.icon}
             </span>
-          ) : (
+          ) : showAiMark ? (
             <Icon
               name="signal-ai"
               size="small"
               label="AI Concierge"
               className={cx("shrink-0 text-ai-icon", aiMarkClassName)}
             />
-          )}
+          ) : null}
           {headerIdentity.title ? (
             <span className="min-w-0 truncate text-heading-md text-text">
               {headerIdentity.title}
@@ -702,18 +716,51 @@ export function ChatThread({
   );
 }
 
-export const ChatBody = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
-  function ChatBody({ className, children, ...props }, ref) {
-    return (
+export const ChatBody = forwardRef<HTMLDivElement, ChatBodyProps>(
+  function ChatBody(
+    {
+      className,
+      children,
+      showJumpToLatest = false,
+      onJumpToLatest,
+      style,
+      ...props
+    },
+    ref,
+  ) {
+    const body = (
       <div
         {...props}
         ref={ref}
         className={cx(
-          "flex min-h-0 min-w-0 flex-1 justify-center overflow-x-hidden overflow-y-auto",
+          "flex min-h-0 min-w-0 flex-1 flex-col items-center overflow-x-hidden overflow-y-auto",
           className,
         )}
+        style={{ overflowAnchor: "none", ...style }}
       >
         {children}
+      </div>
+    );
+
+    if (!onJumpToLatest) {
+      return body;
+    }
+
+    return (
+      <div className="relative flex min-h-0 min-w-0 flex-1">
+        {body}
+        {showJumpToLatest ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-md z-20 flex justify-center">
+            <OverlayButtonIcon
+              className="pointer-events-auto"
+              color="white"
+              icon="arrow-down"
+              label="Jump to latest message"
+              onClick={() => onJumpToLatest()}
+              size="small"
+            />
+          </div>
+        ) : null}
       </div>
     );
   },
@@ -781,6 +828,7 @@ export function ChatMessage({
   return (
     <div
       {...props}
+      data-chat-message-role={role}
       className={cx(
         "chat-message-enter flex w-full",
         isUser && "justify-end",
@@ -1205,6 +1253,7 @@ export function Prompt({
   className,
   onClick,
   onPromptSelect,
+  showNativeTooltip = true,
   visualState = "default",
   type,
   title,
@@ -1225,7 +1274,7 @@ export function Prompt({
     <button
       {...props}
       type={type ?? "button"}
-      title={title ?? prompt}
+      title={showNativeTooltip ? (title ?? prompt) : undefined}
       aria-label={ariaLabel ?? `Send message: ${prompt}`}
       data-visual-state={visualState}
       className={cx(
