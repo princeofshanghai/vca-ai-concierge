@@ -120,6 +120,7 @@ import {
   ProductCard as ResponseProductCard,
 } from "./response-blocks/ChatCards";
 import { PersonCard as ResponsePersonCard } from "./response-blocks/PersonCard";
+import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
 import { ResponseRail } from "./response-blocks/ResponseRail";
 import { StreamingText as ResponseStreamingText } from "./response-blocks/Text";
 import { ScriptedResponseTurn } from "./scripted-response-turn";
@@ -862,13 +863,11 @@ function VeloraCaseStudySidePanel({
           ))}
         </div>
 
-        <div className="mt-xl flex items-center justify-between border-t border-border-faint py-md text-body-sm text-text-meta">
-          <span className="inline-flex min-w-0 items-center gap-sm">
-            <ReactionPile />
-            <span>{post.engagement}</span>
-          </span>
-          <span>{post.commentLabel}</span>
-        </div>
+        <PostSidePanelEngagementSummary
+          comments={post.commentLabel}
+          reactions={post.engagement}
+          reposts={post.repostLabel}
+        />
 
         <footer className="mt-xxl flex justify-end gap-sm border-t border-border-faint pt-lg">
           <Button

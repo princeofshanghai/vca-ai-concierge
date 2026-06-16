@@ -28,10 +28,6 @@ import {
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
-import {
-  SduiReactionIcon,
-  type SduiReactionIconType,
-} from "@/components/primitives/reaction-icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 import { AudienceFit as ResponseAudienceFit } from "@/components/premium-company-pages/response-blocks/AudienceFit";
 import { Chips as ResponseChips } from "@/components/premium-company-pages/response-blocks/Chips";
@@ -60,6 +56,7 @@ import {
 import { ScriptedResponseTurn } from "./scripted-response-turn";
 import { TodayActionCard } from "./today-action-card";
 import { useScriptedTurnController } from "./use-scripted-turn-controller";
+import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
 import { PcpAdminGoldAiMark } from "./vca-fab";
 import {
   adminUc5CompetitorRows,
@@ -210,9 +207,16 @@ const ADMIN_RELEVANT_VISITORS_PROMPT =
 const VISITOR_AUDIENCE_REACH_MORE_PROMPT = "How do I reach more of them?";
 const VISITOR_AUDIENCE_RELEVANT_VISITORS_RESPONSE_TEXT =
   "Here are a few visitors who match the strongest audience signals for Velora right now.";
-const ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT = `A few recent visitors look especially relevant because they match Velora's target profile: HR and benefits leaders at large companies, with signs they may be evaluating benefits operations workflows.
+const ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT = `A few recent visitors look especially relevant for Velora.
 
-I'd prioritize people who combine seniority, company size, and recent Page activity. Those signals are stronger than a single Page view on its own.`;
+They match your target profile: HR and benefits leaders at large companies, with recent Page activity around benefits operations content.
+
+I'd prioritize visitors who combine seniority, company size, and repeat engagement. Those signals are stronger than a single Page view on its own.`;
+const ADMIN_RELEVANT_VISITORS_RESPONSE_HIGHLIGHTS = [
+  "HR and benefits leaders",
+  "large companies",
+  "seniority, company size, and repeat engagement",
+] as const;
 const VISITOR_AUDIENCE_REACH_MORE_RESPONSE_TEXT =
   "Post more content for Human Resources leaders at large employers, then reuse the open enrollment and carrier-readiness proof that is already attracting relevant visitors.";
 const ADMIN_NEXT_FOCUS_RESPONSE_TEXT = `Focus on turning engagement into follower growth.
@@ -235,15 +239,14 @@ Before enrollment opens, HR teams should confirm carrier file readiness, eligibi
 Velora helps benefits teams see those moving parts in one workflow, so open enrollment feels coordinated before the deadline pressure hits.`;
 const ADMIN_POST_IMPRESSIONS_PROMPT = "Why are post impressions down?";
 const ADMIN_POST_IMPRESSIONS_BOOST_PROMPT = "What post should I boost?";
-const ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT = `Post impressions are down 18.4% this month, mostly because Velora posted fewer times and two link-heavy updates had weaker early engagement.
+const ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT = `Post impressions are down 18.4% this month. The clearest pattern is cadence: Velora posted fewer times, and two link-heavy updates had weaker early engagement.
 
 The content itself is not all underperforming. Reactions, comments, and reposts are still up, which suggests people are responding when the right posts reach them. The issue looks more like distribution than topic fit.
 
 I would first return to a steadier posting cadence and reuse practical benefits-operations topics organically. If you need faster reach ahead of open enrollment planning, boosting a proven post could also be a reasonable next step.`;
 const ADMIN_POST_IMPRESSIONS_RESPONSE_HIGHLIGHTS = [
-  "Post impressions are down 18.4%",
+  "18.4% this month",
   "posted fewer times",
-  "weaker early engagement",
   "distribution than topic fit",
   "boosting a proven post could also be a reasonable next step",
 ] as const;
@@ -614,8 +617,8 @@ export function AdminPerformanceDigestCard({
                 }),
             }}
             dismissLabel="Dismiss follower growth insight"
-            evidence="Down 18% after posting slowed to once a week."
-            headline="Recover your follower growth"
+            evidence="New followers dropped 18% after posting slowed to once a week."
+            headline="Get follower growth back on track"
             onDismiss={() => resolveCard(STORY_1A_CARD_ID)}
             type="anomaly"
           />
@@ -1110,14 +1113,11 @@ function AdminBoostPostSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
           </p>
         </div>
 
-        <div className="mt-xl flex flex-wrap items-center justify-between gap-md border-t border-border-faint py-md text-body-sm text-text-meta">
-          <span className="inline-flex min-w-0 items-center gap-sm">
-            <AdminReactionPile />
-            <span>1,240</span>
-          </span>
-          <span>146 comments</span>
-          <span>64 reposts</span>
-        </div>
+        <PostSidePanelEngagementSummary
+          comments="146 comments"
+          reactions="1,240"
+          reposts="64 reposts"
+        />
 
         <footer className="mt-xxl flex flex-wrap justify-end gap-sm border-t border-border-faint pt-lg">
           <Button
@@ -1138,31 +1138,6 @@ function AdminBoostPostSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
         </footer>
       </article>
     </ChatSidePanel>
-  );
-}
-
-const adminDefaultReactionTypes: ReadonlyArray<SduiReactionIconType> = [
-  "like",
-  "empathy",
-  "interest",
-];
-
-function AdminReactionPile({
-  reactionTypes = adminDefaultReactionTypes,
-}: Readonly<{ reactionTypes?: ReadonlyArray<SduiReactionIconType> }>) {
-  return (
-    <span className="flex items-center">
-      {reactionTypes.map((reaction, index) => (
-        <SduiReactionIcon
-          className={index < reactionTypes.length - 1 ? "-mr-[4px]" : undefined}
-          decorative
-          key={`${reaction}-${index}`}
-          ring
-          size="xsmall"
-          type={reaction}
-        />
-      ))}
-    </span>
   );
 }
 
@@ -1459,6 +1434,12 @@ function SelfInitiatedRelevantVisitorsThread({
         id={`${turnId}-relevant-visitors`}
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <RelevantVisitorsResponseText
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
         stopSignal={stopSignal}
         text={ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT}
       />
@@ -1651,10 +1632,12 @@ function EmphasizedStreamingText({
 }
 
 function FormattedInsightResponseText({
+  emphasizeOpening = true,
   highlights,
   isStreaming,
   text,
 }: Readonly<{
+  emphasizeOpening?: boolean;
   highlights: ReadonlyArray<string>;
   isStreaming: boolean;
   text: string;
@@ -1668,7 +1651,10 @@ function FormattedInsightResponseText({
     <ResponseText className="chat-message-enter">
       {blocks.map((block, index) => (
         <p
-          className={cx(index === 0 && "font-semibold", index > 0 && "mt-md")}
+          className={cx(
+            emphasizeOpening && index === 0 && "font-semibold",
+            index > 0 && "mt-md",
+          )}
           key={index}
         >
           <EmphasizedStreamingText
@@ -1692,6 +1678,23 @@ function VisitorAudienceResponseText({
   return (
     <FormattedInsightResponseText
       highlights={VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS}
+      isStreaming={isStreaming}
+      text={text}
+    />
+  );
+}
+
+function RelevantVisitorsResponseText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  return (
+    <FormattedInsightResponseText
+      emphasizeOpening={false}
+      highlights={ADMIN_RELEVANT_VISITORS_RESPONSE_HIGHLIGHTS}
       isStreaming={isStreaming}
       text={text}
     />

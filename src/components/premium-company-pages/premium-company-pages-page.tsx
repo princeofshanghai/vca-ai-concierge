@@ -262,6 +262,7 @@ type RecentPostData =
   | RecentVideoPostData;
 
 type PremiumCompanyPagesAdminStory =
+  | "current-state"
   | "current"
   | "old";
 
@@ -314,10 +315,11 @@ const performanceCards: Array<PerformanceCardData> = [
     deltaTone: "positive",
   },
   {
-    title: "Visitors from audiences",
-    value: "18.4K",
-    label: "Premium insight",
-    premium: true,
+    title: "Page visitors",
+    value: "4,280",
+    delta: "15%",
+    deltaMeta: "last 7 days",
+    deltaTone: "negative",
   },
   {
     title: "Post impressions",
@@ -327,11 +329,10 @@ const performanceCards: Array<PerformanceCardData> = [
     deltaTone: "positive",
   },
   {
-    title: "Page visitors",
-    value: "4,280",
-    delta: "15%",
-    deltaMeta: "last 7 days",
-    deltaTone: "negative",
+    title: "Visitors from audiences",
+    value: "18.4K",
+    label: "Premium insight",
+    premium: true,
   },
 ];
 const PERFORMANCE_CARDS_VISIBLE_COUNT = 4;
@@ -905,6 +906,16 @@ function getRailItemHrefForStory(
 
     if (label === "Analytics") {
       return "/premium-company-pages/admin/old/analytics";
+    }
+  }
+
+  if (story === "current-state") {
+    if (label === "Dashboard") {
+      return "/premium-company-pages/admin/current-state";
+    }
+
+    if (label === "Analytics") {
+      return "/premium-company-pages/admin/current-state/analytics";
     }
   }
 
@@ -4221,6 +4232,7 @@ function PremiumCompanyPagesAdminVcaShell({
   const agentPanelPositionClass = isAgentExpanded
     ? "md:inset-auto md:left-1/2 md:top-1/2 md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-expanded-width))] md:-translate-x-1/2 md:-translate-y-1/2"
     : "md:inset-auto md:bottom-6 md:right-6 md:top-[calc(52px_+_var(--design-spacing-xxl))] md:w-[min(calc(100vw_-_48px),var(--design-layout-panel-collapsed-width))]";
+  const showVcaFabEntry = story !== "current-state";
 
   return (
     <>
@@ -4243,7 +4255,7 @@ function PremiumCompanyPagesAdminVcaShell({
         />
       ) : null}
 
-      {!isAgentOpen ? (
+      {!isAgentOpen && showVcaFabEntry ? (
         <AdminVcaFabEntry
           chatPanelId={agentPanelId}
           onOpen={handleOpenAgentFromFab}
@@ -4301,6 +4313,10 @@ type PremiumCompanyPagesPageProps = Readonly<{
 function getPremiumCompanyPagesDashboardStory(
   story: string | undefined,
 ): PremiumCompanyPagesAdminStory {
+  if (story === "current-state") {
+    return "current-state";
+  }
+
   if (story === "dashboard-entry" || story === "cold-start" || story === "old") {
     return "old";
   }

@@ -78,7 +78,7 @@ export const pcpProofSnippets = {
   postEngagement: "3,840",
   postCommentCount: "186",
   postCommentLabel: "186 comments",
-  postRepostCount: "72",
+  postRepostCount: "76",
   postBody: [
     "Arbor Retail Group was preparing open enrollment for 12,000 employees across stores, distribution centers, and corporate teams. Eligibility cleanup and carrier file readiness used to send the benefits team into a spreadsheet scramble.",
     "With Velora, Dana's team mapped each plan change to the populations, carrier files, and employee communications behind it. When one carrier feed changed, only the affected launch tasks moved into review. Everyone else stayed on schedule.",

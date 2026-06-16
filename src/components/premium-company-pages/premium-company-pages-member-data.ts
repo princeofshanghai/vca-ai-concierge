@@ -87,6 +87,7 @@ export type VcaPostDetail = Readonly<{
   engagement: string;
   image?: string;
   imageAlt: string;
+  repostLabel?: string;
   title: string;
 }>;
 
@@ -134,6 +135,7 @@ export const vcaCaseStudyPostDetail: VcaPostDetail = {
   engagement: pcpProofSnippets.postEngagement,
   image: pcpProofSnippets.postImage,
   imageAlt: pcpProofSnippets.postImageAlt,
+  repostLabel: `${pcpProofSnippets.postRepostCount} reposts`,
   title: pcpProofSnippets.postTitle,
 };
 
@@ -147,6 +149,7 @@ export const vcaReadinessPostDetail: VcaPostDetail = {
   engagement: "216",
   image: "open-enrollment-readiness-checklist.png",
   imageAlt: "Hand using a stylus to check off an open enrollment checklist",
+  repostLabel: "9 reposts",
   title: "Open enrollment readiness checklist for enterprise HR teams",
 };
 

@@ -23,6 +23,8 @@ const HIRING_PROTOTYPE_HREF = HIRING_ENTRY_LIX_TEST_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
+const PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF =
+  "/premium-company-pages/admin/current-state";
 const PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF =
   "/premium-company-pages/admin/old";
 const PREMIUM_COMPANY_PAGES_STORIES_HREF = "/premium-company-pages/stories";
@@ -244,6 +246,10 @@ function getPrototypeMetaLabel(
       return `${placeholderStoryLabel} · Placeholder`;
     }
 
+    if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF)) {
+      return "Current state";
+    }
+
     if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_HREF)) {
       return "Admin view";
     }
@@ -315,6 +321,9 @@ function getPrototypeDestination(
     matches: isPremiumCompanyPages
       ? (candidate) =>
           candidate.startsWith("/premium-company-pages") &&
+          !candidate.startsWith(
+            PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF,
+          ) &&
           !candidate.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF)
       : isPremium
         ? (candidate) =>
@@ -332,6 +341,15 @@ function getPrototypeDestination(
       hiringShellLabel,
       premiumShellLabel,
     ),
+  };
+}
+
+function getPremiumCompanyPagesCurrentStateDestination(): ReviewDestination {
+  return {
+    href: PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF,
+    label: "Current state",
+    matches: (pathname) =>
+      pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF),
   };
 }
 
@@ -360,6 +378,7 @@ function getReviewDestinations(
   ];
 
   if (pathname.startsWith("/premium-company-pages")) {
+    destinations.push(getPremiumCompanyPagesCurrentStateDestination());
     destinations.push(getPremiumCompanyPagesOldDestination());
   }
 
