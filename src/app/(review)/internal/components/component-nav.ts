@@ -51,6 +51,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/shared/feedback",
           },
           {
+            id: "shared-end-chat-csat",
+            title: "End chat CSAT",
+            description:
+              "Lets visitors rate the overall conversation before ending a chat.",
+            href: "/internal/components/shared/end-chat-csat",
+          },
+          {
             id: "shared-composer",
             title: "Composer",
             description:

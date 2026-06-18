@@ -1,6 +1,7 @@
 export {
   ChatBody,
   ChatComposer,
+  ChatEndFeedbackScreen,
   ChatFeedbackReasonChips,
   ChatFeedbackReasonPanel,
   ChatHeader,
@@ -17,6 +18,8 @@ export {
   ChatThread,
   Prompt,
   RecommendationCard,
+  type ChatEndFeedbackRating,
+  type ChatEndFeedbackSubmission,
   type ChatFeedbackReason,
   type ChatHeaderIdentity,
   type ChatInlineFeedbackTone,

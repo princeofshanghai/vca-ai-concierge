@@ -46,16 +46,16 @@ const HIRING_ENTRY_LIX_TEST_NAV_ITEM = {
 } as const;
 const HIRING_SHELL_OPTIONS = [
   {
+    id: "hiring-shell-hybrid",
+    label: "Tray (hybrid)",
+  },
+  {
     id: "hiring-shell-default",
     label: "Tray (hidden)",
   },
   {
     id: "hiring-shell-tray",
     label: "Tray (persistent)",
-  },
-  {
-    id: "hiring-shell-hybrid",
-    label: "Tray (hybrid)",
   },
 ] as const;
 const PREMIUM_SHELL_OPTIONS = [
@@ -388,15 +388,15 @@ function getReviewDestinations(
 }
 
 function withHiringShell(href: string, shellLabel: HiringShellLabel) {
+  if (shellLabel === "Tray (hybrid)") {
+    return href;
+  }
+
   if (shellLabel === "Tray (hidden)") {
     return `${href}?shell=default`;
   }
 
-  if (shellLabel === "Tray (persistent)") {
-    return href;
-  }
-
-  return `${href}?shell=hybrid`;
+  return `${href}?shell=tray`;
 }
 
 function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
@@ -538,18 +538,21 @@ export function ReviewShellNav({
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const vcaShellParam = searchParams.get("vcaShell");
   const activeHiringShellLabel: HiringShellLabel =
-    searchParams.get("shell") === "hybrid"
+    searchParams.get("shell") === "tray" ||
+    searchParams.get("shell") === "persistent-tray"
+      ? "Tray (persistent)"
+      : searchParams.get("shell") === "hybrid"
       ? "Tray (hybrid)"
       : searchParams.get("shell") === "default" ||
           searchParams.get("shell") === "dismissable-tray"
         ? "Tray (hidden)"
-        : "Tray (persistent)";
+        : "Tray (hybrid)";
   const normalizedHiringHref =
     activeHiringShellLabel === "Tray (hybrid)"
-      ? `${pathname}?shell=hybrid`
+      ? pathname
       : activeHiringShellLabel === "Tray (hidden)"
         ? `${pathname}?shell=default`
-        : pathname;
+        : `${pathname}?shell=tray`;
   const activePremiumShellLabel: PremiumShellLabel =
     searchParams.get("shell") === "tray"
       ? "Tray (persistent)"

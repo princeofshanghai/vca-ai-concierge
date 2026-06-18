@@ -211,9 +211,21 @@ type ChatFeedbackSubmission = Readonly<{
   comment: string;
 }>;
 
+export type ChatEndFeedbackRating = 1 | 2 | 3 | 4 | 5;
+
+export type ChatEndFeedbackSubmission = Readonly<{
+  rating: ChatEndFeedbackRating | null;
+  comment: string;
+}>;
+
 type ChatMessageFeedbackFlowProps = HTMLAttributes<HTMLDivElement> & {
   timestamp?: string;
   onSubmitFeedback?: (submission: ChatFeedbackSubmission) => void;
+};
+
+type ChatEndFeedbackScreenProps = HTMLAttributes<HTMLDivElement> & {
+  onBackToChat: () => void;
+  onEndChat: (submission: ChatEndFeedbackSubmission) => void;
 };
 
 type ChatFeedbackReasonPanelProps = HTMLAttributes<HTMLDivElement> & {
@@ -237,6 +249,19 @@ const defaultFeedbackReasonOptions: ReadonlyArray<ChatFeedbackReasonOption> = [
     label: "Inappropriate or harmful",
   },
   { value: "something-else", label: "Something else" },
+];
+
+const endFeedbackRatings: ReadonlyArray<
+  Readonly<{
+    value: ChatEndFeedbackRating;
+    label: string;
+  }>
+> = [
+  { value: 1, label: "Very dissatisfied" },
+  { value: 2, label: "Dissatisfied" },
+  { value: 3, label: "Neutral" },
+  { value: 4, label: "Satisfied" },
+  { value: 5, label: "Very satisfied" },
 ];
 
 const panelWidthClasses: Record<ChatPanelVariant, string> = {
@@ -1141,6 +1166,110 @@ export function ChatFeedbackReasonPanel({
       <Button variant="secondary" className="w-full" onClick={onSubmit}>
         Submit feedback
       </Button>
+    </section>
+  );
+}
+
+export function ChatEndFeedbackScreen({
+  onBackToChat,
+  onEndChat,
+  className,
+  ...props
+}: ChatEndFeedbackScreenProps) {
+  const [rating, setRating] = useState<ChatEndFeedbackRating | null>(null);
+  const [comment, setComment] = useState("");
+  const selectedRatingLabel =
+    endFeedbackRatings.find((option) => option.value === rating)?.label ??
+    "Select a rating";
+
+  function handleEndChat() {
+    onEndChat({ rating, comment });
+  }
+
+  function handleRatingClick(nextRating: ChatEndFeedbackRating) {
+    setRating((currentRating) =>
+      currentRating === nextRating ? null : nextRating,
+    );
+  }
+
+  return (
+    <section
+      {...props}
+      className={cx(
+        "flex min-h-0 flex-1 flex-col bg-background text-text",
+        className,
+      )}
+    >
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-xxl py-xxxl">
+        <div className="flex w-full max-w-[336px] flex-col items-center text-center">
+          <h2 className="text-heading-xl text-text">
+            How satisfied are you with the chat experience?
+          </h2>
+          <p className="mt-lg text-body-md-open text-text-meta">
+            {selectedRatingLabel}
+          </p>
+
+          <div
+            role="radiogroup"
+            aria-label="Rate the chat experience"
+            className="mt-md flex items-center justify-center gap-md"
+          >
+            {endFeedbackRatings.map((option) => {
+              const checked = rating === option.value;
+              const filled = rating !== null && option.value <= rating;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={checked}
+                  aria-label={
+                    checked
+                      ? `Remove ${option.label} rating, ${option.value} out of 5`
+                      : `${option.label}, ${option.value} out of 5`
+                  }
+                  className={cx(
+                    "inline-flex size-9 items-center justify-center rounded-xs outline-none transition-[color,transform] duration-150 ease-out hover:scale-105 focus-visible:ring-4 focus-visible:ring-action-focus-ring",
+                    filled
+                      ? "text-premium-brand hover:text-premium-brand active:text-premium-brand"
+                      : "text-icon hover:text-icon-hover active:text-icon-active",
+                  )}
+                  onClick={() => handleRatingClick(option.value)}
+                >
+                  <Icon
+                    name={filled ? "star-fill" : "star-outline"}
+                    size="medium"
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          <TextArea
+            aria-label="Share feedback"
+            className="mt-lg"
+            textareaClassName="min-h-[128px]"
+            placeholder="Please share your feedback to help us improve"
+            size="small"
+            value={comment}
+            onChange={(event) => setComment(event.currentTarget.value)}
+          />
+
+          <div className="mt-xl flex w-full flex-col-reverse gap-sm sm:flex-row sm:justify-center">
+            <Button
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={onBackToChat}
+            >
+              Back to chat
+            </Button>
+            <Button className="w-full sm:w-auto" onClick={handleEndChat}>
+              {rating ? "Submit and end chat" : "End chat"}
+            </Button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }

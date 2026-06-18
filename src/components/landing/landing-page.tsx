@@ -8,6 +8,7 @@ import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
 
 import {
+  ChatEndFeedbackScreen,
   ChatTray,
   type ChatHeaderIdentity,
   type ChatPanelVariant,
@@ -61,7 +62,7 @@ export function LandingPage({
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [isReviewSidePanelOpen, setIsReviewSidePanelOpen] = useState(false);
-  const [isEndChatDialogOpen, setIsEndChatDialogOpen] = useState(false);
+  const [isEndChatFeedbackOpen, setIsEndChatFeedbackOpen] = useState(false);
   const [pendingLeaveHref, setPendingLeaveHref] =
     useState<HiringHeaderNavHref | null>(null);
   const [isChatConversationStarted, setIsChatConversationStarted] =
@@ -75,7 +76,7 @@ export function LandingPage({
   const chatPanelId = useId();
   const hasOpenedContactSalesOnLoadRef = useRef(false);
   const resetChatPanelState = useCallback(() => {
-    setIsEndChatDialogOpen(false);
+    setIsEndChatFeedbackOpen(false);
     setPendingLeaveHref(null);
     setIsChatConversationStarted(false);
     setIsReviewSidePanelOpen(false);
@@ -254,11 +255,26 @@ export function LandingPage({
       return;
     }
 
-    setIsEndChatDialogOpen(false);
+    setIsEndChatFeedbackOpen(false);
     setIsChatTrayOpeningBridgeVisible(false);
     setIsHybridTrayVisible(isHybridShell);
     closeChatPanel();
   }, [closeChatPanel, isHybridShell, isReviewFlow, isTrayStyleShell]);
+
+  const showEndChatFeedback = useCallback(() => {
+    clearUnreadTrayActivity();
+    setIsEndChatFeedbackOpen(true);
+    setIsChatTrayOpeningBridgeVisible(
+      isPersistentTrayShell || (isHybridShell && isHybridTrayVisible),
+    );
+    openChatPanel();
+  }, [
+    clearUnreadTrayActivity,
+    isHybridShell,
+    isHybridTrayVisible,
+    isPersistentTrayShell,
+    openChatPanel,
+  ]);
 
   const requestCloseChat = useCallback(() => {
     if (isReviewFlow && !isTrayStyleShell) {
@@ -267,7 +283,20 @@ export function LandingPage({
       return;
     }
 
-    if (chatPanelPresence === "closed" || chatPanelPresence === "exiting") {
+    if (isEndChatFeedbackOpen) {
+      closeChat();
+      return;
+    }
+
+    const isHybridDockedTrayClose =
+      isHybridShell &&
+      isHybridTrayVisible &&
+      chatPanelPresence === "closed";
+
+    if (
+      (chatPanelPresence === "closed" || chatPanelPresence === "exiting") &&
+      !isHybridDockedTrayClose
+    ) {
       return;
     }
 
@@ -276,23 +305,27 @@ export function LandingPage({
       return;
     }
 
-    setIsEndChatDialogOpen(true);
+    showEndChatFeedback();
   }, [
     chatPanelPresence,
     closeChat,
     homeHref,
+    isEndChatFeedbackOpen,
     isChatConversationStarted,
+    isHybridShell,
+    isHybridTrayVisible,
     isReviewFlow,
     isTrayStyleShell,
     router,
+    showEndChatFeedback,
   ]);
 
-  const cancelEndChatDialog = useCallback(() => {
-    setIsEndChatDialogOpen(false);
+  const cancelEndChatFeedback = useCallback(() => {
+    setIsEndChatFeedbackOpen(false);
   }, []);
 
   const confirmEndChat = useCallback(() => {
-    setIsEndChatDialogOpen(false);
+    setIsEndChatFeedbackOpen(false);
     closeChat();
   }, [closeChat]);
 
@@ -344,7 +377,7 @@ export function LandingPage({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        if (isEndChatDialogOpen || pendingLeaveHref) {
+        if (isEndChatFeedbackOpen || pendingLeaveHref) {
           return;
         }
 
@@ -359,7 +392,7 @@ export function LandingPage({
     };
   }, [
     isChatPanelMounted,
-    isEndChatDialogOpen,
+    isEndChatFeedbackOpen,
     pendingLeaveHref,
     requestCloseChat,
   ]);
@@ -442,11 +475,11 @@ export function LandingPage({
           identity={trayIdentity}
           inert={isChatTrayOpeningBridgeActive}
           onOpen={openChat}
-          onVariantToggle={openChatExpanded}
+          onVariantToggle={isHybridShell ? undefined : openChatExpanded}
           openActionPosition={
             isPersistentTrayShell ? "after-variant" : undefined
           }
-          onClose={isHybridShell ? closeChat : undefined}
+          onClose={isHybridShell ? requestCloseChat : undefined}
           showCloseAction={isHybridShell}
         />
       ) : null}
@@ -531,19 +564,13 @@ export function LandingPage({
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}
                   onSessionEnd={closeChat}
-                  confirmationDialog={
-                    <ConfirmationDialog
-                      open={isEndChatDialogOpen && isChatConversationStarted}
-                      title="End chat?"
-                      confirmLabel="End chat"
-                      cancelLabel="Continue chat"
-                      scope="container"
-                      onConfirm={confirmEndChat}
-                      onCancel={cancelEndChatDialog}
-                      onDismiss={cancelEndChatDialog}
-                    >
-                      <p className="m-0">Ending will clear this chat.</p>
-                    </ConfirmationDialog>
+                  endFeedbackScreen={
+                    isEndChatFeedbackOpen ? (
+                      <ChatEndFeedbackScreen
+                        onBackToChat={cancelEndChatFeedback}
+                        onEndChat={confirmEndChat}
+                      />
+                    ) : undefined
                   }
                 />
               )}

@@ -109,6 +109,7 @@ import {
   SharedComposerDemo,
   SharedConfirmationDemo,
   SharedConfirmationVariants,
+  SharedEndChatCsatDemo,
   SharedFeedbackDemo,
   SharedFeedbackVariants,
   SharedHeaderDemo,
@@ -863,6 +864,19 @@ function SharedFeedbackPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       </PreviewSection>
       <PreviewSection title="Variants">
         <SharedFeedbackVariants />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedEndChatCsatPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection
+        title="Demo"
+        description="A reusable close-chat moment for capturing overall conversation satisfaction before ending the session."
+      >
+        <SharedEndChatCsatDemo />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -2868,6 +2882,8 @@ export function ComponentPageContent({
       return <SharedMessagesPage item={item} />;
     case "shared-feedback":
       return <SharedFeedbackPage item={item} />;
+    case "shared-end-chat-csat":
+      return <SharedEndChatCsatPage item={item} />;
     case "shared-composer":
       return <SharedComposerPage item={item} />;
     case "shared-prompts":

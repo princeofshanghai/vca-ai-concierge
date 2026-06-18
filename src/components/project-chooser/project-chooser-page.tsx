@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { Icon } from "@/components/primitives/icon";
+
 type ProjectStatus = "In progress" | "Ready";
 type ProjectPreview = Readonly<{
   alt: string;
@@ -17,8 +19,8 @@ const projectOptions: Array<{
 }> = [
   {
     href: "/hiring/entry-lix-test",
-    label: "LTS microsite",
-    description: "VCA sales agent to help qualify leads and route to an AE/SDR.",
+    label: "LTS acquisition",
+    description: "Sales agent for lead qualification",
     preview: {
       alt: "Preview of the LTS microsite concierge",
       objectPosition: "center top",
@@ -28,8 +30,8 @@ const projectOptions: Array<{
   },
   {
     href: "/premium",
-    label: "Premium survey/chooser",
-    description: "VCA sales agent to help give Premium SKU recommendations.",
+    label: "Premium acquisition",
+    description: "Sales agent for online SKU recommendations",
     preview: {
       alt: "Preview of the Premium survey concierge",
       objectPosition: "62% top",
@@ -39,9 +41,8 @@ const projectOptions: Array<{
   },
   {
     href: "/premium-company-pages/admin",
-    label: "Premium Company Pages vision",
-    description:
-      "VCA agent that helps give admins more insight and helps visitors get their questions answered.",
+    label: "PCP vision",
+    description: "Admin and visitor agent for analytics insights and support",
     preview: {
       alt: "Preview of Premium Company Pages",
       objectPosition: "50% top",
@@ -58,15 +59,15 @@ const componentLibraryOption = {
 
 const statusClassNames: Record<ProjectStatus, string> = {
   "In progress":
-    "bg-[color-mix(in_srgb,var(--color-caution)_11%,white)] text-caution",
+    "bg-[color-mix(in_srgb,var(--color-caution)_12%,white)] text-caution",
   Ready:
-    "bg-[color-mix(in_srgb,var(--color-positive)_11%,white)] text-positive",
+    "bg-[color-mix(in_srgb,var(--color-positive)_12%,white)] text-positive",
 };
 
 function ProjectStatusChip({ status }: Readonly<{ status: ProjectStatus }>) {
   return (
     <span
-      className={`inline-flex h-5 max-w-full shrink-0 items-center rounded-round px-sm text-supportive-s-strong ${statusClassNames[status]}`}
+      className={`inline-flex h-5 max-w-full shrink-0 items-center rounded-round px-sm text-[12px] font-semibold leading-[15px] tracking-normal ${statusClassNames[status]}`}
     >
       {status}
     </span>
@@ -75,13 +76,13 @@ function ProjectStatusChip({ status }: Readonly<{ status: ProjectStatus }>) {
 
 function ProjectPreview({ preview }: Readonly<{ preview: ProjectPreview }>) {
   return (
-    <div className="relative aspect-[2390/1630] w-full overflow-hidden rounded-xs bg-background-neutral-soft">
+    <div className="relative aspect-[16/10] w-full overflow-hidden rounded-sm border border-border-faint bg-background-neutral-soft transition-colors duration-150 ease-out group-hover:border-border-subtle">
       <Image
         src={preview.src}
         alt={preview.alt}
         fill
-        sizes="(min-width: 1024px) 34vw, (min-width: 768px) 42vw, 100vw"
-        className="object-contain"
+        sizes="(min-width: 1024px) 214px, (min-width: 768px) 42vw, 100vw"
+        className="object-cover transition-transform duration-150 ease-out group-hover:scale-[1.015]"
         loading="eager"
         style={{ objectPosition: preview.objectPosition }}
       />
@@ -100,19 +101,19 @@ function ProjectTile({
     <Link
       href={href}
       aria-label={`${label}, ${status}`}
-      className="group flex min-w-0 flex-col overflow-hidden rounded-sm border border-border-faint bg-background outline-none transition-[border-color,background-color] duration-150 ease-out hover:border-border-subtle focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+      className="group flex min-w-0 flex-col rounded-sm outline-none transition-opacity duration-150 ease-out focus-visible:ring-4 focus-visible:ring-action-focus-ring"
     >
-      <div className="border-b border-border-faint bg-background-neutral-soft p-sm">
-        <ProjectPreview preview={preview} />
-      </div>
-      <div className="flex flex-1 flex-col gap-md p-lg text-left">
-        <div className="flex items-start justify-between gap-md">
-          <h2 className="text-heading-sm text-text">{label}</h2>
-          <ProjectStatusChip status={status} />
-        </div>
-        <p className="max-w-[30rem] text-body-sm-open text-text">
+      <ProjectPreview preview={preview} />
+      <div className="flex flex-1 flex-col pt-lg text-left">
+        <h2 className="text-[14px] font-medium leading-[18px] tracking-normal text-text transition-colors duration-150 ease-out group-hover:text-action">
+          {label}
+        </h2>
+        <p className="mt-sm max-w-[19rem] text-[13px] font-normal leading-[18px] tracking-normal text-text-meta">
           {description}
         </p>
+        <div className="mt-md">
+          <ProjectStatusChip status={status} />
+        </div>
       </div>
     </Link>
   );
@@ -123,28 +124,43 @@ export function ProjectChooserPage() {
     <main className="min-h-dvh bg-background text-text">
       <section
         aria-labelledby="project-chooser-title"
-        className="mx-auto flex min-h-dvh w-full max-w-[1440px] flex-col px-md py-lg sm:px-lg lg:px-xxl"
+        className="mx-auto flex min-h-dvh w-full max-w-[720px] flex-col px-md py-[32px] sm:px-[40px] sm:py-[56px] lg:px-0 lg:py-[64px]"
       >
         <header className="flex items-center justify-between gap-lg">
-          <p className="text-heading-md text-text">VCA AI Concierge</p>
+          <p className="flex items-center gap-xs text-[13px] font-medium leading-[18px] tracking-normal text-text">
+            <Image
+              src="/assets/linkedin-bug-blue.svg"
+              alt=""
+              width={14}
+              height={14}
+              aria-hidden="true"
+              className="size-[14px] shrink-0"
+            />
+            VCA AI concierge
+          </p>
           <Link
             href={componentLibraryOption.href}
-            className="rounded-round border border-border-subtle bg-background px-md py-xs text-control-sm text-text outline-none transition-[background-color,border-color] duration-150 ease-out hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+            className="group inline-flex items-center gap-xs rounded-xs px-xs py-xs text-[13px] font-normal leading-[18px] tracking-normal text-text-meta outline-none transition-colors duration-150 ease-out hover:text-text focus-visible:ring-4 focus-visible:ring-action-focus-ring"
           >
-            Browse component library
+            {componentLibraryOption.label}
+            <Icon
+              name="arrow-right"
+              size="small"
+              className="transition-transform duration-150 ease-out group-hover:translate-x-[2px]"
+            />
           </Link>
         </header>
 
-        <div className="mt-[72px] md:mt-[96px]">
+        <div className="mt-[112px] md:mt-[144px]">
           <h1
             id="project-chooser-title"
-            className="text-display-md text-text sm:text-display-xl"
+            className="text-[24px] font-medium leading-[30px] tracking-normal text-text"
           >
             Choose project
           </h1>
         </div>
 
-        <div className="mt-[72px] grid gap-lg md:mt-[96px] md:grid-cols-3">
+        <div className="mt-[72px] grid gap-x-[40px] gap-y-[64px] md:grid-cols-2 lg:grid-cols-3">
           {projectOptions.map((option) => (
             <ProjectTile key={option.href} {...option} />
           ))}

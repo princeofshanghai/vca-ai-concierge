@@ -11,6 +11,7 @@ import {
 import {
   ChatBody,
   ChatComposer,
+  ChatEndFeedbackScreen,
   ChatFeedbackReasonPanel,
   ChatFeedbackReasonChips,
   ChatHeader,
@@ -1063,7 +1064,7 @@ function ShellDemoSurface({
           className={trayClassName}
           title={shellTitle}
           onOpen={onOpen}
-          onVariantToggle={isMobile ? undefined : onOpenExpanded}
+          onVariantToggle={isMobile || isHybrid ? undefined : onOpenExpanded}
           openActionPosition={isPersistent ? "after-variant" : undefined}
           onClose={isHybrid ? onClose : undefined}
           showCloseAction={isHybrid}
@@ -1713,7 +1714,9 @@ export function SharedHeaderDemo() {
               identity={headerIdentity}
               title={headerTitle}
               onOpen={openHeaderDemo}
-              onVariantToggle={isMobile ? undefined : () => {}}
+              onVariantToggle={
+                isMobile || shellVersion === "hybrid" ? undefined : () => {}
+              }
               openActionPosition={isPersistent ? "after-variant" : undefined}
               onClose={shellVersion === "hybrid" ? openHeaderDemo : undefined}
               showCloseAction={shellVersion === "hybrid"}
@@ -1873,6 +1876,23 @@ export function SharedFeedbackDemo() {
           <ChatMessageFeedbackFlow timestamp="1:01 PM" />
         </div>
       </ChatThreadContextFrame>
+    </ComponentDemoSection>
+  );
+}
+
+export function SharedEndChatCsatDemo() {
+  return (
+    <ComponentDemoSection>
+      <ChatPanel
+        variant="collapsed"
+        className="!h-[640px] !w-[var(--design-layout-panel-collapsed-width)] md:!h-[640px] md:!w-[var(--design-layout-panel-collapsed-width)]"
+      >
+        <ChatHeader title="Contact sales" showAiMark />
+        <ChatEndFeedbackScreen
+          onBackToChat={() => {}}
+          onEndChat={() => {}}
+        />
+      </ChatPanel>
     </ComponentDemoSection>
   );
 }

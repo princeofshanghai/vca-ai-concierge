@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
   type MouseEvent,
+  type ReactNode,
   type UIEvent,
 } from "react";
 
@@ -563,6 +564,7 @@ export function PremiumConciergePanel({
   onMinimizeToTray,
   onVariantToggle,
   showCloseAction = true,
+  endFeedbackScreen,
 }: Readonly<{
   variant?: ChatPanelVariant;
   className?: string;
@@ -573,6 +575,7 @@ export function PremiumConciergePanel({
   onMinimizeToTray?: () => void;
   onVariantToggle?: () => void;
   showCloseAction?: boolean;
+  endFeedbackScreen?: ReactNode;
 }>) {
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const liveItemIdRef = useRef(0);
@@ -1025,55 +1028,61 @@ export function PremiumConciergePanel({
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
       />
-      <ChatBody
-        ref={chatBodyRef}
-        onJumpToLatest={scrollToLatest}
-        onScroll={handleChatBodyScroll}
-        showJumpToLatest={hasLatestBelow}
-      >
-        {flow ? (
-          <ChatThread aria-label={`${flow.label} transcript`}>
-            {flow.steps.map(renderConversationStep)}
-          </ChatThread>
-        ) : (
-          <ChatThread
-            aria-live="polite"
-            aria-busy={isAssistantBusy || undefined}
-            aria-label="Live Premium Concierge conversation"
+      {endFeedbackScreen ? (
+        endFeedbackScreen
+      ) : (
+        <>
+          <ChatBody
+            ref={chatBodyRef}
+            onJumpToLatest={scrollToLatest}
+            onScroll={handleChatBodyScroll}
+            showJumpToLatest={hasLatestBelow}
           >
-            {liveItems.map((item, index) =>
-              renderLiveItem(
-                item,
-                index,
-                activePrompts?.length &&
-                  !isAssistantBusy &&
-                  index === liveItems.length - 1
-                  ? activePrompts
-                  : null,
-              ),
+            {flow ? (
+              <ChatThread aria-label={`${flow.label} transcript`}>
+                {flow.steps.map(renderConversationStep)}
+              </ChatThread>
+            ) : (
+              <ChatThread
+                aria-live="polite"
+                aria-busy={isAssistantBusy || undefined}
+                aria-label="Live Premium Concierge conversation"
+              >
+                {liveItems.map((item, index) =>
+                  renderLiveItem(
+                    item,
+                    index,
+                    activePrompts?.length &&
+                      !isAssistantBusy &&
+                      index === liveItems.length - 1
+                      ? activePrompts
+                      : null,
+                  ),
+                )}
+              </ChatThread>
             )}
-          </ChatThread>
-        )}
-      </ChatBody>
-      <ChatComposer
-        variant={variant}
-        showTopDivider={hasChatBodyScrolled}
-        isResponding={isAssistantBusy}
-        onStopResponse={handleStopAssistantResponse}
-        inputProps={{
-          value: draft,
-          disabled: Boolean(flow) || isAssistantBusy,
-          placeholder: composerPlaceholder,
-          onChange: handleDraftChange,
-        }}
-        onSend={handleSendMessage}
-        sendDisabled={
-          Boolean(flow) ||
-          isAssistantBusy ||
-          draft.trim() === ""
-        }
-        showVoiceMode={false}
-      />
+          </ChatBody>
+          <ChatComposer
+            variant={variant}
+            showTopDivider={hasChatBodyScrolled}
+            isResponding={isAssistantBusy}
+            onStopResponse={handleStopAssistantResponse}
+            inputProps={{
+              value: draft,
+              disabled: Boolean(flow) || isAssistantBusy,
+              placeholder: composerPlaceholder,
+              onChange: handleDraftChange,
+            }}
+            onSend={handleSendMessage}
+            sendDisabled={
+              Boolean(flow) ||
+              isAssistantBusy ||
+              draft.trim() === ""
+            }
+            showVoiceMode={false}
+          />
+        </>
+      )}
     </ChatPanel>
   );
 }

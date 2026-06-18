@@ -81,6 +81,7 @@ type ConciergePanelProps = Readonly<{
   onUnreadActivity?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
   confirmationDialog?: ReactNode;
+  endFeedbackScreen?: ReactNode;
 }>;
 
 type ConciergeMessage = Readonly<{
@@ -351,6 +352,7 @@ export function ConciergePanel({
   onUnreadActivity,
   onSidePanelOpenChange,
   confirmationDialog,
+  endFeedbackScreen,
 }: ConciergePanelProps) {
   const { isSignedIn } = useReviewShellState();
   const [entryLixStep, setEntryLixStep] = useState<EntryLixStep>(() =>
@@ -988,8 +990,8 @@ export function ConciergePanel({
         variant={variant}
         title={phase === "chat" ? HIRING_CONCIERGE_TITLE : undefined}
         backLabel="Back to contact options"
-        backIcon={showEntryLixBackAction ? "arrow-left-large" : undefined}
-        backIconSize={showEntryLixBackAction ? "medium" : undefined}
+        backIcon={showEntryLixBackAction ? "arrow-left" : undefined}
+        backIconSize={showEntryLixBackAction ? "small" : undefined}
         onClose={onClose}
         onBack={showEntryLixBackAction ? handleEntryLixBackToChoice : undefined}
         dockActionPosition={dockActionPosition}
@@ -1001,7 +1003,9 @@ export function ConciergePanel({
         aiMarkClassName="concierge-ai-mark"
       />
 
-      {lead ? (
+      {endFeedbackScreen ? (
+        endFeedbackScreen
+      ) : lead ? (
         isSchedulePanelOpen ? (
           <ChatSidePanelLayout
             chatBodyRef={chatBodyRef}
@@ -1073,7 +1077,7 @@ export function ConciergePanel({
           subcopy={contactSalesEntry === "lix-test" ? null : undefined}
         />
       )}
-      {lead && isIdlePromptOpen ? (
+      {lead && isIdlePromptOpen && !endFeedbackScreen ? (
         <IdleSessionPrompt
           title="Still there?"
           description="Your hiring chat will close soon."

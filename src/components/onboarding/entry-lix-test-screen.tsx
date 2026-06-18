@@ -192,7 +192,7 @@ export function EntryLixChoiceScreen({
           <EntryLixOptionCard
             icon="person"
             title="Have someone contact me"
-            description="Share your details and a sales rep will contact you."
+            description="Share your details and a sales rep will be in touch"
             onClick={onFillOutForm}
           />
         </div>

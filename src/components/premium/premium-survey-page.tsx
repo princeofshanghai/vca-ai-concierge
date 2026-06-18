@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useState } from "react";
 
 import {
+  ChatEndFeedbackScreen,
   ChatTray,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
@@ -142,16 +143,21 @@ export function PremiumSurveyPage({
   >(() => new Set(initialGoalOptions));
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
+  const [hasChatConversationStarted, setHasChatConversationStarted] =
+    useState(initialChatOpen);
+  const [isEndChatFeedbackOpen, setIsEndChatFeedbackOpen] = useState(false);
   const chatPanelId = useId();
   const resetChatPanelState = useCallback(() => {
+    setHasChatConversationStarted(false);
+    setIsEndChatFeedbackOpen(false);
     setChatPanelVariant("collapsed");
   }, []);
   const {
     isMounted: isChatMounted,
     isOpen: isChatOpen,
     isInteractive: isChatInteractive,
-    open: openChat,
-    close: closeChat,
+    open: openChatPanel,
+    close: closeChatPanel,
   } = useChatPanelPresence({
     initialOpen: isDockableTrayShell ? false : initialChatOpen,
     onBeforeOpen: isDockableTrayShell ? undefined : resetChatPanelState,
@@ -174,6 +180,52 @@ export function PremiumSurveyPage({
     : chatPanelVariant === "expanded"
       ? "md:!h-full md:!w-full"
       : "md:!h-full md:!w-full";
+
+  const openChat = useCallback(() => {
+    openChatPanel();
+    setHasChatConversationStarted(true);
+    setIsEndChatFeedbackOpen(false);
+  }, [openChatPanel]);
+
+  const closeChat = useCallback(() => {
+    setIsEndChatFeedbackOpen(false);
+    closeChatPanel();
+  }, [closeChatPanel]);
+
+  const endChat = useCallback(() => {
+    setIsEndChatFeedbackOpen(false);
+    setHasChatConversationStarted(false);
+    closeChatPanel();
+  }, [closeChatPanel]);
+
+  const showEndChatFeedback = useCallback(() => {
+    setIsEndChatFeedbackOpen(true);
+    openChatPanel();
+  }, [openChatPanel]);
+
+  const requestCloseChat = useCallback(() => {
+    if (isEndChatFeedbackOpen) {
+      endChat();
+      return;
+    }
+
+    if (!hasChatConversationStarted) {
+      closeChat();
+      return;
+    }
+
+    showEndChatFeedback();
+  }, [
+    closeChat,
+    endChat,
+    hasChatConversationStarted,
+    isEndChatFeedbackOpen,
+    showEndChatFeedback,
+  ]);
+
+  const cancelEndChatFeedback = useCallback(() => {
+    setIsEndChatFeedbackOpen(false);
+  }, []);
 
   const toggleChatPanelVariant = useCallback(() => {
     const toggleVariant = () => {
@@ -198,9 +250,10 @@ export function PremiumSurveyPage({
   }, []);
 
   const dockChatToTray = useCallback(() => {
+    setIsEndChatFeedbackOpen(false);
     setChatPanelVariant("collapsed");
-    closeChat();
-  }, [closeChat]);
+    closeChatPanel();
+  }, [closeChatPanel]);
 
   useEffect(() => {
     window.scrollTo({ left: 0, top: 0 });
@@ -213,12 +266,16 @@ export function PremiumSurveyPage({
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
+        if (isEndChatFeedbackOpen) {
+          return;
+        }
+
         if (isDockableTrayShell) {
           dockChatToTray();
           return;
         }
 
-        closeChat();
+        requestCloseChat();
       }
     }
 
@@ -227,7 +284,13 @@ export function PremiumSurveyPage({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [closeChat, dockChatToTray, isChatMounted, isDockableTrayShell]);
+  }, [
+    dockChatToTray,
+    isChatMounted,
+    isDockableTrayShell,
+    isEndChatFeedbackOpen,
+    requestCloseChat,
+  ]);
 
   function advanceSurvey() {
     if (step === "use-case") {
@@ -403,7 +466,8 @@ export function PremiumSurveyPage({
             openChat();
           }}
           openActionPosition="after-close"
-          showCloseAction={false}
+          onClose={hasChatConversationStarted ? requestCloseChat : undefined}
+          showCloseAction={hasChatConversationStarted}
         />
       ) : null}
 
@@ -453,12 +517,22 @@ export function PremiumSurveyPage({
                 context={step}
                 flow={conversationFlow}
                 liveMode={liveMode}
-                onClose={isDockableTrayShell ? undefined : closeChat}
+                onClose={requestCloseChat}
                 onMinimizeToTray={
                   isDockableTrayShell ? dockChatToTray : undefined
                 }
                 onVariantToggle={toggleChatPanelVariant}
-                showCloseAction={!isDockableTrayShell}
+                showCloseAction={
+                  !isDockableTrayShell || hasChatConversationStarted
+                }
+                endFeedbackScreen={
+                  isEndChatFeedbackOpen ? (
+                    <ChatEndFeedbackScreen
+                      onBackToChat={cancelEndChatFeedback}
+                      onEndChat={endChat}
+                    />
+                  ) : undefined
+                }
               />
             </div>
           </div>
