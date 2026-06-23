@@ -290,12 +290,20 @@ const highValueMatchCardStates: ReadonlyArray<
     bookedMeeting?: BookedMeeting;
   }>
 > = [
-  { label: "Initial", state: "initial" },
-  { label: "Matching", state: "matching" },
-  { label: "Matched", state: "matched" },
-  { label: "Scheduling passive", state: "scheduling" },
-  { label: "Booked online", state: "booked", bookedMeeting: bookedMeetingPreview },
-  { label: "Booked phone", state: "booked", bookedMeeting: bookedPhoneCallPreview },
+  { label: "AE recommendation", state: "initial" },
+  { label: "Matching AE", state: "matching" },
+  { label: "AE matched", state: "matched" },
+  { label: "Scheduling call", state: "scheduling" },
+  {
+    label: "Online call booked",
+    state: "booked",
+    bookedMeeting: bookedMeetingPreview,
+  },
+  {
+    label: "Phone call booked",
+    state: "booked",
+    bookedMeeting: bookedPhoneCallPreview,
+  },
 ];
 
 const mediumAvailableHandoffStates: ReadonlyArray<
@@ -304,10 +312,11 @@ const mediumAvailableHandoffStates: ReadonlyArray<
     state: MediumAvailableHandoffState;
   }>
 > = [
-  { label: "Available card", state: "initial" },
-  { label: "Connecting", state: "connecting" },
-  { label: "Connected", state: "connected" },
-  { label: "Unavailable", state: "unavailable" },
+  { label: "SDR online", state: "initial" },
+  { label: "Connecting to SDR", state: "connecting" },
+  { label: "Connected to SDR", state: "connected" },
+  { label: "SDR offline", state: "unavailable" },
+  { label: "Connection failed", state: "failed" },
 ];
 
 const highValueBookingPanelStates = [
@@ -990,31 +999,54 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <SharedActionCardDemo />
       </PreviewSection>
 
-      <PreviewSection title="Hiring examples">
+      <PreviewSection title="Routing scenarios">
         <PreviewMomentStack>
-          {highValueMatchCardStates.map(({ label, state, bookedMeeting }) => (
-            <PreviewMoment key={`${state}-${label}`}>
-              <PreviewExampleHeading>
-                Specialist recommendation · {label}
-              </PreviewExampleHeading>
-              <ChatThreadReferenceFrame>
-                <HighValueMatchCardPreview
-                  state={state}
-                  bookedMeeting={bookedMeeting}
-                />
-              </ChatThreadReferenceFrame>
-            </PreviewMoment>
-          ))}
-          {mediumAvailableHandoffStates.map(({ label, state }) => (
-            <PreviewMoment key={state}>
-              <PreviewExampleHeading>
-                Live handoff · {label}
-              </PreviewExampleHeading>
-              <ChatThreadReferenceFrame>
-                <MediumAvailableHandoffPreview state={state} />
-              </ChatThreadReferenceFrame>
-            </PreviewMoment>
-          ))}
+          <PreviewMoment>
+            <PreviewExampleHeading>
+              Connect with AE (high intent)
+            </PreviewExampleHeading>
+            <p className="max-w-[44rem] text-body-sm-open text-text-meta">
+              Use when the conversation has enough buying signal to route the
+              visitor toward a scheduled AE conversation.
+            </p>
+            <div className="space-y-12">
+              {highValueMatchCardStates.map(({ label, state, bookedMeeting }) => (
+                <PreviewMoment key={`${state}-${label}`}>
+                  <PreviewExampleHeading level="h4">
+                    {label}
+                  </PreviewExampleHeading>
+                  <ChatThreadReferenceFrame>
+                    <HighValueMatchCardPreview
+                      state={state}
+                      bookedMeeting={bookedMeeting}
+                    />
+                  </ChatThreadReferenceFrame>
+                </PreviewMoment>
+              ))}
+            </div>
+          </PreviewMoment>
+
+          <PreviewMoment>
+            <PreviewExampleHeading>
+              Connect with SDR (medium intent)
+            </PreviewExampleHeading>
+            <p className="max-w-[44rem] text-body-sm-open text-text-meta">
+              Use when the flow should try live SDR chat first, then fall back
+              to scheduling if the SDR is offline or the connection fails.
+            </p>
+            <div className="space-y-12">
+              {mediumAvailableHandoffStates.map(({ label, state }) => (
+                <PreviewMoment key={state}>
+                  <PreviewExampleHeading level="h4">
+                    {label}
+                  </PreviewExampleHeading>
+                  <ChatThreadReferenceFrame>
+                    <MediumAvailableHandoffPreview state={state} />
+                  </ChatThreadReferenceFrame>
+                </PreviewMoment>
+              ))}
+            </div>
+          </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>

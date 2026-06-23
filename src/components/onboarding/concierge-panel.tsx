@@ -160,6 +160,7 @@ const ENTRY_LIX_FALLBACK_LEAD: OnboardingResult = {
   firstName: "there",
   lastName: "",
   workEmail: "",
+  phoneNumber: "",
   company: "your company",
 };
 const VOICE_USER_TRANSCRIPTS = [

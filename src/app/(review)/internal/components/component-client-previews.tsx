@@ -37,12 +37,10 @@ import {
   ChatSidePanelLayout,
 } from "@/components/chat/chat-side-panel";
 import {
-  CallbackRequestPanel,
   HighValueMatchCardPreview,
   MediumAvailableHandoffPreview,
   SchedulePanel,
   type BookedMeeting,
-  type CallbackRequestPanelState,
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
 } from "@/components/flow-review/flow-review-chat-panel";
@@ -133,8 +131,8 @@ type NavLinkItemDemoState = NavLinkItemHorizontalVisualState;
 type TabItemDemoState = TabItemHorizontalVisualState;
 type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
 type SidePanelDemoView = "panel" | "shell";
-type SalesCardDemoMoment = "specialist" | "live";
-type SalesCardDemoSidePanel = "schedule" | "callback" | null;
+type SalesCardDemoScenario = "ae" | "sdr";
+type SalesCardDemoSidePanel = "schedule" | null;
 type ShellDemoVersion = "dismissable" | "persistent" | "hybrid";
 type ShellDemoDevice = "desktop" | "mobile";
 type ShellDemoState = "closed" | "tray" | "panel";
@@ -188,12 +186,22 @@ const highValueMatchCardStates: ReadonlyArray<
     bookedMeeting?: BookedMeeting;
   }>
 > = [
-  { id: "initial", label: "Initial", state: "initial" },
-  { id: "matching", label: "Matching", state: "matching" },
-  { id: "matched", label: "Matched", state: "matched" },
-  { id: "scheduling", label: "Scheduling passive", state: "scheduling" },
-  { id: "booked-online", label: "Booked online", state: "booked", bookedMeeting: bookedMeetingPreview },
-  { id: "booked-phone", label: "Booked phone", state: "booked", bookedMeeting: bookedPhoneCallPreview },
+  { id: "initial", label: "AE recommendation", state: "initial" },
+  { id: "matching", label: "Matching AE", state: "matching" },
+  { id: "matched", label: "AE matched", state: "matched" },
+  { id: "scheduling", label: "Scheduling call", state: "scheduling" },
+  {
+    id: "booked-online",
+    label: "Online call booked",
+    state: "booked",
+    bookedMeeting: bookedMeetingPreview,
+  },
+  {
+    id: "booked-phone",
+    label: "Phone call booked",
+    state: "booked",
+    bookedMeeting: bookedPhoneCallPreview,
+  },
 ];
 
 const mediumAvailableHandoffStates: ReadonlyArray<
@@ -202,10 +210,11 @@ const mediumAvailableHandoffStates: ReadonlyArray<
     state: MediumAvailableHandoffState;
   }>
 > = [
-  { label: "Available card", state: "initial" },
-  { label: "Connecting", state: "connecting" },
-  { label: "Connected", state: "connected" },
-  { label: "Unavailable", state: "unavailable" },
+  { label: "SDR online", state: "initial" },
+  { label: "Connecting to SDR", state: "connecting" },
+  { label: "Connected to SDR", state: "connected" },
+  { label: "SDR offline", state: "unavailable" },
+  { label: "Connection failed", state: "failed" },
 ];
 
 const buttonStates: ReadonlyArray<DemoOption<ButtonDemoState>> = [
@@ -2327,7 +2336,7 @@ export function SharedPromptsDemo() {
 }
 
 export function SharedActionCardDemo() {
-  const [moment, setMoment] = useState<SalesCardDemoMoment>("specialist");
+  const [scenario, setScenario] = useState<SalesCardDemoScenario>("ae");
   const [context, setContext] =
     useState<ComponentLibraryContext>("collapsed");
   const [specialistState, setSpecialistState] =
@@ -2338,22 +2347,16 @@ export function SharedActionCardDemo() {
     useState<BookedMeeting | null>(null);
   const [salesCardSidePanel, setSalesCardSidePanel] =
     useState<SalesCardDemoSidePanel>(null);
-  const [callbackRequestPanelState, setCallbackRequestPanelState] =
-    useState<CallbackRequestPanelState>("form");
   const selectedSpecialistState =
     highValueMatchCardStates.find(({ id }) => id === specialistState) ??
     highValueMatchCardStates[0];
   const variant = getPanelVariantForContext(context);
-  const isLiveSidePanelOpen = moment === "live" && salesCardSidePanel !== null;
+  const isLiveSidePanelOpen = scenario === "sdr" && salesCardSidePanel !== null;
   const liveHandoffPreview = (
     <MediumAvailableHandoffPreview
       state={liveState}
       bookedMeeting={liveBookedMeeting}
       onBookTime={() => setSalesCardSidePanel("schedule")}
-      onRequestCallback={() => {
-        setCallbackRequestPanelState("form");
-        setSalesCardSidePanel("callback");
-      }}
     />
   );
   const liveHandoffThread = (
@@ -2362,12 +2365,11 @@ export function SharedActionCardDemo() {
 
   function resetLiveHandoffDemo() {
     setSalesCardSidePanel(null);
-    setCallbackRequestPanelState("form");
     setLiveBookedMeeting(null);
   }
 
-  function handleMomentChange(nextMoment: SalesCardDemoMoment) {
-    setMoment(nextMoment);
+  function handleScenarioChange(nextScenario: SalesCardDemoScenario) {
+    setScenario(nextScenario);
     resetLiveHandoffDemo();
   }
 
@@ -2387,15 +2389,15 @@ export function SharedActionCardDemo() {
         <>
           <ChatContextControl value={context} onChange={setContext} />
           <SegmentedControl
-            label="Moment"
-            value={moment}
+            label="Scenario"
+            value={scenario}
             options={[
-              { label: "Specialist recommendation", value: "specialist" },
-              { label: "Live handoff", value: "live" },
+              { label: "Connect with AE (high intent)", value: "ae" },
+              { label: "Connect with SDR (medium intent)", value: "sdr" },
             ]}
-            onChange={handleMomentChange}
+            onChange={handleScenarioChange}
           />
-          {moment === "specialist" ? (
+          {scenario === "ae" ? (
             <SelectControl
               label="State"
               value={specialistState}
@@ -2406,7 +2408,7 @@ export function SharedActionCardDemo() {
               onChange={setSpecialistState}
             />
           ) : null}
-          {moment === "live" ? (
+          {scenario === "sdr" ? (
             <SegmentedControl
               label="State"
               value={liveState}
@@ -2433,28 +2435,19 @@ export function SharedActionCardDemo() {
             <ChatSidePanelLayout
               history={liveHandoffThread}
               sidePanel={
-                salesCardSidePanel === "schedule" ? (
-                  <SchedulePanel
-                    onBack={handleCloseSalesCardSidePanel}
-                    onBook={(meeting) => {
-                      setLiveBookedMeeting(meeting);
-                      setSalesCardSidePanel(null);
-                    }}
-                  />
-                ) : (
-                  <CallbackRequestPanel
-                    state={callbackRequestPanelState}
-                    onBack={handleCloseSalesCardSidePanel}
-                    onDone={handleCloseSalesCardSidePanel}
-                    onSubmit={() => setCallbackRequestPanelState("success")}
-                  />
-                )
+                <SchedulePanel
+                  onBack={handleCloseSalesCardSidePanel}
+                  onBook={(meeting) => {
+                    setLiveBookedMeeting(meeting);
+                    setSalesCardSidePanel(null);
+                  }}
+                />
               }
               variant={variant}
             />
           </ChatPanel>
         </SidePanelContextFrame>
-      ) : moment === "specialist" ? (
+      ) : scenario === "ae" ? (
         <ChatThreadContextFrame context={context}>
           <HighValueMatchCardPreview
             state={selectedSpecialistState.state}

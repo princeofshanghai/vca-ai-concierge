@@ -27,7 +27,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "shared-action-card",
             title: "Sales card",
             description:
-              "Displays a sales recommendation or handoff next step inside the conversation.",
+              "Shows AE and SDR connection paths for high- and medium-intent sales moments.",
             href: "/internal/components/shared/sales-card",
           },
           {

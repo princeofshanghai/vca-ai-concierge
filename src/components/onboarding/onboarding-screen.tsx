@@ -39,6 +39,7 @@ export type OnboardingResult = Readonly<{
   firstName: string;
   lastName: string;
   workEmail: string;
+  phoneNumber: string;
   company: string;
 }>;
 
@@ -59,6 +60,7 @@ type FormState = Readonly<{
   // This lets "Not Jamie?" discard profile-owned data while preserving
   // anything the user typed manually.
   workEmailSource: "empty" | "profile" | "manual";
+  phoneNumber: string;
   company: string;
 }>;
 
@@ -80,6 +82,7 @@ function buildInitialFormState(
     lastName: isSignedIn ? persona.lastName : "",
     workEmail: shouldPrefillProfileEmail ? profileEmail : "",
     workEmailSource: shouldPrefillProfileEmail ? "profile" : "empty",
+    phoneNumber: "",
     company: "",
   };
 }
@@ -202,6 +205,17 @@ export function OnboardingScreen({
     [],
   );
 
+  const handlePhoneNumberChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const value = event.currentTarget.value;
+      setForm((prev) => ({
+        ...prev,
+        phoneNumber: value,
+      }));
+    },
+    [],
+  );
+
   const handleDismissLinkedIn = useCallback(() => {
     setHasDismissedLinkedInIdentity(true);
     setForm((prev) => ({
@@ -251,6 +265,7 @@ export function OnboardingScreen({
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         workEmail: form.workEmail.trim(),
+        phoneNumber: form.phoneNumber.trim(),
         company: form.company.trim(),
       });
     },
@@ -376,6 +391,18 @@ export function OnboardingScreen({
                 ? PERSONAL_EMAIL_HELPER_TEXT
                 : undefined
             }
+          />
+          <TextInput
+            label="Phone number (optional)"
+            name="phoneNumber"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            size="large"
+            trailingIcon={null}
+            value={form.phoneNumber}
+            onChange={handlePhoneNumberChange}
+            disabled={inputsDisabled}
           />
           <TextInput
             ref={companyRef}
