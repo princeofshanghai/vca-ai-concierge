@@ -1879,7 +1879,6 @@ function PremiumCompanyPagesVcaPanel({
             onStopResponse={handleStopAssistantResponse}
             sendDisabled={isComposerDisabled}
             showAttachAction={false}
-            showDictationAction={false}
             showTopDivider={false}
             showVoiceMode={false}
             variant="collapsed"

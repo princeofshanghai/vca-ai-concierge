@@ -35,6 +35,7 @@ type UseChatPanelPresenceOptions = Readonly<{
 type ChatAssistantStreamResponse = Readonly<{
   id: string;
   text: string;
+  streamDelayScale?: number;
 }>;
 
 type UseChatAssistantStreamOptions<
@@ -319,6 +320,7 @@ export function useChatAssistantStream<
     let streamTimer: number | null = null;
     let visibleText = "";
     let index = 0;
+    const streamDelayScale = Math.max(0.25, response.streamDelayScale ?? 1);
 
     const thinkingTimer = window.setTimeout(() => {
       if (shouldReduceMotion) {
@@ -343,7 +345,7 @@ export function useChatAssistantStream<
 
         streamTimer = window.setTimeout(
           streamNextChunk,
-          getStreamDelay(nextChunk),
+          getStreamDelay(nextChunk) * streamDelayScale,
         );
       }
 

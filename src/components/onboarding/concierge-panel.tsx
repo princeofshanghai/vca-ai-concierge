@@ -25,6 +25,7 @@ import {
   ChatThread,
   Prompt,
   RecommendationCard,
+  type ChatComposerVoiceState,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
 import { ChatSidePanelLayout } from "@/components/chat/chat-side-panel";
@@ -135,9 +136,12 @@ type PendingAssistantResponse = Readonly<{
   id: string;
   text: string;
   surfaceAfter?: ConciergeSurface;
+  streamDelayScale?: number;
+  voicePlaybackText?: string;
 }>;
 
 type EntryLixStep = "choice" | "chat" | "form" | "success";
+type VoiceModeState = "off" | ChatComposerVoiceState;
 
 type ConciergePhase =
   | "entry-choice"
@@ -158,6 +162,25 @@ const ENTRY_LIX_FALLBACK_LEAD: OnboardingResult = {
   workEmail: "",
   company: "your company",
 };
+const VOICE_USER_TRANSCRIPTS = [
+  "We need to hire about 40 roles in the next two quarters.",
+  "Actually, can I talk to someone who can help us plan this?",
+] as const;
+const VOICE_AGENT_RESPONSES = [
+  {
+    text:
+      "You are describing an urgent, high-volume hiring ramp. I can match you with a sales consultant who can help shape the first-wave plan.",
+    spokenText:
+      "You are describing an urgent, high-volume hiring ramp. I can match you with a sales consultant who can help shape the first-wave plan.",
+  },
+  {
+    text:
+      "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
+    spokenText:
+      "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
+  },
+] as const;
+const VOICE_TEXT_STREAM_DELAY_SCALE = 2.8;
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
@@ -221,6 +244,25 @@ function createSurfaceItem(
   }
 
   return null;
+}
+
+function getVoiceModeRecommendationStep(): FlowReviewRecommendationStep | null {
+  const step = flowReviews.high.steps.find(
+    (flowStep) => flowStep.id === "high-recommendation-card",
+  );
+
+  return step?.kind === "recommendation" ? step : null;
+}
+
+function getInterruptedAssistantText(fullText: string, visibleText: string) {
+  const visibleLength = Math.min(visibleText.length, fullText.length);
+  const nextWordStart = fullText.slice(visibleLength).search(/\S/);
+  const partialStart =
+    nextWordStart < 0 ? visibleLength : visibleLength + nextWordStart;
+  const partialEnd = Math.min(fullText.length, partialStart + 4);
+  const nextText = fullText.slice(0, Math.max(visibleLength, partialEnd));
+
+  return nextText.trimEnd();
 }
 
 function getNextScriptedAssistantTurn({
@@ -365,6 +407,10 @@ export function ConciergePanel({
     [],
   );
   const [draft, setDraft] = useState("");
+  const [voiceModeState, setVoiceModeState] =
+    useState<VoiceModeState>("off");
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceTurnIndex, setVoiceTurnIndex] = useState(0);
   const [pendingAssistantResponse, setPendingAssistantResponse] =
     useState<PendingAssistantResponse | null>(null);
   const [liveFlowId, setLiveFlowId] = useState<FlowReviewId | null>(null);
@@ -386,6 +432,9 @@ export function ConciergePanel({
   );
   const chatBodyRef = useRef<HTMLDivElement>(null);
   const nextMessageIdRef = useRef(0);
+  const voiceCompletionTimerRef = useRef<number | null>(null);
+  const voicePlaybackTimerRef = useRef<number | null>(null);
+  const voiceTranscriptTimerRef = useRef<number | null>(null);
 
   const phase: ConciergePhase = lead
     ? "chat"
@@ -410,6 +459,9 @@ export function ConciergePanel({
         isMessageItem(message) &&
         (message.status === "thinking" || message.status === "streaming"),
     );
+  const isVoiceModeActive = voiceModeState !== "off";
+  const visibleVoiceState: ChatComposerVoiceState =
+    voiceModeState === "off" ? "idle" : voiceModeState;
   const {
     hasLatestBelow,
     handleScroll: handleLatestScroll,
@@ -426,15 +478,89 @@ export function ConciergePanel({
     return id;
   }, []);
 
+  const clearVoiceTimers = useCallback(() => {
+    if (voiceTranscriptTimerRef.current !== null) {
+      window.clearInterval(voiceTranscriptTimerRef.current);
+      voiceTranscriptTimerRef.current = null;
+    }
+
+    if (voiceCompletionTimerRef.current !== null) {
+      window.clearTimeout(voiceCompletionTimerRef.current);
+      voiceCompletionTimerRef.current = null;
+    }
+
+    if (voicePlaybackTimerRef.current !== null) {
+      window.clearTimeout(voicePlaybackTimerRef.current);
+      voicePlaybackTimerRef.current = null;
+    }
+  }, []);
+
+  const stopVoicePlayback = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (typeof window.speechSynthesis !== "undefined") {
+      window.speechSynthesis.cancel();
+    }
+
+    if (voicePlaybackTimerRef.current !== null) {
+      window.clearTimeout(voicePlaybackTimerRef.current);
+      voicePlaybackTimerRef.current = null;
+    }
+  }, []);
+
+  const finishVoicePlayback = useCallback(() => {
+    setVoiceModeState((currentState) =>
+      currentState === "speaking" ? "idle" : currentState,
+    );
+  }, []);
+
+  const startVoicePlayback = useCallback(
+    (text: string) => {
+      stopVoicePlayback();
+
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      if (
+        typeof window.speechSynthesis !== "undefined" &&
+        typeof window.SpeechSynthesisUtterance !== "undefined"
+      ) {
+        const utterance = new window.SpeechSynthesisUtterance(text);
+        utterance.rate = 1.03;
+        utterance.pitch = 1;
+        utterance.onend = finishVoicePlayback;
+        utterance.onerror = finishVoicePlayback;
+        window.speechSynthesis.speak(utterance);
+        return;
+      }
+
+      voicePlaybackTimerRef.current = window.setTimeout(
+        finishVoicePlayback,
+        Math.max(2200, text.split(/\s+/).length * 260),
+      );
+    },
+    [finishVoicePlayback, stopVoicePlayback],
+  );
+
   const queueAssistantResponse = useCallback(
     (
       text: string,
       options: Readonly<{
         surfaceAfter?: ConciergeSurface;
         feedbackEligible?: boolean;
+        streamDelayScale?: number;
+        voicePlaybackText?: string;
       }> = {},
     ) => {
-      const { surfaceAfter, feedbackEligible } = options;
+      const {
+        surfaceAfter,
+        feedbackEligible,
+        streamDelayScale,
+        voicePlaybackText,
+      } = options;
       const id = createMessageId("assistant");
 
       setMessages((currentMessages) => [
@@ -448,7 +574,13 @@ export function ConciergePanel({
           feedbackEligible,
         },
       ]);
-      setPendingAssistantResponse({ id, text, surfaceAfter });
+      setPendingAssistantResponse({
+        id,
+        text,
+        surfaceAfter,
+        streamDelayScale,
+        voicePlaybackText,
+      });
     },
     [createMessageId],
   );
@@ -476,6 +608,11 @@ export function ConciergePanel({
 
   const handleAssistantStreamStart = useCallback(
     (response: PendingAssistantResponse) => {
+      if (response.voicePlaybackText) {
+        setVoiceModeState("speaking");
+        startVoicePlayback(response.voicePlaybackText);
+      }
+
       setMessages((currentMessages) =>
         currentMessages.map((message) =>
           isMessageItem(message) && message.id === response.id
@@ -484,7 +621,7 @@ export function ConciergePanel({
         ),
       );
     },
-    [],
+    [startVoicePlayback],
   );
 
   const handleAssistantStreamText = useCallback(
@@ -506,6 +643,13 @@ export function ConciergePanel({
     onStreamText: handleAssistantStreamText,
     onComplete: completePendingAssistantResponse,
   });
+
+  useEffect(() => {
+    return () => {
+      clearVoiceTimers();
+      stopVoicePlayback();
+    };
+  }, [clearVoiceTimers, stopVoicePlayback]);
 
   useEffect(() => {
     return () => {
@@ -595,9 +739,14 @@ export function ConciergePanel({
       const assistantId = createMessageId("assistant");
 
       resetIdleSession();
+      clearVoiceTimers();
+      stopVoicePlayback();
       setLead(result);
       setPreparingLead(null);
       setDraft("");
+      setVoiceModeState("off");
+      setVoiceTranscript("");
+      setVoiceTurnIndex(0);
       setLiveFlowId(null);
       setLiveStepIndex(INITIAL_LIVE_SCRIPT_INDEX);
       setScheduledSpecialistState("initial");
@@ -619,8 +768,10 @@ export function ConciergePanel({
     },
     [
       createMessageId,
+      clearVoiceTimers,
       onSidePanelOpenChange,
       resetIdleSession,
+      stopVoicePlayback,
     ],
   );
 
@@ -663,8 +814,9 @@ export function ConciergePanel({
   );
 
   const handleEntryLixChatWithAi = useCallback(() => {
+    onConversationStart?.();
     setEntryLixStep("chat");
-  }, []);
+  }, [onConversationStart]);
 
   const handleEntryLixFillOutForm = useCallback(() => {
     setEntryLixStep("form");
@@ -698,6 +850,139 @@ export function ConciergePanel({
     [],
   );
 
+  const submitVoiceTranscript = useCallback(
+    (transcript: string, turnIndex: number) => {
+      if (!lead || transcript.trim().length === 0) {
+        return;
+      }
+
+      const userMessageId = createMessageId("user");
+      const response =
+        VOICE_AGENT_RESPONSES[
+          Math.min(turnIndex, VOICE_AGENT_RESPONSES.length - 1)
+        ];
+      const recommendationStep = getVoiceModeRecommendationStep();
+      const surfaceAfter = recommendationStep
+        ? ({
+            id: createMessageId("surface"),
+            kind: "recommendation",
+            step: recommendationStep,
+          } satisfies ConciergeRecommendation)
+        : undefined;
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          kind: "message",
+          id: userMessageId,
+          role: "user",
+          content: transcript.trim(),
+          status: "complete",
+        },
+      ]);
+      setLatestUserMessageAnchorKey(userMessageId);
+      setLiveFlowId("high");
+      setLiveStepIndex(flowReviews.high.steps.length - 1);
+      setVoiceModeState("thinking");
+      setVoiceTurnIndex((currentTurnIndex) =>
+        Math.max(currentTurnIndex, turnIndex + 1),
+      );
+      queueAssistantResponse(response.text, {
+        feedbackEligible: true,
+        streamDelayScale: VOICE_TEXT_STREAM_DELAY_SCALE,
+        surfaceAfter,
+        voicePlaybackText: response.spokenText,
+      });
+    },
+    [createMessageId, lead, queueAssistantResponse],
+  );
+
+  const startVoiceListening = useCallback(
+    (turnIndex = voiceTurnIndex) => {
+      if (!lead) {
+        return;
+      }
+
+      clearVoiceTimers();
+      stopVoicePlayback();
+      setVoiceModeState("listening");
+      setVoiceTranscript("");
+
+      const transcript =
+        VOICE_USER_TRANSCRIPTS[
+          Math.min(turnIndex, VOICE_USER_TRANSCRIPTS.length - 1)
+        ];
+      const words = transcript.split(" ");
+      let wordIndex = 0;
+
+      voiceTranscriptTimerRef.current = window.setInterval(() => {
+        wordIndex += 1;
+        setVoiceTranscript(words.slice(0, wordIndex).join(" "));
+
+        if (wordIndex >= words.length) {
+          if (voiceTranscriptTimerRef.current !== null) {
+            window.clearInterval(voiceTranscriptTimerRef.current);
+            voiceTranscriptTimerRef.current = null;
+          }
+
+          voiceCompletionTimerRef.current = window.setTimeout(() => {
+            voiceCompletionTimerRef.current = null;
+            submitVoiceTranscript(transcript, turnIndex);
+          }, 420);
+        }
+      }, 155);
+    },
+    [
+      clearVoiceTimers,
+      lead,
+      stopVoicePlayback,
+      submitVoiceTranscript,
+      voiceTurnIndex,
+    ],
+  );
+
+  const handleVoiceModeStart = useCallback(() => {
+    setVoiceModeState("listening");
+    startVoiceListening();
+  }, [startVoiceListening]);
+
+  const handleVoiceModeExit = useCallback(() => {
+    clearVoiceTimers();
+    stopVoicePlayback();
+    setVoiceModeState("off");
+    setVoiceTranscript("");
+  }, [clearVoiceTimers, stopVoicePlayback]);
+
+  const handleVoiceInterrupt = useCallback(() => {
+    clearVoiceTimers();
+    stopVoicePlayback();
+
+    if (pendingAssistantResponse) {
+      const { id, text } = pendingAssistantResponse;
+
+      setPendingAssistantResponse(null);
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
+          isMessageItem(message) && message.id === id
+            ? {
+                ...message,
+                content: getInterruptedAssistantText(text, message.content),
+                status: "complete" as const,
+                feedbackEligible: false,
+              }
+            : message,
+        ),
+      );
+    }
+
+    startVoiceListening();
+  }, [
+    clearVoiceTimers,
+    pendingAssistantResponse,
+    startVoiceListening,
+    stopVoicePlayback,
+  ]);
+
   const submitUserMessage = useCallback(
     (messageText: string) => {
       const text = messageText.trim();
@@ -729,14 +1014,24 @@ export function ConciergePanel({
 
       setLiveFlowId(nextFlowId);
       setLiveStepIndex(nextTurn.nextStepIndex);
+      if (isVoiceModeActive) {
+        setVoiceModeState("thinking");
+      }
       queueAssistantResponse(nextTurn.content, {
         surfaceAfter: nextTurn.surfaceAfter,
         feedbackEligible: nextTurn.feedbackEligible,
+        ...(isVoiceModeActive
+          ? {
+              streamDelayScale: VOICE_TEXT_STREAM_DELAY_SCALE,
+              voicePlaybackText: nextTurn.content,
+            }
+          : {}),
       });
     },
     [
       createMessageId,
       isAssistantBusy,
+      isVoiceModeActive,
       lead,
       liveFlowId,
       liveStepIndex,
@@ -1036,13 +1331,22 @@ export function ConciergePanel({
               showTopDivider={hasChatBodyScrolled}
               isResponding={isAssistantBusy}
               onStopResponse={handleStopAssistantResponse}
+              onVoiceInterrupt={handleVoiceInterrupt}
+              onVoiceListen={startVoiceListening}
+              onVoiceModeExit={handleVoiceModeExit}
+              onVoiceModeStart={handleVoiceModeStart}
               inputProps={{
                 value: draft,
                 onChange: handleDraftChange,
                 autoFocus: true,
               }}
               onSend={handleSendMessage}
-              sendDisabled={draft.trim().length === 0 || isAssistantBusy}
+              sendDisabled={
+                draft.trim().length === 0 || isAssistantBusy
+              }
+              voiceModeActive={isVoiceModeActive}
+              voiceState={visibleVoiceState}
+              voiceTranscript={voiceTranscript}
             />
           </>
         )

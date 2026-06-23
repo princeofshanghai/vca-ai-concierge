@@ -20,6 +20,7 @@ export {
   RecommendationCard,
   type ChatEndFeedbackRating,
   type ChatEndFeedbackSubmission,
+  type ChatComposerVoiceState,
   type ChatFeedbackReason,
   type ChatHeaderIdentity,
   type ChatInlineFeedbackTone,

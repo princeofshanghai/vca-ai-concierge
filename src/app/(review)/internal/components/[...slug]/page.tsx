@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { createPageMetadata } from "@/lib/metadata";
 
 import { ComponentPageContent } from "../component-page-content";
-import { componentNavItems, getComponentNavItem } from "../component-nav";
+import {
+  componentNavItems,
+  getComponentNavItem,
+  getComponentRedirectHref,
+} from "../component-nav";
 
 type ComponentDetailPageProps = Readonly<{
   params: Promise<{
@@ -49,6 +53,12 @@ export default async function ComponentDetailPage({
   const item = getComponentNavItem(slug);
 
   if (!item) {
+    const redirectHref = getComponentRedirectHref(slug);
+
+    if (redirectHref) {
+      redirect(redirectHref);
+    }
+
     notFound();
   }
 

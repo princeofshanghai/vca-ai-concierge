@@ -25,11 +25,13 @@ type EntryLixChoiceScreenProps = Readonly<{
 
 type EntryLixLeadFormScreenProps = Readonly<{
   onSubmit: () => void;
+  title?: string;
 }>;
 
 type EntryLixSuccessScreenProps = Readonly<{
-  onChatWithAi: () => void;
   onDone: () => void;
+  onChatWithAi?: () => void;
+  showChatWithAiAction?: boolean;
 }>;
 
 type SelectOption = Readonly<{
@@ -308,6 +310,7 @@ function EntryLixSelectField({
 
 export function EntryLixLeadFormScreen({
   onSubmit,
+  title = "Have someone contact me",
 }: EntryLixLeadFormScreenProps) {
   const [form, setForm] = useState<EntryLixFormState>(initialFormState);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -397,11 +400,11 @@ export function EntryLixLeadFormScreen({
         <div className="flex flex-col text-left">
           <Icon
             name="person"
-            label="Have someone contact me"
+            label={title}
             className="!size-7 text-ai-icon"
           />
           <h2 className="mt-md text-display-md text-text">
-            Have someone contact me
+            {title}
           </h2>
           <p className="mt-sm text-body-xs text-text-meta">
             Forms submitted between 9:00 AM and 12:00 PM PST Monday-Friday will
@@ -558,7 +561,10 @@ export function EntryLixLeadFormScreen({
 export function EntryLixSuccessScreen({
   onChatWithAi,
   onDone,
+  showChatWithAiAction = true,
 }: EntryLixSuccessScreenProps) {
+  const showChatWithAi = showChatWithAiAction && onChatWithAi;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       <div className="mx-auto flex w-full max-w-[384px] flex-1 flex-col px-xxl pb-xxxl pt-xxl">
@@ -584,20 +590,22 @@ export function EntryLixSuccessScreen({
           Done
         </Button>
 
-        <div className="mt-lg flex flex-col gap-sm">
-          <p className="text-center text-body-md text-text">
-            Want answers now?
-          </p>
-          <Button
-            type="button"
-            size="medium"
-            variant="secondary"
-            className="w-full"
-            onClick={onChatWithAi}
-          >
-            Chat with AI
-          </Button>
-        </div>
+        {showChatWithAi ? (
+          <div className="mt-lg flex flex-col gap-sm">
+            <p className="text-center text-body-md text-text">
+              Want answers now?
+            </p>
+            <Button
+              type="button"
+              size="medium"
+              variant="secondary"
+              className="w-full"
+              onClick={showChatWithAi}
+            >
+              Chat with AI
+            </Button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

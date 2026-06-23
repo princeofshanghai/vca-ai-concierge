@@ -1,14 +1,4 @@
-import type { Metadata } from "next";
-
-import { LandingPage } from "@/components/landing/landing-page";
-import { getHiringShellMode } from "@/lib/hiring-shell";
-import { createPageMetadata } from "@/lib/metadata";
-
-export const metadata: Metadata = createPageMetadata({
-  title: "Entry LIX Test | LTS Hiring Concierge",
-  description:
-    "Review prototype for the LinkedIn Hiring Contact sales entry test.",
-});
+import { redirect } from "next/navigation";
 
 type HiringEntryLixTestPageProps = Readonly<{
   searchParams: Promise<{
@@ -17,21 +7,27 @@ type HiringEntryLixTestPageProps = Readonly<{
   }>;
 }>;
 
+function getFirstValue(value: string | ReadonlyArray<string> | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 export default async function HiringEntryLixTestPage({
   searchParams,
 }: HiringEntryLixTestPageProps) {
   const { contactSales, shell } = await searchParams;
-  const contactSalesValue = Array.isArray(contactSales)
-    ? contactSales[0]
-    : contactSales;
-  const shellMode = getHiringShellMode(shell);
+  const params = new URLSearchParams();
+  const contactSalesValue = getFirstValue(contactSales);
+  const shellValue = getFirstValue(shell);
 
-  return (
-    <LandingPage
-      contactSalesEntry="lix-test"
-      homeHref="/hiring/entry-lix-test"
-      openContactSalesOnLoad={contactSalesValue === "open"}
-      shellMode={shellMode}
-    />
-  );
+  if (contactSalesValue) {
+    params.set("contactSales", contactSalesValue);
+  }
+
+  if (shellValue) {
+    params.set("shell", shellValue);
+  }
+
+  const queryString = params.toString();
+
+  redirect(`/hiring${queryString ? `?${queryString}` : ""}`);
 }

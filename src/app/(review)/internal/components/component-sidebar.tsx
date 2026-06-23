@@ -81,11 +81,9 @@ export function ComponentSidebar() {
               >
                 {section.groups.map((group) => (
                   <div key={group.title} className="space-y-2">
-                    {section.title === "SDUI components" ? null : (
-                      <h3 className="px-md text-[12px] font-medium leading-4 text-text-meta">
-                        {group.title}
-                      </h3>
-                    )}
+                    <h3 className="px-md text-[12px] font-medium leading-4 text-text-meta">
+                      {group.title}
+                    </h3>
                     <div className="space-y-1">
                       {group.items.map((item) => {
                         const isActive = pathname === item.href;

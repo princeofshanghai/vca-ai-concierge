@@ -93,6 +93,7 @@ export const iconNames = [
   "maximize",
   "mention",
   "mention-off",
+  "monitor",
   "messages",
   "microphone-fill",
   "microphone-off",
@@ -195,6 +196,7 @@ export const iconNames = [
   "slides",
   "signal-success-outline",
   "skills",
+  "smartphone",
   "skip-back",
   "skip-forward",
   "sort",
@@ -811,6 +813,11 @@ export const iconMetadata = [
     "label": "Mention Off",
     "figmaName": "Mention Off Small",
     "figmaNodeId": "2008:2665"
+  },
+  {
+    "name": "monitor",
+    "label": "Monitor",
+    "source": "Lucide"
   },
   {
     "name": "messages",
@@ -1475,6 +1482,11 @@ export const iconMetadata = [
     "figmaNodeId": "2008:2681"
   },
   {
+    "name": "smartphone",
+    "label": "Smartphone",
+    "source": "Lucide"
+  },
+  {
     "name": "skip-back",
     "label": "Skip Back",
     "figmaName": "Skip Back Small",
@@ -1881,6 +1893,7 @@ const iconSvgByName = {
   "maximize": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M8 6.6L6.6 8L3 4.4V7H1V1H7V3H4.4L8 6.6ZM13 9V11.6L9.4 8L8 9.4L11.6 13H9V15H15V9H13Z\" fill=\"currentColor\"/>\n</svg>",
   "mention": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M7.995 1C4.13776 1 1 3.82 1 8C1 12.18 4.13776 15 7.995 15C9.63383 15 10.863 14.57 11.4925 14.19V12.67C10.783 13.08 9.62384 13.6 7.995 13.6C4.90721 13.6 2.399 11.41 2.399 8C2.399 4.59 4.90721 2.4 7.995 2.4C11.5325 2.4 13.591 4.45 13.591 7.86C13.591 9.16 13.1513 10.1 12.4518 10.1C11.8223 10.1 11.4925 9.7 11.4925 8.99V4.64H10.0935V5.22C9.50393 4.78 8.78444 4.5 7.995 4.5C6.06638 4.5 4.4975 6.07 4.4975 8C4.4975 9.93 6.06638 11.5 7.995 11.5C8.9743 11.5 9.85368 11.09 10.4932 10.45C10.833 11.1 11.5125 11.5 12.4618 11.5C13.631 11.5 15 10.44 15 7.86C15 3.67 12.3119 1 8.005 1H7.995ZM7.995 10.1C6.83583 10.1 5.8965 9.16 5.8965 8C5.8965 6.84 6.83583 5.9 7.995 5.9C9.15418 5.9 10.0935 6.84 10.0935 8C10.0935 9.16 9.15418 10.1 7.995 10.1Z\" fill=\"currentColor\"/>\n</svg>",
   "mention-off": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M3.36 13.35C4.6 14.4 6.22 15 8 15C9.64 15 10.87 14.57 11.5 14.19V12.67C10.79 13.08 9.63 13.6 8 13.6C6.61 13.6 5.34 13.16 4.36 12.36L5.91 10.81C6.49 11.25 7.22 11.51 8 11.51C8.98 11.51 9.86 11.1 10.5 10.46C10.84 11.11 11.52 11.51 12.47 11.51C13.64 11.51 15.01 10.45 15.01 7.87C15.01 5.99 14.47 4.41 13.48 3.25L14.99 1.74L14.28 1.03L1.02 14.27L1.73 14.98L3.36 13.35ZM12.47 4.24L11.49 5.22V9C11.49 9.71 11.82 10.11 12.45 10.11C13.15 10.11 13.59 9.17 13.59 7.87C13.59 6.39 13.2 5.16 12.47 4.25V4.24ZM9.79 6.91L6.91 9.79C7.23 9.98 7.6 10.09 8 10.09C9.16 10.09 10.1 9.15 10.1 7.99C10.1 7.59 9.99 7.22 9.8 6.9L9.79 6.91ZM2.05 11.83L3.07 10.81C2.64 10.01 2.4 9.07 2.4 8C2.4 4.59 4.91 2.4 8 2.4C9.12 2.4 10.09 2.6 10.89 2.99L11.93 1.95C10.86 1.33 9.54 1 8.01 1H8C4.14 1 1 3.82 1 8C1 9.46 1.38 10.76 2.05 11.83ZM4.7 9.18L5.9 7.98C5.9 6.83 6.84 5.91 7.98 5.9L9.17 4.71C8.8 4.57 8.41 4.5 8 4.5C6.07 4.5 4.5 6.07 4.5 8C4.5 8.41 4.57 8.81 4.7 9.18Z\" fill=\"currentColor\"/>\n</svg>",
+  "monitor": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"20\" height=\"14\" x=\"2\" y=\"3\" rx=\"2\"/>\n<line x1=\"8\" x2=\"16\" y1=\"21\" y2=\"21\"/>\n<line x1=\"12\" x2=\"12\" y1=\"17\" y2=\"21\"/>\n</svg>",
   "messages": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M10.5 2H5.736C2.491 2 0 4.531 0 7.5C0 10.762 2.698 13 5.5 13H8V16L13.248 12.621C14.963 11.517 16 9.616 16 7.576V7.5C16 4.462 13.538 2 10.5 2ZM5 8.5C4.448 8.5 4 8.052 4 7.5C4 6.948 4.448 6.5 5 6.5C5.552 6.5 6 6.948 6 7.5C6 8.052 5.552 8.5 5 8.5ZM8 8.5C7.448 8.5 7 8.052 7 7.5C7 6.948 7.448 6.5 8 6.5C8.552 6.5 9 6.948 9 7.5C9 8.052 8.552 8.5 8 8.5ZM11 8.5C10.448 8.5 10 8.052 10 7.5C10 6.948 10.448 6.5 11 6.5C11.552 6.5 12 6.948 12 7.5C12 8.052 11.552 8.5 11 8.5Z\" fill=\"currentColor\"/>\n</svg>",
   "microphone-fill": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M10.1213 9.12132C9.55871 9.68393 8.79565 10 8 10C7.20435 10 6.44129 9.68393 5.87868 9.12132C5.31607 8.55871 5 7.79565 5 7V4C5 3.20435 5.31607 2.44129 5.87868 1.87868C6.44129 1.31607 7.20435 1 8 1C8.79565 1 9.55871 1.31607 10.1213 1.87868C10.6839 2.44129 11 3.20435 11 4V7C11 7.79565 10.6839 8.55871 10.1213 9.12132Z\" fill=\"currentColor\"/>\n<path d=\"M12 7V6H13V7C13.0002 8.15265 12.6022 9.26999 11.8733 10.1629C11.1444 11.0558 10.1294 11.6695 9 11.9V13H11V15H5V13H7V11.9C5.87064 11.6695 4.8556 11.0558 4.12669 10.1629C3.39778 9.26999 2.99977 8.15265 3 7V6H4V7C4 8.06087 4.42143 9.07828 5.17157 9.82843C5.92172 10.5786 6.93913 11 8 11C9.06087 11 10.0783 10.5786 10.8284 9.82843C11.5786 9.07828 12 8.06087 12 7Z\" fill=\"currentColor\"/>\n</svg>",
   "microphone-off": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M9 11.9V13H11V15H5V13H7V11.9C4.72 11.44 3 9.42 3 7V6H4V7C4 9.21 5.79 11 8 11C8.66 11 9.28 10.82 9.83 10.54L9.08 9.79C8.75 9.92 8.38 10 8 10C6.34 10 5 8.66 5 7V5.71L1 1.71L1.71 1L15 14.29L14.29 15L10.56 11.27C10.09 11.56 9.57 11.78 9 11.9ZM13 7V6H12V7C12 7.82 11.74 8.56 11.31 9.19L12.04 9.92C12.64 9.1 13 8.09 13 7ZM11 7V4C11 2.34 9.66 1 8 1C6.68 1 5.57 1.86 5.17 3.05L10.59 8.47C10.84 8.03 11 7.54 11 7Z\" fill=\"currentColor\"/>\n</svg>",
@@ -1983,6 +1996,7 @@ const iconSvgByName = {
   "slides": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M4 2C3.46957 2 2.96086 2.21071 2.58579 2.58579C2.21071 2.96086 2 3.46957 2 4V12C2 12.5304 2.21071 13.0391 2.58579 13.4142C2.96086 13.7893 3.46957 14 4 14H12C12.5304 14 13.0391 13.7893 13.4142 13.4142C13.7893 13.0391 14 12.5304 14 12V4C14 3.46957 13.7893 2.96086 13.4142 2.58579C13.0391 2.21071 12.5304 2 12 2H4ZM4 4H12V12H4V4ZM0 4H1V12H0V4ZM15 4H16V12H15V4Z\" fill=\"currentColor\"/>\n</svg>",
   "signal-success-outline": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path fill-rule=\"evenodd\" clip-rule=\"evenodd\" d=\"M3 8C3 5.2 5.2 3 8 3C10.8 3 13 5.2 13 8C13 10.8 10.8 13 8 13C5.2 13 3 10.8 3 8ZM1 8C1 4.1 4.1 1 8 1C11.9 1 15 4.1 15 8C15 11.9 11.9 15 8 15C4.1 15 1 11.9 1 8ZM7.4 12L4.3 8.9L5.6 7.6L7.1 9L9.7 5H12L7.4 12Z\" fill=\"currentColor\"/>\n</svg>",
   "skills": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M12.67 2H3.33L1 6L8 14L15 6L12.67 2ZM8.01 4H11.52L12.39 5.5H3.61L4.49 4H8.02H8.01ZM4.1 6.5H11.91L8.01 10.96L4.11 6.5H4.1Z\" fill=\"currentColor\"/>\n</svg>",
+  "smartphone": "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\">\n<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\" ry=\"2\"/>\n<path d=\"M12 18h.01\"/>\n</svg>",
   "skip-back": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M5 1V6.8L13 2V14L5 9.2V15H3V1H5Z\" fill=\"currentColor\"/>\n</svg>",
   "skip-forward": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M13 1V15H11V9.2L3 14V2L11 6.8V1H13Z\" fill=\"currentColor\"/>\n</svg>",
   "sort": "<svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M13 7L8 3.5L3 7V4.6L8 1L13 4.6V7ZM3 11.4L8 15L13 11.4V9L8 12.5L3 9V11.4Z\" fill=\"currentColor\"/>\n</svg>",

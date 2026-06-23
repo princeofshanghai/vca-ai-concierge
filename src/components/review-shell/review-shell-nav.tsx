@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -18,8 +18,7 @@ import {
 } from "./review-shell-state-menu";
 
 const HIRING_ALL_INTENTS_HREF = "/hiring";
-const HIRING_ENTRY_LIX_TEST_HREF = "/hiring/entry-lix-test";
-const HIRING_PROTOTYPE_HREF = HIRING_ENTRY_LIX_TEST_HREF;
+const HIRING_PROTOTYPE_HREF = HIRING_ALL_INTENTS_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
@@ -33,18 +32,13 @@ const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
   href: HIRING_ALL_INTENTS_HREF,
   label: "All intents",
-  description: "Interact with the prototype to see results across all intents",
   typeLabel: "Interactive",
-} as const;
-const HIRING_ENTRY_LIX_TEST_NAV_ITEM = {
-  id: "entry-lix-test",
-  href: HIRING_ENTRY_LIX_TEST_HREF,
-  label: "Entry LIX test",
-  description: "Review the Contact sales entry choice experiment",
-  typeLabel: "Interactive",
-  hasDividerAfter: true,
 } as const;
 const HIRING_SHELL_OPTIONS = [
+  {
+    id: "hiring-shell-tray",
+    label: "Tray (persistent)",
+  },
   {
     id: "hiring-shell-hybrid",
     label: "Tray (hybrid)",
@@ -52,10 +46,6 @@ const HIRING_SHELL_OPTIONS = [
   {
     id: "hiring-shell-default",
     label: "Tray (hidden)",
-  },
-  {
-    id: "hiring-shell-tray",
-    label: "Tray (persistent)",
   },
 ] as const;
 const PREMIUM_SHELL_OPTIONS = [
@@ -84,7 +74,6 @@ const PREMIUM_COMPANY_PAGES_SHELL_OPTIONS = [
 ] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
-  HIRING_ENTRY_LIX_TEST_NAV_ITEM,
   {
     id: "high",
     href: "/internal/flows/high",
@@ -127,6 +116,18 @@ const premiumCompanyPagesModeOptions = [
     label: "Admin view",
     description: "Admin view of PCP",
   },
+  {
+    id: "premium-company-pages-current-state",
+    href: PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF,
+    label: "Current state",
+    description: "Current LinkedIn Page admin baseline",
+  },
+  {
+    id: "premium-company-pages-future-vision",
+    href: PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF,
+    label: "Future vision",
+    description: "Vision prototype for the VCA admin experience",
+  },
 ] as const;
 const premiumCompanyPagesPlaceholderStoryLabels: Readonly<
   Record<string, string>
@@ -165,6 +166,7 @@ type ReviewDestination = Readonly<{
 }>;
 
 type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
+type HiringCallbackFormLabel = "On" | "Off";
 type PremiumShellLabel = (typeof PREMIUM_SHELL_OPTIONS)[number]["label"];
 type PremiumCompanyPagesShellLabel =
   (typeof PREMIUM_COMPANY_PAGES_SHELL_OPTIONS)[number]["label"];
@@ -189,7 +191,6 @@ function getComponentsDestination(
 function isHiringPrototypePath(pathname: string) {
   return (
     pathname === HIRING_ALL_INTENTS_HREF ||
-    pathname === HIRING_ENTRY_LIX_TEST_HREF ||
     pathname.startsWith("/internal/flows")
   );
 }
@@ -246,6 +247,10 @@ function getPrototypeMetaLabel(
       return `${placeholderStoryLabel} · Placeholder`;
     }
 
+    if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF)) {
+      return "Future vision";
+    }
+
     if (pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF)) {
       return "Current state";
     }
@@ -286,7 +291,7 @@ function getPrototypeMetaLabel(
       }
     }
 
-    return `${modeLabel} · ${hiringShellLabel}`;
+    return modeLabel;
   }
 
   return undefined;
@@ -319,12 +324,7 @@ function getPrototypeDestination(
         : HIRING_PROTOTYPE_HREF,
     label: "Prototype",
     matches: isPremiumCompanyPages
-      ? (candidate) =>
-          candidate.startsWith("/premium-company-pages") &&
-          !candidate.startsWith(
-            PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF,
-          ) &&
-          !candidate.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF)
+      ? (candidate) => candidate.startsWith("/premium-company-pages")
       : isPremium
         ? (candidate) =>
             candidate.startsWith("/premium") &&
@@ -344,24 +344,6 @@ function getPrototypeDestination(
   };
 }
 
-function getPremiumCompanyPagesCurrentStateDestination(): ReviewDestination {
-  return {
-    href: PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF,
-    label: "Current state",
-    matches: (pathname) =>
-      pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF),
-  };
-}
-
-function getPremiumCompanyPagesOldDestination(): ReviewDestination {
-  return {
-    href: PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF,
-    label: "Future vision",
-    matches: (pathname) =>
-      pathname.startsWith(PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF),
-  };
-}
-
 function getReviewDestinations(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
@@ -377,26 +359,45 @@ function getReviewDestinations(
     ),
   ];
 
-  if (pathname.startsWith("/premium-company-pages")) {
-    destinations.push(getPremiumCompanyPagesCurrentStateDestination());
-    destinations.push(getPremiumCompanyPagesOldDestination());
-  }
-
   destinations.push(getComponentsDestination(componentProductLens));
 
   return destinations;
 }
 
+function withHiringCallbackForm(
+  href: string,
+  callbackFormLabel: HiringCallbackFormLabel,
+) {
+  return withQueryParam(
+    href,
+    "callbackForm",
+    callbackFormLabel === "Off" ? "off" : null,
+  );
+}
+
 function withHiringShell(href: string, shellLabel: HiringShellLabel) {
-  if (shellLabel === "Tray (hybrid)") {
-    return href;
+  if (shellLabel === "Tray (persistent)") {
+    return withQueryParam(href, "shell", null);
   }
 
   if (shellLabel === "Tray (hidden)") {
-    return `${href}?shell=default`;
+    return withQueryParam(href, "shell", "default");
   }
 
-  return `${href}?shell=tray`;
+  return withQueryParam(href, "shell", "hybrid");
+}
+
+function withHiringPrototypeSettings(
+  href: string,
+  shellLabel: HiringShellLabel,
+  callbackFormLabel: HiringCallbackFormLabel,
+) {
+  const hrefWithCallbackForm =
+    href.split("?")[0] === HIRING_ALL_INTENTS_HREF
+      ? withHiringCallbackForm(href, callbackFormLabel)
+      : href;
+
+  return withHiringShell(hrefWithCallbackForm, shellLabel);
 }
 
 function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
@@ -466,16 +467,46 @@ function getPremiumCompanyPagesActiveShellLabel(
   return value === "tray" ? "Tray" : "FAB pill";
 }
 
-function getHiringShellOptions(pathname: string) {
-  const baseHref =
+function getHiringShellOptions(
+  pathname: string,
+  callbackFormLabel: HiringCallbackFormLabel,
+) {
+  const basePathname =
     isHiringPrototypePath(pathname)
       ? pathname
       : HIRING_PROTOTYPE_HREF;
+  const baseHref =
+    basePathname === HIRING_ALL_INTENTS_HREF
+      ? withHiringCallbackForm(basePathname, callbackFormLabel)
+      : basePathname;
 
   return HIRING_SHELL_OPTIONS.map((option) => ({
     ...option,
     href: withHiringShell(baseHref, option.label),
   }));
+}
+
+function getHiringCallbackFormOptions(shellLabel: HiringShellLabel) {
+  return [
+    {
+      id: "hiring-callback-form-on",
+      label: "On",
+      href: withHiringPrototypeSettings(
+        HIRING_ALL_INTENTS_HREF,
+        shellLabel,
+        "On",
+      ),
+    },
+    {
+      id: "hiring-callback-form-off",
+      label: "Off",
+      href: withHiringPrototypeSettings(
+        HIRING_ALL_INTENTS_HREF,
+        shellLabel,
+        "Off",
+      ),
+    },
+  ] as const;
 }
 
 function getPremiumShellOptions(pathname: string) {
@@ -514,15 +545,7 @@ function getPremiumCompanyPagesShellOptions(
   }));
 }
 
-type ReviewShellNavProps = Readonly<{
-  isToolbarHidden: boolean;
-  onToolbarHiddenChange: (isHidden: boolean) => void;
-}>;
-
-export function ReviewShellNav({
-  isToolbarHidden,
-  onToolbarHiddenChange,
-}: ReviewShellNavProps) {
+export function ReviewShellNav() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -531,9 +554,6 @@ export function ReviewShellNav({
   const isPremiumCompanyPagesMember = pathname.startsWith(
     PREMIUM_COMPANY_PAGES_MEMBER_HREF,
   );
-  const [hasDarkOverlayBackdrop, setHasDarkOverlayBackdrop] = useState(false);
-  const usesDarkOverlayChrome =
-    isPremiumCompanyPagesMember && hasDarkOverlayBackdrop;
   const currentSearch = searchParams.toString();
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const vcaShellParam = searchParams.get("vcaShell");
@@ -546,13 +566,21 @@ export function ReviewShellNav({
       : searchParams.get("shell") === "default" ||
           searchParams.get("shell") === "dismissable-tray"
         ? "Tray (hidden)"
-        : "Tray (hybrid)";
+        : "Tray (persistent)";
+  const activeHiringCallbackFormLabel: HiringCallbackFormLabel =
+    searchParams.get("callbackForm") === "off" ? "Off" : "On";
   const normalizedHiringHref =
-    activeHiringShellLabel === "Tray (hybrid)"
-      ? pathname
-      : activeHiringShellLabel === "Tray (hidden)"
-        ? `${pathname}?shell=default`
-        : `${pathname}?shell=tray`;
+    withHiringPrototypeSettings(
+      pathname,
+      activeHiringShellLabel,
+      activeHiringCallbackFormLabel,
+    );
+  const normalizedHiringCallbackFormHref =
+    withHiringPrototypeSettings(
+      HIRING_ALL_INTENTS_HREF,
+      activeHiringShellLabel,
+      activeHiringCallbackFormLabel,
+    );
   const activePremiumShellLabel: PremiumShellLabel =
     searchParams.get("shell") === "tray"
       ? "Tray (persistent)"
@@ -592,19 +620,27 @@ export function ReviewShellNav({
       hiringModeOptions.map((option) => ({
         ...option,
         href: "href" in option && option.href
-          ? withHiringShell(option.href, activeHiringShellLabel)
+          ? withHiringPrototypeSettings(
+              option.href,
+              activeHiringShellLabel,
+              activeHiringCallbackFormLabel,
+            )
           : undefined,
         options:
           "options" in option
             ? option.options.map((childOption) => ({
                 ...childOption,
                 href: childOption.href
-                  ? withHiringShell(childOption.href, activeHiringShellLabel)
+                  ? withHiringPrototypeSettings(
+                      childOption.href,
+                      activeHiringShellLabel,
+                      activeHiringCallbackFormLabel,
+                    )
                   : undefined,
               }))
             : undefined,
       })),
-    [activeHiringShellLabel],
+    [activeHiringCallbackFormLabel, activeHiringShellLabel],
   );
   const shellAwarePremiumModeOptions = useMemo(
     () =>
@@ -685,8 +721,12 @@ export function ReviewShellNav({
     [activePremiumShellLabel, shellAwarePremiumModeOptions],
   );
   const hiringShellOptions = useMemo(
-    () => getHiringShellOptions(pathname),
-    [pathname],
+    () => getHiringShellOptions(pathname, activeHiringCallbackFormLabel),
+    [activeHiringCallbackFormLabel, pathname],
+  );
+  const hiringCallbackFormOptions = useMemo(
+    () => getHiringCallbackFormOptions(activeHiringShellLabel),
+    [activeHiringShellLabel],
   );
   const premiumShellOptions = useMemo(
     () => getPremiumShellOptions(pathname),
@@ -716,197 +756,18 @@ export function ReviewShellNav({
     ],
   );
 
-  const listRef = useRef<HTMLUListElement | null>(null);
-  const itemRefs = useRef<Record<string, HTMLElement | null>>({});
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-
-  const [indicatorStyle, setIndicatorStyle] = useState<{
-    opacity: number;
-    transform: string;
-    width: number;
-  }>({
-    opacity: 0,
-    transform: "translateX(0px)",
-    width: 0,
-  });
-
-  useLayoutEffect(() => {
-    function updateIndicator() {
-      const activeDestination = reviewDestinations.find((destination) =>
-        destination.matches(pathname),
-      );
-      const activeElement = activeDestination
-        ? itemRefs.current[activeDestination.href]
-        : null;
-      const listElement = listRef.current;
-
-      if (!activeElement || !listElement) {
-        return;
-      }
-
-      const listRect = listElement.getBoundingClientRect();
-      const activeRect = activeElement.getBoundingClientRect();
-
-      setIndicatorStyle({
-        opacity: 1,
-        transform: `translateX(${activeRect.left - listRect.left}px)`,
-        width: activeRect.width,
-      });
-    }
-
-    updateIndicator();
-    window.addEventListener("resize", updateIndicator);
-
-    return () => {
-      window.removeEventListener("resize", updateIndicator);
-    };
-  }, [pathname, isSignedIn, isToolbarHidden, reviewDestinations]);
-
-  useEffect(() => {
-    if (!isPremiumCompanyPagesMember) {
-      return;
-    }
-
-    function getColorLuminance(color: string) {
-      const rgbMatch = color.match(/^rgba?\((.+)\)$/);
-
-      if (!rgbMatch) {
-        return null;
-      }
-
-      const [channelValue, alphaValue] = rgbMatch[1].split("/");
-      const channels = channelValue
-        .trim()
-        .split(/[,\s]+/)
-        .filter(Boolean);
-
-      if (channels.length < 3) {
-        return null;
-      }
-
-      const alpha = alphaValue
-        ? Number.parseFloat(alphaValue)
-        : channels[3]
-          ? Number.parseFloat(channels[3])
-          : 1;
-
-      if (alpha < 0.2) {
-        return null;
-      }
-
-      const [red, green, blue] = channels.slice(0, 3).map((channel) => {
-        if (channel.endsWith("%")) {
-          return (Number.parseFloat(channel) / 100) * 255;
-        }
-
-        return Number.parseFloat(channel);
-      });
-
-      if ([red, green, blue].some((channel) => Number.isNaN(channel))) {
-        return null;
-      }
-
-      const [linearRed, linearGreen, linearBlue] = [red, green, blue].map(
-        (channel) => {
-          const normalized = channel / 255;
-
-          return normalized <= 0.03928
-            ? normalized / 12.92
-            : ((normalized + 0.055) / 1.055) ** 2.4;
-        },
-      );
-
-      return (
-        0.2126 * linearRed + 0.7152 * linearGreen + 0.0722 * linearBlue
-      );
-    }
-
-    function getElementBackdropIsDark(element: Element) {
-      let currentElement: HTMLElement | null =
-        element instanceof HTMLElement ? element : element.parentElement;
-
-      while (currentElement && currentElement !== document.documentElement) {
-        const style = window.getComputedStyle(currentElement);
-        const luminance = getColorLuminance(style.backgroundColor);
-
-        if (luminance !== null) {
-          return luminance < 0.45;
-        }
-
-        currentElement = currentElement.parentElement;
-      }
-
-      return false;
-    }
-
-    function getPointBackdropIsDark(
-      navElement: HTMLElement,
-      x: number,
-      y: number,
-    ) {
-      const elements = document.elementsFromPoint(x, y);
-      const backdropElement = elements.find(
-        (element) => !navElement.contains(element),
-      );
-
-      return backdropElement
-        ? getElementBackdropIsDark(backdropElement)
-        : false;
-    }
-
-    function updateChromeContrast() {
-      const navElement = listRef.current?.closest("nav");
-
-      if (!(navElement instanceof HTMLElement)) {
-        return;
-      }
-
-      const navRect = navElement.getBoundingClientRect();
-      const sampleY = navRect.top + navRect.height / 2;
-      const samplePoints = [
-        navRect.left + Math.min(48, navRect.width / 4),
-        navRect.left + navRect.width / 2,
-        navRect.right - Math.min(48, navRect.width / 4),
-      ];
-      const darkSampleCount = samplePoints.filter((sampleX) =>
-        getPointBackdropIsDark(navElement, sampleX, sampleY),
-      ).length;
-
-      setHasDarkOverlayBackdrop((currentValue) => {
-        const nextValue = darkSampleCount >= 2;
-
-        return currentValue === nextValue ? currentValue : nextValue;
-      });
-    }
-
-    let frame = window.requestAnimationFrame(updateChromeContrast);
-
-    function scheduleChromeContrastUpdate() {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(updateChromeContrast);
-    }
-
-    window.addEventListener("scroll", scheduleChromeContrastUpdate, {
-      passive: true,
-    });
-    window.addEventListener("resize", scheduleChromeContrastUpdate);
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", scheduleChromeContrastUpdate);
-      window.removeEventListener("resize", scheduleChromeContrastUpdate);
-    };
-  }, [isPremiumCompanyPagesMember]);
 
   function handleLoginSelect(next: boolean) {
     setIsSignedIn(next);
     setIsMenuOpen(false);
     router.push(
-      withHiringShell(
+      withHiringPrototypeSettings(
         pathname === HIRING_ALL_INTENTS_HREF
           ? HIRING_ALL_INTENTS_HREF
           : HIRING_PROTOTYPE_HREF,
         activeHiringShellLabel,
+        activeHiringCallbackFormLabel,
       ),
     );
   }
@@ -916,46 +777,23 @@ export function ReviewShellNav({
     triggerRef.current?.focus();
   }
 
-  function hideToolbar() {
-    setIsMenuOpen(false);
-    onToolbarHiddenChange(true);
-  }
-
-  if (isToolbarHidden) {
-    return (
-      <div className="pointer-events-none fixed left-3 top-3 z-50">
-        <button
-          type="button"
-          aria-label="Reveal toolbar"
-          title="Reveal toolbar"
-          onClick={() => onToolbarHiddenChange(false)}
-          className="group pointer-events-auto inline-flex size-10 items-center justify-center rounded-full border border-white/75 bg-white/50 text-slate-700 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl transition-colors duration-200 ease-out hover:bg-white/70 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 supports-[backdrop-filter]:bg-white/42"
-        >
-          <Icon name="visibility" size="small" className="[&&]:size-4" />
-          <span className="pointer-events-none absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-white/75 bg-white/70 px-3 py-1.5 text-[11px] font-medium leading-none text-slate-700 opacity-0 shadow-[0_8px_24px_rgba(15,23,42,0.08)] ring-1 ring-black/5 backdrop-blur-2xl transition-opacity duration-150 ease-out group-hover:opacity-100 group-focus-visible:opacity-100 supports-[backdrop-filter]:bg-white/58">
-            Reveal toolbar
-          </span>
-        </button>
-      </div>
-    );
+  function getPillClasses(isActive: boolean, extraClassName = "") {
+    return [
+      "pointer-events-auto inline-flex min-h-8 min-w-0 items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
+      isActive
+        ? "border-sky-100 bg-sky-50/82 text-sky-900 supports-[backdrop-filter]:bg-sky-50/70"
+        : "border-slate-300/80 bg-white/50 text-slate-700 ring-slate-900/10 hover:border-slate-400/70 hover:bg-white/70 hover:text-slate-950 supports-[backdrop-filter]:bg-white/42",
+      extraClassName,
+    ].join(" ");
   }
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-2 z-50 flex justify-center px-4 sm:top-3">
-      <nav
-        aria-label="Review surfaces"
-        className={[
-          "pointer-events-auto rounded-full border bg-white/50 p-1 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/42",
-          usesDarkOverlayChrome ? "border-white/40" : "border-white/75",
-        ].join(" ")}
-      >
-        <ul ref={listRef} className="relative flex items-center gap-1">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-y-0 left-0 rounded-full bg-sky-50 ring-1 ring-sky-100 transition-[transform,width,opacity] duration-200 ease-out motion-reduce:transition-none"
-            style={indicatorStyle}
-          />
-          {reviewDestinations.map((destination) => {
+    <nav
+      aria-label="Review surfaces"
+      className="pointer-events-none fixed inset-x-0 top-2 z-50 px-4 sm:top-3"
+    >
+      <ul className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 sm:gap-3">
+        {reviewDestinations.map((destination) => {
             const isActive = destination.matches(pathname);
             const hasMenu = Boolean(destination.menu);
             const isPremiumMenu = destination.menu === "premium";
@@ -979,7 +817,10 @@ export function ReviewShellNav({
 
             if (hasMenu) {
               return (
-                <li key={destination.href} className="relative z-10">
+                <li
+                  key={destination.href}
+                  className="relative z-10 min-w-0 justify-self-center"
+                >
                   <button
                     id={TRIGGER_ID}
                     type="button"
@@ -993,17 +834,12 @@ export function ReviewShellNav({
                     }`}
                     onClick={() => setIsMenuOpen((prev) => !prev)}
                     ref={(element) => {
-                      itemRefs.current[destination.href] = element;
                       triggerRef.current = element;
                     }}
-                    className={[
-                      "inline-flex min-h-8 min-w-0 items-center gap-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
-                      isActive
-                        ? "text-sky-900"
-                        : usesDarkOverlayChrome
-                          ? "text-white/90 hover:bg-white/15 hover:text-white"
-                          : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
-                    ].join(" ")}
+                    className={getPillClasses(
+                      isActive,
+                      "max-w-full gap-2 sm:gap-3",
+                    )}
                   >
                     <span className="inline-flex min-w-0 items-baseline gap-2 leading-none">
                       <span className="leading-[1.1]">
@@ -1012,12 +848,10 @@ export function ReviewShellNav({
                       {destination.metaLabel ? (
                         <span
                           className={[
-                            "max-w-[44vw] truncate text-[10px] font-medium leading-[1.05] tracking-normal sm:max-w-none",
+                            "hidden max-w-[34vw] truncate border-l pl-3 text-[11px] font-medium leading-[1.05] tracking-normal md:inline",
                             isActive
-                              ? "text-sky-700/75"
-                              : usesDarkOverlayChrome
-                                ? "text-white/70"
-                                : "text-slate-500",
+                              ? "border-sky-700/20 text-sky-700/75"
+                              : "border-slate-300/80 text-slate-500",
                           ].join(" ")}
                         >
                           {destination.metaLabel}
@@ -1069,6 +903,13 @@ export function ReviewShellNav({
                     }
                     shellHeading="UI"
                     shellOptions={shellOptions}
+                    callbackFormHeading="Call back form"
+                    callbackFormOptions={
+                      !isProjectMenu && !isPremiumMenu && !isPremiumCompanyPagesMenu
+                        ? hiringCallbackFormOptions
+                        : []
+                    }
+                    callbackFormCurrentHref={normalizedHiringCallbackFormHref}
                     showVisitorControls={
                       !isProjectMenu && !isPremiumMenu && !isPremiumCompanyPagesMenu
                     }
@@ -1078,60 +919,43 @@ export function ReviewShellNav({
             }
 
             return (
-              <li key={destination.href} className="relative z-10">
+              <li
+                key={destination.href}
+                className={[
+                  "relative z-10",
+                  destination.href === HOME_DESTINATION.href
+                    ? "justify-self-start"
+                    : "justify-self-end",
+                ].join(" ")}
+              >
                 <Link
                   href={destination.href}
                   aria-current={isActive ? "page" : undefined}
-                  ref={(element) => {
-                    itemRefs.current[destination.href] = element;
-                  }}
-                  className={[
-                    "inline-flex min-h-8 items-center justify-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
-                    isActive
-                      ? "text-sky-900"
-                      : usesDarkOverlayChrome
-                        ? "text-white/90 hover:bg-white/15 hover:text-white"
-                        : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
-                  ].join(" ")}
+                  className={getPillClasses(
+                    isActive,
+                    destination.href === HOME_DESTINATION.href
+                      ? "gap-1 sm:gap-1.5"
+                      : "gap-1.5",
+                  )}
                 >
                   {destination.href === HOME_DESTINATION.href ? (
-                    <HomeNavIcon />
-                  ) : null}
-                  {destination.label}
+                    <>
+                      <HomeNavIcon />
+                      <span className="hidden sm:inline">
+                        {destination.label}
+                      </span>
+                      <span className="sr-only sm:hidden">
+                        {destination.label}
+                      </span>
+                    </>
+                  ) : (
+                    destination.label
+                  )}
                 </Link>
               </li>
             );
           })}
-          <li
-            aria-hidden="true"
-            className={[
-              "relative z-10 mx-1 h-5 w-px shrink-0",
-              usesDarkOverlayChrome ? "bg-white/30" : "bg-slate-200/90",
-            ].join(" ")}
-          />
-          <li className="relative z-10">
-            <button
-              type="button"
-              aria-label="Hide toolbar"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                hideToolbar();
-              }}
-              onClick={hideToolbar}
-              className={[
-                "inline-flex min-h-8 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
-                usesDarkOverlayChrome
-                  ? "text-white/90 hover:bg-white/15 hover:text-white"
-                  : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950",
-              ].join(" ")}
-            >
-              <Icon name="visibility-off" size="small" className="[&&]:size-4" />
-              Hide
-            </button>
-          </li>
-        </ul>
-      </nav>
-    </div>
+      </ul>
+    </nav>
   );
 }

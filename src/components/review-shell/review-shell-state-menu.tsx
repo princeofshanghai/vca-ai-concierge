@@ -18,7 +18,6 @@ const LIVE_PROTOTYPE_NAV_ITEM = {
   id: "live",
   href: "/hiring",
   label: "All intents",
-  description: "Interact with the prototype to see results across all intents",
   typeLabel: "Interactive",
 } as const;
 
@@ -75,6 +74,9 @@ type ReviewShellStateMenuProps = Readonly<{
   modeHeading?: string;
   storyOptions?: ReadonlyArray<ReviewShellModeMenuOption>;
   storyHeading?: string;
+  callbackFormOptions?: ReadonlyArray<ReviewShellShellMenuOption>;
+  callbackFormHeading?: string;
+  callbackFormCurrentHref?: string;
   shellOptions?: ReadonlyArray<ReviewShellShellMenuOption>;
   shellHeading?: string;
   showVisitorControls?: boolean;
@@ -95,6 +97,9 @@ export function ReviewShellStateMenu({
   modeHeading = "Mode",
   storyOptions = [],
   storyHeading = "Choose story",
+  callbackFormOptions = [],
+  callbackFormHeading = "Call back form",
+  callbackFormCurrentHref,
   shellOptions = [],
   shellHeading = "Shell",
   showVisitorControls = true,
@@ -107,13 +112,18 @@ export function ReviewShellStateMenu({
   const visitorOptions = showVisitorControls ? loginOptions : [];
   const storyControlCount = storyOptions.length;
   const modeControlCount = modeGroups?.length ?? modeOptions.length;
-  const hasSettings = visitorOptions.length > 0 || shellOptions.length > 0;
+  const hasSettings =
+    visitorOptions.length > 0 ||
+    callbackFormOptions.length > 0 ||
+    shellOptions.length > 0;
   const currentStoryHref = storyCurrentHref ?? currentHref;
+  const currentCallbackFormHref = callbackFormCurrentHref ?? currentHref;
   const optionCount =
     storyControlCount +
     modeControlCount +
-    shellOptions.length +
-    visitorOptions.length;
+    visitorOptions.length +
+    callbackFormOptions.length +
+    shellOptions.length;
   const optionMatchesCurrentHref = (
     href?: string,
     candidateHref = currentHref,
@@ -149,6 +159,9 @@ export function ReviewShellStateMenu({
   const activeShellIndex = shellOptions.findIndex(
     (option) => option.href === currentHref,
   );
+  const activeCallbackFormIndex = callbackFormOptions.findIndex(
+    (option) => option.href === currentCallbackFormHref,
+  );
   const activeLoginIndex = visitorOptions.findIndex(
     (option) => option.value === isSignedIn,
   );
@@ -159,11 +172,17 @@ export function ReviewShellStateMenu({
         ? storyControlCount + activeModeIndex
         : activeLoginIndex >= 0
           ? storyControlCount + modeControlCount + activeLoginIndex
-          : activeShellIndex >= 0
+          : activeCallbackFormIndex >= 0
             ? storyControlCount +
               modeControlCount +
               visitorOptions.length +
-              activeShellIndex
+              activeCallbackFormIndex
+            : activeShellIndex >= 0
+              ? storyControlCount +
+                modeControlCount +
+                visitorOptions.length +
+                callbackFormOptions.length +
+                activeShellIndex
             : 0;
   const shellGridClass =
     shellOptions.length > 2
@@ -179,16 +198,46 @@ export function ReviewShellStateMenu({
     ].join(" ");
   }
 
+  function getMenuItemClasses(isSelected: boolean) {
+    return [
+      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
+      isSelected
+        ? "bg-sky-50 text-sky-900"
+        : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
+    ].join(" ");
+  }
+
+  function getCheckClasses(isSelected: boolean) {
+    return [
+      "inline-flex w-3 shrink-0 items-center justify-center",
+      isSelected ? "text-sky-700" : "text-transparent",
+    ].join(" ");
+  }
+
   function getSettingsControlIndex(
-    group: "auth" | "shell",
+    group: "auth" | "callback-form" | "shell",
     optionIndex: number,
   ) {
-    return group === "auth"
-      ? storyControlCount + modeControlCount + optionIndex
-      : storyControlCount +
-          modeControlCount +
-          visitorOptions.length +
-          optionIndex;
+    if (group === "auth") {
+      return storyControlCount + modeControlCount + optionIndex;
+    }
+
+    if (group === "callback-form") {
+      return (
+        storyControlCount +
+        modeControlCount +
+        visitorOptions.length +
+        optionIndex
+      );
+    }
+
+    return (
+      storyControlCount +
+      modeControlCount +
+      visitorOptions.length +
+      callbackFormOptions.length +
+      optionIndex
+    );
   }
 
   function renderSettingRow({
@@ -201,7 +250,7 @@ export function ReviewShellStateMenu({
     id: string;
   }>) {
     return (
-      <div className="grid grid-cols-[56px_minmax(0,1fr)] items-center gap-3 px-1">
+      <div className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-3 px-1">
         <p
           id={id}
           className="pl-2 text-[11px] font-semibold leading-none text-slate-500"
@@ -334,19 +383,11 @@ export function ReviewShellStateMenu({
           tabIndex={optionIndex === focusIndex ? 0 : -1}
           onClick={onClose}
           onKeyDown={(event) => handleItemKeyDown(event, optionIndex)}
-          className={[
-            "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-            isSelected
-              ? "bg-sky-50 text-sky-900"
-              : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-          ].join(" ")}
+          className={getMenuItemClasses(isSelected)}
         >
           <span
             aria-hidden="true"
-            className={[
-              "inline-flex w-3 shrink-0 items-center justify-center",
-              isSelected ? "text-sky-700" : "text-transparent",
-            ].join(" ")}
+            className={getCheckClasses(isSelected)}
           >
             <Icon name="check" size="small" className="[&&]:size-3" />
           </span>
@@ -355,7 +396,7 @@ export function ReviewShellStateMenu({
               {display.label}
             </span>
             {option.description ? (
-              <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+              <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">
                 {option.description}
               </span>
             ) : null}
@@ -398,19 +439,11 @@ export function ReviewShellStateMenu({
               ref={(element) => {
                 itemRefs.current[index] = element;
               }}
-              className={[
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-                isGroupSelected
-                  ? "bg-sky-50 text-sky-900"
-                  : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-              ].join(" ")}
+              className={getMenuItemClasses(isGroupSelected)}
             >
               <span
                 aria-hidden="true"
-                className={[
-                  "inline-flex w-3 shrink-0 items-center justify-center",
-                  isGroupSelected ? "text-sky-700" : "text-transparent",
-                ].join(" ")}
+                className={getCheckClasses(isGroupSelected)}
               >
                 <Icon name="check" size="small" className="[&&]:size-3" />
               </span>
@@ -419,7 +452,7 @@ export function ReviewShellStateMenu({
                   {group.label}
                 </span>
                 {group.description ? (
-                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">
                     {group.description}
                   </span>
                 ) : null}
@@ -462,19 +495,11 @@ export function ReviewShellStateMenu({
                         handleItemKeyDown(event, index);
                       }
                     }}
-                    className={[
-                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-                      isSelected
-                        ? "bg-sky-50 text-sky-900"
-                        : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-                    ].join(" ")}
+                    className={getMenuItemClasses(isSelected)}
                   >
                     <span
                       aria-hidden="true"
-                      className={[
-                        "inline-flex w-3 shrink-0 items-center justify-center",
-                        isSelected ? "text-sky-700" : "text-transparent",
-                      ].join(" ")}
+                      className={getCheckClasses(isSelected)}
                     >
                       <Icon name="check" size="small" className="[&&]:size-3" />
                     </span>
@@ -533,19 +558,11 @@ export function ReviewShellStateMenu({
               ref={(element) => {
                 itemRefs.current[index] = element;
               }}
-              className={[
-                "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-                isSelected
-                  ? "bg-sky-50 text-sky-900"
-                  : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-              ].join(" ")}
+              className={getMenuItemClasses(isSelected)}
             >
               <span
                 aria-hidden="true"
-                className={[
-                  "inline-flex w-3 shrink-0 items-center justify-center",
-                  isSelected ? "text-sky-700" : "text-transparent",
-                ].join(" ")}
+                className={getCheckClasses(isSelected)}
               >
                 <Icon name="check" size="small" className="[&&]:size-3" />
               </span>
@@ -554,7 +571,7 @@ export function ReviewShellStateMenu({
                   {display.label}
                 </span>
                 {option.description ? (
-                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+                  <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">
                     {option.description}
                   </span>
                 ) : null}
@@ -597,19 +614,11 @@ export function ReviewShellStateMenu({
                         handleItemKeyDown(event, index);
                       }
                     }}
-                    className={[
-                      "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-                      isChildSelected
-                        ? "bg-sky-50 text-sky-900"
-                        : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-                    ].join(" ")}
+                    className={getMenuItemClasses(isChildSelected)}
                   >
                     <span
                       aria-hidden="true"
-                      className={[
-                        "inline-flex w-3 shrink-0 items-center justify-center",
-                        isChildSelected ? "text-sky-700" : "text-transparent",
-                      ].join(" ")}
+                      className={getCheckClasses(isChildSelected)}
                     >
                       <Icon name="check" size="small" className="[&&]:size-3" />
                     </span>
@@ -648,19 +657,11 @@ export function ReviewShellStateMenu({
             tabIndex={index === focusIndex ? 0 : -1}
             onClick={onClose}
             onKeyDown={(event) => handleItemKeyDown(event, index)}
-            className={[
-              "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20",
-              isSelected
-                ? "bg-sky-50 text-sky-900"
-                : "text-slate-600 hover:bg-sky-50 hover:text-sky-900 focus-visible:bg-sky-50 focus-visible:text-sky-900",
-            ].join(" ")}
+            className={getMenuItemClasses(isSelected)}
           >
             <span
               aria-hidden="true"
-              className={[
-                "inline-flex w-3 shrink-0 items-center justify-center",
-                isSelected ? "text-sky-700" : "text-transparent",
-              ].join(" ")}
+              className={getCheckClasses(isSelected)}
             >
               <Icon name="check" size="small" className="[&&]:size-3" />
             </span>
@@ -669,7 +670,7 @@ export function ReviewShellStateMenu({
                 {display.label}
               </span>
               {option.description ? (
-                <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-500">
+                <span className="mt-0.5 block text-[11px] font-normal leading-snug text-slate-400">
                   {option.description}
                 </span>
               ) : null}
@@ -691,7 +692,7 @@ export function ReviewShellStateMenu({
       role="menu"
       aria-orientation="vertical"
       aria-labelledby={labelledBy}
-      className="absolute left-0 top-full z-50 mt-2 min-w-[320px] rounded-2xl border border-slate-200 bg-white px-2 pb-2 pt-3 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5"
+      className="pointer-events-auto absolute left-1/2 top-full z-50 mt-2 w-[calc(100vw-32px)] max-w-[360px] -translate-x-1/2 rounded-2xl border border-slate-200 bg-white px-2 pb-2 pt-3 shadow-[0_16px_40px_rgba(15,23,42,0.12),0_4px_14px_rgba(15,23,42,0.06)] ring-1 ring-black/5 sm:w-[360px]"
     >
       {storyOptions.length > 0 ? (
         <div
@@ -776,6 +777,47 @@ export function ReviewShellStateMenu({
                         >
                           {option.label}
                         </button>
+                      );
+                    })}
+                  </div>
+                ),
+              })
+            : null}
+          {callbackFormOptions.length > 0
+            ? renderSettingRow({
+                heading: callbackFormHeading,
+                id: "review-shell-callback-form-menu-heading",
+                children: (
+                  <div
+                    aria-labelledby="review-shell-callback-form-menu-heading"
+                    className="grid grid-cols-2 gap-0.5 rounded-[11px] bg-slate-100 p-0.5"
+                  >
+                    {callbackFormOptions.map((option, optionIndex) => {
+                      const index = getSettingsControlIndex(
+                        "callback-form",
+                        optionIndex,
+                      );
+                      const isSelected =
+                        option.href === currentCallbackFormHref;
+
+                      return (
+                        <Link
+                          key={option.id}
+                          ref={(element) => {
+                            itemRefs.current[index] = element;
+                          }}
+                          href={option.href}
+                          role="menuitemradio"
+                          aria-checked={isSelected}
+                          tabIndex={index === focusIndex ? 0 : -1}
+                          onClick={onClose}
+                          onKeyDown={(event) =>
+                            handleItemKeyDown(event, index)
+                          }
+                          className={getSegmentClasses(isSelected)}
+                        >
+                          {option.label}
+                        </Link>
                       );
                     })}
                   </div>

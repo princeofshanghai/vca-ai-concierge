@@ -1100,6 +1100,67 @@ body {
   will-change: stroke-dasharray, stroke-dashoffset;
 }
 
+.chat-voice-waveform {
+  --chat-voice-waveform-color: var(--color-action);
+
+  display: inline-flex;
+  height: 28px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: var(--chat-voice-waveform-color);
+  transition: color var(--design-motion-duration-base)
+    var(--design-motion-easing-standard);
+}
+
+.chat-voice-waveform[data-tone="agent"] {
+  --chat-voice-waveform-color: var(--figma-color-accent-5-color-accent-5);
+}
+
+.chat-voice-waveform-bar {
+  --chat-voice-bar-base: 8px;
+
+  display: block;
+  width: 3px;
+  height: var(--chat-voice-bar-base);
+  border-radius: var(--design-rounded-round);
+  background: currentColor;
+  opacity: 0.88;
+  transform-origin: center;
+  transition:
+    height var(--design-motion-duration-base)
+      var(--design-motion-easing-standard),
+    opacity var(--design-motion-duration-base)
+      var(--design-motion-easing-standard);
+}
+
+.chat-voice-waveform[data-state="idle"] .chat-voice-waveform-bar {
+  --chat-voice-bar-base: 8px;
+  opacity: 0.55;
+}
+
+.chat-voice-waveform[data-state="thinking"] .chat-voice-waveform-bar {
+  --chat-voice-bar-base: 10px;
+  animation: chat-voice-thinking-pulse 1200ms
+    var(--design-motion-easing-standard) infinite;
+  animation-delay: calc(var(--chat-voice-bar-index) * 65ms);
+}
+
+.chat-voice-waveform[data-state="listening"] .chat-voice-waveform-bar {
+  --chat-voice-bar-base: 18px;
+  animation: chat-voice-user-wave 820ms
+    var(--design-motion-easing-standard) infinite;
+  animation-delay: calc(var(--chat-voice-bar-index) * 56ms);
+}
+
+.chat-voice-waveform[data-state="speaking"] .chat-voice-waveform-bar {
+  --chat-voice-bar-base: 16px;
+  animation: chat-voice-agent-wave 1120ms
+    var(--design-motion-easing-standard) infinite;
+  animation-delay: calc(var(--chat-voice-bar-index) * 72ms);
+}
+
 .chat-side-panel-layout {
   --design-layout-side-panel-padding-inline: var(--design-spacing-xxxl);
   --design-layout-schedule-panel-padding-inline: var(
@@ -1193,6 +1254,49 @@ body {
   to {
     grid-template-rows: 1fr;
     opacity: 1;
+  }
+}
+
+@keyframes chat-voice-thinking-pulse {
+  0%,
+  100% {
+    height: 8px;
+    opacity: 0.42;
+  }
+
+  50% {
+    height: 14px;
+    opacity: 0.92;
+  }
+}
+
+@keyframes chat-voice-user-wave {
+  0%,
+  100% {
+    height: 8px;
+  }
+
+  28% {
+    height: 24px;
+  }
+
+  56% {
+    height: 13px;
+  }
+}
+
+@keyframes chat-voice-agent-wave {
+  0%,
+  100% {
+    height: 10px;
+  }
+
+  34% {
+    height: 18px;
+  }
+
+  68% {
+    height: 24px;
   }
 }
 
@@ -1652,6 +1756,7 @@ html.pcp-background-trays-slide::view-transition-new(
 	  .chat-response-attachment,
 	  .chat-thinking-text,
 	  .chat-stream-word,
+	  .chat-voice-waveform-bar,
 	  .composer-stop-ring,
 	  .composer-stop-ring-arc {
 	    animation: none;

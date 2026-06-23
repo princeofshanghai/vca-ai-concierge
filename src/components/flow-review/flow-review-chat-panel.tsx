@@ -31,8 +31,11 @@ import {
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
+import {
+  EntryLixLeadFormScreen,
+  EntryLixSuccessScreen,
+} from "@/components/onboarding/entry-lix-test-screen";
 import { Pill } from "@/components/primitives/pill";
-import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
 import { Tag } from "@/components/primitives/tag";
 import { TextArea } from "@/components/primitives/text-area";
 import { TextInput } from "@/components/primitives/text-input";
@@ -72,7 +75,8 @@ export type HighValueRecommendationState =
 export type MediumAvailableHandoffState =
   | "initial"
   | "connecting"
-  | "connected";
+  | "connected"
+  | "unavailable";
 
 const MATCHING_DELAY_MS = 900;
 const BOOKING_DELAY_MS = 550;
@@ -128,10 +132,15 @@ export type HighValueMatchCardPreviewProps = Readonly<{
 
 export type MediumAvailableHandoffPreviewProps = Readonly<{
   state?: MediumAvailableHandoffState;
+  bookedMeeting?: BookedMeeting | null;
+  onBookTime?: () => void;
+  onRequestCallback?: () => void;
 }>;
 
 type SchedulePanelVisualState = "default" | "confirming";
 type SchedulePanelInitialScrollPosition = "top" | "footer";
+export type CallbackRequestPanelState = "form" | "success";
+type FlowReviewSidePanel = "schedule" | "callback" | null;
 
 type SchedulePanelProps = Readonly<{
   visualState?: SchedulePanelVisualState;
@@ -402,12 +411,18 @@ function AvailabilityVariant({
 }
 
 function MediumAvailableHandoff({
+  bookedMeeting,
   step,
   state,
+  onBookTime,
+  onRequestCallback,
   onStartChat,
 }: {
+  bookedMeeting?: BookedMeeting | null;
   step: FlowReviewAvailabilityStep;
   state: MediumAvailableHandoffState;
+  onBookTime: () => void;
+  onRequestCallback: () => void;
   onStartChat: () => void;
 }) {
   const variant = step.variants[0];
@@ -424,14 +439,55 @@ function MediumAvailableHandoff({
         className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text"
       >
         {state === "connecting" ? (
-          <div className="flex items-center gap-md">
-            <ProgressIndicatorCircular
-              aria-label="Connecting"
-              size={20}
-              type="indeterminate"
-            />
-            <h2 className="text-heading-md">Connecting you now</h2>
+          <div className="space-y-sm">
+            <div className="flex items-center gap-md">
+              <MatchingEntityStack />
+              <h2 className="text-heading-md">Connecting you now...</h2>
+            </div>
+            <p className="text-body-sm-open text-text-meta">
+              This can take up to 3 minutes.
+            </p>
           </div>
+        ) : null}
+        {state === "unavailable" && bookedMeeting ? (
+          <>
+            <SpecialistHeader
+              title={getBookedMeetingTitle(bookedMeeting)}
+              booked
+            />
+            <BookedMeetingDetails meeting={bookedMeeting} />
+          </>
+        ) : null}
+        {state === "unavailable" ? (
+          bookedMeeting ? null : (
+            <>
+              <div className="space-y-xs">
+                <h2 className="text-heading-md">
+                  Live chat is unavailable right now
+                </h2>
+                <p className="text-body-sm-open text-text-meta">
+                  Book a time or have someone call you back.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-sm">
+                <Button
+                  size="small"
+                  className="px-pill-padding-inline"
+                  onClick={onBookTime}
+                >
+                  Book a time
+                </Button>
+                <Button
+                  size="small"
+                  variant="secondary"
+                  className="px-pill-padding-inline"
+                  onClick={onRequestCallback}
+                >
+                  Request call back
+                </Button>
+              </div>
+            </>
+          )
         ) : null}
         {state === "connected" ? (
           <div className="flex items-center gap-sm">
@@ -488,6 +544,9 @@ function MediumAvailableHandoff({
 }
 
 export function MediumAvailableHandoffPreview({
+  bookedMeeting,
+  onBookTime = () => {},
+  onRequestCallback = () => {},
   state = "initial",
 }: MediumAvailableHandoffPreviewProps) {
   const availabilityStep = getMediumFlowReview("available").steps.find(
@@ -500,10 +559,38 @@ export function MediumAvailableHandoffPreview({
 
   return (
     <MediumAvailableHandoff
+      bookedMeeting={bookedMeeting}
       step={availabilityStep}
       state={state}
+      onBookTime={onBookTime}
+      onRequestCallback={onRequestCallback}
       onStartChat={() => {}}
     />
+  );
+}
+
+export function CallbackRequestPanel({
+  state,
+  onBack,
+  onDone,
+  onSubmit,
+}: Readonly<{
+  state: CallbackRequestPanelState;
+  onBack: () => void;
+  onDone: () => void;
+  onSubmit: () => void;
+}>) {
+  return (
+    <ChatSidePanel onBack={onBack}>
+      {state === "form" ? (
+        <EntryLixLeadFormScreen title="Request call back" onSubmit={onSubmit} />
+      ) : (
+        <EntryLixSuccessScreen
+          onDone={onDone}
+          showChatWithAiAction={false}
+        />
+      )}
+    </ChatSidePanel>
   );
 }
 
@@ -568,10 +655,6 @@ function isMediumScheduledStep(step: FlowReviewStep) {
     step.variants.length === 1 &&
     step.variants[0]?.id === "medium-scheduled"
   );
-}
-
-function hasMediumScheduledHandoff(flow: FlowReview) {
-  return flow.steps.some(isMediumScheduledStep);
 }
 
 export function ScheduledSpecialistCard({
@@ -953,12 +1036,13 @@ export function FlowReviewChatPanel({
   const [bookedMeeting, setBookedMeeting] = useState<BookedMeeting | null>(
     null,
   );
+  const [activeSidePanel, setActiveSidePanel] =
+    useState<FlowReviewSidePanel>(null);
+  const [callbackRequestPanelState, setCallbackRequestPanelState] =
+    useState<CallbackRequestPanelState>("form");
   const [hasChatBodyScrolled, setHasChatBodyScrolled] = useState(false);
   const isHighValueFlow = flow.id === "high";
-  const isMediumScheduledFlow = hasMediumScheduledHandoff(flow);
-  const isScheduledSpecialistFlow = isHighValueFlow || isMediumScheduledFlow;
-  const isSchedulePanelOpen =
-    isScheduledSpecialistFlow && scheduledSpecialistState === "scheduling";
+  const isSidePanelOpen = activeSidePanel !== null;
   const shellVariant = variant;
   const {
     hasLatestBelow,
@@ -966,7 +1050,7 @@ export function FlowReviewChatPanel({
     scrollToLatest,
   } = useChatLatestMessageAnchor({
     scrollRef: chatBodyRef,
-    contentKey: `${flow.id}:${isSchedulePanelOpen}:${scheduledSpecialistState}:${mediumAvailableHandoffState}`,
+    contentKey: `${flow.id}:${activeSidePanel}:${callbackRequestPanelState}:${scheduledSpecialistState}:${mediumAvailableHandoffState}`,
   });
   const chatHeaderIdentity = useMemo<ChatHeaderIdentity | null>(
     () =>
@@ -1035,17 +1119,26 @@ export function FlowReviewChatPanel({
 
   function handleScheduleCall() {
     setScheduledSpecialistState("scheduling");
+    setActiveSidePanel("schedule");
     onSidePanelOpenChange?.(true);
   }
 
   function handleBackToChat() {
-    setScheduledSpecialistState("matched");
+    if (scheduledSpecialistState === "scheduling") {
+      setScheduledSpecialistState("matched");
+    }
+
+    setActiveSidePanel(null);
     onSidePanelOpenChange?.(false);
   }
 
   function handleBookMeeting(meeting: BookedMeeting) {
     setBookedMeeting(meeting);
-    setScheduledSpecialistState("booked");
+    if (scheduledSpecialistState === "scheduling") {
+      setScheduledSpecialistState("booked");
+    }
+
+    setActiveSidePanel(null);
     onSidePanelOpenChange?.(false);
   }
 
@@ -1063,6 +1156,27 @@ export function FlowReviewChatPanel({
 
   function handleStartMediumLiveChat() {
     setMediumAvailableHandoffState("connecting");
+  }
+
+  function handleBookMediumUnavailableTime() {
+    setActiveSidePanel("schedule");
+    onSidePanelOpenChange?.(true);
+  }
+
+  function handleRequestMediumCallback() {
+    setCallbackRequestPanelState("form");
+    setActiveSidePanel("callback");
+    onSidePanelOpenChange?.(true);
+  }
+
+  function handleCallbackRequestSubmit() {
+    setCallbackRequestPanelState("success");
+  }
+
+  function handleCallbackRequestDone() {
+    setCallbackRequestPanelState("form");
+    setActiveSidePanel(null);
+    onSidePanelOpenChange?.(false);
   }
 
   function renderReviewStep(step: FlowReviewStep, index: number) {
@@ -1100,8 +1214,11 @@ export function FlowReviewChatPanel({
       return (
         <MediumAvailableHandoff
           key={`${step.id}-${mediumAvailableHandoffState}`}
+          bookedMeeting={bookedMeeting}
           step={step}
           state={mediumAvailableHandoffState}
+          onBookTime={handleBookMediumUnavailableTime}
+          onRequestCallback={handleRequestMediumCallback}
           onStartChat={handleStartMediumLiveChat}
         />
       );
@@ -1113,10 +1230,10 @@ export function FlowReviewChatPanel({
   const thread = (
     <ChatThread
       aria-label={`${flow.label} flow conversation`}
-      className={isSchedulePanelOpen ? "chat-side-panel-thread" : undefined}
+      className={isSidePanelOpen ? "chat-side-panel-thread" : undefined}
     >
       {flow.steps.map(renderReviewStep)}
-      {isSchedulePanelOpen ? (
+      {isSidePanelOpen ? (
         <div aria-hidden="true" className="h-lg shrink-0" />
       ) : null}
     </ChatThread>
@@ -1125,7 +1242,7 @@ export function FlowReviewChatPanel({
   return (
     <ChatPanel
       variant={shellVariant}
-      className={[isSchedulePanelOpen && "md:!w-full", className]
+      className={[isSidePanelOpen && "md:!w-full", className]
         .filter(Boolean)
         .join(" ")}
     >
@@ -1139,14 +1256,26 @@ export function FlowReviewChatPanel({
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
       />
-      {isSchedulePanelOpen ? (
+      {isSidePanelOpen ? (
         <ChatSidePanelLayout
           chatBodyRef={chatBodyRef}
           history={thread}
           onChatBodyScroll={handleChatBodyScroll}
           onJumpToLatest={scrollToLatest}
           sidePanel={
-            <SchedulePanel onBack={handleBackToChat} onBook={handleBookMeeting} />
+            activeSidePanel === "schedule" ? (
+              <SchedulePanel
+                onBack={handleBackToChat}
+                onBook={handleBookMeeting}
+              />
+            ) : (
+              <CallbackRequestPanel
+                state={callbackRequestPanelState}
+                onBack={handleBackToChat}
+                onDone={handleCallbackRequestDone}
+                onSubmit={handleCallbackRequestSubmit}
+              />
+            )
           }
           showJumpToLatest={hasLatestBelow}
           variant={variant}
@@ -1164,6 +1293,7 @@ export function FlowReviewChatPanel({
           <ChatComposer
             variant={variant}
             showTopDivider={hasChatBodyScrolled}
+            showVoiceMode={false}
             className="pointer-events-none"
             inputProps={{
               disabled: true,

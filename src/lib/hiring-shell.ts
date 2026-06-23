@@ -25,5 +25,5 @@ export function getHiringShellMode(
     return "hybrid";
   }
 
-  return "hybrid";
+  return "tray";
 }

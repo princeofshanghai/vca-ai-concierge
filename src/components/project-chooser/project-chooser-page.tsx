@@ -20,7 +20,7 @@ const projectOptions: Array<{
   {
     href: "/hiring/entry-lix-test",
     label: "LTS acquisition",
-    description: "Sales agent for lead qualification",
+    description: "Sales agent for lead qualification on microsites",
     preview: {
       alt: "Preview of the LTS microsite concierge",
       objectPosition: "center top",

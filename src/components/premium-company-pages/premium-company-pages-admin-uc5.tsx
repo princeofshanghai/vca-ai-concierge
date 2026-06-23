@@ -992,7 +992,6 @@ export function AdminUc5AgentPanel({
             onStopResponse={handleStopAssistantResponse}
             sendDisabled={isAssistantBusy}
             showAttachAction={false}
-            showDictationAction={false}
             showTopDivider
             showVoiceMode={false}
             variant="collapsed"
@@ -1030,7 +1029,6 @@ function AdminAssistantStartSurface({
             }}
             onSend={onSend}
             showAttachAction={false}
-            showDictationAction={false}
             showVoiceMode={false}
             variant="collapsed"
           />

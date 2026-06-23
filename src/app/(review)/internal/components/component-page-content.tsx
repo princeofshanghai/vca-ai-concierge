@@ -11,7 +11,6 @@ import {
   ChatThinkingMessage,
   ChatThread,
   Prompt,
-  RecommendationCard,
 } from "@/components/chat/chat-ui";
 import {
   HighValueMatchCardPreview,
@@ -120,6 +119,7 @@ import {
   SharedShellHiringMicrositeDemo,
   SharedShellPremiumSurveyDemo,
   SharedSidePanelDemo,
+  SharedVoiceModeDemo,
   VcaFabPresenceBadgeExplorationPreview,
   VcaFabReviewPreview,
   VcaFabStatesPreview,
@@ -307,6 +307,7 @@ const mediumAvailableHandoffStates: ReadonlyArray<
   { label: "Available card", state: "initial" },
   { label: "Connecting", state: "connecting" },
   { label: "Connected", state: "connected" },
+  { label: "Unavailable", state: "unavailable" },
 ];
 
 const highValueBookingPanelStates = [
@@ -920,6 +921,38 @@ function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SharedVoiceModePage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection
+        title="Demo"
+        description="A click-through mock for the composer-only voice layer. The transcript and cards remain in the normal chat thread while the composer handles listening, thinking, speaking, interruption, and idle voice states."
+      >
+        <SharedVoiceModeDemo />
+      </PreviewSection>
+      <PreviewSection title="Production notes">
+        <div className="max-w-[48rem] space-y-md rounded-md border border-border-faint bg-background-neutral-soft p-xl text-body-sm-open text-text-meta">
+          <p>
+            This prototype mocks speech-to-text with a scripted transcript and
+            uses browser speech synthesis as the audio fallback. Production
+            should use streaming STT and a brand-tuned TTS voice.
+          </p>
+          <p>
+            The prototype starts audio when visible text begins streaming and
+            paces the text to feel synchronized. Production should stream both
+            channels together and target sub-300ms audio cutoff for barge-in.
+          </p>
+          <p>
+            Structured cards render silently. The assistant should always speak
+            a short framing sentence first, then let cards appear visually
+            without reading their contents aloud.
+          </p>
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SharedPromptsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
@@ -956,11 +989,6 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedActionCardDemo />
       </PreviewSection>
-      <PreviewSection title="Shared pattern">
-        <ChatThreadReferenceFrame>
-          <RecommendationCard />
-        </ChatThreadReferenceFrame>
-      </PreviewSection>
 
       <PreviewSection title="Hiring examples">
         <PreviewMomentStack>
@@ -988,12 +1016,6 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             </PreviewMoment>
           ))}
         </PreviewMomentStack>
-      </PreviewSection>
-
-      <PreviewSection title="Premium examples">
-        <ChatThreadReferenceFrame>
-          <PremiumProductRecommendationCard />
-        </ChatThreadReferenceFrame>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1063,7 +1085,6 @@ function SharedInterimStatePage({ item }: Readonly<{ item: ComponentNavItem }>) 
                 placeholder: "Send a message",
               }}
               showAttachAction={false}
-              showDictationAction={false}
             />
           </ChatPanel>
         </ChatShellContainerPreview>
@@ -1099,7 +1120,6 @@ function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                 placeholder: "Send a message",
               }}
               showAttachAction={false}
-              showDictationAction={false}
             />
             <IdleSessionPrompt
               title="Still there?"
@@ -2886,6 +2906,8 @@ export function ComponentPageContent({
       return <SharedEndChatCsatPage item={item} />;
     case "shared-composer":
       return <SharedComposerPage item={item} />;
+    case "shared-voice-mode":
+      return <SharedVoiceModePage item={item} />;
     case "shared-prompts":
       return <SharedPromptsPage item={item} />;
     case "shared-action-card":

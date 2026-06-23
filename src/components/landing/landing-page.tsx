@@ -50,7 +50,7 @@ export function LandingPage({
   homeHref = "/hiring",
   openContactSalesOnLoad = false,
   reviewFlow,
-  shellMode = "default",
+  shellMode = "tray",
 }: LandingPageProps) {
   const router = useRouter();
   const isReviewFlow = Boolean(reviewFlow);
@@ -300,7 +300,7 @@ export function LandingPage({
       return;
     }
 
-    if (!isChatConversationStarted) {
+    if (!isReviewFlow && !isChatConversationStarted) {
       closeChat();
       return;
     }
@@ -475,7 +475,9 @@ export function LandingPage({
           identity={trayIdentity}
           inert={isChatTrayOpeningBridgeActive}
           onOpen={openChat}
-          onVariantToggle={isHybridShell ? undefined : openChatExpanded}
+          onVariantToggle={
+            isHybridShell || isPersistentTrayShell ? undefined : openChatExpanded
+          }
           openActionPosition={
             isPersistentTrayShell ? "after-variant" : undefined
           }
@@ -539,7 +541,7 @@ export function LandingPage({
                   dockActionPosition={
                     isPersistentTrayShell ? "after-variant" : undefined
                   }
-                  showCloseAction={!isPersistentTrayShell}
+                  showCloseAction
                   onHeaderIdentityChange={setTrayIdentity}
                   onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
@@ -559,7 +561,7 @@ export function LandingPage({
                   dockActionPosition={
                     isPersistentTrayShell ? "after-variant" : undefined
                   }
-                  showCloseAction={!isPersistentTrayShell}
+                  showCloseAction
                   onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}

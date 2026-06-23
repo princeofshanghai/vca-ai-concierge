@@ -2,6 +2,9 @@
 
 import Image from "next/image";
 import {
+  useCallback,
+  useEffect,
+  useRef,
   useState,
   type CSSProperties,
   type MouseEventHandler,
@@ -25,6 +28,7 @@ import {
   ChatTray,
   Prompt,
   RecommendationCard,
+  type ChatComposerVoiceState,
   type ChatFeedbackReason,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
@@ -33,9 +37,12 @@ import {
   ChatSidePanelLayout,
 } from "@/components/chat/chat-side-panel";
 import {
+  CallbackRequestPanel,
   HighValueMatchCardPreview,
   MediumAvailableHandoffPreview,
+  SchedulePanel,
   type BookedMeeting,
+  type CallbackRequestPanelState,
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
 } from "@/components/flow-review/flow-review-chat-panel";
@@ -126,6 +133,8 @@ type NavLinkItemDemoState = NavLinkItemHorizontalVisualState;
 type TabItemDemoState = TabItemHorizontalVisualState;
 type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
 type SidePanelDemoView = "panel" | "shell";
+type SalesCardDemoMoment = "specialist" | "live";
+type SalesCardDemoSidePanel = "schedule" | "callback" | null;
 type ShellDemoVersion = "dismissable" | "persistent" | "hybrid";
 type ShellDemoDevice = "desktop" | "mobile";
 type ShellDemoState = "closed" | "tray" | "panel";
@@ -196,6 +205,7 @@ const mediumAvailableHandoffStates: ReadonlyArray<
   { label: "Available card", state: "initial" },
   { label: "Connecting", state: "connecting" },
   { label: "Connected", state: "connected" },
+  { label: "Unavailable", state: "unavailable" },
 ];
 
 const buttonStates: ReadonlyArray<DemoOption<ButtonDemoState>> = [
@@ -245,29 +255,27 @@ const tabItemTones: ReadonlyArray<DemoOption<TabItemHorizontalTone>> = [
 
 const chatContextOptions: ReadonlyArray<DemoOption<ComponentLibraryContext>> = [
   { label: "Mobile", value: "mobile" },
-  { label: "Desktop collapsed", value: "collapsed" },
-  { label: "Desktop expanded", value: "expanded" },
+  { label: "Desktop", value: "collapsed" },
 ];
 
 const chatContextDisplayOptions: ReadonlyArray<
   DemoOption<ComponentLibraryContext> & Readonly<{ icon: IconName }>
 > = [
-  { label: "Mobile", value: "mobile", icon: "phone-handset" },
-  { label: "Desktop collapsed", value: "collapsed", icon: "responsive" },
-  { label: "Desktop expanded", value: "expanded", icon: "maximize" },
+  { label: "Mobile", value: "mobile", icon: "smartphone" },
+  { label: "Desktop", value: "collapsed", icon: "monitor" },
 ];
 
 const shellDemoVersionOptions: ReadonlyArray<DemoOption<ShellDemoVersion>> = [
-  { label: "Tray (hidden)", value: "dismissable" },
   { label: "Tray (persistent)", value: "persistent" },
   { label: "Tray (hybrid)", value: "hybrid" },
+  { label: "Tray (hidden)", value: "dismissable" },
 ];
 
 const shellDemoDeviceOptions: ReadonlyArray<
   DemoOption<ShellDemoDevice> & Readonly<{ icon: IconName }>
 > = [
-  { label: "Desktop", value: "desktop", icon: "responsive" },
-  { label: "Mobile", value: "mobile", icon: "phone-handset" },
+  { label: "Desktop", value: "desktop", icon: "monitor" },
+  { label: "Mobile", value: "mobile", icon: "smartphone" },
 ];
 
 const shellDemoDesktopHeight = 820;
@@ -1030,7 +1038,7 @@ function ShellDemoSurface({
   const isPersistent = version === "persistent";
   const isHybrid = version === "hybrid";
   const canDockToTray = isPersistent || isHybrid;
-  const showCloseAction = !isPersistent;
+  const showCloseAction = true;
   const desktopShellRailClass =
     "absolute bottom-0 right-6 z-20 w-[min(calc(100%_-_48px),var(--design-layout-chat-tray-width))]";
   const panelClassName = isMobile
@@ -1064,7 +1072,9 @@ function ShellDemoSurface({
           className={trayClassName}
           title={shellTitle}
           onOpen={onOpen}
-          onVariantToggle={isMobile || isHybrid ? undefined : onOpenExpanded}
+          onVariantToggle={
+            isMobile || isHybrid || isPersistent ? undefined : onOpenExpanded
+          }
           openActionPosition={isPersistent ? "after-variant" : undefined}
           onClose={isHybrid ? onClose : undefined}
           showCloseAction={isHybrid}
@@ -1160,10 +1170,10 @@ function ShellDemoFrame({
 }
 
 export function SharedShellDemo() {
-  const [version, setVersion] = useState<ShellDemoVersion>("dismissable");
+  const [version, setVersion] = useState<ShellDemoVersion>("persistent");
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
   const [shellState, setShellState] = useState<ShellDemoState>(
-    getInitialShellDemoState("dismissable"),
+    getInitialShellDemoState("persistent"),
   );
   const [panelVariant, setPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
@@ -1615,8 +1625,8 @@ export function SharedHeaderDemo() {
   const [mode, setMode] = useState("hiring");
   const [hasLiveAgent, setHasLiveAgent] = useState(false);
   const [shellVersion, setShellVersion] =
-    useState<ShellDemoVersion>("dismissable");
-  const [isDocked, setIsDocked] = useState(false);
+    useState<ShellDemoVersion>("persistent");
+  const [isDocked, setIsDocked] = useState(true);
   const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
   const isMobile = device === "mobile";
@@ -1646,9 +1656,7 @@ export function SharedHeaderDemo() {
 
   function handleHeaderShellChange(nextShellVersion: ShellDemoVersion) {
     setShellVersion(nextShellVersion);
-    if (nextShellVersion === "dismissable") {
-      setIsDocked(false);
-    }
+    setIsDocked(nextShellVersion === "persistent");
   }
 
   function dockHeaderDemo() {
@@ -1714,9 +1722,7 @@ export function SharedHeaderDemo() {
               identity={headerIdentity}
               title={headerTitle}
               onOpen={openHeaderDemo}
-              onVariantToggle={
-                isMobile || shellVersion === "hybrid" ? undefined : () => {}
-              }
+              onVariantToggle={undefined}
               openActionPosition={isPersistent ? "after-variant" : undefined}
               onClose={shellVersion === "hybrid" ? openHeaderDemo : undefined}
               showCloseAction={shellVersion === "hybrid"}
@@ -1728,11 +1734,12 @@ export function SharedHeaderDemo() {
             identity={headerIdentity}
             title={headerTitle}
             dockActionPosition={isPersistent ? "after-variant" : undefined}
+            onClose={hasDockAction ? dockHeaderDemo : undefined}
             onMinimizeToTray={hasDockAction ? dockHeaderDemo : undefined}
             onVariantToggle={isMobile ? undefined : () => {}}
-            showCloseAction={!isPersistent}
+            showCloseAction
           />
-        ) }
+        )}
         {!shouldShowDockedTray ? (
           <div className="flex min-h-0 flex-1 items-center justify-center bg-background-neutral-soft px-xl text-center">
             <p className="max-w-[18rem] text-body-sm-open text-text-meta">
@@ -1964,7 +1971,6 @@ export function SharedComposerDemo() {
   const [state, setState] = useState("empty");
   const [showVoiceMode, setShowVoiceMode] = useState(false);
   const [showAttachAction, setShowAttachAction] = useState(true);
-  const [showDictationAction, setShowDictationAction] = useState(true);
   const [responseStopped, setResponseStopped] = useState(false);
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
   const panelVariant = getPanelVariantForContext(
@@ -2001,11 +2007,6 @@ export function SharedComposerDemo() {
             checked={showAttachAction}
             onChange={setShowAttachAction}
           />
-          <ToggleControl
-            label="Dictate"
-            checked={showDictationAction}
-            onChange={setShowDictationAction}
-          />
           <DemoDeviceControl value={device} onChange={setDevice} />
         </>
       }
@@ -2031,7 +2032,6 @@ export function SharedComposerDemo() {
           isResponding={isResponding}
           onStopResponse={() => setResponseStopped(true)}
           showAttachAction={showAttachAction}
-          showDictationAction={showDictationAction}
           showVoiceMode={showVoiceMode}
           inputProps={
             state === "draft"
@@ -2042,6 +2042,247 @@ export function SharedComposerDemo() {
                 }
               : undefined
           }
+        />
+      </ChatSurfaceDemoFrame>
+    </ContextualComponentDemoSection>
+  );
+}
+
+const voiceModeDemoTranscripts = [
+  "We need to hire about 40 roles in the next two quarters.",
+  "Actually, can I talk to someone who can help us plan this?",
+] as const;
+
+const voiceModeDemoResponses = [
+  "You are describing an urgent, high-volume hiring ramp. I can match you with a sales consultant who can help shape the first-wave plan.",
+  "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
+] as const;
+
+function getPartialVoiceDemoText(fullText: string, visibleText: string) {
+  const visibleLength = Math.min(visibleText.length, fullText.length);
+  const nextWordStart = fullText.slice(visibleLength).search(/\S/);
+  const partialStart =
+    nextWordStart < 0 ? visibleLength : visibleLength + nextWordStart;
+
+  return fullText.slice(0, Math.max(visibleLength, partialStart + 4)).trimEnd();
+}
+
+export function SharedVoiceModeDemo() {
+  const [device, setDevice] = useState<ShellDemoDevice>("desktop");
+  const [draft, setDraft] = useState("");
+  const [voiceModeOn, setVoiceModeOn] = useState(false);
+  const [voiceState, setVoiceState] = useState<ChatComposerVoiceState>("idle");
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [turnIndex, setTurnIndex] = useState(0);
+  const [userMessages, setUserMessages] = useState<ReadonlyArray<string>>([]);
+  const [assistantText, setAssistantText] = useState("");
+  const [assistantFullText, setAssistantFullText] = useState<string>(
+    voiceModeDemoResponses[0],
+  );
+  const [showThinking, setShowThinking] = useState(false);
+  const [showCard, setShowCard] = useState(false);
+  const transcriptTimerRef = useRef<number | null>(null);
+  const completionTimerRef = useRef<number | null>(null);
+  const streamTimerRef = useRef<number | null>(null);
+  const panelVariant = getPanelVariantForContext(
+    device === "mobile" ? "mobile" : "collapsed",
+  );
+
+  const clearTimers = useCallback(() => {
+    if (transcriptTimerRef.current !== null) {
+      window.clearInterval(transcriptTimerRef.current);
+      transcriptTimerRef.current = null;
+    }
+
+    if (completionTimerRef.current !== null) {
+      window.clearTimeout(completionTimerRef.current);
+      completionTimerRef.current = null;
+    }
+
+    if (streamTimerRef.current !== null) {
+      window.clearInterval(streamTimerRef.current);
+      streamTimerRef.current = null;
+    }
+  }, []);
+
+  const resetDemo = useCallback(() => {
+    clearTimers();
+    setDraft("");
+    setVoiceModeOn(false);
+    setVoiceState("idle");
+    setVoiceTranscript("");
+    setTurnIndex(0);
+    setUserMessages([]);
+    setAssistantText("");
+    setAssistantFullText(voiceModeDemoResponses[0]);
+    setShowThinking(false);
+    setShowCard(false);
+  }, [clearTimers]);
+
+  const streamAssistantResponse = useCallback(
+    (responseText: string) => {
+      const chunks = responseText.match(/\S+\s*/g) ?? [responseText];
+      let chunkIndex = 0;
+      let visibleText = "";
+
+      setAssistantFullText(responseText);
+      setAssistantText("");
+      setShowThinking(false);
+      setVoiceState("speaking");
+
+      streamTimerRef.current = window.setInterval(() => {
+        const nextChunk = chunks[chunkIndex];
+
+        if (!nextChunk) {
+          if (streamTimerRef.current !== null) {
+            window.clearInterval(streamTimerRef.current);
+            streamTimerRef.current = null;
+          }
+          setAssistantText(responseText);
+          setShowCard(true);
+          window.setTimeout(() => setVoiceState("idle"), 420);
+          return;
+        }
+
+        visibleText += nextChunk;
+        chunkIndex += 1;
+        setAssistantText(visibleText);
+      }, 145);
+    },
+    [],
+  );
+
+  const submitTranscript = useCallback(
+    (transcript: string, nextTurnIndex: number) => {
+      const responseText =
+        voiceModeDemoResponses[
+          Math.min(nextTurnIndex, voiceModeDemoResponses.length - 1)
+        ];
+
+      setUserMessages((currentMessages) => [
+        ...currentMessages,
+        transcript,
+      ]);
+      setShowThinking(true);
+      setVoiceState("thinking");
+      setTurnIndex((currentTurnIndex) =>
+        Math.max(currentTurnIndex, nextTurnIndex + 1),
+      );
+
+      completionTimerRef.current = window.setTimeout(() => {
+        completionTimerRef.current = null;
+        streamAssistantResponse(responseText);
+      }, 720);
+    },
+    [streamAssistantResponse],
+  );
+
+  const startListening = useCallback(
+    (nextTurnIndex = turnIndex) => {
+      clearTimers();
+      setVoiceModeOn(true);
+      setVoiceState("listening");
+      setVoiceTranscript("");
+      setShowThinking(false);
+      setShowCard(false);
+
+      const transcript =
+        voiceModeDemoTranscripts[
+          Math.min(nextTurnIndex, voiceModeDemoTranscripts.length - 1)
+        ];
+      const words = transcript.split(" ");
+      let wordIndex = 0;
+
+      transcriptTimerRef.current = window.setInterval(() => {
+        wordIndex += 1;
+        setVoiceTranscript(words.slice(0, wordIndex).join(" "));
+
+        if (wordIndex >= words.length) {
+          if (transcriptTimerRef.current !== null) {
+            window.clearInterval(transcriptTimerRef.current);
+            transcriptTimerRef.current = null;
+          }
+
+          completionTimerRef.current = window.setTimeout(() => {
+            completionTimerRef.current = null;
+            submitTranscript(transcript, nextTurnIndex);
+          }, 420);
+        }
+      }, 155);
+    },
+    [clearTimers, submitTranscript, turnIndex],
+  );
+
+  const interruptVoice = useCallback(() => {
+    clearTimers();
+    setAssistantText((currentText) =>
+      getPartialVoiceDemoText(assistantFullText, currentText),
+    );
+    startListening();
+  }, [assistantFullText, clearTimers, startListening]);
+
+  useEffect(() => clearTimers, [clearTimers]);
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <>
+          <Button size="small" variant="secondary" onClick={resetDemo}>
+            Reset demo
+          </Button>
+          <DemoDeviceControl value={device} onChange={setDevice} />
+        </>
+      }
+    >
+      <ChatSurfaceDemoFrame device={device} height="tall">
+        <ChatHeader title={HIRING_CONCIERGE_TITLE} showCloseAction={false} />
+        <ChatBody>
+          <ChatThread showAiDisclaimer={false}>
+            <ChatMessage>
+              Hi Jamie. I can help you understand which LinkedIn hiring
+              solution fits Northstar Health and what the next step should be.
+            </ChatMessage>
+            {userMessages.map((message, index) => (
+              <ChatMessage key={`${message}-${index}`} role="user">
+                {message}
+              </ChatMessage>
+            ))}
+            {showThinking ? <ChatThinkingMessage /> : null}
+            {assistantText ? (
+              <ChatMessage
+                aria-busy={voiceState === "speaking" || undefined}
+                streamStatus={voiceState === "speaking" ? "streaming" : "complete"}
+                streamText={assistantText}
+              >
+                {assistantFullText}
+              </ChatMessage>
+            ) : null}
+            {showCard ? (
+              <RecommendationCard
+                title="Speak with a sales consultant"
+                description="15 min. We will match you with someone who can help plan your first hiring wave."
+                primaryAction="Book a time"
+              />
+            ) : null}
+          </ChatThread>
+        </ChatBody>
+        <ChatComposer
+          variant={panelVariant}
+          inputProps={{
+            "aria-label": "Message AI Concierge during voice mode",
+            onChange: (event) => setDraft(event.currentTarget.value),
+            value: draft,
+          }}
+          onSend={() => setDraft("")}
+          onVoiceInterrupt={interruptVoice}
+          onVoiceListen={() => startListening()}
+          onVoiceModeExit={resetDemo}
+          onVoiceModeStart={() => startListening()}
+          sendDisabled={draft.trim().length === 0}
+          showVoiceMode
+          voiceModeActive={voiceModeOn}
+          voiceState={voiceState}
+          voiceTranscript={voiceTranscript}
         />
       </ChatSurfaceDemoFrame>
     </ContextualComponentDemoSection>
@@ -2086,35 +2327,75 @@ export function SharedPromptsDemo() {
 }
 
 export function SharedActionCardDemo() {
-  const [useCase, setUseCase] = useState("shared");
+  const [moment, setMoment] = useState<SalesCardDemoMoment>("specialist");
   const [context, setContext] =
     useState<ComponentLibraryContext>("collapsed");
   const [specialistState, setSpecialistState] =
     useState<SpecialistActionDemoStateId>("initial");
-  const [liveState, setLiveState] = useState<MediumAvailableHandoffState>("initial");
-  const [premiumPlanId, setPremiumPlanId] =
-    useState<PremiumPlanId>("business-suite");
+  const [liveState, setLiveState] =
+    useState<MediumAvailableHandoffState>("initial");
+  const [liveBookedMeeting, setLiveBookedMeeting] =
+    useState<BookedMeeting | null>(null);
+  const [salesCardSidePanel, setSalesCardSidePanel] =
+    useState<SalesCardDemoSidePanel>(null);
+  const [callbackRequestPanelState, setCallbackRequestPanelState] =
+    useState<CallbackRequestPanelState>("form");
   const selectedSpecialistState =
     highValueMatchCardStates.find(({ id }) => id === specialistState) ??
     highValueMatchCardStates[0];
+  const variant = getPanelVariantForContext(context);
+  const isLiveSidePanelOpen = moment === "live" && salesCardSidePanel !== null;
+  const liveHandoffPreview = (
+    <MediumAvailableHandoffPreview
+      state={liveState}
+      bookedMeeting={liveBookedMeeting}
+      onBookTime={() => setSalesCardSidePanel("schedule")}
+      onRequestCallback={() => {
+        setCallbackRequestPanelState("form");
+        setSalesCardSidePanel("callback");
+      }}
+    />
+  );
+  const liveHandoffThread = (
+    <ChatThread showAiDisclaimer={false}>{liveHandoffPreview}</ChatThread>
+  );
+
+  function resetLiveHandoffDemo() {
+    setSalesCardSidePanel(null);
+    setCallbackRequestPanelState("form");
+    setLiveBookedMeeting(null);
+  }
+
+  function handleMomentChange(nextMoment: SalesCardDemoMoment) {
+    setMoment(nextMoment);
+    resetLiveHandoffDemo();
+  }
+
+  function handleLiveStateChange(nextLiveState: MediumAvailableHandoffState) {
+    setLiveState(nextLiveState);
+    resetLiveHandoffDemo();
+  }
+
+  function handleCloseSalesCardSidePanel() {
+    setSalesCardSidePanel(null);
+  }
 
   return (
     <ComponentDemoSection
+      previewClassName={isLiveSidePanelOpen ? "w-full" : undefined}
       controls={
         <>
           <ChatContextControl value={context} onChange={setContext} />
           <SegmentedControl
-            label="Use case"
-            value={useCase}
+            label="Moment"
+            value={moment}
             options={[
-              { label: "Shared", value: "shared" },
-              { label: "Specialist", value: "specialist" },
+              { label: "Specialist recommendation", value: "specialist" },
               { label: "Live handoff", value: "live" },
-              { label: "Premium plan", value: "premium" },
             ]}
-            onChange={setUseCase}
+            onChange={handleMomentChange}
           />
-          {useCase === "specialist" ? (
+          {moment === "specialist" ? (
             <SelectControl
               label="State"
               value={specialistState}
@@ -2125,7 +2406,7 @@ export function SharedActionCardDemo() {
               onChange={setSpecialistState}
             />
           ) : null}
-          {useCase === "live" ? (
+          {moment === "live" ? (
             <SegmentedControl
               label="State"
               value={liveState}
@@ -2133,37 +2414,58 @@ export function SharedActionCardDemo() {
                 label,
                 value: state,
               }))}
-              onChange={setLiveState}
-            />
-          ) : null}
-          {useCase === "premium" ? (
-            <SelectControl
-              label="Plan"
-              value={premiumPlanId}
-              options={premiumPlans.map((plan) => ({
-                label: plan.name,
-                value: plan.id,
-              }))}
-              onChange={setPremiumPlanId}
+              onChange={handleLiveStateChange}
             />
           ) : null}
         </>
       }
     >
-      <ChatThreadContextFrame context={context}>
-        {useCase === "specialist" ? (
+      {isLiveSidePanelOpen ? (
+        <SidePanelContextFrame context={context}>
+          <ChatPanel
+            variant={variant}
+            className={cx(
+              "md:!h-full md:!w-full",
+              getMobilePanelOverrideClass(context),
+            )}
+          >
+            <ChatHeader title="Contact sales" showAiMark variant={variant} />
+            <ChatSidePanelLayout
+              history={liveHandoffThread}
+              sidePanel={
+                salesCardSidePanel === "schedule" ? (
+                  <SchedulePanel
+                    onBack={handleCloseSalesCardSidePanel}
+                    onBook={(meeting) => {
+                      setLiveBookedMeeting(meeting);
+                      setSalesCardSidePanel(null);
+                    }}
+                  />
+                ) : (
+                  <CallbackRequestPanel
+                    state={callbackRequestPanelState}
+                    onBack={handleCloseSalesCardSidePanel}
+                    onDone={handleCloseSalesCardSidePanel}
+                    onSubmit={() => setCallbackRequestPanelState("success")}
+                  />
+                )
+              }
+              variant={variant}
+            />
+          </ChatPanel>
+        </SidePanelContextFrame>
+      ) : moment === "specialist" ? (
+        <ChatThreadContextFrame context={context}>
           <HighValueMatchCardPreview
             state={selectedSpecialistState.state}
             bookedMeeting={selectedSpecialistState.bookedMeeting}
           />
-        ) : useCase === "live" ? (
-          <MediumAvailableHandoffPreview state={liveState} />
-        ) : useCase === "premium" ? (
-          <PremiumProductRecommendationCard planId={premiumPlanId} />
-        ) : (
-          <RecommendationCard />
-        )}
-      </ChatThreadContextFrame>
+        </ChatThreadContextFrame>
+      ) : (
+        <ChatThreadContextFrame context={context}>
+          {liveHandoffPreview}
+        </ChatThreadContextFrame>
+      )}
     </ComponentDemoSection>
   );
 }

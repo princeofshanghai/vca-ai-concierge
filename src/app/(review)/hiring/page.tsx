@@ -12,6 +12,7 @@ export const metadata: Metadata = createPageMetadata({
 
 type HiringPrototypePageProps = Readonly<{
   searchParams: Promise<{
+    callbackForm?: string | ReadonlyArray<string>;
     contactSales?: string | ReadonlyArray<string>;
     shell?: string | ReadonlyArray<string>;
   }>;
@@ -20,7 +21,10 @@ type HiringPrototypePageProps = Readonly<{
 export default async function HiringPrototypePage({
   searchParams,
 }: HiringPrototypePageProps) {
-  const { contactSales, shell } = await searchParams;
+  const { callbackForm, contactSales, shell } = await searchParams;
+  const callbackFormValue = Array.isArray(callbackForm)
+    ? callbackForm[0]
+    : callbackForm;
   const contactSalesValue = Array.isArray(contactSales)
     ? contactSales[0]
     : contactSales;
@@ -28,6 +32,7 @@ export default async function HiringPrototypePage({
 
   return (
     <LandingPage
+      contactSalesEntry={callbackFormValue === "off" ? "default" : "lix-test"}
       openContactSalesOnLoad={contactSalesValue === "open"}
       shellMode={shellMode}
     />
