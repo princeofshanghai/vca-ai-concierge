@@ -95,6 +95,12 @@ const hiringModeOptions = [
         label: "SDR unavailable",
         typeLabel: "Static",
       },
+      {
+        id: "medium-failed",
+        href: "/internal/flows/medium/failed",
+        label: "SDR connection failed",
+        typeLabel: "Static",
+      },
     ],
   },
   { id: "low", href: "/internal/flows/low", label: "Low intent (static)" },

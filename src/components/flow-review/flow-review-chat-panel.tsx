@@ -49,6 +49,7 @@ import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
 type FlowReviewChatPanelProps = Readonly<{
   flow: FlowReview;
+  initialMediumAvailableHandoffState?: MediumAvailableHandoffState;
   variant?: ChatPanelVariant;
   className?: string;
   onClose?: () => void;
@@ -981,6 +982,7 @@ export function HighValueSchedulePanelPreview({
 
 export function FlowReviewChatPanel({
   flow,
+  initialMediumAvailableHandoffState = "initial",
   variant = "collapsed",
   className,
   onClose,
@@ -996,7 +998,7 @@ export function FlowReviewChatPanel({
   const [scheduledSpecialistState, setScheduledSpecialistState] =
     useState<HighValueRecommendationState>("initial");
   const [mediumAvailableHandoffState, setMediumAvailableHandoffState] =
-    useState<MediumAvailableHandoffState>("initial");
+    useState<MediumAvailableHandoffState>(initialMediumAvailableHandoffState);
   const [bookedMeeting, setBookedMeeting] = useState<BookedMeeting | null>(
     null,
   );

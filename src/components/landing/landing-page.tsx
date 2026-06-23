@@ -18,7 +18,10 @@ import {
   startChatPanelViewTransition,
   useChatPanelPresence,
 } from "@/components/chat/chat-motion";
-import { FlowReviewChatPanel } from "@/components/flow-review/flow-review-chat-panel";
+import {
+  FlowReviewChatPanel,
+  type MediumAvailableHandoffState,
+} from "@/components/flow-review/flow-review-chat-panel";
 import {
   ConciergePanel,
   type ContactSalesEntry,
@@ -35,6 +38,7 @@ type LandingPageProps = Readonly<{
   homeHref?: string;
   openContactSalesOnLoad?: boolean;
   reviewFlow?: FlowReview;
+  reviewMediumHandoffState?: MediumAvailableHandoffState;
   shellMode?: HiringShellMode;
 }>;
 
@@ -50,6 +54,7 @@ export function LandingPage({
   homeHref = "/hiring",
   openContactSalesOnLoad = false,
   reviewFlow,
+  reviewMediumHandoffState,
   shellMode = "tray",
 }: LandingPageProps) {
   const router = useRouter();
@@ -530,6 +535,9 @@ export function LandingPage({
                 <FlowReviewChatPanel
                   className={chatPanelFrameClass}
                   flow={reviewFlow}
+                  initialMediumAvailableHandoffState={
+                    reviewMediumHandoffState
+                  }
                   variant={chatPanelVariant}
                   onClose={requestCloseChat}
                   onMinimizeToTray={

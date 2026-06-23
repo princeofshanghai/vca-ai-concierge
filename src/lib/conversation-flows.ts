@@ -12,7 +12,7 @@ export type LeadContext = Readonly<{
 }>;
 
 export type FlowReviewId = "high" | "medium" | "low";
-export type MediumAvailabilityMode = "available" | "unavailable";
+export type MediumAvailabilityMode = "available" | "unavailable" | "failed";
 
 export type FlowReviewMessageRole = "assistant" | "user" | "representative";
 
@@ -94,6 +94,11 @@ export const FLOW_REVIEW_NAV_ITEMS: ReadonlyArray<
     id: "medium-unavailable",
     href: "/internal/flows/medium/unavailable",
     label: "Medium intent · SDR unavailable (static)",
+  },
+  {
+    id: "medium-failed",
+    href: "/internal/flows/medium/failed",
+    label: "Medium intent · SDR connection failed (static)",
   },
   { id: "low", href: "/internal/flows/low", label: "Low intent (static)" },
 ];
@@ -458,6 +463,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
 const mediumAvailabilityVariantId: Record<MediumAvailabilityMode, string> = {
   available: "medium-live",
   unavailable: "medium-scheduled",
+  failed: "medium-live",
 };
 
 export function getMediumFlowReview(
@@ -465,15 +471,20 @@ export function getMediumFlowReview(
 ): FlowReview {
   const variantId = mediumAvailabilityVariantId[availability];
   const isAvailable = availability === "available";
+  const isFailed = availability === "failed";
 
   return {
     ...flowReviews.medium,
     title: isAvailable
       ? "Medium Flow - Available"
-      : "Medium Flow - Unavailable",
+      : isFailed
+        ? "Medium Flow - Connection Failed"
+        : "Medium Flow - Unavailable",
     description: isAvailable
       ? "A smaller team hiring conversation where a sales consultant is available now."
-      : "A smaller team hiring conversation where the next step is a scheduled sales consultant call.",
+      : isFailed
+        ? "A smaller team hiring conversation where a live handoff fails and scheduling is the fallback."
+        : "A smaller team hiring conversation where the next step is a scheduled sales consultant call.",
     steps: flowReviews.medium.steps.map((step) => {
       if (step.kind !== "availability") {
         return step;
