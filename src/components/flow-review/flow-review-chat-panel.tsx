@@ -1228,6 +1228,7 @@ export function FlowReviewChatPanel({
           </ChatBody>
           <ChatComposer
             variant={variant}
+            showAttachAction={false}
             showTopDivider={hasChatBodyScrolled}
             showVoiceMode={false}
             className="pointer-events-none"

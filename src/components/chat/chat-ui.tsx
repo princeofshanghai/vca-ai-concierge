@@ -1721,7 +1721,10 @@ export function ChatComposer({
       {...props}
       data-chat-variant={variant}
       className={cx(
-        "flex min-h-[var(--design-layout-composer-height)] shrink-0 items-end justify-center border-t px-xxl pb-[calc(var(--design-spacing-xxl)+env(safe-area-inset-bottom))] pt-lg transition-colors duration-150 ease-out md:px-xxl md:pb-xxl md:pt-lg",
+        "flex min-h-[var(--design-layout-composer-height)] shrink-0 border-t px-xxl pb-[calc(var(--design-spacing-xxl)+env(safe-area-inset-bottom))] pt-lg transition-colors duration-150 ease-out md:px-xxl md:pb-xxl md:pt-lg",
+        voiceModeActive
+          ? "flex-col items-center justify-end gap-sm"
+          : "items-end justify-center",
         showTopDivider ? "border-border-faint" : "border-transparent",
         className,
       )}
@@ -1738,86 +1741,98 @@ export function ChatComposer({
           </span>
         </button>
       ) : (
-        <div
-          ref={composerRef}
-          style={
-            voiceModeActive
-              ? undefined
-              : ({
-                  height:
-                    composerSurfaceHeight === null
-                      ? "var(--design-layout-composer-height)"
-                      : `${composerSurfaceHeight}px`,
-                } as CSSProperties)
-          }
-          className={cx(
-            "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-subtle bg-background px-md shadow-raised-faint transition-[height,border-color,box-shadow] duration-150 ease-out hover:border-border-subtle-hover focus-within:border-border-subtle-active",
-            voiceModeActive
-              ? "min-h-[112px] grid-cols-1 gap-sm rounded-md py-sm"
-              : isMultiline
-                ? "grid-cols-1 gap-sm rounded-md py-sm"
-                : cx(
-                    "items-center gap-sm rounded-round py-xs",
-                    showAttachAction
-                      ? "grid-cols-[auto_minmax(0,1fr)_auto]"
-                      : "grid-cols-[minmax(0,1fr)_auto]",
-                  ),
-          )}
-        >
+        <>
+          {voiceModeActive ? (
+            <div className="flex w-full max-w-[var(--design-layout-panel-content-max)] items-center gap-sm rounded-sm border border-[color-mix(in_srgb,var(--color-caution)_34%,transparent)] bg-[color-mix(in_srgb,var(--figma-color-caution-color-background-caution-soft)_82%,white)] px-md py-sm text-body-sm-open font-medium text-caution shadow-raised-faint">
+              <Icon
+                name="signal-caution"
+                size="small"
+                className="shrink-0"
+              />
+              <span>This is WIP (dont build)</span>
+            </div>
+          ) : null}
+          <div
+            ref={composerRef}
+            style={
+              voiceModeActive
+                ? undefined
+                : ({
+                    height:
+                      composerSurfaceHeight === null
+                        ? "var(--design-layout-composer-height)"
+                        : `${composerSurfaceHeight}px`,
+                  } as CSSProperties)
+            }
+            className={cx(
+              "relative grid w-full max-w-[var(--design-layout-panel-content-max)] border border-border-subtle bg-background px-md shadow-raised-faint transition-[height,border-color,box-shadow] duration-150 ease-out hover:border-border-subtle-hover focus-within:border-border-subtle-active",
+              voiceModeActive
+                ? "min-h-[112px] grid-cols-1 gap-sm rounded-md py-sm"
+                : isMultiline
+                  ? "grid-cols-1 gap-sm rounded-md py-sm"
+                  : cx(
+                      "items-center gap-sm rounded-round py-xs",
+                      showAttachAction
+                        ? "grid-cols-[auto_minmax(0,1fr)_auto]"
+                        : "grid-cols-[minmax(0,1fr)_auto]",
+                    ),
+            )}
+          >
             {voiceModeActive ? (
               <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-md">
-                <button
-                  type="button"
-                  aria-label={voiceActionLabel}
-                  className="inline-flex size-12 shrink-0 items-center justify-center rounded-round outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-                  onClick={() => {
-                    if (voiceState === "speaking") {
-                      onVoiceInterrupt?.();
-                      return;
-                    }
+                  <button
+                    type="button"
+                    aria-label={voiceActionLabel}
+                    className="inline-flex size-12 shrink-0 items-center justify-center rounded-round outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+                    onClick={() => {
+                      if (voiceState === "speaking") {
+                        onVoiceInterrupt?.();
+                        return;
+                      }
 
-                    onVoiceListen?.();
-                  }}
-                >
-                  <VoiceWaveform state={voiceState} />
-                </button>
-                <div className="min-w-0">
-                  <p className="text-body-xs text-text-meta">
-                    {voiceStatusLabel}
-                  </p>
-                  <p
-                    aria-live={voiceState === "listening" ? "polite" : "off"}
-                    className={cx(
-                      "mt-xxs min-h-[20px] break-words text-body-sm-open text-text",
-                      voiceTranscript.trim().length === 0 && "text-text-disabled",
-                    )}
+                      onVoiceListen?.();
+                    }}
                   >
-                    {voiceTranscript.trim().length > 0
-                      ? voiceTranscript
-                      : voiceState === "idle"
-                        ? "Ready when you are."
-                        : " "}
-                  </p>
-                </div>
-                <div className="flex items-center gap-xs">
-                  {voiceState === "speaking" ? (
-                    <button
-                      type="button"
-                      className="inline-flex h-8 shrink-0 items-center rounded-round px-sm text-body-xs text-action outline-none transition-[background-color,color] duration-150 ease-out hover:bg-action-background-transparent-hover hover:text-action-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-                      onClick={onVoiceInterrupt}
+                    <VoiceWaveform state={voiceState} />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="text-body-xs text-text-meta">
+                      {voiceStatusLabel}
+                    </p>
+                    <p
+                      aria-live={voiceState === "listening" ? "polite" : "off"}
+                      className={cx(
+                        "mt-xxs min-h-[20px] break-words text-body-sm-open text-text",
+                        voiceTranscript.trim().length === 0 &&
+                          "text-text-disabled",
+                      )}
                     >
-                      Tap to interrupt
-                    </button>
-                  ) : null}
-                  <GhostIconButton
-                    label="Exit voice mode"
-                    icon="close"
-                    size="small"
-                    touchTarget={false}
-                    onClick={onVoiceModeExit}
-                  />
+                      {voiceTranscript.trim().length > 0
+                        ? voiceTranscript
+                        : voiceState === "idle"
+                          ? "Ready when you are."
+                          : " "}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-xs">
+                    {voiceState === "speaking" ? (
+                      <button
+                        type="button"
+                        className="inline-flex h-8 shrink-0 items-center rounded-round px-sm text-body-xs text-action outline-none transition-[background-color,color] duration-150 ease-out hover:bg-action-background-transparent-hover hover:text-action-hover focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+                        onClick={onVoiceInterrupt}
+                      >
+                        Tap to interrupt
+                      </button>
+                    ) : null}
+                    <GhostIconButton
+                      label="Exit voice mode"
+                      icon="close"
+                      size="small"
+                      touchTarget={false}
+                      onClick={onVoiceModeExit}
+                    />
+                  </div>
                 </div>
-              </div>
             ) : null}
             {showAttachAction && !isMultiline && !voiceModeActive ? (
               <div className="flex shrink-0 items-center">
@@ -1872,7 +1887,8 @@ export function ChatComposer({
                 ) : null}
               </div>
             </div>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

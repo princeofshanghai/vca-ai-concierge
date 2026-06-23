@@ -1336,6 +1336,7 @@ export function ConciergePanel({
               onVoiceListen={startVoiceListening}
               onVoiceModeExit={handleVoiceModeExit}
               onVoiceModeStart={handleVoiceModeStart}
+              showAttachAction={false}
               inputProps={{
                 value: draft,
                 onChange: handleDraftChange,
