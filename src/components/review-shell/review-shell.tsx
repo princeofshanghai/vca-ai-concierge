@@ -14,7 +14,9 @@ type ReviewShellProps = Readonly<{
 export function ReviewShell({ children }: ReviewShellProps) {
   const pathname = usePathname();
   const shouldOverlapPrototype =
-    pathname?.startsWith("/premium-company-pages") ?? false;
+    pathname?.startsWith("/premium-company-pages") ||
+    pathname?.startsWith("/vca-ecosystem") ||
+    false;
 
   return (
     <ReviewShellStateProvider>

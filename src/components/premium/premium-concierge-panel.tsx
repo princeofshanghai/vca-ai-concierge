@@ -1027,6 +1027,7 @@ export function PremiumConciergePanel({
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
+        showAiMark={false}
       />
       {endFeedbackScreen ? (
         endFeedbackScreen

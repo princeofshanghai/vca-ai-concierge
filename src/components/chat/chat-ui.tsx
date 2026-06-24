@@ -38,7 +38,7 @@ import {
 } from "./chat-motion";
 
 export type ChatPanelVariant = "collapsed" | "expanded";
-export type ChatPanelSurface = "default" | "welcome";
+export type ChatPanelSurface = "default" | "welcome" | "floating-card";
 export type ChatMessageRole = "assistant" | "user" | "representative";
 export type ChatComposerVoiceState =
   | "idle"
@@ -73,9 +73,12 @@ type ChatTrayProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
   variant?: ChatPanelVariant;
   identity?: ChatHeaderIdentity | null;
   title?: ReactNode;
+  titleClassName?: string;
   badge?: boolean;
   badgeLabel?: string;
   actionSize?: GhostIconButtonSize;
+  trayHeight?: "default" | "header";
+  showAiMark?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
   onVariantToggle?: () => void;
@@ -96,6 +99,7 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   onBack?: () => void;
   onDockToggle?: () => void;
   onMinimizeToTray?: () => void;
+  onStartNewChat?: () => void;
   onVariantToggle?: () => void;
   dockActionPosition?: "before-variant" | "after-variant";
   showCloseAction?: boolean;
@@ -129,6 +133,8 @@ type ChatComposerProps = HTMLAttributes<HTMLDivElement> & {
   voiceModeActive?: boolean;
   voiceState?: ChatComposerVoiceState;
   voiceTranscript?: string;
+  forceMultiline?: boolean;
+  multilineMinHeight?: number;
 };
 
 type ChatThreadProps = HTMLAttributes<HTMLDivElement> & {
@@ -151,6 +157,8 @@ type ChatMessageProps = HTMLAttributes<HTMLDivElement> & {
   streamStatus?: ChatMessageStreamStatus;
   streamText?: string;
 };
+
+type ChatMessageContentProps = HTMLAttributes<HTMLDivElement>;
 
 type ChatResponseAttachmentProps = HTMLAttributes<HTMLDivElement> & {
   gap?: "sm" | "md";
@@ -282,6 +290,12 @@ const panelWidthClasses: Record<ChatPanelVariant, string> = {
     "[--design-layout-chat-message-assistant-max:var(--design-layout-chat-message-assistant-expanded-max)] md:h-[min(calc(100dvh_-_48px),var(--design-layout-panel-expanded-height))] md:w-[min(100%,var(--design-layout-panel-expanded-width))] md:rounded-panel",
 };
 
+const panelSurfaceClasses: Record<ChatPanelSurface, string> = {
+  default: "",
+  welcome: "",
+  "floating-card": "rounded-panel shadow-[0_12px_32px_rgba(0,0,0,0.16)]",
+};
+
 const headerActionIcon: Record<ChatPanelVariant, IconName> = {
   collapsed: "maximize",
   expanded: "minimize",
@@ -363,6 +377,7 @@ export function ChatPanel({
       className={cx(
         "h-[var(--design-layout-mobile-panel-height)] w-[var(--design-layout-mobile-panel-width)] max-w-full rounded-none text-text shadow-raised-faint transition-[width,height,border-radius] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:transition-none",
         panelWidthClasses[variant],
+        panelSurfaceClasses[surface],
         className,
       )}
     >
@@ -382,10 +397,14 @@ export function ChatTray({
   variant = "collapsed",
   identity,
   title = "Contact sales",
+  titleClassName,
   badge = false,
   badgeLabel = "New activity",
   actionSize = "medium",
+  trayHeight = "default",
+  showAiMark = true,
   className,
+  style,
   onOpen,
   onClose,
   onVariantToggle,
@@ -422,8 +441,17 @@ export function ChatTray({
   return (
     <div
       {...props}
+      style={
+        {
+          ...style,
+          "--chat-tray-height":
+            trayHeight === "header"
+              ? "var(--design-layout-panel-header-height)"
+              : "var(--design-layout-chat-tray-height)",
+        } as CSSProperties
+      }
       className={cx(
-        "inline-flex h-[var(--design-layout-chat-tray-height)] w-[min(100%,var(--design-layout-chat-tray-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-lg py-0 text-left text-text shadow-raised-faint transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
+        "inline-flex h-[var(--chat-tray-height)] w-[min(100%,var(--design-layout-chat-tray-width))] items-center gap-md rounded-t-md rounded-b-none border border-b-0 border-border-faint bg-background px-lg py-0 text-left text-text shadow-raised-faint transition-[background-color,border-color,box-shadow] duration-[var(--design-motion-duration-fast)] ease-standard motion-reduce:transition-none",
         className,
       )}
     >
@@ -440,7 +468,12 @@ export function ChatTray({
           <>
             <RepresentativeAvatar identity={identity} />
             <span className="min-w-0 inline-flex items-center gap-sm">
-              <span className="min-w-0 truncate text-heading-md text-text">
+              <span
+                className={cx(
+                  "min-w-0 truncate text-text",
+                  titleClassName ?? "text-heading-md",
+                )}
+              >
                 {identity.name}
               </span>
               {badgeIndicator}
@@ -448,20 +481,25 @@ export function ChatTray({
           </>
         ) : (
           <>
-            {identity?.type === "ai" && identity.icon ? (
+            {identity?.type === "ai" && identity.icon && showAiMark ? (
               <span
                 aria-hidden="true"
                 className="inline-flex shrink-0 items-center justify-center"
               >
                 {identity.icon}
               </span>
-            ) : (
+            ) : showAiMark ? (
               <span className="inline-flex shrink-0 items-center justify-center text-ai-icon">
                 <Icon name="signal-ai" size="small" label="AI Concierge" />
               </span>
-            )}
+            ) : null}
             <span className="min-w-0 inline-flex flex-1 items-center gap-sm">
-              <span className="min-w-0 truncate text-heading-md text-text">
+              <span
+                className={cx(
+                  "min-w-0 truncate text-text",
+                  titleClassName ?? "text-heading-md",
+                )}
+              >
                 {identity?.type === "ai" ? (identity.title ?? title) : title}
               </span>
               {badgeIndicator}
@@ -659,6 +697,7 @@ export function ChatHeader({
   onBack,
   onDockToggle,
   onMinimizeToTray,
+  onStartNewChat,
   onVariantToggle,
   dockActionPosition = "before-variant",
   showCloseAction = true,
@@ -668,7 +707,7 @@ export function ChatHeader({
   ...props
 }: ChatHeaderProps) {
   const headerIdentity: ChatHeaderIdentity | null =
-    identity ?? (showAiMark ? ({ type: "ai", title } as const) : null);
+    identity ?? (title ? ({ type: "ai", title } as const) : null);
   const dockAction =
     onDockToggle || onMinimizeToTray ? (
       <GhostIconButton
@@ -687,6 +726,14 @@ export function ChatHeader({
         onClick={onVariantToggle}
       />
     </span>
+  ) : null;
+  const startNewChatAction = onStartNewChat ? (
+    <GhostIconButton
+      label="Start new chat"
+      icon="compose"
+      size={actionSize}
+      onClick={onStartNewChat}
+    />
   ) : null;
 
   const backAction = onBack ? (
@@ -756,6 +803,7 @@ export function ChatHeader({
       <div className="flex items-center gap-0">
         {dockActionPosition === "before-variant" ? dockAction : null}
         {variantAction}
+        {startNewChatAction}
         {dockActionPosition === "after-variant" ? dockAction : null}
         {showCloseAction ? (
           <GhostIconButton
@@ -975,6 +1023,21 @@ export function ChatMessage({
         ) : null}
       </div>
     </div>
+  );
+}
+
+export function ChatMessageContent({
+  className,
+  ...props
+}: ChatMessageContentProps) {
+  return (
+    <div
+      {...props}
+      className={cx(
+        "flex flex-col gap-lg [&_a]:text-action [&_a]:transition-colors [&_a]:duration-150 [&_a]:ease-out [&_a]:hover:text-action-hover [&_a]:focus-visible:outline-none [&_a]:focus-visible:ring-4 [&_a]:focus-visible:ring-action-focus-ring [&_a]:active:text-action-active [&_li]:pl-xs [&_ol]:m-0 [&_ol]:list-decimal [&_ol]:space-y-xs [&_ol]:pl-xl [&_p]:m-0 [&_strong]:font-semibold [&_ul]:m-0 [&_ul]:list-disc [&_ul]:space-y-xs [&_ul]:pl-xl",
+        className,
+      )}
+    />
   );
 }
 
@@ -1551,6 +1614,8 @@ export function ChatComposer({
   voiceModeActive = false,
   voiceState = "idle",
   voiceTranscript = "",
+  forceMultiline = false,
+  multilineMinHeight = 104,
   ...props
 }: ChatComposerProps) {
   const composerRef = useRef<HTMLDivElement>(null);
@@ -1623,8 +1688,10 @@ export function ChatComposer({
 
       if (textarea.value.length === 0) {
         textarea.style.height = `${COMPOSER_TEXTAREA_EMPTY_HEIGHT}px`;
-        setIsMultiline(false);
-        setComposerSurfaceHeight(composerHeight);
+        setIsMultiline(forceMultiline);
+        setComposerSurfaceHeight(
+          forceMultiline ? multilineMinHeight : composerHeight,
+        );
         return;
       }
 
@@ -1643,7 +1710,8 @@ export function ChatComposer({
         singleLineWidth,
         maxHeight,
       );
-      const nextIsMultiline = singleLineHeight > COMPOSER_SINGLE_LINE_HEIGHT;
+      const nextIsMultiline =
+        forceMultiline || singleLineHeight > COMPOSER_SINGLE_LINE_HEIGHT;
       const nextHeight = measureTextareaHeight(
         textarea,
         nextIsMultiline ? contentWidth : singleLineWidth,
@@ -1660,19 +1728,28 @@ export function ChatComposer({
       const composerBorder =
         Number.parseFloat(composerStyles?.borderTopWidth ?? "") +
           Number.parseFloat(composerStyles?.borderBottomWidth ?? "") || 2;
-      const nextComposerSurfaceHeight = nextIsMultiline
+      const measuredComposerSurfaceHeight = nextIsMultiline
         ? nextHeight +
           compactActionHeight +
           multilineGap +
           multilineBlockPadding +
           composerBorder
         : composerHeight;
+      const nextComposerSurfaceHeight =
+        forceMultiline && nextIsMultiline
+          ? Math.max(measuredComposerSurfaceHeight, multilineMinHeight)
+          : measuredComposerSurfaceHeight;
 
       textarea.style.height = `${nextHeight}px`;
       setIsMultiline(nextIsMultiline);
       setComposerSurfaceHeight(nextComposerSurfaceHeight);
     },
-    [getComposerContentWidth, getSingleLineTextareaWidth],
+    [
+      forceMultiline,
+      getComposerContentWidth,
+      getSingleLineTextareaWidth,
+      multilineMinHeight,
+    ],
   );
 
   function handleTextareaChange(event: ChangeEvent<HTMLTextAreaElement>) {
@@ -1769,7 +1846,10 @@ export function ChatComposer({
               voiceModeActive
                 ? "min-h-[112px] grid-cols-1 gap-sm rounded-md py-sm"
                 : isMultiline
-                  ? "grid-cols-1 gap-sm rounded-md py-sm"
+                  ? cx(
+                      "grid-cols-1 gap-sm rounded-md py-sm",
+                      forceMultiline && "content-between",
+                    )
                   : cx(
                       "items-center gap-sm rounded-round py-xs",
                       showAttachAction

@@ -7,6 +7,7 @@ import {
   ChatHeader,
   ChatInlineFeedback,
   ChatMessage,
+  ChatMessageContent,
   ChatPanel,
   ChatThinkingMessage,
   ChatThread,
@@ -42,6 +43,7 @@ import {
 import { Pill } from "@/components/primitives/pill";
 import { PresenceBadge } from "@/components/primitives/presence-badge";
 import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
+import { Radio } from "@/components/primitives/radio";
 import {
   isSduiReactionIconAvailable,
   SduiReactionIcon,
@@ -100,11 +102,13 @@ import {
   SduiOverlayButtonIconDemo,
   SduiPillDemo,
   SduiPresenceBadgeDemo,
+  SduiRadioDemo,
   SduiTagDemo,
   SduiTabItemHorizontalDemo,
   SduiTextAreaDemo,
   SduiTextInputDemo,
   SharedActionCardDemo,
+  SharedChoiceCardDemo,
   SharedComposerDemo,
   SharedConfirmationDemo,
   SharedConfirmationVariants,
@@ -119,6 +123,7 @@ import {
   SharedShellHiringMicrositeDemo,
   SharedShellPremiumSurveyDemo,
   SharedSidePanelDemo,
+  SharedTaskStatusCardDemo,
   SharedVoiceModeDemo,
   VcaFabPresenceBadgeExplorationPreview,
   VcaFabReviewPreview,
@@ -155,6 +160,7 @@ const overlayButtonIconRows = [
 const entitySizes = [160, 128, 96, 80, 64, 48, 40, 32, 24, 16] as const;
 const promptStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
 const pillStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
+const radioStates = ["default", "hover", "active", "disabled"] as const;
 const textInputSizes = [
   { label: "Small", size: "small" },
   { label: "Large", size: "large" },
@@ -788,6 +794,17 @@ function renderPillState(
   );
 }
 
+function renderRadioState(
+  state: (typeof radioStates)[number],
+  checked = false,
+) {
+  if (state === "disabled") {
+    return <Radio checked={checked} disabled />;
+  }
+
+  return <Radio checked={checked} visualState={state} />;
+}
+
 function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
@@ -849,14 +866,14 @@ function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             <PreviewExampleHeading>Rich content</PreviewExampleHeading>
             <ChatThreadReferenceFrame>
               <ChatMessage>
-                <div className="space-y-sm">
+                <ChatMessageContent>
                   <p>Here are the fastest next steps:</p>
-                  <ul className="list-disc space-y-xs pl-lg">
+                  <ul>
                     <li>Confirm hiring volume and timeline.</li>
                     <li>Choose whether the team needs sourcing tools.</li>
                     <li>Route complex questions to a live agent.</li>
                   </ul>
-                </div>
+                </ChatMessageContent>
               </ChatMessage>
             </ChatThreadReferenceFrame>
           </PreviewMoment>
@@ -902,6 +919,12 @@ function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <PreviewMomentStack>
           <PreviewMoment>
             <PreviewExampleHeading>Empty</PreviewExampleHeading>
+            <ChatPanelReferenceFrame>
+              <ChatComposer showVoiceMode={false} sendDisabled />
+            </ChatPanelReferenceFrame>
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Voice mode button</PreviewExampleHeading>
             <ChatPanelReferenceFrame>
               <ChatComposer />
             </ChatPanelReferenceFrame>
@@ -1053,6 +1076,34 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SharedChoiceCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection
+        title="Demo"
+        description="Use Choice card when the assistant needs the visitor to pick one option from a small set before the conversation can continue."
+      >
+        <SharedChoiceCardDemo />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedTaskStatusCardPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection
+        title="Demo"
+        description="Use Task status card when the assistant is running an action and needs to show a clear in-progress or completed state."
+      >
+        <SharedTaskStatusCardDemo />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
@@ -1137,7 +1188,7 @@ function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             variant="collapsed"
             className="md:!h-full md:!w-full"
           >
-            <ChatHeader title="Contact sales" showAiMark />
+            <ChatHeader title="Contact sales" showAiMark={false} />
             <ChatBody className="opacity-20">
               <ChatThread timestamp="23:02" showAiDisclaimer={false}>
                 <ChatMessage>
@@ -2313,6 +2364,36 @@ function SduiPillPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SduiRadioPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiRadioDemo />
+      </PreviewSection>
+      <PreviewSection title="Radio states">
+        <div className="space-y-8">
+          {[
+            { label: "Unchecked", checked: false },
+            { label: "Checked", checked: true },
+          ].map(({ label, checked }) => (
+            <section key={label} className="space-y-4">
+              <PreviewExampleHeading>{label}</PreviewExampleHeading>
+              <div className="flex flex-wrap items-start gap-lg">
+                {radioStates.map((state) => (
+                  <div key={`${label}-${state}`} className="space-y-sm">
+                    <p className="text-body-xs text-text-meta">{state}</p>
+                    {renderRadioState(state, checked)}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
@@ -2944,6 +3025,10 @@ export function ComponentPageContent({
       return <SharedPromptsPage item={item} />;
     case "shared-action-card":
       return <SharedActionCardPage item={item} />;
+    case "shared-choice-card":
+      return <SharedChoiceCardPage item={item} />;
+    case "shared-task-status-card":
+      return <SharedTaskStatusCardPage item={item} />;
     case "shared-side-panel":
       return <SharedSidePanelPage item={item} />;
     case "shared-interim-state":
@@ -2986,6 +3071,8 @@ export function ComponentPageContent({
       return <SduiConfirmationPage item={item} />;
     case "sdui-pill":
       return <SduiPillPage item={item} />;
+    case "sdui-radio":
+      return <SduiRadioPage item={item} />;
     case "sdui-icon":
       return <SduiIconPage item={item} />;
     case "sdui-illustrations":

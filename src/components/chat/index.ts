@@ -7,6 +7,7 @@ export {
   ChatHeader,
   ChatInlineFeedback,
   ChatMessage,
+  ChatMessageContent,
   ChatMessageFeedback,
   ChatMessageFeedbackFlow,
   ChatPanel,

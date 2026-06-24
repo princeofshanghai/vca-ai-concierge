@@ -27,6 +27,9 @@ const PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF =
 const PREMIUM_COMPANY_PAGES_ADMIN_OLD_HREF =
   "/premium-company-pages/admin/old";
 const PREMIUM_COMPANY_PAGES_STORIES_HREF = "/premium-company-pages/stories";
+const VCA_ECOSYSTEM_HREF = "/vca-ecosystem";
+const VCA_ECOSYSTEM_ONLINE_JOBS_HREF = "/vca-ecosystem/online-jobs";
+const VCA_ECOSYSTEM_FLAGSHIP_HREF = "/vca-ecosystem/flagship";
 const TRIGGER_ID = "review-shell-state-menu-trigger";
 const HIRING_LIVE_NAV_ITEM = {
   id: "hiring-live",
@@ -142,6 +145,26 @@ const premiumCompanyPagesPlaceholderStoryLabels: Readonly<
   "1c": "Story 1c",
   "2": "Story 2",
 };
+const vcaEcosystemModeOptions = [
+  {
+    id: "vca-ecosystem-help-center",
+    href: VCA_ECOSYSTEM_HREF,
+    label: "Help center",
+    description: "Recruiter support landing page",
+  },
+  {
+    id: "vca-ecosystem-online-jobs",
+    href: VCA_ECOSYSTEM_ONLINE_JOBS_HREF,
+    label: "Online jobs",
+    description: "Jobs management landing page",
+  },
+  {
+    id: "vca-ecosystem-flagship",
+    href: VCA_ECOSYSTEM_FLAGSHIP_HREF,
+    label: "Flagship",
+    description: "LinkedIn.com member experience",
+  },
+] as const;
 const prototypeProjectOptions = [
   {
     id: "project-hiring",
@@ -161,6 +184,12 @@ const prototypeProjectOptions = [
     label: "Premium Company Pages",
     description: "Company Pages prototype",
   },
+  {
+    id: "project-vca-ecosystem",
+    href: VCA_ECOSYSTEM_HREF,
+    label: "VCA ecosystem",
+    description: "Near term VCA UI optimizations",
+  },
 ] as const;
 
 type ReviewDestination = Readonly<{
@@ -168,7 +197,12 @@ type ReviewDestination = Readonly<{
   label: string;
   matches: (pathname: string) => boolean;
   metaLabel?: string;
-  menu?: "hiring" | "premium" | "premium-company-pages" | "projects";
+  menu?:
+    | "hiring"
+    | "premium"
+    | "premium-company-pages"
+    | "projects"
+    | "vca-ecosystem";
 }>;
 
 type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
@@ -243,6 +277,18 @@ function getPrototypeMetaLabel(
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
+  }
+
+  if (pathname.startsWith(VCA_ECOSYSTEM_HREF)) {
+    if (pathname.startsWith(VCA_ECOSYSTEM_FLAGSHIP_HREF)) {
+      return "Flagship";
+    }
+
+    if (pathname.startsWith(VCA_ECOSYSTEM_ONLINE_JOBS_HREF)) {
+      return "Online jobs";
+    }
+
+    return "Help center";
   }
 
   if (pathname.startsWith("/premium-company-pages")) {
@@ -321,15 +367,20 @@ function getPrototypeDestination(
     pathname.startsWith("/premium") &&
     !pathname.startsWith("/premium-company-pages");
   const isPremiumCompanyPages = pathname.startsWith("/premium-company-pages");
+  const isVcaEcosystem = pathname.startsWith(VCA_ECOSYSTEM_HREF);
 
   return {
-    href: isPremiumCompanyPages
+    href: isVcaEcosystem
+      ? VCA_ECOSYSTEM_HREF
+      : isPremiumCompanyPages
       ? PREMIUM_COMPANY_PAGES_MEMBER_HREF
       : isPremium
         ? PREMIUM_PROTOTYPE_HREF
         : HIRING_PROTOTYPE_HREF,
     label: "Prototype",
-    matches: isPremiumCompanyPages
+    matches: isVcaEcosystem
+      ? (candidate) => candidate.startsWith(VCA_ECOSYSTEM_HREF)
+      : isPremiumCompanyPages
       ? (candidate) => candidate.startsWith("/premium-company-pages")
       : isPremium
         ? (candidate) =>
@@ -337,7 +388,9 @@ function getPrototypeDestination(
             !candidate.startsWith("/premium-company-pages")
         : (candidate) =>
             isHiringPrototypePath(candidate),
-    menu: isPremiumCompanyPages
+    menu: isVcaEcosystem
+      ? "vca-ecosystem"
+      : isPremiumCompanyPages
       ? "premium-company-pages"
       : isPremium
         ? "premium"
@@ -806,14 +859,17 @@ export function ReviewShellNav() {
             const isPremiumCompanyPagesMenu =
               destination.menu === "premium-company-pages";
             const isProjectMenu = destination.menu === "projects";
-            const modeOptions = isProjectMenu
+            const isVcaEcosystemMenu = destination.menu === "vca-ecosystem";
+            const modeOptions = isVcaEcosystemMenu
+              ? vcaEcosystemModeOptions
+              : isProjectMenu
               ? prototypeProjectOptions
               : isPremiumCompanyPagesMenu
               ? shellAwarePremiumCompanyPagesModeOptions
               : isPremiumMenu
                 ? shellAwarePremiumModeOptions
                 : shellAwareHiringModeOptions;
-            const shellOptions = isProjectMenu
+            const shellOptions = isProjectMenu || isVcaEcosystemMenu
               ? []
               : isPremiumCompanyPagesMenu
                 ? premiumCompanyPagesShellOptions
@@ -880,6 +936,8 @@ export function ReviewShellNav() {
                     currentHref={
                       isProjectMenu
                         ? pathname
+                        : isVcaEcosystemMenu
+                          ? VCA_ECOSYSTEM_HREF
                         : isPremiumCompanyPagesMenu
                           ? normalizedPremiumCompanyPagesHref
                         : isPremiumMenu
@@ -887,7 +945,10 @@ export function ReviewShellNav() {
                           : normalizedHiringHref
                     }
                     onLoginSelect={
-                      isProjectMenu || isPremiumMenu || isPremiumCompanyPagesMenu
+                      isProjectMenu ||
+                      isVcaEcosystemMenu ||
+                      isPremiumMenu ||
+                      isPremiumCompanyPagesMenu
                         ? undefined
                         : handleLoginSelect
                     }
@@ -901,7 +962,9 @@ export function ReviewShellNav() {
                         : undefined
                     }
                     modeHeading={
-                      isProjectMenu
+                      isVcaEcosystemMenu
+                        ? "VCA ecosystem"
+                        : isProjectMenu
                         ? "Choose project"
                         : isPremiumCompanyPagesMenu
                           ? "Choose view"
@@ -911,13 +974,19 @@ export function ReviewShellNav() {
                     shellOptions={shellOptions}
                     callbackFormHeading="Call back form"
                     callbackFormOptions={
-                      !isProjectMenu && !isPremiumMenu && !isPremiumCompanyPagesMenu
+                      !isProjectMenu &&
+                      !isVcaEcosystemMenu &&
+                      !isPremiumMenu &&
+                      !isPremiumCompanyPagesMenu
                         ? hiringCallbackFormOptions
                         : []
                     }
                     callbackFormCurrentHref={normalizedHiringCallbackFormHref}
                     showVisitorControls={
-                      !isProjectMenu && !isPremiumMenu && !isPremiumCompanyPagesMenu
+                      !isProjectMenu &&
+                      !isVcaEcosystemMenu &&
+                      !isPremiumMenu &&
+                      !isPremiumCompanyPagesMenu
                     }
                   />
                 </li>

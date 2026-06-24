@@ -65,8 +65,8 @@ function NavLinkItemContent({
         />
       ) : null}
       <span className="flex min-w-0 flex-col items-center justify-center gap-xxs">
-        <span className="relative inline-flex size-[var(--design-icon-size-medium)] items-center justify-center">
-          <Icon name={icon} size="medium" />
+        <span className="relative inline-flex size-5 items-center justify-center">
+          <Icon className="[&&]:size-5" name={icon} size="medium" />
           {badge ? (
             <span className="pointer-events-none absolute right-0 top-0 z-10 translate-x-1/4 -translate-y-1/4">
               <Badge

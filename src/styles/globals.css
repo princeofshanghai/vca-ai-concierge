@@ -1041,6 +1041,13 @@ body {
     var(--design-motion-easing-standard) both;
 }
 
+.task-status-card__progress-bar {
+  animation: task-status-card-progress 1500ms
+    var(--design-motion-easing-standard) both;
+  transform: scaleX(0);
+  will-change: transform;
+}
+
 .chat-thinking-text {
   color: var(--color-text-meta);
   background-image: linear-gradient(
@@ -1222,6 +1229,16 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes task-status-card-progress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
   }
 }
 
@@ -1418,8 +1435,10 @@ body {
   }
 
   .interim-loading-mark,
-  .progress-indicator-circular__spinner {
+  .progress-indicator-circular__spinner,
+  .task-status-card__progress-bar {
     animation: none;
+    transform: scaleX(1);
     will-change: auto;
   }
 }
@@ -1501,9 +1520,25 @@ body {
     var(--design-motion-easing-standard) both;
 }
 
+.chat-panel-header-dock-offset {
+  transform: translateY(
+    max(
+      0px,
+      calc(
+        100% - var(--design-layout-panel-header-height) -
+          env(safe-area-inset-top)
+      )
+    )
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chat-tray-enter {
     animation: none;
+  }
+
+  .chat-panel-header-dock-offset {
+    transform: translateY(0);
   }
 }
 
@@ -1706,6 +1741,113 @@ html.pcp-background-trays-slide::view-transition-new(
   animation-name: pcp-background-tray-slide-up;
 }
 
+.vca-ai-messaging-surface {
+  view-transition-name: vca-ai-messaging-surface;
+  contain: layout;
+}
+
+.vca-global-messaging-surface {
+  view-transition-name: vca-global-messaging-surface;
+  contain: layout;
+}
+
+html.vca-messaging-surface-transition .vca-ai-messaging-surface,
+html.vca-messaging-surface-transition .vca-ai-messaging-surface *,
+html.vca-messaging-surface-transition .vca-global-messaging-surface,
+html.vca-messaging-surface-transition .vca-global-messaging-surface * {
+  transition-duration: 0ms !important;
+}
+
+html.vca-messaging-surface-transition::view-transition-group(root),
+html.vca-messaging-surface-transition::view-transition-old(root),
+html.vca-messaging-surface-transition::view-transition-new(root) {
+  animation-duration: 0ms;
+}
+
+html.vca-messaging-surface-transition::view-transition-group(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-old(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-new(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-group(
+    vca-global-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-old(
+    vca-global-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-new(
+    vca-global-messaging-surface
+  ) {
+  animation-duration: var(--design-motion-duration-moderate);
+  animation-timing-function: var(--design-motion-easing-emphasized);
+}
+
+html.vca-messaging-surface-transition::view-transition-group(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-group(
+    vca-global-messaging-surface
+  ) {
+  overflow: clip;
+  border-radius: var(--design-rounded-sm);
+  background: var(--color-background);
+  box-shadow: var(--shadow-raised-faint);
+}
+
+html.vca-messaging-surface-transition::view-transition-image-pair(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-old(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-new(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-image-pair(
+    vca-global-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-old(
+    vca-global-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-new(
+    vca-global-messaging-surface
+  ) {
+  isolation: isolate;
+  mix-blend-mode: normal;
+}
+
+html.vca-messaging-surface-transition::view-transition-old(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-new(
+    vca-ai-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-old(
+    vca-global-messaging-surface
+  ),
+html.vca-messaging-surface-transition::view-transition-new(
+    vca-global-messaging-surface
+  ) {
+  object-fit: none;
+  object-position: top right;
+}
+
+html.vca-background-trays-slide::view-transition-old(
+    vca-global-messaging-surface
+  ) {
+  animation-name: vca-background-tray-slide-down;
+}
+
+html.vca-background-trays-slide::view-transition-new(
+    vca-global-messaging-surface
+  ) {
+  animation-name: vca-background-tray-slide-up;
+}
+
 @keyframes pcp-background-tray-slide-down {
   from {
     opacity: 1;
@@ -1719,6 +1861,30 @@ html.pcp-background-trays-slide::view-transition-new(
 }
 
 @keyframes pcp-background-tray-slide-up {
+  from {
+    opacity: 1;
+    transform: translateY(calc(100% + var(--design-spacing-md)));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vca-background-tray-slide-down {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(calc(100% + var(--design-spacing-md)));
+  }
+}
+
+@keyframes vca-background-tray-slide-up {
   from {
     opacity: 1;
     transform: translateY(calc(100% + var(--design-spacing-md)));

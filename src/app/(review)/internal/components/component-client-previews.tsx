@@ -20,9 +20,11 @@ import {
   ChatHeader,
   ChatInlineFeedback,
   ChatMessage,
+  ChatMessageContent,
   ChatMessageFeedback,
   ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatResponseAttachment,
   ChatThinkingMessage,
   ChatThread,
   ChatTray,
@@ -30,6 +32,7 @@ import {
   RecommendationCard,
   type ChatComposerVoiceState,
   type ChatFeedbackReason,
+  type ChatPanelSurface,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
 import {
@@ -52,6 +55,11 @@ import {
   InsightCard,
   type InsightCardAction,
 } from "@/components/premium-company-pages/insight-card";
+import { ChoiceCard } from "@/components/premium-company-pages/response-blocks/ChoiceCard";
+import {
+  TaskStatusCard,
+  type TaskStatusCardState,
+} from "@/components/premium-company-pages/response-blocks/TaskStatusCard";
 import {
   PremiumCompanyPagesVcaSidePanelPreview,
   type PremiumCompanyPagesVcaSidePanelPreviewKind,
@@ -96,6 +104,7 @@ import {
   PresenceBadge,
   type PresenceBadgeProps,
 } from "@/components/primitives/presence-badge";
+import { Radio, type RadioProps } from "@/components/primitives/radio";
 import { Tag, type TagProps } from "@/components/primitives/tag";
 import {
   TabItemHorizontal,
@@ -133,11 +142,16 @@ type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
 type SidePanelDemoView = "panel" | "shell";
 type SalesCardDemoScenario = "ae" | "sdr";
 type SalesCardDemoSidePanel = "schedule" | null;
-type ShellDemoVersion = "dismissable" | "persistent" | "hybrid";
+type ShellDemoVersion =
+  | "dismissable"
+  | "persistent"
+  | "hybrid"
+  | "floating-card";
 type ShellDemoDevice = "desktop" | "mobile";
 type ShellDemoState = "closed" | "tray" | "panel";
 type ShellDemoPanelRenderProps = Readonly<{
   className: string;
+  surface?: ChatPanelSurface;
   variant: ChatPanelVariant;
   onClose?: () => void;
   onMinimizeToTray?: () => void;
@@ -275,6 +289,7 @@ const chatContextDisplayOptions: ReadonlyArray<
 ];
 
 const shellDemoVersionOptions: ReadonlyArray<DemoOption<ShellDemoVersion>> = [
+  { label: "Floating card", value: "floating-card" },
   { label: "Tray (persistent)", value: "persistent" },
   { label: "Tray (hybrid)", value: "hybrid" },
   { label: "Tray (hidden)", value: "dismissable" },
@@ -979,10 +994,11 @@ function ShellDemoPanel({
   onMinimizeToTray,
   onVariantToggle,
   showCloseAction,
+  surface = "default",
   variant,
 }: ShellDemoPanelRenderProps & Readonly<{ content: ShellDemoContent }>) {
   return (
-    <ChatPanel variant={variant} className={className}>
+    <ChatPanel variant={variant} surface={surface} className={className}>
       <ChatHeader
         variant={variant}
         title={content.title}
@@ -991,6 +1007,7 @@ function ShellDemoPanel({
         onVariantToggle={onVariantToggle}
         dockActionPosition={dockActionPosition}
         showCloseAction={showCloseAction}
+        showAiMark={false}
       />
       <ChatBody>
         <ChatThread>
@@ -1046,20 +1063,27 @@ function ShellDemoSurface({
   const isMobile = device === "mobile";
   const isPersistent = version === "persistent";
   const isHybrid = version === "hybrid";
+  const isFloatingCard = version === "floating-card";
   const canDockToTray = isPersistent || isHybrid;
   const showCloseAction = true;
   const desktopShellRailClass =
     "absolute bottom-0 right-6 z-20 w-[min(calc(100%_-_48px),var(--design-layout-chat-tray-width))]";
+  const floatingCardRailClass =
+    "absolute bottom-6 right-6 z-20 w-[min(calc(100%_-_48px),var(--design-layout-panel-collapsed-width))]";
   const panelClassName = isMobile
     ? "!h-full !w-full !rounded-none md:!h-full md:!w-full md:!rounded-none"
     : panelVariant === "expanded"
       ? "md:!h-[var(--shell-demo-panel-expanded-height)] md:!w-full"
-      : "md:!h-[var(--shell-demo-panel-collapsed-height)] md:!w-full md:!rounded-t-md md:!rounded-b-none";
+      : isFloatingCard
+        ? "md:!h-[var(--shell-demo-panel-collapsed-height)] md:!w-full md:!rounded-panel"
+        : "md:!h-[var(--shell-demo-panel-collapsed-height)] md:!w-full md:!rounded-t-md md:!rounded-b-none";
   const panelPositionClass = isMobile
     ? "absolute inset-0 z-20"
     : panelVariant === "expanded"
       ? "absolute left-1/2 top-1/2 z-20 w-[min(calc(100%_-_48px),var(--design-layout-panel-expanded-width))] -translate-x-1/2 -translate-y-1/2"
-      : desktopShellRailClass;
+      : isFloatingCard
+        ? floatingCardRailClass
+        : desktopShellRailClass;
   const trayClassName = isMobile
     ? "absolute bottom-0 left-0 right-0 z-20 w-full max-w-none"
     : desktopShellRailClass;
@@ -1074,7 +1098,7 @@ function ShellDemoSurface({
           onClick={onVariantToggle}
         />
       ) : null}
-      {shellState === "tray" ? (
+      {shellState === "tray" && !isFloatingCard ? (
         <ChatTray
           variant={panelVariant}
           aria-label="Open AI Concierge chat"
@@ -1087,17 +1111,19 @@ function ShellDemoSurface({
           openActionPosition={isPersistent ? "after-variant" : undefined}
           onClose={isHybrid ? onClose : undefined}
           showCloseAction={isHybrid}
+          showAiMark={false}
+          trayHeight="header"
         />
       ) : null}
       {shellState === "panel" ? (
         <div className={panelPositionClass}>
           {renderPanel({
             className: panelClassName,
+            surface: isFloatingCard ? "floating-card" : "default",
             variant: panelVariant,
             onClose: showCloseAction ? onClose : undefined,
             onMinimizeToTray: canDockToTray ? onDock : undefined,
             onVariantToggle: isMobile ? undefined : onVariantToggle,
-            dockActionPosition: isPersistent ? "after-variant" : undefined,
             showCloseAction,
           })}
         </div>
@@ -1636,6 +1662,7 @@ export function SharedHeaderDemo() {
   const [shellVersion, setShellVersion] =
     useState<ShellDemoVersion>("persistent");
   const [isDocked, setIsDocked] = useState(true);
+  const [showAiMark, setShowAiMark] = useState(false);
   const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
   const isMobile = device === "mobile";
@@ -1696,6 +1723,13 @@ export function SharedHeaderDemo() {
             checked={hasLiveAgent}
             onChange={handleLiveAgentChange}
           />
+          {!hasLiveAgent ? (
+            <ToggleControl
+              label="AI icon"
+              checked={showAiMark}
+              onChange={setShowAiMark}
+            />
+          ) : null}
           <SegmentedControl
             label="Shell"
             value={shellVersion}
@@ -1735,6 +1769,8 @@ export function SharedHeaderDemo() {
               openActionPosition={isPersistent ? "after-variant" : undefined}
               onClose={shellVersion === "hybrid" ? openHeaderDemo : undefined}
               showCloseAction={shellVersion === "hybrid"}
+              showAiMark={showAiMark}
+              trayHeight="header"
             />
           </div>
         ) : (
@@ -1742,11 +1778,11 @@ export function SharedHeaderDemo() {
             variant={panelVariant}
             identity={headerIdentity}
             title={headerTitle}
-            dockActionPosition={isPersistent ? "after-variant" : undefined}
             onClose={hasDockAction ? dockHeaderDemo : undefined}
             onMinimizeToTray={hasDockAction ? dockHeaderDemo : undefined}
             onVariantToggle={isMobile ? undefined : () => {}}
             showCloseAction
+            showAiMark={showAiMark}
           />
         )}
         {!shouldShowDockedTray ? (
@@ -1782,7 +1818,11 @@ export function SharedHeaderVariants() {
           LTS hiring microsite
         </h3>
         <HeaderVariantReferenceFrame>
-          <ChatHeader title={HIRING_CONCIERGE_TITLE} onVariantToggle={() => {}} />
+          <ChatHeader
+            title={HIRING_CONCIERGE_TITLE}
+            onVariantToggle={() => {}}
+            showAiMark={false}
+          />
         </HeaderVariantReferenceFrame>
       </section>
       <section>
@@ -1790,7 +1830,11 @@ export function SharedHeaderVariants() {
           Premium survey
         </h3>
         <HeaderVariantReferenceFrame>
-          <ChatHeader title={PREMIUM_CONCIERGE_TITLE} onVariantToggle={() => {}} />
+          <ChatHeader
+            title={PREMIUM_CONCIERGE_TITLE}
+            onVariantToggle={() => {}}
+            showAiMark={false}
+          />
         </HeaderVariantReferenceFrame>
       </section>
       <section>
@@ -1864,14 +1908,14 @@ export function SharedMessagesDemo() {
           </div>
         ) : messageType === "rich" ? (
           <ChatMessage>
-            <div className="space-y-sm">
+            <ChatMessageContent>
               <p>Here are the fastest next steps:</p>
-              <ul className="list-disc space-y-xs pl-lg">
+              <ul>
                 <li>Confirm hiring volume and timeline.</li>
                 <li>Choose whether the team needs sourcing tools.</li>
                 <li>Route complex questions to a live agent.</li>
               </ul>
-            </div>
+            </ChatMessageContent>
           </ChatMessage>
         ) : (
           <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
@@ -1903,7 +1947,7 @@ export function SharedEndChatCsatDemo() {
         variant="collapsed"
         className="!h-[640px] !w-[var(--design-layout-panel-collapsed-width)] md:!h-[640px] md:!w-[var(--design-layout-panel-collapsed-width)]"
       >
-        <ChatHeader title="Contact sales" showAiMark />
+        <ChatHeader title="Contact sales" showAiMark={false} />
         <ChatEndFeedbackScreen
           onBackToChat={() => {}}
           onEndChat={() => {}}
@@ -2021,7 +2065,11 @@ export function SharedComposerDemo() {
       }
     >
       <ChatSurfaceDemoFrame device={device}>
-        <ChatHeader title={HIRING_CONCIERGE_TITLE} showCloseAction={false} />
+        <ChatHeader
+          title={HIRING_CONCIERGE_TITLE}
+          showCloseAction={false}
+          showAiMark={false}
+        />
         <ChatBody>
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
@@ -2040,6 +2088,7 @@ export function SharedComposerDemo() {
           variant={panelVariant}
           isResponding={isResponding}
           onStopResponse={() => setResponseStopped(true)}
+          sendDisabled={state !== "draft" && !showVoiceMode}
           showAttachAction={showAttachAction}
           showVoiceMode={showVoiceMode}
           inputProps={
@@ -2244,7 +2293,11 @@ export function SharedVoiceModeDemo() {
       }
     >
       <ChatSurfaceDemoFrame device={device} height="tall">
-        <ChatHeader title={HIRING_CONCIERGE_TITLE} showCloseAction={false} />
+        <ChatHeader
+          title={HIRING_CONCIERGE_TITLE}
+          showCloseAction={false}
+          showAiMark={false}
+        />
         <ChatBody>
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>
@@ -2332,6 +2385,120 @@ export function SharedPromptsDemo() {
         />
       </ChatThreadContextFrame>
     </ComponentDemoSection>
+  );
+}
+
+const choiceCardPeople = [
+  {
+    id: "maya-chen",
+    name: "Maya Chen",
+    email: "maya.chen@example.com",
+    avatarSrc: "/assets/premium-company-pages/avatar-1.png",
+  },
+  {
+    id: "maya-patel",
+    name: "Maya Patel",
+    email: "maya.patel@example.com",
+    avatarSrc: "/assets/premium-company-pages/avatar-2.png",
+  },
+  {
+    id: "maya-rivera",
+    name: "Maya Rivera",
+    email: "maya.rivera@example.com",
+    avatarSrc: "/assets/premium-company-pages/avatar-3.png",
+  },
+] as const;
+
+export function SharedChoiceCardDemo() {
+  const [context, setContext] =
+    useState<ComponentLibraryContext>("collapsed");
+  const [selectedId, setSelectedId] = useState<string | null>("maya-chen");
+
+  return (
+    <ContextualComponentDemoSection
+      controls={<ChatContextControl value={context} onChange={setContext} />}
+    >
+      <ChatThreadContextFrame context={context}>
+        <ChatMessage>
+          <ChatMessageContent>
+            <p>
+              Thanks, I found a few people who could match that. Choose the
+              right person below and I&apos;ll help you remove them.
+            </p>
+          </ChatMessageContent>
+        </ChatMessage>
+        <ChatResponseAttachment gap="sm">
+          <ChoiceCard
+            title="Choose person"
+            options={choiceCardPeople.map((person) => ({
+              id: person.id,
+              label: person.name,
+              description: person.email,
+              visual: (
+                <Entity
+                  size={40}
+                  src={person.avatarSrc}
+                />
+              ),
+            }))}
+            selectedId={selectedId}
+            actionLabel="Continue"
+            actionDisabled={!selectedId}
+            onSelectionChange={setSelectedId}
+          />
+        </ChatResponseAttachment>
+      </ChatThreadContextFrame>
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function SharedTaskStatusCardDemo() {
+  const [context, setContext] =
+    useState<ComponentLibraryContext>("collapsed");
+  const [state, setState] =
+    useState<TaskStatusCardState>("in-progress");
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <>
+          <ChatContextControl value={context} onChange={setContext} />
+          <SegmentedControl
+            label="State"
+            value={state}
+            options={[
+              { label: "In progress", value: "in-progress" },
+              { label: "Completed", value: "completed" },
+            ]}
+            onChange={setState}
+          />
+        </>
+      }
+    >
+      <ChatThreadContextFrame context={context}>
+        <ChatResponseAttachment gap="sm">
+          <TaskStatusCard
+            state={state}
+            title={
+              state === "completed"
+                ? "User removed from Flexis Recruiter"
+                : "Removing user..."
+            }
+            description={
+              state === "completed" ? (
+                <p>
+                  You can view the updates in the{" "}
+                  <a href="#" onClick={(event) => event.preventDefault()}>
+                    Users &amp; License Management
+                  </a>{" "}
+                  tab in Admin Center.
+                </p>
+              ) : undefined
+            }
+          />
+        </ChatResponseAttachment>
+      </ChatThreadContextFrame>
+    </ContextualComponentDemoSection>
   );
 }
 
@@ -2431,7 +2598,11 @@ export function SharedActionCardDemo() {
               getMobilePanelOverrideClass(context),
             )}
           >
-            <ChatHeader title="Contact sales" showAiMark variant={variant} />
+            <ChatHeader
+              title="Contact sales"
+              showAiMark={false}
+              variant={variant}
+            />
             <ChatSidePanelLayout
               history={liveHandoffThread}
               sidePanel={
@@ -2574,7 +2745,11 @@ export function SharedSidePanelDemo() {
               getMobilePanelOverrideClass(context),
             )}
           >
-            <ChatHeader title="Contact sales" showAiMark variant={variant} />
+            <ChatHeader
+              title="Contact sales"
+              showAiMark={false}
+              variant={variant}
+            />
             <ChatSidePanelLayout
               history={<GenericSidePanelChatHistory />}
               sidePanel={<GenericSidePanelDemoContent />}
@@ -3435,6 +3610,45 @@ export function SduiPillDemo() {
       >
         Pill choice
       </Pill>
+    </ComponentDemoSection>
+  );
+}
+
+export function SduiRadioDemo() {
+  const [state, setState] =
+    useState<NonNullable<RadioProps["visualState"]>>("default");
+  const [checked, setChecked] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="State"
+            value={state}
+            options={[
+              { label: "Default", value: "default" },
+              { label: "Hover", value: "hover" },
+              { label: "Active", value: "active" },
+            ]}
+            onChange={setState}
+          />
+          <ToggleControl label="Checked" checked={checked} onChange={setChecked} />
+          <ToggleControl label="Disabled" checked={disabled} onChange={setDisabled} />
+        </>
+      }
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={checked}
+        disabled={disabled}
+        className="inline-flex rounded-round outline-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none"
+        onClick={() => setChecked((current) => !current)}
+      >
+        <Radio checked={checked} disabled={disabled} visualState={state} />
+      </button>
     </ComponentDemoSection>
   );
 }

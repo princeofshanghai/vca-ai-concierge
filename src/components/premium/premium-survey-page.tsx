@@ -468,6 +468,7 @@ export function PremiumSurveyPage({
           openActionPosition="after-close"
           onClose={hasChatConversationStarted ? requestCloseChat : undefined}
           showCloseAction={hasChatConversationStarted}
+          showAiMark={false}
         />
       ) : null}
 

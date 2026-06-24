@@ -77,6 +77,7 @@ type ConciergePanelProps = Readonly<{
   onVariantToggle?: () => void;
   dockActionPosition?: "before-variant" | "after-variant";
   showCloseAction?: boolean;
+  showHeaderAiMark?: boolean;
   onConversationStart?: () => void;
   onSessionEnd?: () => void;
   onUnreadActivity?: () => void;
@@ -390,6 +391,7 @@ export function ConciergePanel({
   onVariantToggle,
   dockActionPosition,
   showCloseAction = true,
+  showHeaderAiMark = true,
   onConversationStart,
   onSessionEnd,
   onUnreadActivity,
@@ -1295,7 +1297,7 @@ export function ConciergePanel({
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
         transparent={phase !== "chat" && phase !== "preparing"}
-        showAiMark={phase === "chat"}
+        showAiMark={phase === "chat" && showHeaderAiMark}
         aiMarkClassName="concierge-ai-mark"
       />
 

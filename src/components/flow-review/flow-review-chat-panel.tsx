@@ -57,6 +57,7 @@ type FlowReviewChatPanelProps = Readonly<{
   onVariantToggle?: () => void;
   dockActionPosition?: "before-variant" | "after-variant";
   showCloseAction?: boolean;
+  showHeaderAiMark?: boolean;
   onHeaderIdentityChange?: (identity: ChatHeaderIdentity | null) => void;
   onUnreadActivity?: () => void;
   onSidePanelOpenChange?: (open: boolean) => void;
@@ -990,6 +991,7 @@ export function FlowReviewChatPanel({
   onVariantToggle,
   dockActionPosition,
   showCloseAction = true,
+  showHeaderAiMark = true,
   onHeaderIdentityChange,
   onUnreadActivity,
   onSidePanelOpenChange,
@@ -1202,6 +1204,7 @@ export function FlowReviewChatPanel({
         onMinimizeToTray={onMinimizeToTray}
         onVariantToggle={onVariantToggle}
         showCloseAction={showCloseAction}
+        showAiMark={showHeaderAiMark}
       />
       {isSidePanelOpen ? (
         <ChatSidePanelLayout

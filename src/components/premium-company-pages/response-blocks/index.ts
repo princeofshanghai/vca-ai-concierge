@@ -51,6 +51,13 @@ export type {
 } from "./DataCard";
 export { Compare } from "./Compare";
 export type { CompareProps, CompareRow, CompareRowVisual } from "./Compare";
+export { ChoiceCard } from "./ChoiceCard";
+export type { ChoiceCardOption, ChoiceCardProps } from "./ChoiceCard";
+export { TaskStatusCard } from "./TaskStatusCard";
+export type {
+  TaskStatusCardProps,
+  TaskStatusCardState,
+} from "./TaskStatusCard";
 export { Metric } from "./Metric";
 export type { MetricItem, MetricProps, MetricTone } from "./Metric";
 export { MetricWithTrend } from "./MetricWithTrend";

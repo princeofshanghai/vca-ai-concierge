@@ -112,6 +112,7 @@ export function ReviewShellStateMenu({
   const visitorOptions = showVisitorControls ? loginOptions : [];
   const storyControlCount = storyOptions.length;
   const modeControlCount = modeGroups?.length ?? modeOptions.length;
+  const hasModeControls = modeControlCount > 0;
   const hasSettings =
     visitorOptions.length > 0 ||
     callbackFormOptions.length > 0 ||
@@ -710,24 +711,26 @@ export function ReviewShellStateMenu({
         </div>
       ) : null}
 
-      <div
-        role="group"
-        aria-labelledby="review-shell-mode-menu-heading"
-        className={[
-          "space-y-1",
-          storyOptions.length > 0
-            ? "mt-2 border-t border-slate-200/70 pt-2"
-            : "",
-        ].join(" ")}
-      >
-        <p
-          id="review-shell-mode-menu-heading"
-          className="px-3 pb-1 pt-0 text-[11px] font-semibold leading-none text-slate-500"
+      {hasModeControls ? (
+        <div
+          role="group"
+          aria-labelledby="review-shell-mode-menu-heading"
+          className={[
+            "space-y-1",
+            storyOptions.length > 0
+              ? "mt-2 border-t border-slate-200/70 pt-2"
+              : "",
+          ].join(" ")}
         >
-          {modeHeading}
-        </p>
-        {renderModeOptions()}
-      </div>
+          <p
+            id="review-shell-mode-menu-heading"
+            className="px-3 pb-1 pt-0 text-[11px] font-semibold leading-none text-slate-500"
+          >
+            {modeHeading}
+          </p>
+          {renderModeOptions()}
+        </div>
+      ) : null}
 
       {hasSettings ? (
         <div

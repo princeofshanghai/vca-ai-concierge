@@ -243,7 +243,7 @@ export const premiumConversationFlows: Readonly<
     id: "high",
     label: "High signal (static screen)",
     title: "High Signal Flow",
-    surveyStep: "plans",
+    surveyStep: "goals",
     selectedUseCaseOption: "job",
     selectedGoalOptions: ["expand-network", "new-leads", "hire"],
     steps: [

@@ -125,6 +125,8 @@ export function LandingPage({
       (isHybridTrayVisible || isChatTrayOpeningBridgeVisible));
   const isChatTrayOpeningBridgeActive =
     chatPanelPresence === "open" && isChatTrayOpeningBridgeVisible;
+  const usesHeaderDockMotion =
+    isPersistentTrayShell || (isHybridShell && isHybridTrayVisible);
   // Tray shells are bottom-docked; 72px preserves the 64px landing header plus an 8px gap.
   const chatPanelPositionClass = isBottomAttachedChatSurface
     ? isCenteredChatSurface
@@ -261,6 +263,7 @@ export function LandingPage({
     }
 
     setIsEndChatFeedbackOpen(false);
+    setChatPanelVariant("collapsed");
     setIsChatTrayOpeningBridgeVisible(false);
     setIsHybridTrayVisible(isHybridShell);
     closeChatPanel();
@@ -474,7 +477,7 @@ export function LandingPage({
           aria-label="Open AI Concierge chat"
           badge={hasUnreadTrayActivity}
           className={[
-            "chat-tray-enter fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-chat-tray-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-chat-tray-width))]",
+            "fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-chat-tray-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-chat-tray-width))]",
             isChatTrayOpeningBridgeActive ? "pointer-events-none" : "",
           ].join(" ")}
           identity={trayIdentity}
@@ -488,6 +491,8 @@ export function LandingPage({
           }
           onClose={isHybridShell ? requestCloseChat : undefined}
           showCloseAction={isHybridShell}
+          showAiMark={false}
+          trayHeight="header"
         />
       ) : null}
 
@@ -522,10 +527,18 @@ export function LandingPage({
               className={[
                 "h-full w-full ease-emphasized motion-reduce:translate-y-0 motion-reduce:opacity-100 motion-reduce:duration-[var(--design-motion-duration-instant)]",
                 isTrayStyleShell
-                  ? "transition-transform duration-[var(--design-motion-duration-slow)]"
+                  ? chatPanelPresence === "entering" ||
+                    chatPanelPresence === "closed"
+                    ? "transition-none"
+                    : "transition-transform duration-[var(--design-motion-duration-slow)]"
                   : "transition-[opacity,transform] duration-[var(--design-motion-duration-moderate)]",
                 isChatInteractive
                   ? "translate-y-0 opacity-100"
+                  : isTrayStyleShell &&
+                      usesHeaderDockMotion &&
+                      (chatPanelPresence === "entering" ||
+                        chatPanelPresence === "exiting")
+                    ? "pointer-events-none chat-panel-header-dock-offset opacity-100"
                   : isTrayStyleShell
                     ? "pointer-events-none translate-y-full opacity-100"
                     : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
@@ -546,10 +559,8 @@ export function LandingPage({
                       : undefined
                   }
                   onVariantToggle={toggleChatPanelVariant}
-                  dockActionPosition={
-                    isPersistentTrayShell ? "after-variant" : undefined
-                  }
                   showCloseAction
+                  showHeaderAiMark={false}
                   onHeaderIdentityChange={setTrayIdentity}
                   onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
@@ -566,10 +577,8 @@ export function LandingPage({
                       : undefined
                   }
                   onVariantToggle={toggleChatPanelVariant}
-                  dockActionPosition={
-                    isPersistentTrayShell ? "after-variant" : undefined
-                  }
                   showCloseAction
+                  showHeaderAiMark={false}
                   onUnreadActivity={markUnreadTrayActivity}
                   onSidePanelOpenChange={setIsReviewSidePanelOpen}
                   onConversationStart={handleConversationStart}

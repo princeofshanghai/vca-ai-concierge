@@ -38,6 +38,20 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/premium-company-page/data-cards",
           },
           {
+            id: "shared-choice-card",
+            title: "Choice card",
+            description:
+              "Lets visitors choose one item from a small set of assistant-provided options before continuing.",
+            href: "/internal/components/shared/choice-card",
+          },
+          {
+            id: "shared-task-status-card",
+            title: "Task status card",
+            description:
+              "Shows in-progress and completed states for assistant-run tasks.",
+            href: "/internal/components/shared/task-status-card",
+          },
+          {
             id: "premium-company-page-entity-cards",
             title: "Entity cards",
             description:
@@ -232,6 +246,12 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             title: "Pill",
             description: "Lets members or visitors make a lightweight choice.",
             href: "/internal/components/sdui/pill",
+          },
+          {
+            id: "sdui-radio",
+            title: "Radio",
+            description: "Shows single-select control states for one-choice inputs.",
+            href: "/internal/components/sdui/radio",
           },
           {
             id: "sdui-text-area",

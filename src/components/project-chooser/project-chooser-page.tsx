@@ -1,14 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Icon } from "@/components/primitives/icon";
+import { Icon, type IconName } from "@/components/primitives/icon";
 
 type ProjectStatus = "In progress" | "Ready";
-type ProjectPreview = Readonly<{
+type ProjectImagePreview = Readonly<{
   alt: string;
   objectPosition: string;
   src: string;
 }>;
+type ProjectPlaceholderPreview = Readonly<{
+  icon: IconName;
+  label: string;
+}>;
+type ProjectPreview = ProjectImagePreview | ProjectPlaceholderPreview;
 
 const projectOptions: Array<{
   href: string;
@@ -50,6 +55,16 @@ const projectOptions: Array<{
     },
     status: "In progress",
   },
+  {
+    href: "/vca-ecosystem",
+    label: "VCA ecosystem",
+    description: "Collection of near term VCA UI optimization projects",
+    preview: {
+      icon: "signal-ai",
+      label: "VCA ecosystem placeholder preview",
+    },
+    status: "In progress",
+  },
 ] as const;
 
 const componentLibraryOption = {
@@ -75,6 +90,22 @@ function ProjectStatusChip({ status }: Readonly<{ status: ProjectStatus }>) {
 }
 
 function ProjectPreview({ preview }: Readonly<{ preview: ProjectPreview }>) {
+  if (!("src" in preview)) {
+    return (
+      <div
+        aria-label={preview.label}
+        className="flex aspect-[16/10] w-full items-center justify-center overflow-hidden rounded-sm border border-border-faint bg-surface-tint text-ai-icon transition-colors duration-150 ease-out group-hover:border-border-subtle"
+        role="img"
+      >
+        <Icon
+          name={preview.icon}
+          size="medium"
+          className="[&&]:size-8 transition-transform duration-150 ease-out group-hover:scale-[1.015]"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative aspect-[16/10] w-full overflow-hidden rounded-sm border border-border-faint bg-background-neutral-soft transition-colors duration-150 ease-out group-hover:border-border-subtle">
       <Image

@@ -1,8 +1,17 @@
-import type { HTMLAttributes } from "react";
+"use client";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 
 import { Entity } from "@/components/primitives/entity";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import { NavLinkItemHorizontal } from "@/components/primitives/nav-link-item-horizontal";
+import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 
 import { LinkedInBugSdui } from "./linkedin-bug-sdui";
 
@@ -23,6 +32,9 @@ export type LinkedInGlobalNavigationProps = Omit<
   secondarySearchPlaceholder?: string;
   profileSrc?: string;
   profileLabel?: string;
+  profileName?: string;
+  profileHeadline?: string;
+  onHelpSelect?: () => void;
   showAdvertise?: boolean;
   showPremiumSpotlight?: boolean;
 };
@@ -66,21 +78,224 @@ function SearchInput({
   );
 }
 
-function ProfileMenu({
-  src,
+type UtilityMenuItem = Readonly<{
+  label: string;
+  icon?: ReactNode;
+  iconName?: IconName;
+}>;
+
+const utilityMenuItems: ReadonlyArray<UtilityMenuItem> = [
+  {
+    label: "Premium features",
+    icon: <PremiumChipSmall className="size-6" />,
+  },
+  {
+    label: "Job Posting Account",
+    iconName: "job",
+  },
+  {
+    label: "Settings",
+    iconName: "settings",
+  },
+  {
+    label: "Help",
+    iconName: "question",
+  },
+  {
+    label: "Language",
+    iconName: "globe-language",
+  },
+];
+
+function ProfileMenuCard({
   label,
 }: Readonly<{
-  src?: string;
   label: string;
 }>) {
   return (
-    <span className="hidden h-[52px] w-[56px] shrink-0 flex-col items-center justify-center gap-xxs text-supportive-s text-text-meta md:flex">
-      <Entity label={label} size={24} src={src} />
-      <span className="flex max-w-full items-center gap-xxs truncate">
-        {label}
-        <Icon name="chevron-down" size="small" />
+    <button
+      className="flex min-h-[52px] w-full items-center justify-between rounded-sm border border-border-faint bg-background p-[16px] text-left text-[14px] font-bold leading-5 tracking-normal text-text outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border-subtle hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+      role="menuitem"
+      type="button"
+    >
+      <span>{label}</span>
+      <Icon className="text-text-meta" name="chevron-right" size="small" />
+    </button>
+  );
+}
+
+function UtilityMenuItemRow({
+  icon,
+  iconName,
+  label,
+  onSelect,
+}: UtilityMenuItem & { onSelect?: () => void }) {
+  return (
+    <button
+      className="flex min-h-10 w-full items-center gap-md rounded-xs px-xs py-sm text-left text-[14px] font-bold leading-5 tracking-normal text-text outline-none transition-colors duration-150 ease-out hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+      onClick={onSelect}
+      role="menuitem"
+      type="button"
+    >
+      <span className="flex size-6 shrink-0 items-center justify-center text-icon">
+        {icon ?? (iconName ? <Icon name={iconName} size="medium" /> : null)}
       </span>
-    </span>
+      <span className="min-w-0 truncate">{label}</span>
+    </button>
+  );
+}
+
+function ProfileMenu({
+  src,
+  label,
+  name,
+  headline,
+  onHelpSelect,
+}: Readonly<{
+  src?: string;
+  label: string;
+  name?: string;
+  headline?: string;
+  onHelpSelect?: () => void;
+}>) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const profileName = name ?? label;
+  const showProfileBadge = profileName !== label;
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+
+      if (
+        target instanceof Node &&
+        !containerRef.current?.contains(target)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div
+      className="relative hidden h-[52px] w-20 shrink-0 md:flex"
+      ref={containerRef}
+    >
+      <button
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        aria-label="Open profile menu"
+        className="relative inline-flex h-[52px] w-20 shrink-0 items-center justify-center overflow-hidden text-center text-supportive-s text-text-meta outline-none transition-[background-color,color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover hover:text-text-hover active:bg-background-transparent-active active:text-text-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+        onClick={() => setIsOpen((currentValue) => !currentValue)}
+        ref={buttonRef}
+        type="button"
+      >
+        <span className="flex min-w-0 flex-col items-center justify-center gap-xxs">
+          <span className="relative inline-flex size-5 items-center justify-center">
+            <Entity
+              className="[&&]:size-5"
+              label={profileName}
+              size={24}
+              src={src}
+            />
+          </span>
+          <span className="flex max-w-full items-center justify-center gap-xxs">
+            <span className="min-w-0 truncate">{label}</span>
+            <Icon
+              aria-hidden="true"
+              className="-mx-xxs"
+              name="caret"
+              size="small"
+            />
+          </span>
+        </span>
+      </button>
+
+      {isOpen ? (
+        <div
+          aria-label="Me menu"
+          className="absolute right-0 top-full z-50 mt-xs flex w-[380px] max-w-[calc(100vw-32px)] flex-col gap-md rounded-sm border border-border-faint bg-background p-lg text-text shadow-raised-faint-upward"
+          role="menu"
+        >
+          <button
+            className="flex w-full items-center gap-md rounded-sm border border-border-faint bg-background p-[16px] text-left outline-none transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border-subtle hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+            role="menuitem"
+            type="button"
+          >
+            <Entity label={profileName} size={40} src={src} />
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="flex min-w-0 items-center gap-xs text-[16px] font-bold leading-5 tracking-normal text-text">
+                <span className="min-w-0 truncate">{profileName}</span>
+                {showProfileBadge ? (
+                  <Icon
+                    className="text-premium-inbug"
+                    name="linked-in-bug"
+                    size="small"
+                  />
+                ) : null}
+              </span>
+              {headline ? (
+                <span className="line-clamp-2 text-[12px] font-normal leading-4 tracking-normal text-text">
+                  {headline}
+                </span>
+              ) : null}
+            </span>
+            <Icon className="text-text-meta" name="chevron-right" size="small" />
+          </button>
+
+          <ProfileMenuCard label="Analytics" />
+          <ProfileMenuCard label="Saved posts" />
+
+          <div className="flex flex-col gap-xs py-xs" role="none">
+            {utilityMenuItems.map((item) => {
+              const handleSelect =
+                item.label === "Help" && onHelpSelect
+                  ? () => {
+                      setIsOpen(false);
+                      onHelpSelect();
+                    }
+                  : undefined;
+
+              return (
+                <UtilityMenuItemRow
+                  key={item.label}
+                  {...item}
+                  onSelect={handleSelect}
+                />
+              );
+            })}
+          </div>
+
+          <button
+            className="border-t border-border-faint px-0 pb-0 pt-lg text-left text-[14px] font-bold leading-5 tracking-normal text-text outline-none transition-colors duration-150 ease-out hover:text-text-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+            role="menuitem"
+            type="button"
+          >
+            Sign out
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -113,6 +328,9 @@ export function LinkedInGlobalNavigation({
   secondarySearchPlaceholder,
   profileSrc,
   profileLabel = "Me",
+  profileName,
+  profileHeadline,
+  onHelpSelect,
   showAdvertise = false,
   showPremiumSpotlight = false,
   className,
@@ -190,7 +408,13 @@ export function LinkedInGlobalNavigation({
         </nav>
 
         <div className="ml-auto flex h-[52px] shrink-0 items-center min-[748px]:ml-0">
-          <ProfileMenu label={profileLabel} src={profileSrc} />
+          <ProfileMenu
+            headline={profileHeadline}
+            label={profileLabel}
+            name={profileName}
+            onHelpSelect={onHelpSelect}
+            src={profileSrc}
+          />
           <WorkMenu />
           {showPremiumSpotlight ? <PremiumSpotlight /> : null}
           {showAdvertise ? (
