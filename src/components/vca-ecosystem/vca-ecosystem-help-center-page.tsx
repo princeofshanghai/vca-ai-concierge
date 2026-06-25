@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import Image from "next/image";
+import Link from "next/link";
 
 import {
   CHAT_PANEL_TRAY_TRANSITION_MS,
@@ -28,6 +29,8 @@ import {
   useChatPanelPresence,
   type ChatPanelVariant,
 } from "@/components/chat";
+import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
+import { PremiumUpsellBadge } from "@/components/premium-upsell";
 import { Button } from "@/components/primitives/button";
 import { ChoiceCard } from "@/components/premium-company-pages/response-blocks/ChoiceCard";
 import {
@@ -124,6 +127,14 @@ function getPrototypeUserMatches(searchValue: string) {
     };
   });
 }
+
+type VcaEcosystemHelpCenterPageProps = Readonly<{
+  premiumUpsellBadgeAction?: "open-premium-chat";
+  premiumUpsellBadgeHref?: string;
+  showPremiumUpsellBadge?: boolean;
+}>;
+
+type HelpCenterChatMode = "support" | "premium-recommendation";
 
 function TopicCard({
   icon,
@@ -287,6 +298,7 @@ function SupportCard({
 
 type HelpAssistantPanelProps = Readonly<{
   className?: string;
+  mode: HelpCenterChatMode;
   removeUserDraft: string;
   removeUserSearchQuery: string;
   showRemoveUserConfirmation: boolean;
@@ -309,6 +321,7 @@ type HelpAssistantPanelProps = Readonly<{
 
 function HelpAssistantPanel({
   className,
+  mode,
   removeUserDraft,
   removeUserSearchQuery,
   showRemoveUserConfirmation,
@@ -340,6 +353,7 @@ function HelpAssistantPanel({
   const selectedRemoveUser =
     removeUserMatches.find((person) => person.id === selectedRemoveUserId) ??
     null;
+  const isPremiumRecommendationMode = mode === "premium-recommendation";
 
   useEffect(() => {
     if (!showRemoveUserGuidance) {
@@ -447,39 +461,76 @@ function HelpAssistantPanel({
         onVariantToggle={onVariantToggle}
       />
       <ChatBody>
-        <ChatThread>
-          <div className="flex flex-col items-start">
-            <ChatMessage>
-              <ChatMessageContent>
-                <p>
-                  Hi there. With the help of AI, I can answer questions about
-                  Recruiter solutions or connect you to our team.
-                </p>
-                <p>Not sure where to start? You can try:</p>
-              </ChatMessageContent>
-            </ChatMessage>
-            {!showRemoveUserGuidance ? (
+        {isPremiumRecommendationMode ? (
+          <ChatThread>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    Great, I can help you get started with Premium.
+                  </p>
+                  <p>
+                    For a personal trial, Premium Career is the best place to
+                    start because it&apos;s built for job search and career
+                    growth. It can help you see jobs where you may be a top
+                    applicant, mark top choice jobs, and message hiring
+                    managers directly.
+                  </p>
+                  <p>
+                    You can also{" "}
+                    <Link href="/premium/learn-more">
+                      browse all plans here
+                    </Link>{" "}
+                    if you&apos;d like to compare options.
+                  </p>
+                </ChatMessageContent>
+              </ChatMessage>
               <ChatResponseAttachment gap="sm">
-                <div className="flex flex-wrap gap-sm">
-                  {helpAssistantPrompts.map((prompt) => (
-                    <Prompt
-                      key={prompt}
-                      prompt={prompt}
-                      onPromptSelect={
-                        prompt === "Help me remove a user"
-                          ? onRemoveUserPromptSelect
-                          : undefined
-                      }
-                    />
-                  ))}
-                </div>
+                <PremiumProductRecommendationCard
+                  displayName="Premium Career"
+                  planId="career"
+                />
               </ChatResponseAttachment>
-            ) : null}
-            <p className="mt-sm text-body-xs text-text-meta">
-              {getPrototypeMessageTimestamp(0)}
-            </p>
-          </div>
-          {showRemoveUserGuidance ? (
+              <ChatMessageFeedbackFlow
+                className="mt-sm"
+                timestamp={getPrototypeMessageTimestamp(0)}
+              />
+            </div>
+          </ChatThread>
+        ) : (
+          <ChatThread>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    Hi there. With the help of AI, I can answer questions about
+                    Recruiter solutions or connect you to our team.
+                  </p>
+                  <p>Not sure where to start? You can try:</p>
+                </ChatMessageContent>
+              </ChatMessage>
+              {!showRemoveUserGuidance ? (
+                <ChatResponseAttachment gap="sm">
+                  <div className="flex flex-wrap gap-sm">
+                    {helpAssistantPrompts.map((prompt) => (
+                      <Prompt
+                        key={prompt}
+                        prompt={prompt}
+                        onPromptSelect={
+                          prompt === "Help me remove a user"
+                            ? onRemoveUserPromptSelect
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                </ChatResponseAttachment>
+              ) : null}
+              <p className="mt-sm text-body-xs text-text-meta">
+                {getPrototypeMessageTimestamp(0)}
+              </p>
+            </div>
+            {showRemoveUserGuidance ? (
             <>
               <ChatMessage
                 role="user"
@@ -714,8 +765,9 @@ function HelpAssistantPanel({
                 </>
               ) : null}
             </>
-          ) : null}
-        </ChatThread>
+            ) : null}
+          </ChatThread>
+        )}
       </ChatBody>
       <ChatComposer
         variant={variant}
@@ -723,7 +775,7 @@ function HelpAssistantPanel({
           "aria-label": showRemoveUserEntry
             ? "Enter a name or email to find a user"
             : "Message",
-          disabled: !showRemoveUserEntry,
+          disabled: isPremiumRecommendationMode || !showRemoveUserEntry,
           onChange: (event: ChangeEvent<HTMLTextAreaElement>) =>
             onRemoveUserDraftChange(event.currentTarget.value),
           placeholder: showRemoveUserEntry
@@ -733,7 +785,9 @@ function HelpAssistantPanel({
         }}
         onSend={onRemoveUserLookupSubmit}
         sendDisabled={
-          !showRemoveUserEntry || removeUserDraft.trim().length === 0
+          isPremiumRecommendationMode ||
+          !showRemoveUserEntry ||
+          removeUserDraft.trim().length === 0
         }
         showVoiceMode={false}
       />
@@ -741,9 +795,14 @@ function HelpAssistantPanel({
   );
 }
 
-export function VcaEcosystemHelpCenterPage() {
+export function VcaEcosystemHelpCenterPage({
+  premiumUpsellBadgeAction,
+  premiumUpsellBadgeHref,
+  showPremiumUpsellBadge = false,
+}: VcaEcosystemHelpCenterPageProps) {
   const [chatPanelVariant, setChatPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
+  const [chatMode, setChatMode] = useState<HelpCenterChatMode>("support");
   const [isHybridTrayVisible, setIsHybridTrayVisible] = useState(false);
   const [isChatTrayOpeningBridgeVisible, setIsChatTrayOpeningBridgeVisible] =
     useState(false);
@@ -808,9 +867,28 @@ export function VcaEcosystemHelpCenterPage() {
     removeUserTaskCompletionTimerRef.current = null;
   }, []);
 
+  const openSupportChat = useCallback(() => {
+    setChatMode("support");
+    openChat();
+  }, [openChat]);
+
+  const openPremiumUpsellChat = useCallback(() => {
+    clearRemoveUserTaskCompletionTimer();
+    setChatMode("premium-recommendation");
+    setShowRemoveUserGuidance(false);
+    setShowRemoveUserEntry(false);
+    setShowRemoveUserConfirmation(false);
+    setRemoveUserTaskState(null);
+    setRemoveUserDraft("");
+    setRemoveUserSearchQuery("");
+    setSelectedRemoveUserId(null);
+    openChat();
+  }, [clearRemoveUserTaskCompletionTimer, openChat]);
+
   const closeChat = useCallback(() => {
     clearRemoveUserTaskCompletionTimer();
     setChatPanelVariant("collapsed");
+    setChatMode("support");
     setIsHybridTrayVisible(false);
     setIsChatTrayOpeningBridgeVisible(false);
     setShowRemoveUserGuidance(false);
@@ -946,11 +1024,37 @@ export function VcaEcosystemHelpCenterPage() {
       <header className="bg-[#0073B1] text-on-action">
         <div className="mx-auto flex h-[78px] max-w-[1210px] items-center justify-between px-lg sm:px-[30px] xl:px-0">
           <HelpLogo />
-          <Entity
-            size={24}
-            src="/assets/premium-company-pages/avatar-2.png"
-            label="Charles"
-          />
+          <div className="flex items-center gap-sm">
+            {showPremiumUpsellBadge && premiumUpsellBadgeHref ? (
+              <Link
+                href={premiumUpsellBadgeHref}
+                className="inline-flex rounded-round outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+              >
+                <PremiumUpsellBadge variant="solid" />
+              </Link>
+            ) : showPremiumUpsellBadge &&
+              premiumUpsellBadgeAction === "open-premium-chat" ? (
+              <button
+                type="button"
+                aria-controls={isChatOpen ? chatPanelId : undefined}
+                aria-expanded={
+                  isChatOpen && chatMode === "premium-recommendation"
+                }
+                aria-haspopup="dialog"
+                className="inline-flex rounded-round outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+                onClick={openPremiumUpsellChat}
+              >
+                <PremiumUpsellBadge variant="solid" />
+              </button>
+            ) : showPremiumUpsellBadge ? (
+              <PremiumUpsellBadge variant="solid" />
+            ) : null}
+            <Entity
+              size={24}
+              src="/assets/premium-company-pages/avatar-2.png"
+              label="Charles"
+            />
+          </div>
         </div>
         <div className="border-t border-white/15">
           <div className="mx-auto max-w-[1210px] px-lg pb-[35px] pt-[36px] sm:px-[30px] xl:px-0">
@@ -972,7 +1076,7 @@ export function VcaEcosystemHelpCenterPage() {
         <SupportCard
           chatPanelId={chatPanelId}
           isChatOpen={isChatOpen}
-          onStartChat={openChat}
+          onStartChat={openSupportChat}
         />
       </div>
 
@@ -1042,6 +1146,7 @@ export function VcaEcosystemHelpCenterPage() {
             >
               <HelpAssistantPanel
                 className={chatPanelFrameClass}
+                mode={chatMode}
                 removeUserDraft={removeUserDraft}
                 removeUserSearchQuery={removeUserSearchQuery}
                 showRemoveUserConfirmation={showRemoveUserConfirmation}

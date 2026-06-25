@@ -45,6 +45,17 @@ const projectOptions: Array<{
     status: "Ready",
   },
   {
+    href: "/premium-upsell-help-center",
+    label: "Premium upsell in Help Center",
+    description: "Always-on banner concept inside the Help Center",
+    preview: {
+      alt: "Placeholder preview of the Premium upsell in Help Center",
+      objectPosition: "center top",
+      src: "/assets/project-previews/premium-upsell-help-center-placeholder.svg",
+    },
+    status: "In progress",
+  },
+  {
     href: "/premium-company-pages/admin",
     label: "PCP vision",
     description: "Admin and visitor agent for analytics insights and support",

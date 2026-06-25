@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import {
   ChatEndFeedbackScreen,
@@ -13,6 +13,7 @@ import {
 } from "@/components/chat/chat-motion";
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
+import { Icon } from "@/components/primitives/icon";
 import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import type { PremiumShellMode } from "@/lib/premium-shell";
 
@@ -81,7 +82,86 @@ type UseCaseOptionId = PremiumUseCaseOptionId;
 type GoalOptionId = PremiumGoalOptionId;
 type SurveyStep = PremiumSurveyStep;
 
+function PremiumPlanOfferCard({
+  id,
+}: Readonly<{
+  id: string;
+}>) {
+  return (
+    <section
+      id={id}
+      aria-labelledby={`${id}-title`}
+      className="scroll-mt-28 rounded-sm bg-background px-lg py-xxl text-center shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] sm:scroll-mt-32 sm:px-xxl"
+    >
+      <div className="mx-auto flex max-w-[58rem] flex-col items-center gap-lg">
+        <span className="inline-flex min-h-5 items-center rounded-xs bg-positive px-sm text-control-sm text-on-action">
+          Limited offer
+        </span>
+        <div className="flex flex-col items-center gap-sm text-text">
+          <h2 id={`${id}-title`} className="text-heading-lg">
+            After your free month, pay as little as{" "}
+            <span className="line-through">$39.99</span>{" "}
+            $14.99*/month (save 63%) when billed annually
+          </h2>
+          <p className="text-body-md">
+            Cancel anytime. We&apos;ll remind you 7 days before your trial ends.
+          </p>
+        </div>
+        <Button
+          size="medium"
+          className="px-xl text-heading-lg"
+          aria-describedby={`${id}-checkout-note`}
+        >
+          Redeem 1 month for $0
+        </Button>
+        <p
+          id={`${id}-checkout-note`}
+          className="inline-flex items-center gap-xs text-control-md text-text-meta"
+        >
+          <Icon name="locked" size="small" />
+          Secure checkout
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function PlanComparisonStep() {
+  const offerSectionId = useId();
+  const offerSectionRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollToOfferRef = useRef(false);
+  const [isOfferVisible, setIsOfferVisible] = useState(false);
+
+  const scrollToOffer = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      offerSectionRef.current?.scrollIntoView({
+        block: "start",
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth",
+      });
+    });
+  }, []);
+
+  const showOffer = useCallback(() => {
+    if (isOfferVisible) {
+      scrollToOffer();
+      return;
+    }
+
+    shouldScrollToOfferRef.current = true;
+    setIsOfferVisible(true);
+  }, [isOfferVisible, scrollToOffer]);
+
+  useEffect(() => {
+    if (!isOfferVisible || !shouldScrollToOfferRef.current) {
+      return;
+    }
+
+    shouldScrollToOfferRef.current = false;
+    scrollToOffer();
+  }, [isOfferVisible, scrollToOffer]);
+
   return (
     <section className="bg-background px-6 pb-40 pt-10 sm:px-8 lg:px-[120px]">
       <div className="mx-auto flex max-w-[1200px] flex-col items-center text-center">
@@ -97,7 +177,13 @@ function PlanComparisonStep() {
 
         <div className="mt-10 grid w-full grid-cols-1 gap-xxl text-left lg:grid-cols-3">
           {premiumPlans.map((plan) => (
-            <PremiumPlanCard key={plan.id} plan={plan} />
+            <PremiumPlanCard
+              key={plan.id}
+              learnMoreControls={offerSectionId}
+              learnMoreExpanded={isOfferVisible}
+              plan={plan}
+              onLearnMore={showOffer}
+            />
           ))}
         </div>
 
@@ -107,6 +193,12 @@ function PlanComparisonStep() {
             Millions are using Premium to get up to 16x more connections
           </p>
         </div>
+
+        {isOfferVisible ? (
+          <div ref={offerSectionRef} className="mt-8 w-full">
+            <PremiumPlanOfferCard id={offerSectionId} />
+          </div>
+        ) : null}
       </div>
     </section>
   );

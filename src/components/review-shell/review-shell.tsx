@@ -15,6 +15,8 @@ export function ReviewShell({ children }: ReviewShellProps) {
   const pathname = usePathname();
   const shouldOverlapPrototype =
     pathname?.startsWith("/premium-company-pages") ||
+    (pathname?.startsWith("/premium-upsell-help-center") &&
+      !pathname.startsWith("/premium-upsell-help-center/survey")) ||
     pathname?.startsWith("/vca-ecosystem") ||
     false;
 

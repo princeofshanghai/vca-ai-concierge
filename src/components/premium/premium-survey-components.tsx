@@ -1,8 +1,6 @@
 "use client";
 
-import Link from "next/link";
-
-import { getButtonClassName } from "@/components/primitives/button";
+import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
 
@@ -146,7 +144,17 @@ export function PremiumSurveyOption({
   );
 }
 
-export function PremiumPlanCard({ plan }: Readonly<{ plan: PremiumPlan }>) {
+export function PremiumPlanCard({
+  learnMoreControls,
+  learnMoreExpanded,
+  onLearnMore,
+  plan,
+}: Readonly<{
+  learnMoreControls?: string;
+  learnMoreExpanded?: boolean;
+  onLearnMore?: () => void;
+  plan: PremiumPlan;
+}>) {
   return (
     <article
       className={[
@@ -179,16 +187,16 @@ export function PremiumPlanCard({ plan }: Readonly<{ plan: PremiumPlan }>) {
         </ul>
       </div>
 
-      <Link
-        href="/premium/learn-more"
-        className={getButtonClassName({
-          variant: "tertiary",
-          size: "medium",
-          className: "mt-xxl w-full",
-        })}
+      <Button
+        variant="tertiary"
+        size="medium"
+        className="mt-xxl w-full"
+        aria-controls={learnMoreControls}
+        aria-expanded={learnMoreExpanded}
+        onClick={onLearnMore}
       >
         Learn more
-      </Link>
+      </Button>
     </article>
   );
 }

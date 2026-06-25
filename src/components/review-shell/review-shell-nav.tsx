@@ -20,6 +20,9 @@ import {
 const HIRING_ALL_INTENTS_HREF = "/hiring";
 const HIRING_PROTOTYPE_HREF = HIRING_ALL_INTENTS_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
+const PREMIUM_UPSELL_HELP_CENTER_HREF = "/premium-upsell-help-center";
+const PREMIUM_UPSELL_HELP_CENTER_SEARCH_RESULT_HREF =
+  "/premium-upsell-help-center/search-result";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
 const PREMIUM_COMPANY_PAGES_ADMIN_HREF = "/premium-company-pages/admin";
 const PREMIUM_COMPANY_PAGES_ADMIN_CURRENT_STATE_HREF =
@@ -165,6 +168,31 @@ const vcaEcosystemModeOptions = [
     description: "LinkedIn.com member experience",
   },
 ] as const;
+const premiumUpsellHelpCenterModeOptions = [
+  {
+    id: "premium-upsell-help-center-always-on-banner",
+    label: "Always on banner",
+    options: [
+      {
+        id: "premium-upsell-help-center-low-upm",
+        href: `${PREMIUM_UPSELL_HELP_CENTER_HREF}?upmSignal=low`,
+        label: "Low UPM signal",
+        description: "Go to choose flow",
+      },
+      {
+        id: "premium-upsell-help-center-high-upm",
+        href: `${PREMIUM_UPSELL_HELP_CENTER_HREF}?upmSignal=high`,
+        label: "High UPM signal",
+        description: "Open AI concierge",
+      },
+    ],
+  },
+  {
+    id: "premium-upsell-help-center-search-result",
+    href: PREMIUM_UPSELL_HELP_CENTER_SEARCH_RESULT_HREF,
+    label: "Search result",
+  },
+] as const;
 const prototypeProjectOptions = [
   {
     id: "project-hiring",
@@ -177,6 +205,12 @@ const prototypeProjectOptions = [
     href: PREMIUM_PROTOTYPE_HREF,
     label: "Premium survey",
     description: "Member Premium survey prototype",
+  },
+  {
+    id: "project-premium-upsell-help-center",
+    href: PREMIUM_UPSELL_HELP_CENTER_HREF,
+    label: "Premium upsell in Help Center",
+    description: "Help Center upsell prototype",
   },
   {
     id: "project-premium-company-pages",
@@ -200,6 +234,7 @@ type ReviewDestination = Readonly<{
   menu?:
     | "hiring"
     | "premium"
+    | "premium-upsell-help-center"
     | "premium-company-pages"
     | "projects"
     | "vca-ecosystem";
@@ -212,6 +247,7 @@ type PremiumCompanyPagesShellLabel =
   (typeof PREMIUM_COMPANY_PAGES_SHELL_OPTIONS)[number]["label"];
 type PremiumCompanyPagesIntentLabel = "Buyer intent" | "Job seeker intent";
 type ComponentProductLens = "hiring" | "premium";
+type PremiumUpsellSignalLabel = "Low UPM signal" | "High UPM signal";
 
 const HOME_DESTINATION: ReviewDestination = {
   href: "/",
@@ -274,6 +310,7 @@ function getPrototypeMetaLabel(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
+  premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
@@ -312,6 +349,16 @@ function getPrototypeMetaLabel(
     }
 
     return "Visitor view";
+  }
+
+  if (pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_SEARCH_RESULT_HREF)) {
+    return "Search result";
+  }
+
+  if (pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_HREF)) {
+    return premiumUpsellSignalLabel
+      ? `Always on banner · ${premiumUpsellSignalLabel}`
+      : "Always on banner";
   }
 
   if (pathname.startsWith("/premium")) {
@@ -353,6 +400,7 @@ function getPrototypeDestination(
   pathname: string,
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
+  premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
 ): ReviewDestination {
   if (pathname.startsWith("/internal/components")) {
     return {
@@ -365,13 +413,19 @@ function getPrototypeDestination(
 
   const isPremium =
     pathname.startsWith("/premium") &&
+    !pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_HREF) &&
     !pathname.startsWith("/premium-company-pages");
+  const isPremiumUpsellHelpCenter = pathname.startsWith(
+    PREMIUM_UPSELL_HELP_CENTER_HREF,
+  );
   const isPremiumCompanyPages = pathname.startsWith("/premium-company-pages");
   const isVcaEcosystem = pathname.startsWith(VCA_ECOSYSTEM_HREF);
 
   return {
     href: isVcaEcosystem
       ? VCA_ECOSYSTEM_HREF
+      : isPremiumUpsellHelpCenter
+      ? PREMIUM_UPSELL_HELP_CENTER_HREF
       : isPremiumCompanyPages
       ? PREMIUM_COMPANY_PAGES_MEMBER_HREF
       : isPremium
@@ -380,6 +434,8 @@ function getPrototypeDestination(
     label: "Prototype",
     matches: isVcaEcosystem
       ? (candidate) => candidate.startsWith(VCA_ECOSYSTEM_HREF)
+      : isPremiumUpsellHelpCenter
+      ? (candidate) => candidate.startsWith(PREMIUM_UPSELL_HELP_CENTER_HREF)
       : isPremiumCompanyPages
       ? (candidate) => candidate.startsWith("/premium-company-pages")
       : isPremium
@@ -390,6 +446,8 @@ function getPrototypeDestination(
             isHiringPrototypePath(candidate),
     menu: isVcaEcosystem
       ? "vca-ecosystem"
+      : isPremiumUpsellHelpCenter
+      ? "premium-upsell-help-center"
       : isPremiumCompanyPages
       ? "premium-company-pages"
       : isPremium
@@ -399,6 +457,7 @@ function getPrototypeDestination(
       pathname,
       hiringShellLabel,
       premiumShellLabel,
+      premiumUpsellSignalLabel,
     ),
   };
 }
@@ -408,6 +467,7 @@ function getReviewDestinations(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   componentProductLens: ComponentProductLens = "hiring",
+  premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
 ): ReadonlyArray<ReviewDestination> {
   const destinations = [
     HOME_DESTINATION,
@@ -415,6 +475,7 @@ function getReviewDestinations(
       pathname,
       hiringShellLabel,
       premiumShellLabel,
+      premiumUpsellSignalLabel,
     ),
   ];
 
@@ -667,7 +728,23 @@ export function ReviewShellNav() {
       premiumCompanyPagesBaseHref,
       activePremiumCompanyPagesShellLabel,
     );
+  const activePremiumUpsellSignal =
+    searchParams.get("upmSignal") === "high"
+      ? "high"
+      : searchParams.get("upmSignal") === "low"
+        ? "low"
+        : null;
+  const activePremiumUpsellSignalLabel: PremiumUpsellSignalLabel | undefined =
+    activePremiumUpsellSignal === "high"
+      ? "High UPM signal"
+      : activePremiumUpsellSignal === "low"
+        ? "Low UPM signal"
+        : undefined;
+  const normalizedPremiumUpsellHelpCenterHref = activePremiumUpsellSignal
+    ? `${PREMIUM_UPSELL_HELP_CENTER_HREF}?upmSignal=${activePremiumUpsellSignal}`
+    : currentHref;
   const componentProductLens: ComponentProductLens =
+    pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_HREF) ||
     (pathname.startsWith("/premium") &&
       !pathname.startsWith("/premium-company-pages")) ||
     pathname.startsWith("/premium-company-pages") ||
@@ -806,9 +883,11 @@ export function ReviewShellNav() {
         activeHiringShellLabel,
         activePremiumShellLabel,
         componentProductLens,
+        activePremiumUpsellSignalLabel,
       ),
     [
       activeHiringShellLabel,
+      activePremiumUpsellSignalLabel,
       activePremiumShellLabel,
       componentProductLens,
       pathname,
@@ -856,12 +935,16 @@ export function ReviewShellNav() {
             const isActive = destination.matches(pathname);
             const hasMenu = Boolean(destination.menu);
             const isPremiumMenu = destination.menu === "premium";
+            const isPremiumUpsellHelpCenterMenu =
+              destination.menu === "premium-upsell-help-center";
             const isPremiumCompanyPagesMenu =
               destination.menu === "premium-company-pages";
             const isProjectMenu = destination.menu === "projects";
             const isVcaEcosystemMenu = destination.menu === "vca-ecosystem";
             const modeOptions = isVcaEcosystemMenu
               ? vcaEcosystemModeOptions
+              : isPremiumUpsellHelpCenterMenu
+              ? premiumUpsellHelpCenterModeOptions
               : isProjectMenu
               ? prototypeProjectOptions
               : isPremiumCompanyPagesMenu
@@ -870,6 +953,7 @@ export function ReviewShellNav() {
                 ? shellAwarePremiumModeOptions
                 : shellAwareHiringModeOptions;
             const shellOptions = isProjectMenu || isVcaEcosystemMenu
+              || isPremiumUpsellHelpCenterMenu
               ? []
               : isPremiumCompanyPagesMenu
                 ? premiumCompanyPagesShellOptions
@@ -936,6 +1020,8 @@ export function ReviewShellNav() {
                     currentHref={
                       isProjectMenu
                         ? pathname
+                        : isPremiumUpsellHelpCenterMenu
+                          ? normalizedPremiumUpsellHelpCenterHref
                         : isVcaEcosystemMenu
                           ? VCA_ECOSYSTEM_HREF
                         : isPremiumCompanyPagesMenu
@@ -946,6 +1032,7 @@ export function ReviewShellNav() {
                     }
                     onLoginSelect={
                       isProjectMenu ||
+                      isPremiumUpsellHelpCenterMenu ||
                       isVcaEcosystemMenu ||
                       isPremiumMenu ||
                       isPremiumCompanyPagesMenu
@@ -964,6 +1051,8 @@ export function ReviewShellNav() {
                     modeHeading={
                       isVcaEcosystemMenu
                         ? "VCA ecosystem"
+                        : isPremiumUpsellHelpCenterMenu
+                        ? "Premium upsell"
                         : isProjectMenu
                         ? "Choose project"
                         : isPremiumCompanyPagesMenu
@@ -975,6 +1064,7 @@ export function ReviewShellNav() {
                     callbackFormHeading="Call back form"
                     callbackFormOptions={
                       !isProjectMenu &&
+                      !isPremiumUpsellHelpCenterMenu &&
                       !isVcaEcosystemMenu &&
                       !isPremiumMenu &&
                       !isPremiumCompanyPagesMenu
@@ -984,6 +1074,7 @@ export function ReviewShellNav() {
                     callbackFormCurrentHref={normalizedHiringCallbackFormHref}
                     showVisitorControls={
                       !isProjectMenu &&
+                      !isPremiumUpsellHelpCenterMenu &&
                       !isVcaEcosystemMenu &&
                       !isPremiumMenu &&
                       !isPremiumCompanyPagesMenu

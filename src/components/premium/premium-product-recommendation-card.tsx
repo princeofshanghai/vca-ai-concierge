@@ -11,10 +11,12 @@ import {
 } from "./premium-plan-data";
 
 export function PremiumProductRecommendationCard({
+  displayName,
   planId = "business-suite",
   showAvatar = true,
   showPrice = true,
 }: Readonly<{
+  displayName?: string;
   planId?: PremiumPlanId;
   showAvatar?: boolean;
   showPrice?: boolean;
@@ -22,6 +24,7 @@ export function PremiumProductRecommendationCard({
   const plan =
     premiumPlans.find((premiumPlan) => premiumPlan.id === planId) ??
     premiumBusinessSuitePlan;
+  const planName = displayName ?? plan.name;
 
   return (
     <article className="chat-recommendation-enter flex w-full flex-col rounded-md border border-premium-brand bg-background py-xl pl-xl pr-xl">
@@ -32,13 +35,13 @@ export function PremiumProductRecommendationCard({
               aria-hidden="true"
               className="flex size-12 items-center justify-center"
             >
-              <Entity size={48} label={plan.name} />
+              <Entity size={48} label={planName} />
             </div>
           ) : null}
 
           <div className="flex flex-col gap-xs">
             <h2 className="text-heading-lg text-text">
-              {plan.name}
+              {planName}
             </h2>
             <p className="text-body-md text-text">{plan.subtitle}</p>
           </div>

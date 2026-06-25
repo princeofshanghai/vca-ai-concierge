@@ -175,6 +175,25 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
         ],
       },
       {
+        title: "Premium upsell",
+        items: [
+          {
+            id: "premium-upsell-badge",
+            title: "Premium upsell badge",
+            description:
+              "Promotes the Premium trial offer inside Help Center upsell surfaces.",
+            href: "/internal/components/premium-upsell/badge",
+          },
+          {
+            id: "premium-upsell-result-card",
+            title: "Premium upsell result card",
+            description:
+              "Shows a contextual Premium upsell inside search or help result surfaces.",
+            href: "/internal/components/premium-upsell/result-card",
+          },
+        ],
+      },
+      {
         title: "Premium Company Page",
         items: [
           {

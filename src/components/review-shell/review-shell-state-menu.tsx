@@ -504,8 +504,15 @@ export function ReviewShellStateMenu({
                     >
                       <Icon name="check" size="small" className="[&&]:size-3" />
                     </span>
-                    <span className="min-w-max flex-1 whitespace-nowrap text-[12px] font-medium leading-tight tracking-[0.01em]">
-                      {display.label}
+                    <span className="min-w-0 flex-1">
+                      <span className="block whitespace-nowrap text-[12px] font-medium leading-tight tracking-[0.01em]">
+                        {display.label}
+                      </span>
+                      {option.description ? (
+                        <span className="mt-0.5 block whitespace-nowrap text-[11px] font-normal leading-snug text-slate-400">
+                          {option.description}
+                        </span>
+                      ) : null}
                     </span>
                     {display.typeLabel ? (
                       <span className="shrink-0 text-[11px] font-medium leading-none text-slate-400">
@@ -623,8 +630,15 @@ export function ReviewShellStateMenu({
                     >
                       <Icon name="check" size="small" className="[&&]:size-3" />
                     </span>
-                    <span className="min-w-max flex-1 whitespace-nowrap text-[12px] font-medium leading-tight tracking-[0.01em]">
-                      {childDisplay.label}
+                    <span className="min-w-0 flex-1">
+                      <span className="block whitespace-nowrap text-[12px] font-medium leading-tight tracking-[0.01em]">
+                        {childDisplay.label}
+                      </span>
+                      {childOption.description ? (
+                        <span className="mt-0.5 block whitespace-nowrap text-[11px] font-normal leading-snug text-slate-400">
+                          {childOption.description}
+                        </span>
+                      ) : null}
                     </span>
                     {childDisplay.typeLabel ? (
                       <span className="shrink-0 text-[11px] font-medium leading-none text-slate-400">

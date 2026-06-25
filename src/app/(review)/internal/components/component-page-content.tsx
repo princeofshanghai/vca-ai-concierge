@@ -25,6 +25,11 @@ import { premiumConversationFlows } from "@/components/premium/premium-concierge
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
+import {
+  PremiumUpsellBadge,
+  PremiumUpsellResultCard,
+  type PremiumUpsellBadgeVariant,
+} from "@/components/premium-upsell";
 import { Badge } from "@/components/primitives/badge";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
@@ -270,6 +275,49 @@ const presenceBadgeExamples = [
   { label: "Large", size: "large" },
 ] as const;
 const progressIndicatorCircularSizes = [16, 20, 24, 32, 40, 48, 64] as const;
+const premiumUpsellBadgeExamples = [
+  {
+    label: "Inline on light",
+    variant: "inline-on-light",
+    surfaceClassName: "bg-background-neutral-soft",
+  },
+  {
+    label: "Inline on blue",
+    variant: "inline-on-blue",
+    surfaceClassName: "bg-[#0073B1]",
+  },
+  {
+    label: "Outline on blue",
+    variant: "outline-on-blue",
+    surfaceClassName: "bg-[#0073B1]",
+  },
+  {
+    label: "Floating",
+    variant: "floating",
+    surfaceClassName: "bg-background-neutral-soft",
+  },
+  {
+    label: "Solid",
+    variant: "solid",
+    surfaceClassName: "bg-background-neutral-soft",
+  },
+  {
+    label: "Solid with chip",
+    variant: "solid-with-chip",
+    surfaceClassName: "bg-background-neutral-soft",
+  },
+  {
+    label: "Strong",
+    variant: "strong",
+    surfaceClassName: "bg-background-neutral-soft",
+  },
+] as const satisfies ReadonlyArray<
+  Readonly<{
+    label: string;
+    surfaceClassName: string;
+    variant: PremiumUpsellBadgeVariant;
+  }>
+>;
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -1279,6 +1327,98 @@ function PremiumConciergePanelPage({ item }: Readonly<{ item: ComponentNavItem }
             className="md:!h-full"
             flow={premiumConversationFlows.high}
             showCloseAction={false}
+          />
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function PremiumUpsellBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium upsell">
+      <PreviewSection
+        title="Badge"
+        description="The Premium upsell badge is a compact offer label for Help Center upsell moments. It reuses the shared Premium chip and existing Premium color tokens."
+      >
+        <div className="grid gap-md sm:grid-cols-2 xl:grid-cols-3">
+          {premiumUpsellBadgeExamples.map(
+            ({ label, surfaceClassName, variant }) => (
+              <div
+                key={variant}
+                className="flex min-h-28 flex-col gap-md rounded-sm border border-border-faint bg-background p-md"
+              >
+                <p className="text-body-xs text-text-meta">{label}</p>
+                <div
+                  className={cx(
+                    "flex min-h-16 items-center rounded-xs px-lg py-md",
+                    surfaceClassName,
+                  )}
+                >
+                  <PremiumUpsellBadge variant={variant} />
+                </div>
+              </div>
+            ),
+          )}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function PremiumUpsellResultCardPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium upsell">
+      <PreviewSection
+        title="Generic"
+        description="The Premium upsell result card is a contextual card for search results, help surfaces, and other answer-like pages. Keep the copy tied to what the member is trying to do."
+      >
+        <div className="max-w-[895px]">
+          <PremiumUpsellResultCard
+            title="Premium can help with this goal"
+            body={
+              <p>
+                Use this space to connect the member&apos;s current task to a
+                relevant Premium benefit. Keep the message specific, helpful,
+                and short.
+              </p>
+            }
+            primaryAction={{
+              href: "/premium-upsell-help-center/survey?upmSignal=low",
+              label: "Start free trial",
+            }}
+            secondaryAction={{
+              href: "/premium/learn-more",
+              label: "Compare plans",
+            }}
+          />
+        </div>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Search result use case"
+        description="Example copy for a Help Center search about sending InMail or messaging people outside the member's network."
+      >
+        <div className="max-w-[895px]">
+          <PremiumUpsellResultCard
+            title="Message people outside your network with Premium"
+            body={
+              <p>
+                Premium Career includes InMail credits, so you can reach hiring
+                managers and people you&apos;re not connected to. You can also
+                get help drafting a message before you send.
+              </p>
+            }
+            primaryAction={{
+              href: "/premium-upsell-help-center/survey?upmSignal=low",
+              label: "Start free trial",
+            }}
+            secondaryAction={{
+              href: "/premium/learn-more",
+              label: "Compare Premium plans",
+            }}
           />
         </div>
       </PreviewSection>
@@ -3041,6 +3181,10 @@ export function ComponentPageContent({
       return <PremiumProductCardPage item={item} />;
     case "premium-concierge-panel":
       return <PremiumConciergePanelPage item={item} />;
+    case "premium-upsell-badge":
+      return <PremiumUpsellBadgePage item={item} />;
+    case "premium-upsell-result-card":
+      return <PremiumUpsellResultCardPage item={item} />;
     case "premium-company-page-vca-fab":
       return <PremiumCompanyPageVcaFabPage item={item} />;
     case "premium-company-page-side-panel":
