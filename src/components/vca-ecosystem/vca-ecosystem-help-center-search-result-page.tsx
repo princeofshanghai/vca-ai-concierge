@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 
 import { PremiumUpsellResultCard } from "@/components/premium-upsell";
 import { Entity } from "@/components/primitives/entity";
@@ -71,7 +72,7 @@ const searchResults = [
   },
 ] as const;
 
-function HelpSearchHeader() {
+export function HelpSearchHeader() {
   return (
     <header className="bg-[#0073B1] text-on-action">
       <div className="mx-auto flex min-h-[80px] max-w-[1288px] flex-col gap-md px-lg py-md sm:px-[30px] md:grid md:grid-cols-[174px_minmax(0,844px)_minmax(32px,1fr)] md:items-center md:gap-[34px] md:py-0 xl:px-0">
@@ -121,7 +122,7 @@ function HelpSearchHeader() {
   );
 }
 
-function SearchFilters() {
+export function SearchFilters() {
   return (
     <aside
       aria-labelledby="help-search-filters-title"
@@ -166,28 +167,41 @@ function SearchFilters() {
   );
 }
 
-function SearchResultList() {
+function DefaultSearchResultUpsell() {
+  return (
+    <PremiumUpsellResultCard
+      title="Message people outside your network with Premium"
+      body={
+        <p>
+          Premium Career includes InMail credits, so you can reach hiring
+          managers and people you&apos;re not connected to. You can also get
+          help drafting a message before you send.
+        </p>
+      }
+      primaryAction={{
+        href: PREMIUM_UPSELL_SURVEY_HREF,
+        label: "Start free trial",
+      }}
+      secondaryAction={{
+        href: "/premium/learn-more",
+        label: "Compare Premium plans",
+      }}
+    />
+  );
+}
+
+export function SearchResultList({
+  topContent = <DefaultSearchResultUpsell />,
+}: Readonly<{
+  topContent?: ReactNode;
+}>) {
   return (
     <section aria-label="Search results" className="min-w-0">
-      <PremiumUpsellResultCard
-        title="Message people outside your network with Premium"
-        body={
-          <p>
-            Premium Career includes InMail credits, so you can reach hiring
-            managers and people you&apos;re not connected to. You can also get
-            help drafting a message before you send.
-          </p>
-        }
-        primaryAction={{
-          href: PREMIUM_UPSELL_SURVEY_HREF,
-          label: "Start free trial",
-        }}
-        secondaryAction={{
-          href: "/premium/learn-more",
-          label: "Compare Premium plans",
-        }}
-      />
-      <div className="mt-[30px] flex flex-col gap-[26px]">
+      {topContent}
+      <div className="mt-[30px]">
+        <h2 className="text-heading-sm text-text">Search results</h2>
+      </div>
+      <div className="mt-md flex flex-col gap-[26px]">
         {searchResults.map((result) => (
           <article key={result.title}>
             <h2
@@ -222,7 +236,7 @@ function SearchResultList() {
   );
 }
 
-function SearchFooter() {
+export function SearchFooter() {
   return (
     <footer className="border-t border-border-faint bg-background">
       <div className="mx-auto flex max-w-[1210px] flex-col gap-md px-lg py-lg text-[13px] font-semibold leading-[18px] tracking-normal text-text sm:px-[30px] lg:flex-row lg:items-center lg:justify-between xl:px-0">
@@ -262,11 +276,21 @@ function SearchFooter() {
 
 export function VcaEcosystemHelpCenterSearchResultPage() {
   return (
+    <HelpCenterSearchResultsShell />
+  );
+}
+
+export function HelpCenterSearchResultsShell({
+  topContent,
+}: Readonly<{
+  topContent?: ReactNode;
+}> = {}) {
+  return (
     <main className="min-h-dvh bg-background text-text">
       <HelpSearchHeader />
       <div className="mx-auto grid max-w-[1288px] grid-cols-1 gap-[34px] px-lg py-[34px] sm:px-[30px] lg:grid-cols-[174px_minmax(0,895px)] lg:items-start xl:px-0">
         <SearchFilters />
-        <SearchResultList />
+        <SearchResultList topContent={topContent} />
       </div>
       <SearchFooter />
     </main>

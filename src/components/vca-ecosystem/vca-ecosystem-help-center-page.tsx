@@ -11,6 +11,7 @@ import {
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import {
   CHAT_PANEL_TRAY_TRANSITION_MS,
@@ -129,12 +130,21 @@ function getPrototypeUserMatches(searchValue: string) {
 }
 
 type VcaEcosystemHelpCenterPageProps = Readonly<{
-  premiumUpsellBadgeAction?: "open-premium-chat";
+  premiumUpsellBadgeAction?:
+    | "open-premium-chat"
+    | "open-premium-low-signal-chat";
   premiumUpsellBadgeHref?: string;
+  premiumUpsellInitialChatVariant?: ChatPanelVariant;
+  premiumUpsellStartChatAction?: "open-premium-inmail-support-chat";
+  premiumUpsellStartChatVariant?: ChatPanelVariant;
   showPremiumUpsellBadge?: boolean;
 }>;
 
-type HelpCenterChatMode = "support" | "premium-recommendation";
+type HelpCenterChatMode =
+  | "support"
+  | "premium-recommendation"
+  | "premium-low-signal-recommendation"
+  | "premium-inmail-support";
 
 function TopicCard({
   icon,
@@ -341,6 +351,7 @@ function HelpAssistantPanel({
   onRemoveUserSelectionChange,
   onVariantToggle,
 }: HelpAssistantPanelProps) {
+  const router = useRouter();
   const removeUserNextPromptsRef = useRef<HTMLDivElement | null>(null);
   const removeUserEntryRef = useRef<HTMLDivElement | null>(null);
   const removeUserMatchesRef = useRef<HTMLDivElement | null>(null);
@@ -354,6 +365,13 @@ function HelpAssistantPanel({
     removeUserMatches.find((person) => person.id === selectedRemoveUserId) ??
     null;
   const isPremiumRecommendationMode = mode === "premium-recommendation";
+  const isPremiumLowSignalRecommendationMode =
+    mode === "premium-low-signal-recommendation";
+  const isPremiumInMailSupportMode = mode === "premium-inmail-support";
+  const isPremiumChatMode =
+    isPremiumRecommendationMode ||
+    isPremiumLowSignalRecommendationMode ||
+    isPremiumInMailSupportMode;
 
   useEffect(() => {
     if (!showRemoveUserGuidance) {
@@ -476,12 +494,63 @@ function HelpAssistantPanel({
                     applicant, mark top choice jobs, and message hiring
                     managers directly.
                   </p>
+                </ChatMessageContent>
+              </ChatMessage>
+              <ChatResponseAttachment gap="sm">
+                <PremiumProductRecommendationCard
+                  displayName="Premium Career"
+                  planId="career"
+                />
+              </ChatResponseAttachment>
+              <ChatResponseAttachment gap="sm">
+                <div className="flex flex-wrap gap-sm">
+                  <Prompt
+                    prompt="Browse other plans"
+                    onPromptSelect={() => router.push("/premium/learn-more")}
+                  />
+                </div>
+              </ChatResponseAttachment>
+              <ChatMessageFeedbackFlow
+                className="mt-sm"
+                timestamp={getPrototypeMessageTimestamp(0)}
+              />
+            </div>
+          </ChatThread>
+        ) : isPremiumLowSignalRecommendationMode ? (
+          <ChatThread>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
                   <p>
-                    You can also{" "}
-                    <Link href="/premium/learn-more">
-                      browse all plans here
-                    </Link>{" "}
-                    if you&apos;d like to compare options.
+                    Happy to help you get started with Premium. To point you to
+                    the right plan, I need a little context first.
+                  </p>
+                  <p>What are you hoping Premium helps with most?</p>
+                </ChatMessageContent>
+              </ChatMessage>
+              <ChatMessageFeedbackFlow
+                className="mt-sm"
+                timestamp={getPrototypeMessageTimestamp(0)}
+              />
+            </div>
+            <ChatMessage
+              role="user"
+              timestamp={getPrototypeMessageTimestamp(1)}
+            >
+              I&apos;m mostly trying to message people outside my network and
+              see if Premium can help with my job search.
+            </ChatMessage>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    That helps. For that goal, Premium Career is probably the
+                    best place to start.
+                  </p>
+                  <p>
+                    It includes InMail credits, so you can reach people
+                    you&apos;re not connected to, and it also gives you tools to
+                    stand out in your job search.
                   </p>
                 </ChatMessageContent>
               </ChatMessage>
@@ -493,7 +562,91 @@ function HelpAssistantPanel({
               </ChatResponseAttachment>
               <ChatMessageFeedbackFlow
                 className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(0)}
+                timestamp={getPrototypeMessageTimestamp(2)}
+              />
+            </div>
+          </ChatThread>
+        ) : isPremiumInMailSupportMode ? (
+          <ChatThread>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    Hi there. With the help of AI, I can answer questions about
+                    Recruiter solutions or connect you to our team.
+                  </p>
+                </ChatMessageContent>
+              </ChatMessage>
+              <p className="mt-sm text-body-xs text-text-meta">
+                {getPrototypeMessageTimestamp(0)}
+              </p>
+            </div>
+            <ChatMessage
+              role="user"
+              timestamp={getPrototypeMessageTimestamp(1)}
+            >
+              How do I send an InMail message?
+            </ChatMessage>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    Here&apos;s the quick way to do it. Go to the member&apos;s
+                    profile and look for Message or InMail near the top of the
+                    page. If InMail is available, you can write your note,
+                    review it, and send it from there.
+                  </p>
+                  <p>
+                    One thing to know: InMail is for reaching people
+                    you&apos;re not connected to, and availability can depend on
+                    your account, the member&apos;s settings, and whether you
+                    have InMail credits.
+                  </p>
+                  <p>
+                    If you expect to message people outside your network more
+                    often, I can also show you the Premium option that includes
+                    InMail credits.
+                  </p>
+                </ChatMessageContent>
+              </ChatMessage>
+              <ChatMessageFeedbackFlow
+                className="mt-sm"
+                timestamp={getPrototypeMessageTimestamp(2)}
+              />
+            </div>
+            <ChatMessage
+              role="user"
+              timestamp={getPrototypeMessageTimestamp(3)}
+            >
+              Yes, show me
+            </ChatMessage>
+            <div className="flex flex-col items-start">
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    Sure. For messaging people outside your network while
+                    you&apos;re job searching, Premium Career is the plan
+                    I&apos;d start with.
+                  </p>
+                </ChatMessageContent>
+              </ChatMessage>
+              <ChatResponseAttachment gap="sm">
+                <PremiumProductRecommendationCard
+                  displayName="Premium Career"
+                  planId="career"
+                />
+              </ChatResponseAttachment>
+              <ChatResponseAttachment gap="sm">
+                <div className="flex flex-wrap gap-sm">
+                  <Prompt
+                    prompt="Browse other plans"
+                    onPromptSelect={() => router.push("/premium/learn-more")}
+                  />
+                </div>
+              </ChatResponseAttachment>
+              <ChatMessageFeedbackFlow
+                className="mt-sm"
+                timestamp={getPrototypeMessageTimestamp(4)}
               />
             </div>
           </ChatThread>
@@ -775,7 +928,7 @@ function HelpAssistantPanel({
           "aria-label": showRemoveUserEntry
             ? "Enter a name or email to find a user"
             : "Message",
-          disabled: isPremiumRecommendationMode || !showRemoveUserEntry,
+          disabled: isPremiumChatMode || !showRemoveUserEntry,
           onChange: (event: ChangeEvent<HTMLTextAreaElement>) =>
             onRemoveUserDraftChange(event.currentTarget.value),
           placeholder: showRemoveUserEntry
@@ -785,7 +938,7 @@ function HelpAssistantPanel({
         }}
         onSend={onRemoveUserLookupSubmit}
         sendDisabled={
-          isPremiumRecommendationMode ||
+          isPremiumChatMode ||
           !showRemoveUserEntry ||
           removeUserDraft.trim().length === 0
         }
@@ -798,6 +951,9 @@ function HelpAssistantPanel({
 export function VcaEcosystemHelpCenterPage({
   premiumUpsellBadgeAction,
   premiumUpsellBadgeHref,
+  premiumUpsellInitialChatVariant = "collapsed",
+  premiumUpsellStartChatAction,
+  premiumUpsellStartChatVariant = "collapsed",
   showPremiumUpsellBadge = false,
 }: VcaEcosystemHelpCenterPageProps) {
   const [chatPanelVariant, setChatPanelVariant] =
@@ -846,12 +1002,12 @@ export function VcaEcosystemHelpCenterPage({
     ? "md:!h-full md:!w-full md:!rounded-t-md md:!rounded-b-none"
     : "md:!h-full md:!w-full";
 
-  const openChat = useCallback(() => {
+  const openChat = useCallback((nextVariant: ChatPanelVariant = "collapsed") => {
     const isOpeningFromTray =
       isHybridTrayVisible && chatPanelPresence === "closed";
 
     if (!isOpeningFromTray) {
-      setChatPanelVariant("collapsed");
+      setChatPanelVariant(nextVariant);
     }
 
     setIsChatTrayOpeningBridgeVisible(isOpeningFromTray);
@@ -868,9 +1024,26 @@ export function VcaEcosystemHelpCenterPage({
   }, []);
 
   const openSupportChat = useCallback(() => {
-    setChatMode("support");
-    openChat();
-  }, [openChat]);
+    clearRemoveUserTaskCompletionTimer();
+    setChatMode(
+      premiumUpsellStartChatAction === "open-premium-inmail-support-chat"
+        ? "premium-inmail-support"
+        : "support",
+    );
+    setShowRemoveUserGuidance(false);
+    setShowRemoveUserEntry(false);
+    setShowRemoveUserConfirmation(false);
+    setRemoveUserTaskState(null);
+    setRemoveUserDraft("");
+    setRemoveUserSearchQuery("");
+    setSelectedRemoveUserId(null);
+    openChat(premiumUpsellStartChatVariant);
+  }, [
+    clearRemoveUserTaskCompletionTimer,
+    openChat,
+    premiumUpsellStartChatAction,
+    premiumUpsellStartChatVariant,
+  ]);
 
   const openPremiumUpsellChat = useCallback(() => {
     clearRemoveUserTaskCompletionTimer();
@@ -882,8 +1055,29 @@ export function VcaEcosystemHelpCenterPage({
     setRemoveUserDraft("");
     setRemoveUserSearchQuery("");
     setSelectedRemoveUserId(null);
-    openChat();
-  }, [clearRemoveUserTaskCompletionTimer, openChat]);
+    openChat(premiumUpsellInitialChatVariant);
+  }, [
+    clearRemoveUserTaskCompletionTimer,
+    openChat,
+    premiumUpsellInitialChatVariant,
+  ]);
+
+  const openPremiumLowSignalUpsellChat = useCallback(() => {
+    clearRemoveUserTaskCompletionTimer();
+    setChatMode("premium-low-signal-recommendation");
+    setShowRemoveUserGuidance(false);
+    setShowRemoveUserEntry(false);
+    setShowRemoveUserConfirmation(false);
+    setRemoveUserTaskState(null);
+    setRemoveUserDraft("");
+    setRemoveUserSearchQuery("");
+    setSelectedRemoveUserId(null);
+    openChat(premiumUpsellInitialChatVariant);
+  }, [
+    clearRemoveUserTaskCompletionTimer,
+    openChat,
+    premiumUpsellInitialChatVariant,
+  ]);
 
   const closeChat = useCallback(() => {
     clearRemoveUserTaskCompletionTimer();
@@ -1032,17 +1226,22 @@ export function VcaEcosystemHelpCenterPage({
               >
                 <PremiumUpsellBadge variant="solid" />
               </Link>
-            ) : showPremiumUpsellBadge &&
-              premiumUpsellBadgeAction === "open-premium-chat" ? (
+            ) : showPremiumUpsellBadge && premiumUpsellBadgeAction ? (
               <button
                 type="button"
                 aria-controls={isChatOpen ? chatPanelId : undefined}
                 aria-expanded={
-                  isChatOpen && chatMode === "premium-recommendation"
+                  isChatOpen &&
+                  (chatMode === "premium-recommendation" ||
+                    chatMode === "premium-low-signal-recommendation")
                 }
                 aria-haspopup="dialog"
                 className="inline-flex rounded-round outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
-                onClick={openPremiumUpsellChat}
+                onClick={
+                  premiumUpsellBadgeAction === "open-premium-low-signal-chat"
+                    ? openPremiumLowSignalUpsellChat
+                    : openPremiumUpsellChat
+                }
               >
                 <PremiumUpsellBadge variant="solid" />
               </button>

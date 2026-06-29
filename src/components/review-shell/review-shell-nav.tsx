@@ -21,6 +21,10 @@ const HIRING_ALL_INTENTS_HREF = "/hiring";
 const HIRING_PROTOTYPE_HREF = HIRING_ALL_INTENTS_HREF;
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_UPSELL_HELP_CENTER_HREF = "/premium-upsell-help-center";
+const PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF =
+  "/premium-upsell-help-center/ai-concierge";
+const PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF =
+  "/premium-upsell-help-center/ai-summary";
 const PREMIUM_UPSELL_HELP_CENTER_SEARCH_RESULT_HREF =
   "/premium-upsell-help-center/search-result";
 const PREMIUM_COMPANY_PAGES_MEMBER_HREF = "/premium-company-pages/member";
@@ -192,6 +196,38 @@ const premiumUpsellHelpCenterModeOptions = [
     href: PREMIUM_UPSELL_HELP_CENTER_SEARCH_RESULT_HREF,
     label: "Search result",
   },
+  {
+    id: "premium-upsell-help-center-ai-summary",
+    label: "AI summary",
+    options: [
+      {
+        id: "premium-upsell-help-center-ai-summary-high",
+        href: `${PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF}?signal=high`,
+        label: "High signal",
+      },
+      {
+        id: "premium-upsell-help-center-ai-summary-low",
+        href: `${PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF}?signal=low`,
+        label: "Low signal",
+      },
+    ],
+  },
+  {
+    id: "premium-upsell-help-center-ai-concierge",
+    label: "Using AI concierge",
+    options: [
+      {
+        id: "premium-upsell-help-center-ai-concierge-high",
+        href: `${PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF}?signal=high`,
+        label: "High signal",
+      },
+      {
+        id: "premium-upsell-help-center-ai-concierge-low",
+        href: `${PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF}?signal=low`,
+        label: "Low signal",
+      },
+    ],
+  },
 ] as const;
 const prototypeProjectOptions = [
   {
@@ -248,6 +284,8 @@ type PremiumCompanyPagesShellLabel =
 type PremiumCompanyPagesIntentLabel = "Buyer intent" | "Job seeker intent";
 type ComponentProductLens = "hiring" | "premium";
 type PremiumUpsellSignalLabel = "Low UPM signal" | "High UPM signal";
+type PremiumUpsellAiSignalLabel = "Low signal" | "High signal";
+type PremiumUpsellAiSummarySignalLabel = "Low signal" | "High signal";
 
 const HOME_DESTINATION: ReviewDestination = {
   href: "/",
@@ -311,6 +349,8 @@ function getPrototypeMetaLabel(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
+  premiumUpsellAiSignalLabel?: PremiumUpsellAiSignalLabel,
+  premiumUpsellAiSummarySignalLabel?: PremiumUpsellAiSummarySignalLabel,
 ): string | undefined {
   if (pathname.startsWith("/internal/components")) {
     return undefined;
@@ -353,6 +393,18 @@ function getPrototypeMetaLabel(
 
   if (pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_SEARCH_RESULT_HREF)) {
     return "Search result";
+  }
+
+  if (pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF)) {
+    return premiumUpsellAiSummarySignalLabel
+      ? `AI summary · ${premiumUpsellAiSummarySignalLabel}`
+      : "AI summary";
+  }
+
+  if (pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF)) {
+    return premiumUpsellAiSignalLabel
+      ? `Using AI concierge · ${premiumUpsellAiSignalLabel}`
+      : "Using AI concierge";
   }
 
   if (pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_HREF)) {
@@ -401,6 +453,8 @@ function getPrototypeDestination(
   hiringShellLabel?: HiringShellLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
+  premiumUpsellAiSignalLabel?: PremiumUpsellAiSignalLabel,
+  premiumUpsellAiSummarySignalLabel?: PremiumUpsellAiSummarySignalLabel,
 ): ReviewDestination {
   if (pathname.startsWith("/internal/components")) {
     return {
@@ -458,6 +512,8 @@ function getPrototypeDestination(
       hiringShellLabel,
       premiumShellLabel,
       premiumUpsellSignalLabel,
+      premiumUpsellAiSignalLabel,
+      premiumUpsellAiSummarySignalLabel,
     ),
   };
 }
@@ -468,6 +524,8 @@ function getReviewDestinations(
   premiumShellLabel?: PremiumShellLabel,
   componentProductLens: ComponentProductLens = "hiring",
   premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
+  premiumUpsellAiSignalLabel?: PremiumUpsellAiSignalLabel,
+  premiumUpsellAiSummarySignalLabel?: PremiumUpsellAiSummarySignalLabel,
 ): ReadonlyArray<ReviewDestination> {
   const destinations = [
     HOME_DESTINATION,
@@ -476,6 +534,8 @@ function getReviewDestinations(
       hiringShellLabel,
       premiumShellLabel,
       premiumUpsellSignalLabel,
+      premiumUpsellAiSignalLabel,
+      premiumUpsellAiSummarySignalLabel,
     ),
   ];
 
@@ -740,9 +800,46 @@ export function ReviewShellNav() {
       : activePremiumUpsellSignal === "low"
         ? "Low UPM signal"
         : undefined;
-  const normalizedPremiumUpsellHelpCenterHref = activePremiumUpsellSignal
-    ? `${PREMIUM_UPSELL_HELP_CENTER_HREF}?upmSignal=${activePremiumUpsellSignal}`
-    : currentHref;
+  const activePremiumUpsellAiSignal =
+    pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF) &&
+    searchParams.get("signal") === "high"
+      ? "high"
+      : pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF) &&
+          searchParams.get("signal") === "low"
+        ? "low"
+        : null;
+  const activePremiumUpsellAiSignalLabel:
+    | PremiumUpsellAiSignalLabel
+    | undefined =
+    activePremiumUpsellAiSignal === "high"
+      ? "High signal"
+      : activePremiumUpsellAiSignal === "low"
+        ? "Low signal"
+        : undefined;
+  const activePremiumUpsellAiSummarySignal =
+    pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF) &&
+    searchParams.get("signal") === "high"
+      ? "high"
+      : pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF) &&
+          searchParams.get("signal") === "low"
+        ? "low"
+        : null;
+  const activePremiumUpsellAiSummarySignalLabel:
+    | PremiumUpsellAiSummarySignalLabel
+    | undefined =
+    activePremiumUpsellAiSummarySignal === "high"
+      ? "High signal"
+      : activePremiumUpsellAiSummarySignal === "low"
+        ? "Low signal"
+        : undefined;
+  const normalizedPremiumUpsellHelpCenterHref =
+    activePremiumUpsellAiSummarySignal
+      ? `${PREMIUM_UPSELL_HELP_CENTER_AI_SUMMARY_HREF}?signal=${activePremiumUpsellAiSummarySignal}`
+      : activePremiumUpsellAiSignal
+        ? `${PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF}?signal=${activePremiumUpsellAiSignal}`
+        : activePremiumUpsellSignal
+          ? `${PREMIUM_UPSELL_HELP_CENTER_HREF}?upmSignal=${activePremiumUpsellSignal}`
+          : currentHref;
   const componentProductLens: ComponentProductLens =
     pathname.startsWith(PREMIUM_UPSELL_HELP_CENTER_HREF) ||
     (pathname.startsWith("/premium") &&
@@ -884,9 +981,13 @@ export function ReviewShellNav() {
         activePremiumShellLabel,
         componentProductLens,
         activePremiumUpsellSignalLabel,
+        activePremiumUpsellAiSignalLabel,
+        activePremiumUpsellAiSummarySignalLabel,
       ),
     [
       activeHiringShellLabel,
+      activePremiumUpsellAiSummarySignalLabel,
+      activePremiumUpsellAiSignalLabel,
       activePremiumUpsellSignalLabel,
       activePremiumShellLabel,
       componentProductLens,
