@@ -126,11 +126,21 @@ import {
 import { PersonCard as ResponsePersonCard } from "./response-blocks/PersonCard";
 import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
 import { ResponseRail } from "./response-blocks/ResponseRail";
-import { StreamingText as ResponseStreamingText } from "./response-blocks/Text";
+import { DEFAULT_REACTION_TYPES, ReactionPile } from "./reaction-pile";
 import { ScriptedResponseTurn } from "./scripted-response-turn";
+import {
+  splitTextBlocks,
+  StreamingEmphasizedText,
+  type StreamingTextLink as VcaAssistantTextLink,
+} from "./streaming-emphasized-text";
 import { useHorizontalCarousel } from "./use-horizontal-carousel";
 import { useScriptedTurnController } from "./use-scripted-turn-controller";
 import { VcaFab } from "./vca-fab";
+import {
+  VELORA_LOGO_AVATAR_RADIUS_CLASS,
+  VELORA_LOGO_TILE_BACKGROUND_CLASS,
+  VELORA_LOGO_TILE_BACKGROUND_STYLE,
+} from "./velora-logo-styles";
 
 const ASSET_ROOT = PCP_MEMBER_ASSET_ROOT;
 const VELORA_VISITOR_ASSISTANT_COLOR = "#2AA986";
@@ -244,12 +254,6 @@ function isVcaLiveSupportRequest(prompt: string) {
   ].some((keyword) => normalizedPrompt.includes(keyword));
 }
 
-const VELORA_LOGO_AVATAR_RADIUS_CLASS = "rounded-sm";
-const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
-const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
-  backgroundColor: "#ACF5B3",
-};
-
 function VeloraVcaLogoMark({
   showAiBadge = false,
   size = "small",
@@ -333,22 +337,6 @@ function VcaUserMessage({
   );
 }
 
-function InlineVcaStreamingText({
-  isStreaming,
-  text,
-}: Readonly<{
-  isStreaming: boolean;
-  text: string;
-}>) {
-  return isStreaming ? <ResponseStreamingText text={text} /> : <>{text}</>;
-}
-
-type VcaAssistantTextLink = Readonly<{
-  href?: string;
-  label: string;
-  onSelect?: () => void;
-}>;
-
 const vcaPageExplorerResponseHighlights: Partial<
   Record<VcaVisitorPromptId, ReadonlyArray<string>>
 > = {
@@ -390,137 +378,6 @@ const vcaPageExplorerResponseLinks: Partial<
   ],
 };
 
-function EmphasizedVcaText({
-  highlights,
-  isStreaming,
-  links = [],
-  text,
-}: Readonly<{
-  highlights: ReadonlyArray<string>;
-  isStreaming: boolean;
-  links?: ReadonlyArray<VcaAssistantTextLink>;
-  text: string;
-}>) {
-  const pieces: Array<
-    Readonly<{
-      text: string;
-      highlight?: boolean;
-      link?: VcaAssistantTextLink;
-    }>
-  > = [];
-  let remainingText = text;
-
-  while (remainingText.length > 0) {
-    const linkMatches = links.map((link) => ({
-      index: remainingText.indexOf(link.label),
-      kind: "link" as const,
-      label: link.label,
-      link,
-    }));
-    const highlightMatches = highlights.map((phrase) => ({
-      index: remainingText.indexOf(phrase),
-      kind: "highlight" as const,
-      label: phrase,
-      link: undefined,
-    }));
-    const nextMatch = [...linkMatches, ...highlightMatches].reduce<{
-      index: number;
-      kind: "link" | "highlight";
-      label: string;
-      link?: VcaAssistantTextLink;
-    } | null>((currentMatch, phrase) => {
-      if (phrase.index === -1) {
-        return currentMatch;
-      }
-
-      if (
-        currentMatch === null ||
-        phrase.index < currentMatch.index ||
-        (phrase.index === currentMatch.index &&
-          (phrase.kind === "link" ||
-            phrase.label.length > currentMatch.label.length))
-      ) {
-        return phrase;
-      }
-
-      return currentMatch;
-    }, null);
-
-    if (!nextMatch) {
-      pieces.push({ text: remainingText });
-      break;
-    }
-
-    if (nextMatch.index > 0) {
-      pieces.push({
-        text: remainingText.slice(0, nextMatch.index),
-      });
-    }
-
-    pieces.push({
-      text: nextMatch.label,
-      highlight: nextMatch.kind === "highlight",
-      link: nextMatch.link,
-    });
-    remainingText = remainingText.slice(
-      nextMatch.index + nextMatch.label.length,
-    );
-  }
-
-  return (
-    <>
-      {pieces.map((piece, index) => {
-        if (piece.link) {
-          const linkContent = (
-            <InlineVcaStreamingText
-              isStreaming={isStreaming}
-              text={piece.text}
-            />
-          );
-
-          if (piece.link.onSelect) {
-            return (
-              <button
-                className="inline font-semibold text-action hover:text-action-hover hover:underline"
-                key={index}
-                onClick={() => piece.link?.onSelect?.()}
-                type="button"
-              >
-                {linkContent}
-              </button>
-            );
-          }
-
-          return (
-            <a
-              className="font-semibold text-action hover:text-action-hover hover:underline"
-              href={piece.link.href ?? "#"}
-              key={index}
-            >
-              {linkContent}
-            </a>
-          );
-        }
-
-        return piece.highlight ? (
-          <strong className="font-semibold text-text" key={index}>
-            <InlineVcaStreamingText
-              isStreaming={isStreaming}
-              text={piece.text}
-            />
-          </strong>
-        ) : (
-          <InlineVcaStreamingText
-            isStreaming={isStreaming}
-            key={index}
-            text={piece.text}
-          />
-        );
-      })}
-    </>
-  );
-}
-
 function FormattedVcaAssistantText({
   highlights = [],
   links = [],
@@ -536,16 +393,13 @@ function FormattedVcaAssistantText({
 }>) {
   const isStreaming = streamStatus === "streaming";
   const visibleText = isStreaming ? streamText : text;
-  const blocks = visibleText
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+  const blocks = splitTextBlocks(visibleText);
 
   return (
     <>
       {blocks.map((block, index) => (
         <p className={cx(index > 0 && "mt-md")} key={index}>
-          <EmphasizedVcaText
+          <StreamingEmphasizedText
             highlights={highlights}
             isStreaming={isStreaming}
             links={links}
@@ -678,7 +532,7 @@ function VeloraLinkedInPostProofCard({
       imageSrc={assetSrc(pcpProofSnippets.postImage)}
       followerCount={pcpCompanyProfile.followers}
       reactions={pcpProofSnippets.postEngagement}
-      reactionTypes={defaultReactionTypes}
+      reactionTypes={DEFAULT_REACTION_TYPES}
       reposts={`${pcpProofSnippets.postRepostCount} reposts`}
       snippet="A 12,000-employee retailer simplified carrier coordination before open enrollment by keeping eligibility cleanup, carrier files, and employee communications in one workflow."
       timestamp="35m"
@@ -731,7 +585,7 @@ function VeloraReadinessPostProofCard({
       linkTitle={vcaReadinessPostDetail.title}
       followerCount={pcpCompanyProfile.followers}
       reactions="216"
-      reactionTypes={defaultReactionTypes}
+      reactionTypes={DEFAULT_REACTION_TYPES}
       snippet="Open enrollment readiness starts before plan changes are announced. Here are a few ways benefits teams can keep the launch on track."
       timestamp="35m"
     />
@@ -2475,31 +2329,6 @@ function EntityPile({
           label=""
           size={size}
           src={assetSrc(image)}
-        />
-      ))}
-    </span>
-  );
-}
-
-const defaultReactionTypes: ReadonlyArray<SduiReactionIconType> = [
-  "like",
-  "empathy",
-  "interest",
-];
-
-function ReactionPile({
-  reactionTypes = defaultReactionTypes,
-}: Readonly<{ reactionTypes?: ReadonlyArray<SduiReactionIconType> }>) {
-  return (
-    <span className="flex items-center">
-      {reactionTypes.map((reaction, index) => (
-        <SduiReactionIcon
-          className={index < reactionTypes.length - 1 ? "-mr-[4px]" : undefined}
-          decorative
-          key={`${reaction}-${index}`}
-          ring
-          size="xsmall"
-          type={reaction}
         />
       ))}
     </span>

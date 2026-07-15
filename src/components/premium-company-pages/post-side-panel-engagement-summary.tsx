@@ -1,37 +1,11 @@
 import type { ReactNode } from "react";
 
-import {
-  SduiReactionIcon,
-  type SduiReactionIconType,
-} from "@/components/primitives/reaction-icon";
+import type { SduiReactionIconType } from "@/components/primitives/reaction-icon";
 
-const defaultReactionTypes: ReadonlyArray<SduiReactionIconType> = [
-  "like",
-  "empathy",
-  "interest",
-];
+import { ReactionPile } from "./reaction-pile";
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
-}
-
-function ReactionPile({
-  reactionTypes = defaultReactionTypes,
-}: Readonly<{ reactionTypes?: ReadonlyArray<SduiReactionIconType> }>) {
-  return (
-    <span className="flex items-center">
-      {reactionTypes.map((reaction, index) => (
-        <SduiReactionIcon
-          className={index < reactionTypes.length - 1 ? "-mr-[4px]" : undefined}
-          decorative
-          key={`${reaction}-${index}`}
-          ring
-          size="xsmall"
-          type={reaction}
-        />
-      ))}
-    </span>
-  );
 }
 
 export function PostSidePanelEngagementSummary({

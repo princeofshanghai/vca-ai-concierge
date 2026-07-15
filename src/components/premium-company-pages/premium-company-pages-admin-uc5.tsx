@@ -42,7 +42,6 @@ import { MetricWithTrend as ResponseMetricWithTrend } from "@/components/premium
 import { PersonCard as ResponsePersonCard } from "@/components/premium-company-pages/response-blocks/PersonCard";
 import { ResponseRail } from "@/components/premium-company-pages/response-blocks/ResponseRail";
 import {
-  StreamingText as ResponseStreamingText,
   Text as ResponseText,
   TextRecommendationList as ResponseTextRecommendationList,
 } from "@/components/premium-company-pages/response-blocks/Text";
@@ -56,10 +55,19 @@ import {
   pcpVisitorPersona,
 } from "./persona";
 import { ScriptedResponseTurn as BaseScriptedResponseTurn } from "./scripted-response-turn";
+import {
+  InlineStreamingText,
+  splitTextBlocks,
+  StreamingEmphasizedText,
+} from "./streaming-emphasized-text";
 import { TodayActionCard } from "./today-action-card";
 import { useScriptedTurnController } from "./use-scripted-turn-controller";
 import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
 import { PcpAdminGoldAiMark } from "./vca-fab";
+import {
+  VELORA_LOGO_TILE_BACKGROUND_CLASS,
+  VELORA_LOGO_TILE_BACKGROUND_STYLE,
+} from "./velora-logo-styles";
 import {
   adminUc5CompetitorRows,
   adminUc5DemographicGroups,
@@ -94,10 +102,6 @@ function ScriptedResponseTurn(
   );
 }
 
-const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
-const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
-  backgroundColor: "#ACF5B3",
-};
 const ADMIN_BOOST_POST_IMAGE = "member/arbor-open-enrollment-post.png";
 const CHERI_SPARKS_AVATAR = pcpVisitorPersona.avatar;
 const ADMIN_AI_ASSISTANT_SETTINGS_HREF =
@@ -1561,88 +1565,6 @@ function SelfInitiatedVisitorAudienceThread({
   );
 }
 
-function InlineStreamingText({
-  isStreaming,
-  text,
-}: Readonly<{
-  isStreaming: boolean;
-  text: string;
-}>) {
-  return isStreaming ? <ResponseStreamingText text={text} /> : <>{text}</>;
-}
-
-function EmphasizedStreamingText({
-  highlights = VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS,
-  isStreaming,
-  text,
-}: Readonly<{
-  highlights?: ReadonlyArray<string>;
-  isStreaming: boolean;
-  text: string;
-}>) {
-  const pieces: Array<Readonly<{ text: string; highlight: boolean }>> = [];
-  let remainingText = text;
-
-  while (remainingText.length > 0) {
-    const nextMatch = highlights.reduce<{
-      phrase: string;
-      index: number;
-    } | null>((currentMatch, phrase) => {
-      const index = remainingText.indexOf(phrase);
-
-      if (index === -1) {
-        return currentMatch;
-      }
-
-      if (
-        currentMatch === null ||
-        index < currentMatch.index ||
-        (index === currentMatch.index &&
-          phrase.length > currentMatch.phrase.length)
-      ) {
-        return { phrase, index };
-      }
-
-      return currentMatch;
-    }, null);
-
-    if (!nextMatch) {
-      pieces.push({ text: remainingText, highlight: false });
-      break;
-    }
-
-    if (nextMatch.index > 0) {
-      pieces.push({
-        text: remainingText.slice(0, nextMatch.index),
-        highlight: false,
-      });
-    }
-
-    pieces.push({ text: nextMatch.phrase, highlight: true });
-    remainingText = remainingText.slice(
-      nextMatch.index + nextMatch.phrase.length,
-    );
-  }
-
-  return (
-    <>
-      {pieces.map((piece, index) =>
-        piece.highlight ? (
-          <strong className="font-semibold text-text" key={index}>
-            <InlineStreamingText isStreaming={isStreaming} text={piece.text} />
-          </strong>
-        ) : (
-          <InlineStreamingText
-            isStreaming={isStreaming}
-            key={index}
-            text={piece.text}
-          />
-        ),
-      )}
-    </>
-  );
-}
-
 function FormattedInsightResponseText({
   emphasizeOpening = true,
   highlights,
@@ -1654,10 +1576,7 @@ function FormattedInsightResponseText({
   isStreaming: boolean;
   text: string;
 }>) {
-  const blocks = text
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+  const blocks = splitTextBlocks(text);
 
   return (
     <ResponseText className="chat-message-enter">
@@ -1669,7 +1588,7 @@ function FormattedInsightResponseText({
           )}
           key={index}
         >
-          <EmphasizedStreamingText
+          <StreamingEmphasizedText
             highlights={highlights}
             isStreaming={isStreaming}
             text={block}
@@ -1834,10 +1753,7 @@ function PageEngagementResponseText({
   isStreaming: boolean;
   text: string;
 }>) {
-  const blocks = text
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+  const blocks = splitTextBlocks(text);
 
   return (
     <ResponseText className="chat-message-enter">

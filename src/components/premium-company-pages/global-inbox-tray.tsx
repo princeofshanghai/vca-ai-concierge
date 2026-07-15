@@ -13,12 +13,11 @@ import {
   pcpCompanyProfile,
   pcpVisitorPersona,
 } from "./persona";
-
-const VELORA_LOGO_AVATAR_RADIUS_CLASS = "rounded-sm";
-const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
-const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
-  backgroundColor: "#ACF5B3",
-};
+import {
+  VELORA_LOGO_AVATAR_RADIUS_CLASS,
+  VELORA_LOGO_TILE_BACKGROUND_CLASS,
+  VELORA_LOGO_TILE_BACKGROUND_STYLE,
+} from "./velora-logo-styles";
 
 type GlobalInboxThread = Readonly<{
   id: string;

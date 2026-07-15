@@ -10,6 +10,10 @@ import { Icon } from "@/components/primitives/icon";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 
 import { pcpCompanyProfile } from "./persona";
+import {
+  VELORA_LOGO_TILE_BACKGROUND_CLASS,
+  VELORA_LOGO_TILE_BACKGROUND_STYLE,
+} from "./velora-logo-styles";
 
 type InsightCardType =
   | "anomaly"
@@ -70,11 +74,6 @@ export type InsightCardProps = Readonly<{
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
-
-const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
-const VELORA_LOGO_TILE_BACKGROUND_STYLE = {
-  backgroundColor: "#ACF5B3",
-};
 
 function isVeloraLogo(visual: InsightCardVisual) {
   return (
