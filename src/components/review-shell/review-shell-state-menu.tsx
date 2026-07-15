@@ -34,6 +34,7 @@ type ReviewShellModeMenuOption = Readonly<{
   description?: string;
   typeLabel?: string;
   hasDividerAfter?: boolean;
+  showSubmenu?: boolean;
   options?: ReadonlyArray<ReviewShellModeMenuOption>;
 }>;
 
@@ -530,14 +531,15 @@ export function ReviewShellStateMenu({
 
     return modeOptions.map((option, optionIndex) => {
       const index = storyControlCount + optionIndex;
-      const hasSubmenu = Boolean(option.options?.length);
-      const isSelected = hasSubmenu
-        ? shouldShowModeSelection &&
-          (option.options?.some((childOption) =>
-            optionMatchesCurrentHref(childOption.href),
-          ) ??
-            false)
-        : shouldShowModeSelection && optionMatchesCurrentHref(option.href);
+      const hasSubmenu =
+        Boolean(option.options?.length) && option.showSubmenu !== false;
+      const hasSelectedChild =
+        option.options?.some((childOption) =>
+          optionMatchesCurrentHref(childOption.href),
+        ) ?? false;
+      const isSelected =
+        shouldShowModeSelection &&
+        (optionMatchesCurrentHref(option.href) || hasSelectedChild);
       const display = getModeOptionDisplay(option);
 
       if (hasSubmenu) {
