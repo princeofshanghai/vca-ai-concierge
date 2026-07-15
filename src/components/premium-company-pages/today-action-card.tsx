@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import type { MouseEventHandler, ReactNode } from "react";
 
 import { getButtonClassName } from "@/components/primitives/button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
+import { IntentPrefetchLink } from "@/components/primitives/intent-prefetch-link";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 
 type TodayActionCardBadge = Readonly<{
@@ -52,13 +52,13 @@ function renderInlineAction(
 
   if (action.href) {
     return (
-      <Link
+      <IntentPrefetchLink
         className={actionClassName}
         href={action.href}
         onClick={action.onSelect}
       >
         {action.label}
-      </Link>
+      </IntentPrefetchLink>
     );
   }
 
@@ -81,9 +81,13 @@ function renderPrimaryAction(action: TodayActionCardInlineAction) {
 
   if (action.href) {
     return (
-      <Link className={className} href={action.href} onClick={action.onSelect}>
+      <IntentPrefetchLink
+        className={className}
+        href={action.href}
+        onClick={action.onSelect}
+      >
         {action.label}
-      </Link>
+      </IntentPrefetchLink>
     );
   }
 
@@ -115,7 +119,7 @@ function renderCardLink({
   }
 
   return (
-    <Link
+    <IntentPrefetchLink
       aria-label={cardLabel}
       className="absolute inset-0 z-10 rounded-xs outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
       href={cardHref}

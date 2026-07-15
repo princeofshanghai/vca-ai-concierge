@@ -9,9 +9,8 @@ import {
   type RefObject,
 } from "react";
 
-import Link from "next/link";
-
 import { Icon } from "@/components/primitives/icon";
+import { IntentPrefetchLink } from "@/components/primitives/intent-prefetch-link";
 import { FLOW_REVIEW_NAV_ITEMS } from "@/lib/conversation-flows";
 
 const LIVE_PROTOTYPE_NAV_ITEM = {
@@ -373,7 +372,7 @@ export function ReviewShellStateMenu({
       );
 
       return (
-        <Link
+        <IntentPrefetchLink
           key={option.id}
           ref={(element) => {
             itemRefs.current[optionIndex] = element;
@@ -407,7 +406,7 @@ export function ReviewShellStateMenu({
               {display.typeLabel}
             </span>
           ) : null}
-        </Link>
+        </IntentPrefetchLink>
       );
     });
   }
@@ -481,7 +480,7 @@ export function ReviewShellStateMenu({
                   optionMatchesCurrentHref(option.href);
 
                 return (
-                  <Link
+                  <IntentPrefetchLink
                     key={option.id}
                     href={option.href ?? "#"}
                     role="menuitemradio"
@@ -519,7 +518,7 @@ export function ReviewShellStateMenu({
                         {display.typeLabel}
                       </span>
                     ) : null}
-                  </Link>
+                  </IntentPrefetchLink>
                 );
               })}
             </div>
@@ -614,7 +613,7 @@ export function ReviewShellStateMenu({
                   optionMatchesCurrentHref(childOption.href);
 
                 return (
-                  <Link
+                  <IntentPrefetchLink
                     key={childOption.id}
                     href={childOption.href ?? "#"}
                     role="menuitemradio"
@@ -652,7 +651,7 @@ export function ReviewShellStateMenu({
                         {childDisplay.typeLabel}
                       </span>
                     ) : null}
-                  </Link>
+                  </IntentPrefetchLink>
                 );
               })}
             </div>
@@ -669,7 +668,7 @@ export function ReviewShellStateMenu({
               : "",
           ].join(" ")}
         >
-          <Link
+          <IntentPrefetchLink
             ref={(element) => {
               itemRefs.current[index] = element;
             }}
@@ -702,7 +701,7 @@ export function ReviewShellStateMenu({
                 {display.typeLabel}
               </span>
             ) : null}
-          </Link>
+          </IntentPrefetchLink>
         </div>
       );
     });
@@ -825,7 +824,7 @@ export function ReviewShellStateMenu({
                         option.href === currentCallbackFormHref;
 
                       return (
-                        <Link
+                        <IntentPrefetchLink
                           key={option.id}
                           ref={(element) => {
                             itemRefs.current[index] = element;
@@ -841,7 +840,7 @@ export function ReviewShellStateMenu({
                           className={getSegmentClasses(isSelected)}
                         >
                           {option.label}
-                        </Link>
+                        </IntentPrefetchLink>
                       );
                     })}
                   </div>
@@ -868,7 +867,7 @@ export function ReviewShellStateMenu({
                       const isSelected = option.href === currentHref;
 
                       return (
-                        <Link
+                        <IntentPrefetchLink
                           key={option.id}
                           ref={(element) => {
                             itemRefs.current[index] = element;
@@ -884,7 +883,7 @@ export function ReviewShellStateMenu({
                           className={getSegmentClasses(isSelected)}
                         >
                           {option.label}
-                        </Link>
+                        </IntentPrefetchLink>
                       );
                     })}
                   </div>

@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -10,6 +9,7 @@ import {
   premiumReviewFlowNavItems,
 } from "@/components/premium/premium-concierge-flows";
 import { Icon } from "@/components/primitives/icon";
+import { IntentPrefetchLink } from "@/components/primitives/intent-prefetch-link";
 
 import { useReviewShellState } from "./review-shell-state";
 import {
@@ -1211,7 +1211,7 @@ export function ReviewShellNav() {
                     : "justify-self-end",
                 ].join(" ")}
               >
-                <Link
+                <IntentPrefetchLink
                   href={destination.href}
                   aria-current={isActive ? "page" : undefined}
                   className={getPillClasses(
@@ -1234,7 +1234,7 @@ export function ReviewShellNav() {
                   ) : (
                     destination.label
                   )}
-                </Link>
+                </IntentPrefetchLink>
               </li>
             );
           })}

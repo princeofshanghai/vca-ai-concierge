@@ -1,7 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import { Icon, type IconName } from "@/components/primitives/icon";
+import { IntentPrefetchLink } from "@/components/primitives/intent-prefetch-link";
 
 type ProjectStatus = "In progress" | "Ready";
 type ProjectImagePreview = Readonly<{
@@ -140,7 +140,7 @@ function ProjectTile({
   status,
 }: Readonly<(typeof projectOptions)[number]>) {
   return (
-    <Link
+    <IntentPrefetchLink
       href={href}
       aria-label={`${label}, ${status}`}
       className="group flex min-w-0 flex-col rounded-sm outline-none transition-opacity duration-150 ease-out focus-visible:ring-4 focus-visible:ring-action-focus-ring"
@@ -157,7 +157,7 @@ function ProjectTile({
           <ProjectStatusChip status={status} />
         </div>
       </div>
-    </Link>
+    </IntentPrefetchLink>
   );
 }
 
@@ -180,7 +180,7 @@ export function ProjectChooserPage() {
             />
             VCA AI concierge
           </p>
-          <Link
+          <IntentPrefetchLink
             href={componentLibraryOption.href}
             className="group inline-flex items-center gap-xs rounded-xs px-xs py-xs text-[13px] font-normal leading-[18px] tracking-normal text-text-meta outline-none transition-colors duration-150 ease-out hover:text-text focus-visible:ring-4 focus-visible:ring-action-focus-ring"
           >
@@ -190,7 +190,7 @@ export function ProjectChooserPage() {
               size="small"
               className="transition-transform duration-150 ease-out group-hover:translate-x-[2px]"
             />
-          </Link>
+          </IntentPrefetchLink>
         </header>
 
         <div className="mt-[112px] md:mt-[144px]">

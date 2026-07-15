@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Icon } from "@/components/primitives/icon";
+import { IntentPrefetchLink } from "@/components/primitives/intent-prefetch-link";
 
 import { componentNavGroups } from "./component-nav";
 
@@ -89,7 +89,7 @@ export function ComponentSidebar() {
                         const isActive = pathname === item.href;
 
                         return (
-                          <Link
+                          <IntentPrefetchLink
                             key={item.id}
                             href={item.href}
                             aria-current={isActive ? "page" : undefined}
@@ -101,7 +101,7 @@ export function ComponentSidebar() {
                             )}
                           >
                             {item.title}
-                          </Link>
+                          </IntentPrefetchLink>
                         );
                       })}
                     </div>

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import {
   useId,
   useRef,
@@ -21,6 +20,7 @@ import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
+import { IntentPrefetchLink } from "@/components/primitives/intent-prefetch-link";
 import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 import {
@@ -1100,14 +1100,14 @@ function RailSection({
 
         if (href) {
           return (
-            <Link
+            <IntentPrefetchLink
               aria-current={active ? "page" : undefined}
               className={itemClassName}
               href={href}
               key={label}
             >
               {itemContent}
-            </Link>
+            </IntentPrefetchLink>
           );
         }
 
@@ -1135,12 +1135,22 @@ function PageRail({
   return (
     <aside className="overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="relative p-lg pt-stack">
-        <div
-          className="absolute inset-x-0 top-0 h-[96px] bg-cover bg-center"
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0)), url(${pcpCompanyProfile.coverSrc})`,
-          }}
-        />
+        <div className="absolute inset-x-0 top-0 h-[96px] overflow-hidden">
+          <Image
+            alt=""
+            className="object-cover object-center"
+            fill
+            sizes="240px"
+            src={pcpCompanyProfile.coverSrc}
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0.7), rgba(0,0,0,0))",
+            }}
+          />
+        </div>
         <div className="absolute inset-x-0 top-0 h-xs bg-premium-brand" />
         <span className="absolute right-sm top-md text-control-sm text-white">
           Premium
@@ -1942,9 +1952,9 @@ function SettingsRow({ row }: Readonly<{ row: SettingsRowData }>) {
 
   if (row.href) {
     return (
-      <Link className={rowClassName} href={row.href}>
+      <IntentPrefetchLink className={rowClassName} href={row.href}>
         {rowContent}
-      </Link>
+      </IntentPrefetchLink>
     );
   }
 
@@ -1986,13 +1996,13 @@ function SettingsDetailHeader() {
   return (
     <section className="min-w-0 overflow-hidden rounded-sm border border-border-faint bg-background">
       <div className="flex min-h-[72px] items-center gap-md px-lg py-lg sm:px-xxl">
-        <Link
+        <IntentPrefetchLink
           aria-label="Back to Settings"
           className="inline-flex size-8 shrink-0 items-center justify-center rounded-round text-icon outline-none transition-colors hover:bg-background-transparent-hover hover:text-icon-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
           href={ADMIN_SETTINGS_HREF}
         >
           <Icon name="arrow-left-large" size="medium" />
-        </Link>
+        </IntentPrefetchLink>
         <h1 className="text-heading-lg tracking-normal text-text">
           Manage AI assistant
         </h1>
