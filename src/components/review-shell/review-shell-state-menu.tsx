@@ -34,7 +34,6 @@ type ReviewShellModeMenuOption = Readonly<{
   description?: string;
   typeLabel?: string;
   hasDividerAfter?: boolean;
-  showSubmenu?: boolean;
   options?: ReadonlyArray<ReviewShellModeMenuOption>;
 }>;
 
@@ -531,8 +530,7 @@ export function ReviewShellStateMenu({
 
     return modeOptions.map((option, optionIndex) => {
       const index = storyControlCount + optionIndex;
-      const hasSubmenu =
-        Boolean(option.options?.length) && option.showSubmenu !== false;
+      const hasSubmenu = Boolean(option.options?.length);
       const hasSelectedChild =
         option.options?.some((childOption) =>
           optionMatchesCurrentHref(childOption.href),
@@ -564,6 +562,7 @@ export function ReviewShellStateMenu({
               aria-haspopup="menu"
               aria-expanded={isSubmenuOpen}
               tabIndex={index === focusIndex ? 0 : -1}
+              onClick={() => setActiveModeGroupId(option.id)}
               onKeyDown={(event) => handleItemKeyDown(event, index)}
               ref={(element) => {
                 itemRefs.current[index] = element;
@@ -586,11 +585,17 @@ export function ReviewShellStateMenu({
                   </span>
                 ) : null}
               </span>
-              <Icon
-                name="chevron-right"
-                size="small"
-                className="shrink-0 text-slate-400 [&&]:size-3"
-              />
+              {display.typeLabel ? (
+                <span className="shrink-0 text-[11px] font-medium leading-none text-slate-400">
+                  {display.typeLabel}
+                </span>
+              ) : (
+                <Icon
+                  name="chevron-right"
+                  size="small"
+                  className="shrink-0 text-slate-400 [&&]:size-3"
+                />
+              )}
             </button>
             <div
               role="menu"
