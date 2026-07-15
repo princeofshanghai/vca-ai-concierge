@@ -1,12 +1,14 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import {
   ChatMessage,
-  ChatMessageFeedbackFlow,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThread,
   Prompt,
   RecommendationCard,
 } from "@/components/chat/chat-ui";
+import { getChatResponseFeedbackPolicy } from "@/components/chat/chat-response";
 import { Button } from "@/components/primitives/button";
 import {
   STARTER_PROMPTS,
@@ -69,28 +71,43 @@ function AvailabilityVariants({ step }: { step: FlowReviewAvailabilityStep }) {
       <div className="flex w-full max-w-[33rem] flex-col gap-xl pr-sm">
         {step.variants.map((variant, index) => {
           const role = variant.role ?? "assistant";
-          const showFeedback =
-            role === "assistant" && variant.feedbackEligible === true;
+          const feedbackPolicy =
+            role === "assistant"
+              ? getChatResponseFeedbackPolicy(
+                  variant.responsePurpose ?? "answer",
+                )
+              : "none";
           const timestamp = getPrototypeMessageTimestamp(index);
 
           return (
             <section key={variant.id} className="flex flex-col gap-md">
               <p className="text-body-xs text-text-meta">{variant.label}</p>
-              {showFeedback ? (
-                <div className="flex flex-col items-start gap-sm">
+              {role === "assistant" ? (
+                <ChatResponseBlock
+                  feedbackPolicy={feedbackPolicy}
+                  timestamp={timestamp}
+                >
                   <ChatMessage role={role}>{variant.message}</ChatMessage>
-                  <ChatMessageFeedbackFlow timestamp={timestamp} />
-                </div>
+                  <ChatResponseAttachment>
+                    <RecommendationCard
+                      title={variant.title}
+                      primaryAction={variant.primaryAction}
+                      secondaryAction={variant.secondaryAction}
+                    />
+                  </ChatResponseAttachment>
+                </ChatResponseBlock>
               ) : (
                 <ChatMessage role={role} timestamp={timestamp}>
                   {variant.message}
                 </ChatMessage>
               )}
-              <RecommendationCard
-                title={variant.title}
-                primaryAction={variant.primaryAction}
-                secondaryAction={variant.secondaryAction}
-              />
+              {role !== "assistant" ? (
+                <RecommendationCard
+                  title={variant.title}
+                  primaryAction={variant.primaryAction}
+                  secondaryAction={variant.secondaryAction}
+                />
+              ) : null}
             </section>
           );
         })}
@@ -99,34 +116,79 @@ function AvailabilityVariants({ step }: { step: FlowReviewAvailabilityStep }) {
   );
 }
 
-function renderStep(step: FlowReviewStep, index: number) {
+function isResponseSurface(step: FlowReviewStep | undefined) {
+  return step?.kind === "recommendation" || step?.kind === "resources";
+}
+
+function renderResponseSurface(step: FlowReviewStep): ReactNode {
+  if (step.kind === "recommendation") {
+    return (
+      <RecommendationCard
+        title={step.title}
+        description={step.description}
+        primaryAction={step.primaryAction}
+        secondaryAction={step.secondaryAction}
+      />
+    );
+  }
+
+  if (step.kind === "resources") {
+    return <ResourceCards step={step} />;
+  }
+
+  return null;
+}
+
+function renderStep(
+  step: FlowReviewStep,
+  index: number,
+  steps: ReadonlyArray<FlowReviewStep>,
+) {
+  const previousStep = steps[index - 1];
+  const nextStep = steps[index + 1];
+
+  if (
+    isResponseSurface(step) &&
+    previousStep?.kind === "message" &&
+    previousStep.role === "assistant"
+  ) {
+    return null;
+  }
+
   if (step.kind === "message") {
     const showFeedback = shouldShowFlowReviewMessageFeedback(step);
     const showStarterPrompts = step.showStarterPromptsAfter === true;
     const timestamp = getPrototypeMessageTimestamp(index);
-    const messageNode = (
-      <ChatMessage role={step.role} timestamp={showFeedback ? undefined : timestamp}>
-        {step.content}
-      </ChatMessage>
-    );
 
-    if (showStarterPrompts || showFeedback) {
+    if (step.role === "assistant") {
       return (
-        <div key={step.id} className="flex flex-col items-start">
-          {messageNode}
+        <ChatResponseBlock
+          feedbackPolicy={showFeedback ? "rateable" : "none"}
+          key={step.id}
+          timestamp={timestamp}
+        >
+          <ChatMessage role={step.role}>{step.content}</ChatMessage>
+          {isResponseSurface(nextStep) ? (
+            <ChatResponseAttachment>
+              {renderResponseSurface(nextStep)}
+            </ChatResponseAttachment>
+          ) : null}
           {showStarterPrompts ? (
-            <div className="mt-md w-full">
+            <ChatResponseAttachment>
               <StarterPromptRow />
-            </div>
+            </ChatResponseAttachment>
           ) : null}
-          {showFeedback ? (
-            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
-          ) : null}
-        </div>
+        </ChatResponseBlock>
       );
     }
 
-    return <Fragment key={step.id}>{messageNode}</Fragment>;
+    return (
+      <Fragment key={step.id}>
+        <ChatMessage role={step.role} timestamp={timestamp}>
+          {step.content}
+        </ChatMessage>
+      </Fragment>
+    );
   }
 
   if (step.kind === "recommendation") {
@@ -165,7 +227,9 @@ export function FlowReviewPage({ flow }: FlowReviewPageProps) {
           className="border-t border-border-faint pt-xxxl"
         >
           <ChatThread className="mx-auto" timestamp="Today">
-            {flow.steps.map(renderStep)}
+            {flow.steps.map((step, index) =>
+              renderStep(step, index, flow.steps),
+            )}
           </ChatThread>
         </section>
       </div>

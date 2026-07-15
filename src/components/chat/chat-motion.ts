@@ -11,9 +11,19 @@ import {
 
 export const CHAT_PANEL_TRANSITION_MS = 240;
 export const CHAT_PANEL_TRAY_TRANSITION_MS = 320;
-export const CHAT_ASSISTANT_THINKING_DELAY_MS = 650;
-export const CHAT_ASSISTANT_STREAM_WORD_FADE_MS = 180;
+export const CHAT_ASSISTANT_THINKING_DELAY_MS = 360;
+export const CHAT_ASSISTANT_STREAM_CHUNK_FADE_MS = 90;
+export const CHAT_ASSISTANT_STREAM_CHUNK_DELAY_MS = 58;
+const CHAT_ASSISTANT_STREAM_WORDS_PER_CHUNK = 4;
+const CHAT_ASSISTANT_STREAM_TARGET_MAX_UPDATES = 20;
 const CHAT_PANEL_VIEW_TRANSITION_CLASS = "chat-panel-view-transition";
+const CHAT_RESPONSE_RUNWAY_SELECTOR = "[data-chat-response-runway]";
+const CHAT_ANCHOR_STATE_ATTRIBUTE = "data-chat-anchor-state";
+const CHAT_ANCHOR_HIDDEN_ATTRIBUTE = "data-chat-anchor-hidden";
+const CHAT_THINKING_MESSAGE_SELECTOR = ".chat-thinking-message";
+const CHAT_LATEST_CONTENT_THRESHOLD_PX = 8;
+const CHAT_MESSAGE_ANCHOR_TOLERANCE_PX = 2;
+const CHAT_MESSAGE_ANCHOR_DURATION_MS = CHAT_PANEL_TRAY_TRANSITION_MS;
 
 export type ChatPanelPresence = "closed" | "entering" | "open" | "exiting";
 export type ChatMessageStreamStatus = "thinking" | "streaming" | "complete";
@@ -36,6 +46,7 @@ type ChatAssistantStreamResponse = Readonly<{
   id: string;
   text: string;
   streamDelayScale?: number;
+  thinkingDelayMs?: number;
 }>;
 
 type UseChatAssistantStreamOptions<
@@ -120,25 +131,138 @@ export function startChatPanelViewTransition(callback: () => void): boolean {
 }
 
 export function splitIntoStreamChunks(text: string): Array<string> {
-  return text.match(/\S+\s*/g) ?? [text];
+  const words = text.match(/\S+\s*/g);
+
+  if (!words) {
+    return [text];
+  }
+
+  const chunks: Array<string> = [];
+  let currentChunk = "";
+  let currentWordCount = 0;
+
+  words.forEach((word, index) => {
+    currentChunk += word;
+    currentWordCount += 1;
+
+    const trimmedWord = word.trim();
+    const remainingWordCount = words.length - index - 1;
+    const endsSentence = /[.!?](?:["')\]]+)?$/.test(trimmedWord);
+    const endsClause = /[,;:](?:["')\]]+)?$/.test(trimmedWord);
+    const reachedTarget =
+      currentWordCount >= CHAT_ASSISTANT_STREAM_WORDS_PER_CHUNK;
+    const hasEnoughWordsForClause =
+      currentWordCount >= CHAT_ASSISTANT_STREAM_WORDS_PER_CHUNK - 1;
+    const hasNearbyBoundary = words
+      .slice(index + 1, index + 3)
+      .some((nextWord) => /[.!?,;:](?:["')\]]+)?$/.test(nextWord.trim()));
+    const wouldLeaveTinyFinalChunk =
+      remainingWordCount > 0 &&
+      remainingWordCount < CHAT_ASSISTANT_STREAM_WORDS_PER_CHUNK;
+    const shouldFlush =
+      remainingWordCount === 0 ||
+      endsSentence ||
+      (endsClause && hasEnoughWordsForClause) ||
+      (reachedTarget && !hasNearbyBoundary && !wouldLeaveTinyFinalChunk) ||
+      (currentWordCount >= CHAT_ASSISTANT_STREAM_WORDS_PER_CHUNK + 2 &&
+        !wouldLeaveTinyFinalChunk);
+
+    if (!shouldFlush) {
+      return;
+    }
+
+    chunks.push(currentChunk);
+    currentChunk = "";
+    currentWordCount = 0;
+  });
+
+  return chunks;
 }
 
 export function getStreamDelay(chunk: string): number {
   const trimmed = chunk.trim();
 
-  if (/[.!?]$/.test(trimmed)) {
-    return 140;
+  if (/[.!?](?:["')\]]+)?$/.test(trimmed)) {
+    return CHAT_ASSISTANT_STREAM_CHUNK_DELAY_MS + 18;
   }
 
-  if (/[,;:]$/.test(trimmed)) {
-    return 80;
+  if (/[,;:](?:["')\]]+)?$/.test(trimmed)) {
+    return CHAT_ASSISTANT_STREAM_CHUNK_DELAY_MS + 8;
   }
 
-  return 48;
+  return CHAT_ASSISTANT_STREAM_CHUNK_DELAY_MS;
+}
+
+function getResponseRunway(element: HTMLElement): HTMLElement | null {
+  return element.querySelector<HTMLElement>(CHAT_RESPONSE_RUNWAY_SELECTOR);
+}
+
+function getRealContentBottom(element: HTMLElement): number {
+  const runway = getResponseRunway(element);
+
+  if (!runway) {
+    return element.scrollHeight;
+  }
+
+  const containerRect = element.getBoundingClientRect();
+  const runwayRect = runway.getBoundingClientRect();
+
+  return element.scrollTop + runwayRect.top - containerRect.top;
+}
+
+function setResponseRunwayHeight(element: HTMLElement, height: number) {
+  const runway = getResponseRunway(element);
+
+  if (!runway) {
+    return;
+  }
+
+  const nextHeight = Math.max(0, Math.ceil(height));
+
+  if (Math.abs(runway.getBoundingClientRect().height - nextHeight) <= 0.5) {
+    return;
+  }
+
+  runway.style.height = `${nextHeight}px`;
+}
+
+function setAnchorMoving(element: HTMLElement, isMoving: boolean) {
+  const thinkingMessages = element.querySelectorAll<HTMLElement>(
+    CHAT_THINKING_MESSAGE_SELECTOR,
+  );
+
+  if (isMoving) {
+    element.setAttribute(CHAT_ANCHOR_STATE_ATTRIBUTE, "moving");
+
+    thinkingMessages.forEach((message) => {
+      message.style.visibility = "hidden";
+      message.setAttribute(CHAT_ANCHOR_HIDDEN_ATTRIBUTE, "true");
+    });
+
+    return;
+  }
+
+  element.removeAttribute(CHAT_ANCHOR_STATE_ATTRIBUTE);
+
+  thinkingMessages.forEach((message) => {
+    if (message.hasAttribute(CHAT_ANCHOR_HIDDEN_ATTRIBUTE)) {
+      message.style.removeProperty("visibility");
+      message.removeAttribute(CHAT_ANCHOR_HIDDEN_ATTRIBUTE);
+    }
+  });
+}
+
+function easeOutCubic(progress: number) {
+  return 1 - Math.pow(1 - progress, 3);
 }
 
 function hasHiddenLatestContent(element: HTMLElement): boolean {
-  return element.scrollHeight - element.clientHeight - element.scrollTop > 8;
+  const visibleBottom = element.scrollTop + element.clientHeight;
+
+  return (
+    getRealContentBottom(element) - visibleBottom >
+    CHAT_LATEST_CONTENT_THRESHOLD_PX
+  );
 }
 
 function getLatestUserMessage(element: HTMLElement): HTMLElement | null {
@@ -160,10 +284,24 @@ function getScrollTopForElement({
 }) {
   const containerRect = scrollContainer.getBoundingClientRect();
   const elementRect = element.getBoundingClientRect();
+  const transform = window.getComputedStyle(element).transform;
+  let animatedTranslateY = 0;
+
+  if (transform && transform !== "none") {
+    try {
+      animatedTranslateY = new DOMMatrixReadOnly(transform).m42;
+    } catch {
+      animatedTranslateY = 0;
+    }
+  }
 
   return Math.max(
     0,
-    scrollContainer.scrollTop + elementRect.top - containerRect.top - topOffset,
+    scrollContainer.scrollTop +
+      elementRect.top -
+      animatedTranslateY -
+      containerRect.top -
+      topOffset,
   );
 }
 
@@ -175,6 +313,31 @@ export function useChatLatestMessageAnchor<Element extends HTMLElement>({
 }: UseChatLatestMessageAnchorOptions<Element>) {
   const [hasLatestBelow, setHasLatestBelow] = useState(false);
   const latestAnchorKeyRef = useRef<unknown>(undefined);
+  const latestUserMessageRef = useRef<HTMLElement | null>(null);
+  const shouldPreserveAnchorRef = useRef(false);
+  const isApplyingAnchorRef = useRef(false);
+  const anchorStartFrameRef = useRef<number | null>(null);
+  const anchorAnimationFrameRef = useRef<number | null>(null);
+
+  const clearAnchorMotion = useCallback(() => {
+    if (anchorStartFrameRef.current !== null) {
+      window.cancelAnimationFrame(anchorStartFrameRef.current);
+      anchorStartFrameRef.current = null;
+    }
+
+    if (anchorAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(anchorAnimationFrameRef.current);
+      anchorAnimationFrameRef.current = null;
+    }
+
+    const scrollContainer = scrollRef.current;
+
+    if (scrollContainer) {
+      setAnchorMoving(scrollContainer, false);
+    }
+
+    isApplyingAnchorRef.current = false;
+  }, [scrollRef]);
 
   const updateHasLatestBelow = useCallback(() => {
     const scrollContainer = scrollRef.current;
@@ -199,15 +362,67 @@ export function useChatLatestMessageAnchor<Element extends HTMLElement>({
         return;
       }
 
+      shouldPreserveAnchorRef.current = false;
+      clearAnchorMotion();
+
       window.requestAnimationFrame(() => {
         scrollContainer.scrollTo({
-          top: scrollContainer.scrollHeight,
+          top: Math.max(
+            0,
+            getRealContentBottom(scrollContainer) - scrollContainer.clientHeight,
+          ),
           behavior: prefersReducedMotion() ? "auto" : behavior,
         });
         window.requestAnimationFrame(updateHasLatestBelow);
       });
     },
-    [scrollRef, updateHasLatestBelow],
+    [clearAnchorMotion, scrollRef, updateHasLatestBelow],
+  );
+
+  const syncResponseRunway = useCallback(
+    ({
+      reposition,
+      behavior = "auto",
+    }: {
+      reposition: boolean;
+      behavior?: ScrollBehavior;
+    }) => {
+      const scrollContainer = scrollRef.current;
+      const latestUserMessage = scrollContainer
+        ? getLatestUserMessage(scrollContainer)
+        : null;
+
+      if (!scrollContainer || !latestUserMessage) {
+        updateHasLatestBelow();
+        return false;
+      }
+
+      const desiredScrollTop = getScrollTopForElement({
+        element: latestUserMessage,
+        scrollContainer,
+        topOffset,
+      });
+      const requiredRunwayHeight = Math.max(
+        0,
+        desiredScrollTop +
+          scrollContainer.clientHeight -
+          getRealContentBottom(scrollContainer),
+      );
+
+      setResponseRunwayHeight(scrollContainer, requiredRunwayHeight);
+
+      if (reposition) {
+        scrollContainer.scrollTo({
+          top: desiredScrollTop,
+          behavior: prefersReducedMotion() ? "auto" : behavior,
+        });
+      }
+
+      updateHasLatestBelow();
+
+      return true;
+    },
+    [scrollRef, topOffset, updateHasLatestBelow],
   );
 
   const anchorLatestUserMessage = useCallback(() => {
@@ -217,38 +432,142 @@ export function useChatLatestMessageAnchor<Element extends HTMLElement>({
       : null;
 
     if (!scrollContainer || !latestUserMessage) {
+      clearAnchorMotion();
       updateHasLatestBelow();
       return false;
     }
 
-    const desiredScrollTop = getScrollTopForElement({
-      element: latestUserMessage,
-      scrollContainer,
-      topOffset,
-    });
-    const maxScrollTop = Math.max(
-      0,
-      scrollContainer.scrollHeight - scrollContainer.clientHeight,
-    );
+    clearAnchorMotion();
+    shouldPreserveAnchorRef.current = true;
+    isApplyingAnchorRef.current = true;
+    setAnchorMoving(scrollContainer, true);
 
-    scrollContainer.scrollTo({
-      top: Math.min(desiredScrollTop, maxScrollTop),
-      behavior: "auto",
+    const didAnchor = syncResponseRunway({
+      reposition: false,
     });
-    updateHasLatestBelow();
+
+    if (!didAnchor) {
+      shouldPreserveAnchorRef.current = false;
+      clearAnchorMotion();
+      return false;
+    }
+
+    latestUserMessageRef.current = latestUserMessage;
+    anchorStartFrameRef.current = window.requestAnimationFrame(() => {
+      anchorStartFrameRef.current = null;
+
+      const targetScrollTop = getScrollTopForElement({
+        element: latestUserMessage,
+        scrollContainer,
+        topOffset,
+      });
+      const startScrollTop = scrollContainer.scrollTop;
+      const scrollDistance = targetScrollTop - startScrollTop;
+
+      const finishAnchorMotion = () => {
+        anchorAnimationFrameRef.current = null;
+        isApplyingAnchorRef.current = false;
+        setAnchorMoving(scrollContainer, false);
+        updateHasLatestBelow();
+      };
+
+      if (
+        prefersReducedMotion() ||
+        Math.abs(scrollDistance) <= CHAT_MESSAGE_ANCHOR_TOLERANCE_PX
+      ) {
+        scrollContainer.scrollTop = targetScrollTop;
+        finishAnchorMotion();
+        return;
+      }
+
+      let animationStartTime: number | null = null;
+
+      const animateAnchor = (timestamp: number) => {
+        animationStartTime ??= timestamp;
+
+        const progress = Math.min(
+          1,
+          (timestamp - animationStartTime) / CHAT_MESSAGE_ANCHOR_DURATION_MS,
+        );
+        scrollContainer.scrollTop =
+          startScrollTop + scrollDistance * easeOutCubic(progress);
+
+        if (progress >= 1) {
+          scrollContainer.scrollTop = targetScrollTop;
+          finishAnchorMotion();
+          return;
+        }
+
+        anchorAnimationFrameRef.current =
+          window.requestAnimationFrame(animateAnchor);
+      };
+
+      anchorAnimationFrameRef.current =
+        window.requestAnimationFrame(animateAnchor);
+    });
 
     return true;
+  }, [
+    clearAnchorMotion,
+    scrollRef,
+    syncResponseRunway,
+    topOffset,
+    updateHasLatestBelow,
+  ]);
+
+  const handleScroll = useCallback(() => {
+    const scrollContainer = scrollRef.current;
+
+    if (
+      scrollContainer &&
+      latestAnchorKeyRef.current !== undefined &&
+      shouldPreserveAnchorRef.current &&
+      !isApplyingAnchorRef.current
+    ) {
+      const latestUserMessage = getLatestUserMessage(scrollContainer);
+
+      if (latestUserMessage) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const messageRect = latestUserMessage.getBoundingClientRect();
+        const visualTop = messageRect.top - containerRect.top;
+
+        if (
+          Math.abs(visualTop - topOffset) >
+          CHAT_MESSAGE_ANCHOR_TOLERANCE_PX
+        ) {
+          shouldPreserveAnchorRef.current = false;
+        }
+      }
+    }
+
+    updateHasLatestBelow();
   }, [scrollRef, topOffset, updateHasLatestBelow]);
 
   useLayoutEffect(() => {
     if (anchorKey === undefined || anchorKey === null) {
       latestAnchorKeyRef.current = undefined;
+      latestUserMessageRef.current = null;
+      shouldPreserveAnchorRef.current = false;
+      clearAnchorMotion();
+      const scrollContainer = scrollRef.current;
+
+      if (scrollContainer) {
+        setResponseRunwayHeight(scrollContainer, 0);
+      }
+
       updateHasLatestBelow();
       return;
     }
 
     if (latestAnchorKeyRef.current === anchorKey) {
       return;
+    }
+
+    const scrollContainer = scrollRef.current;
+
+    if (scrollContainer) {
+      isApplyingAnchorRef.current = true;
+      setAnchorMoving(scrollContainer, true);
     }
 
     const frame = window.requestAnimationFrame(() => {
@@ -260,43 +579,141 @@ export function useChatLatestMessageAnchor<Element extends HTMLElement>({
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [anchorKey, anchorLatestUserMessage, updateHasLatestBelow]);
+  }, [
+    anchorKey,
+    anchorLatestUserMessage,
+    clearAnchorMotion,
+    scrollRef,
+    updateHasLatestBelow,
+  ]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      updateHasLatestBelow();
+      syncResponseRunway({
+        reposition: false,
+      });
     });
 
     return () => {
       window.cancelAnimationFrame(frame);
     };
-  }, [contentKey, updateHasLatestBelow]);
+  }, [contentKey, syncResponseRunway]);
 
   useEffect(() => {
     const scrollContainer = scrollRef.current;
 
-    if (!scrollContainer || typeof ResizeObserver === "undefined") {
+    if (!scrollContainer) {
       return;
     }
 
-    const resizeObserver = new ResizeObserver(() => {
-      updateHasLatestBelow();
-    });
+    let syncFrame: number | null = null;
+    const scheduleLayoutSync = () => {
+      if (syncFrame !== null) {
+        return;
+      }
 
-    resizeObserver.observe(scrollContainer);
+      syncFrame = window.requestAnimationFrame(() => {
+        syncFrame = null;
+
+        const latestUserMessage = getLatestUserMessage(scrollContainer);
+
+        if (
+          anchorKey !== undefined &&
+          anchorKey !== null &&
+          latestAnchorKeyRef.current === anchorKey &&
+          latestUserMessage &&
+          latestUserMessage !== latestUserMessageRef.current
+        ) {
+          anchorLatestUserMessage();
+          return;
+        }
+
+        syncResponseRunway({
+          reposition:
+            shouldPreserveAnchorRef.current &&
+            !isApplyingAnchorRef.current,
+        });
+      });
+    };
+    const resizeObserver =
+      typeof ResizeObserver === "undefined"
+        ? null
+        : new ResizeObserver(scheduleLayoutSync);
+    const mutationObserver =
+      typeof MutationObserver === "undefined"
+        ? null
+        : new MutationObserver(() => {
+            if (
+              scrollContainer.getAttribute(CHAT_ANCHOR_STATE_ATTRIBUTE) ===
+              "moving"
+            ) {
+              setAnchorMoving(scrollContainer, true);
+            }
+
+            if (scrollContainer.firstElementChild) {
+              resizeObserver?.observe(scrollContainer.firstElementChild);
+            }
+
+            scheduleLayoutSync();
+          });
+
+    resizeObserver?.observe(scrollContainer);
 
     if (scrollContainer.firstElementChild) {
-      resizeObserver.observe(scrollContainer.firstElementChild);
+      resizeObserver?.observe(scrollContainer.firstElementChild);
     }
 
+    mutationObserver?.observe(scrollContainer, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
+
     return () => {
-      resizeObserver.disconnect();
+      resizeObserver?.disconnect();
+      mutationObserver?.disconnect();
+      if (syncFrame !== null) {
+        window.cancelAnimationFrame(syncFrame);
+      }
     };
-  }, [scrollRef, updateHasLatestBelow]);
+  }, [anchorKey, anchorLatestUserMessage, scrollRef, syncResponseRunway]);
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+
+    if (!scrollContainer) {
+      return;
+    }
+
+    const releasePreservedAnchor = () => {
+      shouldPreserveAnchorRef.current = false;
+      clearAnchorMotion();
+    };
+
+    scrollContainer.addEventListener("wheel", releasePreservedAnchor, {
+      passive: true,
+    });
+    scrollContainer.addEventListener("touchstart", releasePreservedAnchor, {
+      passive: true,
+    });
+    scrollContainer.addEventListener("pointerdown", releasePreservedAnchor, {
+      passive: true,
+    });
+    scrollContainer.addEventListener("keydown", releasePreservedAnchor);
+
+    return () => {
+      scrollContainer.removeEventListener("wheel", releasePreservedAnchor);
+      scrollContainer.removeEventListener("touchstart", releasePreservedAnchor);
+      scrollContainer.removeEventListener("pointerdown", releasePreservedAnchor);
+      scrollContainer.removeEventListener("keydown", releasePreservedAnchor);
+    };
+  }, [clearAnchorMotion, scrollRef]);
+
+  useEffect(() => clearAnchorMotion, [clearAnchorMotion]);
 
   return {
     hasLatestBelow,
-    handleScroll: updateHasLatestBelow,
+    handleScroll,
     scrollToLatest,
   };
 }
@@ -317,6 +734,10 @@ export function useChatAssistantStream<
     const response = pendingResponse;
     const shouldReduceMotion = prefersReducedMotion();
     const chunks = splitIntoStreamChunks(response.text);
+    const chunksPerUpdate = Math.max(
+      1,
+      Math.ceil(chunks.length / CHAT_ASSISTANT_STREAM_TARGET_MAX_UPDATES),
+    );
     let streamTimer: number | null = null;
     let visibleText = "";
     let index = 0;
@@ -331,26 +752,38 @@ export function useChatAssistantStream<
       onStreamStart(response);
 
       function streamNextChunk() {
-        const nextChunk = chunks[index];
+        const nextChunks = chunks.slice(index, index + chunksPerUpdate);
 
-        if (!nextChunk) {
+        if (nextChunks.length === 0) {
           onComplete(response);
           return;
         }
 
-        visibleText += nextChunk;
-        index += 1;
+        visibleText += nextChunks.join("");
+        index += nextChunks.length;
 
         onStreamText(response, visibleText);
 
+        const lastChunk = nextChunks[nextChunks.length - 1] ?? "";
+        const nextDelay =
+          index >= chunks.length
+            ? CHAT_ASSISTANT_STREAM_CHUNK_FADE_MS
+            : getStreamDelay(lastChunk);
+
         streamTimer = window.setTimeout(
           streamNextChunk,
-          getStreamDelay(nextChunk) * streamDelayScale,
+          nextDelay * streamDelayScale,
         );
       }
 
       streamNextChunk();
-    }, shouldReduceMotion ? 0 : CHAT_ASSISTANT_THINKING_DELAY_MS);
+    },
+    shouldReduceMotion
+      ? 0
+      : Math.max(
+          0,
+          response.thinkingDelayMs ?? CHAT_ASSISTANT_THINKING_DELAY_MS,
+        ));
 
     return () => {
       window.clearTimeout(thinkingTimer);

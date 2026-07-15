@@ -11,9 +11,9 @@ import {
   ChatHeader,
   ChatMessage,
   ChatMessageContent,
-  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThread,
   Prompt,
   startChatPanelViewTransition,
@@ -201,7 +201,7 @@ function PremiumAiSummaryAssistantPanel({
       <ChatBody>
         {isLowSignal ? (
           <ChatThread>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock timestamp={getPrototypeMessageTimestamp(0)}>
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -214,11 +214,7 @@ function PremiumAiSummaryAssistantPanel({
                   </p>
                 </ChatMessageContent>
               </ChatMessage>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(0)}
-              />
-            </div>
+            </ChatResponseBlock>
             <ChatMessage
               role="user"
               timestamp={getPrototypeMessageTimestamp(1)}
@@ -226,7 +222,10 @@ function PremiumAiSummaryAssistantPanel({
               I want to message people I&apos;m not connected to, especially for
               my job search.
             </ChatMessage>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(2)}
+            >
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -242,15 +241,14 @@ function PremiumAiSummaryAssistantPanel({
                   planId="career"
                 />
               </ChatResponseAttachment>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(2)}
-              />
-            </div>
+            </ChatResponseBlock>
           </ChatThread>
         ) : (
           <ChatThread>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(0)}
+            >
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -277,11 +275,7 @@ function PremiumAiSummaryAssistantPanel({
                   />
                 </div>
               </ChatResponseAttachment>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(0)}
-              />
-            </div>
+            </ChatResponseBlock>
           </ChatThread>
         )}
       </ChatBody>

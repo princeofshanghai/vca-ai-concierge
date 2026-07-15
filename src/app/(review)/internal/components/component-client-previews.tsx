@@ -40,6 +40,10 @@ import {
   ChatSidePanelLayout,
 } from "@/components/chat/chat-side-panel";
 import {
+  useChatAssistantStream,
+  useChatLatestMessageAnchor,
+} from "@/components/chat/chat-motion";
+import {
   HighValueMatchCardPreview,
   MediumAvailableHandoffPreview,
   SchedulePanel,
@@ -47,6 +51,7 @@ import {
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
 } from "@/components/flow-review/flow-review-chat-panel";
+import { MicrophoneVoiceBanner } from "@/components/hiring-microsite/microphone-voice-banner";
 import {
   premiumConversationFlows,
   type PremiumReviewFlowId,
@@ -90,6 +95,10 @@ import { Entity, type EntityProps } from "@/components/primitives/entity";
 import { GhostButton, type GhostButtonProps } from "@/components/primitives/ghost-button";
 import { GhostIconButton, type GhostIconButtonProps } from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
+import {
+  InlineFeedback,
+  type InlineFeedbackTone,
+} from "@/components/primitives/inline-feedback";
 import {
   NavLinkItemHorizontal,
   type NavLinkItemHorizontalIndicator,
@@ -1604,6 +1613,125 @@ export function SharedShellHiringMicrositeDemo() {
   );
 }
 
+export function HiringGenericInlineErrorDemo() {
+  const [phase, setPhase] = useState<"error" | "loading" | "complete">(
+    "error",
+  );
+
+  useEffect(() => {
+    if (phase !== "loading") {
+      return;
+    }
+
+    const responseTimer = window.setTimeout(() => {
+      setPhase("complete");
+    }, 900);
+
+    return () => window.clearTimeout(responseTimer);
+  }, [phase]);
+
+  return (
+    <div className="flex min-w-[28rem] justify-center rounded-lg bg-background-neutral-soft p-xxxl">
+      <ChatPanel
+        variant="collapsed"
+        style={{
+          height: "620px",
+          width: "var(--design-layout-panel-collapsed-width)",
+        }}
+      >
+        <ChatHeader
+          title={HIRING_CONCIERGE_TITLE}
+          showCloseAction={false}
+          showAiMark={false}
+        />
+        <ChatBody>
+          <ChatThread showAiDisclaimer={false}>
+            <ChatMessage>
+              Hi Jamie. I can help you understand which LinkedIn hiring
+              solution fits Northstar Health and what the next step should be.
+            </ChatMessage>
+            <ChatMessage role="user">
+              Which option is fastest to launch?
+            </ChatMessage>
+            {phase === "error" ? (
+              <InlineFeedback
+                action={
+                  <button
+                    className="rounded-xs outline-none focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
+                    type="button"
+                    onClick={() => setPhase("loading")}
+                  >
+                    Retry
+                  </button>
+                }
+                tone="negative"
+              >
+                Something went wrong.
+              </InlineFeedback>
+            ) : null}
+            {phase === "loading" ? <ChatThinkingMessage /> : null}
+            {phase === "complete" ? (
+              <ChatMessage>
+                For your 40-role ramp, Hiring Pro is likely the faster path to
+                launch. I can also compare it with Recruiter before you decide.
+              </ChatMessage>
+            ) : null}
+          </ChatThread>
+        </ChatBody>
+        <ChatComposer
+          isResponding={phase === "loading"}
+          showAttachAction={false}
+        />
+      </ChatPanel>
+    </div>
+  );
+}
+
+export function HiringMicrophoneVoiceBannerDemo() {
+  const [voiceModeOn, setVoiceModeOn] = useState(true);
+
+  return (
+    <div className="flex min-w-[28rem] justify-center rounded-lg bg-background-neutral-soft p-xxxl">
+      <ChatPanel
+        variant="collapsed"
+        style={{
+          height: "620px",
+          width: "var(--design-layout-panel-collapsed-width)",
+        }}
+      >
+        <ChatHeader
+          title={HIRING_CONCIERGE_TITLE}
+          showCloseAction={false}
+          showAiMark={false}
+        />
+        <ChatBody>
+          <ChatThread showAiDisclaimer={false}>
+            <ChatMessage>
+              Hi Jamie. I can help you understand which LinkedIn hiring
+              solution fits Northstar Health and what the next step should be.
+            </ChatMessage>
+            <ChatMessage role="user">
+              We need to hire about 40 roles in the next two quarters.
+            </ChatMessage>
+            <ChatMessage>
+              You&apos;re describing an urgent, high-volume hiring ramp. I can
+              help you compare options or connect you with a hiring specialist.
+            </ChatMessage>
+          </ChatThread>
+        </ChatBody>
+        <ChatComposer
+          notice={voiceModeOn ? <MicrophoneVoiceBanner /> : undefined}
+          onVoiceModeExit={() => setVoiceModeOn(false)}
+          onVoiceModeStart={() => setVoiceModeOn(true)}
+          showAttachAction={false}
+          voiceModeActive={voiceModeOn}
+          voiceState="blocked"
+        />
+      </ChatPanel>
+    </div>
+  );
+}
+
 export function SharedShellPremiumSurveyDemo() {
   const [shellState, setShellState] = useState<ShellDemoState>("closed");
   const [panelVariant, setPanelVariant] =
@@ -2116,6 +2244,13 @@ const voiceModeDemoResponses = [
   "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
 ] as const;
 
+type VoiceModeDemoPendingResponse = Readonly<{
+  id: string;
+  text: string;
+  streamDelayScale: number;
+  thinkingDelayMs: number;
+}>;
+
 function getPartialVoiceDemoText(fullText: string, visibleText: string) {
   const visibleLength = Math.min(visibleText.length, fullText.length);
   const nextWordStart = fullText.slice(visibleLength).search(/\S/);
@@ -2137,14 +2272,28 @@ export function SharedVoiceModeDemo() {
   const [assistantFullText, setAssistantFullText] = useState<string>(
     voiceModeDemoResponses[0],
   );
+  const [pendingAssistantResponse, setPendingAssistantResponse] =
+    useState<VoiceModeDemoPendingResponse | null>(null);
   const [showThinking, setShowThinking] = useState(false);
   const [showCard, setShowCard] = useState(false);
+  const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const transcriptTimerRef = useRef<number | null>(null);
   const completionTimerRef = useRef<number | null>(null);
-  const streamTimerRef = useRef<number | null>(null);
   const panelVariant = getPanelVariantForContext(
     device === "mobile" ? "mobile" : "collapsed",
   );
+  const latestVoiceUserMessageKey = userMessages.length
+    ? `${userMessages.length}:${userMessages[userMessages.length - 1]}`
+    : null;
+  const {
+    hasLatestBelow,
+    handleScroll: handleLatestScroll,
+    scrollToLatest,
+  } = useChatLatestMessageAnchor({
+    scrollRef: chatBodyRef,
+    anchorKey: latestVoiceUserMessageKey,
+    contentKey: `${assistantText}:${voiceTranscript}:${showThinking}:${showCard}:${device}`,
+  });
 
   const clearTimers = useCallback(() => {
     if (transcriptTimerRef.current !== null) {
@@ -2155,11 +2304,6 @@ export function SharedVoiceModeDemo() {
     if (completionTimerRef.current !== null) {
       window.clearTimeout(completionTimerRef.current);
       completionTimerRef.current = null;
-    }
-
-    if (streamTimerRef.current !== null) {
-      window.clearInterval(streamTimerRef.current);
-      streamTimerRef.current = null;
     }
   }, []);
 
@@ -2173,42 +2317,54 @@ export function SharedVoiceModeDemo() {
     setUserMessages([]);
     setAssistantText("");
     setAssistantFullText(voiceModeDemoResponses[0]);
+    setPendingAssistantResponse(null);
     setShowThinking(false);
     setShowCard(false);
   }, [clearTimers]);
 
-  const streamAssistantResponse = useCallback(
-    (responseText: string) => {
-      const chunks = responseText.match(/\S+\s*/g) ?? [responseText];
-      let chunkIndex = 0;
-      let visibleText = "";
+  const exitVoiceMode = useCallback(() => {
+    clearTimers();
+    setVoiceModeOn(false);
+    setVoiceState("idle");
+    setVoiceTranscript("");
+  }, [clearTimers]);
 
-      setAssistantFullText(responseText);
+  const handleVoiceStreamStart = useCallback(
+    (response: VoiceModeDemoPendingResponse) => {
+      setAssistantFullText(response.text);
       setAssistantText("");
       setShowThinking(false);
       setVoiceState("speaking");
-
-      streamTimerRef.current = window.setInterval(() => {
-        const nextChunk = chunks[chunkIndex];
-
-        if (!nextChunk) {
-          if (streamTimerRef.current !== null) {
-            window.clearInterval(streamTimerRef.current);
-            streamTimerRef.current = null;
-          }
-          setAssistantText(responseText);
-          setShowCard(true);
-          window.setTimeout(() => setVoiceState("idle"), 420);
-          return;
-        }
-
-        visibleText += nextChunk;
-        chunkIndex += 1;
-        setAssistantText(visibleText);
-      }, 145);
     },
     [],
   );
+
+  const handleVoiceStreamText = useCallback(
+    (_response: VoiceModeDemoPendingResponse, visibleText: string) => {
+      setAssistantText(visibleText);
+    },
+    [],
+  );
+
+  const handleVoiceStreamComplete = useCallback(
+    (response: VoiceModeDemoPendingResponse) => {
+      setAssistantText(response.text);
+      setShowCard(true);
+      setPendingAssistantResponse(null);
+      completionTimerRef.current = window.setTimeout(() => {
+        completionTimerRef.current = null;
+        setVoiceState("listening");
+      }, 420);
+    },
+    [],
+  );
+
+  useChatAssistantStream({
+    pendingResponse: pendingAssistantResponse,
+    onStreamStart: handleVoiceStreamStart,
+    onStreamText: handleVoiceStreamText,
+    onComplete: handleVoiceStreamComplete,
+  });
 
   const submitTranscript = useCallback(
     (transcript: string, nextTurnIndex: number) => {
@@ -2221,18 +2377,37 @@ export function SharedVoiceModeDemo() {
         ...currentMessages,
         transcript,
       ]);
+      setVoiceTranscript("");
       setShowThinking(true);
       setVoiceState("thinking");
       setTurnIndex((currentTurnIndex) =>
         Math.max(currentTurnIndex, nextTurnIndex + 1),
       );
+      setPendingAssistantResponse({
+        id: `voice-response-${nextTurnIndex}`,
+        text: responseText,
+        streamDelayScale: 8,
+        thinkingDelayMs: 720,
+      });
+    },
+    [],
+  );
 
+  const finalizeTranscript = useCallback(
+    (transcript: string, nextTurnIndex: number) => {
+      const committedTranscript = transcript.trim();
+
+      if (committedTranscript.length === 0) {
+        return;
+      }
+
+      setVoiceState("finalizing");
       completionTimerRef.current = window.setTimeout(() => {
         completionTimerRef.current = null;
-        streamAssistantResponse(responseText);
-      }, 720);
+        submitTranscript(committedTranscript, nextTurnIndex);
+      }, 420);
     },
-    [streamAssistantResponse],
+    [submitTranscript],
   );
 
   const startListening = useCallback(
@@ -2241,18 +2416,23 @@ export function SharedVoiceModeDemo() {
       setVoiceModeOn(true);
       setVoiceState("listening");
       setVoiceTranscript("");
+      setPendingAssistantResponse(null);
       setShowThinking(false);
       setShowCard(false);
 
-      const transcript =
-        voiceModeDemoTranscripts[
-          Math.min(nextTurnIndex, voiceModeDemoTranscripts.length - 1)
-        ];
+      if (nextTurnIndex >= voiceModeDemoTranscripts.length) {
+        return;
+      }
+
+      const transcript = voiceModeDemoTranscripts[nextTurnIndex];
       const words = transcript.split(" ");
       let wordIndex = 0;
 
       transcriptTimerRef.current = window.setInterval(() => {
         wordIndex += 1;
+        if (wordIndex === 1) {
+          setVoiceState("user-speaking");
+        }
         setVoiceTranscript(words.slice(0, wordIndex).join(" "));
 
         if (wordIndex >= words.length) {
@@ -2261,23 +2441,46 @@ export function SharedVoiceModeDemo() {
             transcriptTimerRef.current = null;
           }
 
-          completionTimerRef.current = window.setTimeout(() => {
-            completionTimerRef.current = null;
-            submitTranscript(transcript, nextTurnIndex);
-          }, 420);
+          finalizeTranscript(transcript, nextTurnIndex);
         }
       }, 155);
     },
-    [clearTimers, submitTranscript, turnIndex],
+    [clearTimers, finalizeTranscript, turnIndex],
   );
+
+  const finishSpeaking = useCallback(() => {
+    if (
+      voiceState !== "user-speaking" ||
+      voiceTranscript.trim().length === 0
+    ) {
+      return;
+    }
+
+    const committedTranscript = voiceTranscript;
+    const committedTurnIndex = turnIndex;
+    clearTimers();
+    finalizeTranscript(committedTranscript, committedTurnIndex);
+  }, [
+    clearTimers,
+    finalizeTranscript,
+    turnIndex,
+    voiceState,
+    voiceTranscript,
+  ]);
 
   const interruptVoice = useCallback(() => {
     clearTimers();
+    setPendingAssistantResponse(null);
+    setShowThinking(false);
+    setShowCard(false);
     setAssistantText((currentText) =>
-      getPartialVoiceDemoText(assistantFullText, currentText),
+      currentText.trim().length > 0
+        ? getPartialVoiceDemoText(assistantFullText, currentText)
+        : "",
     );
-    startListening();
-  }, [assistantFullText, clearTimers, startListening]);
+    setVoiceTranscript("");
+    setVoiceState("listening");
+  }, [assistantFullText, clearTimers]);
 
   useEffect(() => clearTimers, [clearTimers]);
 
@@ -2298,7 +2501,12 @@ export function SharedVoiceModeDemo() {
           showCloseAction={false}
           showAiMark={false}
         />
-        <ChatBody>
+        <ChatBody
+          ref={chatBodyRef}
+          onJumpToLatest={scrollToLatest}
+          onScroll={handleLatestScroll}
+          showJumpToLatest={hasLatestBelow}
+        >
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>
               Hi Jamie. I can help you understand which LinkedIn hiring
@@ -2309,6 +2517,14 @@ export function SharedVoiceModeDemo() {
                 {message}
               </ChatMessage>
             ))}
+            {voiceModeOn &&
+            (voiceState === "user-speaking" ||
+              voiceState === "finalizing") &&
+            voiceTranscript.trim().length > 0 ? (
+              <ChatMessage aria-hidden="true" className="opacity-70" role="user">
+                {voiceTranscript}
+              </ChatMessage>
+            ) : null}
             {showThinking ? <ChatThinkingMessage /> : null}
             {assistantText ? (
               <ChatMessage
@@ -2336,15 +2552,14 @@ export function SharedVoiceModeDemo() {
             value: draft,
           }}
           onSend={() => setDraft("")}
+          onVoiceCommit={finishSpeaking}
           onVoiceInterrupt={interruptVoice}
-          onVoiceListen={() => startListening()}
-          onVoiceModeExit={resetDemo}
+          onVoiceModeExit={exitVoiceMode}
           onVoiceModeStart={() => startListening()}
           sendDisabled={draft.trim().length === 0}
           showVoiceMode
           voiceModeActive={voiceModeOn}
           voiceState={voiceState}
-          voiceTranscript={voiceTranscript}
         />
       </ChatSurfaceDemoFrame>
     </ContextualComponentDemoSection>
@@ -3835,6 +4050,32 @@ export function SduiTagDemo() {
       }
     >
       <Tag size={size} tone={tone}>Label</Tag>
+    </ComponentDemoSection>
+  );
+}
+
+export function SduiInlineFeedbackDemo() {
+  const [tone, setTone] = useState<InlineFeedbackTone>("positive");
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <SegmentedControl
+          label="Tone"
+          value={tone}
+          options={[
+            { label: "Positive", value: "positive" },
+            { label: "Negative", value: "negative" },
+            { label: "Neutral", value: "neutral" },
+            { label: "Caution", value: "caution" },
+          ]}
+          onChange={setTone}
+        />
+      }
+    >
+      <InlineFeedback action={<span>Link</span>} tone={tone}>
+        Feedback text.
+      </InlineFeedback>
     </ComponentDemoSection>
   );
 }

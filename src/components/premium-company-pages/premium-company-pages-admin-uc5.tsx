@@ -3,6 +3,7 @@
 import Image from "next/image";
 import {
   type ChangeEvent,
+  type ComponentProps,
   useCallback,
   useRef,
   useState,
@@ -21,6 +22,7 @@ import {
 import {
   useChatLatestMessageAnchor,
 } from "@/components/chat/chat-motion";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 import {
   ChatSidePanel,
   ChatSidePanelLayout,
@@ -53,7 +55,7 @@ import {
   pcpProofSnippets,
   pcpVisitorPersona,
 } from "./persona";
-import { ScriptedResponseTurn } from "./scripted-response-turn";
+import { ScriptedResponseTurn as BaseScriptedResponseTurn } from "./scripted-response-turn";
 import { TodayActionCard } from "./today-action-card";
 import { useScriptedTurnController } from "./use-scripted-turn-controller";
 import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
@@ -79,6 +81,18 @@ import {
   type AdminUc5PostPerformance,
   type AdminUc5Tone,
 } from "./premium-company-pages-admin-uc5-data";
+
+function ScriptedResponseTurn(
+  props: ComponentProps<typeof BaseScriptedResponseTurn>,
+) {
+  return (
+    <BaseScriptedResponseTurn
+      feedbackPolicy="rateable"
+      timestamp={getPrototypeMessageTimestamp(1)}
+      {...props}
+    />
+  );
+}
 
 const VELORA_LOGO_TILE_BACKGROUND_CLASS = "bg-[#ACF5B3]";
 const VELORA_LOGO_TILE_BACKGROUND_STYLE = {

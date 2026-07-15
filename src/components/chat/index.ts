@@ -14,6 +14,8 @@ export {
   ChatPanelPreview,
   ChatResponseAttachment,
   ChatResponseBlock,
+  ChatResponseFooter,
+  ChatStreamingText,
   ChatTray,
   ChatThinkingMessage,
   ChatThread,
@@ -32,9 +34,16 @@ export {
   type PromptProps,
   type PromptVisualState,
 } from "./chat-ui";
+
+export {
+  getChatResponseFeedbackPolicy,
+  type ChatAssistantResponsePurpose,
+  type ChatResponseFeedbackPolicy,
+} from "./chat-response";
 export {
   CHAT_ASSISTANT_THINKING_DELAY_MS,
-  CHAT_ASSISTANT_STREAM_WORD_FADE_MS,
+  CHAT_ASSISTANT_STREAM_CHUNK_DELAY_MS,
+  CHAT_ASSISTANT_STREAM_CHUNK_FADE_MS,
   CHAT_PANEL_TRANSITION_MS,
   CHAT_PANEL_TRAY_TRANSITION_MS,
   getStreamDelay,

@@ -20,6 +20,7 @@ import {
   ChatHeader,
   ChatMessage,
   ChatPanel,
+  ChatResponseBlock,
   ChatTray,
   ChatThread,
   Prompt,
@@ -571,23 +572,12 @@ function VcaScriptedAssistantTurn({
   ...props
 }: VcaScriptedAssistantTurnProps) {
   const [stableTimestamp] = useState(() => timestamp);
-  const attachmentsWithTimestamp: ComponentProps<
-    typeof ScriptedResponseTurn
-  >["attachments"] = [
-    ...attachments,
-    {
-      id: `${id}-timestamp`,
-      gap: "sm",
-      children: (
-        <p className="text-body-xs text-text-meta">{stableTimestamp}</p>
-      ),
-    },
-  ];
 
   return (
     <ScriptedResponseTurn
       {...props}
-      attachments={attachmentsWithTimestamp}
+      attachments={attachments}
+      feedbackPolicy="rateable"
       id={id}
       renderText={({ streamStatus, streamText, text }) => (
         <VcaAssistantMessage>
@@ -600,6 +590,7 @@ function VcaScriptedAssistantTurn({
           />
         </VcaAssistantMessage>
       )}
+      timestamp={stableTimestamp}
     />
   );
 }
@@ -607,29 +598,33 @@ function VcaScriptedAssistantTurn({
 function VcaWelcomeIntro({
   prompts,
   onPromptSelect,
+  timestamp,
 }: Readonly<{
   prompts: ReadonlyArray<Readonly<{ label: string }>>;
   onPromptSelect: (prompt: string) => void;
+  timestamp: string;
 }>) {
   return (
-    <section className="flex w-full max-w-[var(--design-layout-chat-message-assistant-max)] flex-col items-start pb-xl pt-sm pr-sm">
-      <h2 className="text-heading-lg text-text">
-        {pcpVcaScenario.openingTitle}
-      </h2>
-      <p className="mt-xs text-body-sm text-text">
-        {pcpVcaScenario.openingSubcopy}
-      </p>
-      <div className="mt-lg flex flex-col gap-sm">
-        {prompts.map((prompt) => (
-          <Prompt
-            className="w-fit max-w-full self-start"
-            key={prompt.label}
-            onPromptSelect={() => onPromptSelect(prompt.label)}
-            prompt={prompt.label}
-          />
-        ))}
-      </div>
-    </section>
+    <ChatResponseBlock timestamp={timestamp}>
+      <section className="flex w-full max-w-[var(--design-layout-chat-message-assistant-max)] flex-col items-start pt-sm pr-sm">
+        <h2 className="text-heading-lg text-text">
+          {pcpVcaScenario.openingTitle}
+        </h2>
+        <p className="mt-xs text-body-sm text-text">
+          {pcpVcaScenario.openingSubcopy}
+        </p>
+        <div className="mt-lg flex flex-col gap-sm">
+          {prompts.map((prompt) => (
+            <Prompt
+              className="w-fit max-w-full self-start"
+              key={prompt.label}
+              onPromptSelect={() => onPromptSelect(prompt.label)}
+              prompt={prompt.label}
+            />
+          ))}
+        </div>
+      </section>
+    </ChatResponseBlock>
   );
 }
 
@@ -1538,6 +1533,7 @@ function PremiumCompanyPagesVcaPanel({
           <VcaWelcomeIntro
             onPromptSelect={onPromptSelect}
             prompts={starterPrompts}
+            timestamp={getNextMessageTimestamp()}
           />
         ) : null}
         {visitorQuestion ? (

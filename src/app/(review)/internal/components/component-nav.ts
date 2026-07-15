@@ -24,20 +24,6 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
         title: "Cards",
         items: [
           {
-            id: "shared-action-card",
-            title: "Sales card",
-            description:
-              "Shows AE and SDR connection paths for high- and medium-intent sales moments.",
-            href: "/internal/components/shared/sales-card",
-          },
-          {
-            id: "premium-company-page-data-cards",
-            title: "Data cards",
-            description:
-              "Shows reusable metric, trend, comparison, audience, and content evidence cards used inside PCP responses.",
-            href: "/internal/components/premium-company-page/data-cards",
-          },
-          {
             id: "shared-choice-card",
             title: "Choice card",
             description:
@@ -50,27 +36,6 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Shows in-progress and completed states for assistant-run tasks.",
             href: "/internal/components/shared/task-status-card",
-          },
-          {
-            id: "premium-company-page-entity-cards",
-            title: "Entity cards",
-            description:
-              "Shows reusable product, post, job, people, company, and carousel cards used inside PCP responses.",
-            href: "/internal/components/premium-company-page/entity-cards",
-          },
-          {
-            id: "premium-company-page-insight-cards",
-            title: "Insight cards",
-            description:
-              "Showcases the reusable dashboard insight card system, routing rule, and six card types.",
-            href: "/internal/components/premium-company-page/insight-cards",
-          },
-          {
-            id: "premium-product-recommendation-card",
-            title: "SKU card",
-            description:
-              "Displays Premium SKU recommendations inside a conversation.",
-            href: "/internal/components/premium/sku-card",
           },
         ],
       },
@@ -150,8 +115,41 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "shared-voice-mode",
             title: "Voice mode",
             description:
-              "Shows the composer-only voice layer for a scripted chat moment.",
+              "Shows compact voice controls with a scripted transcript in the chat thread.",
             href: "/internal/components/shared/voice-mode",
+          },
+        ],
+      },
+      {
+        title: "Hiring microsite",
+        items: [
+          {
+            id: "shared-action-card",
+            title: "Sales card",
+            description:
+              "Shows AE and SDR connection paths for high- and medium-intent sales moments.",
+            href: "/internal/components/shared/sales-card",
+          },
+          {
+            id: "hiring-microsite-microphone-voice-banner",
+            title: "Microphone voice banner",
+            description:
+              "Shows blocked microphone access in context of the Hiring chat panel.",
+            href: "/internal/components/hiring-microsite/microphone-voice-banner",
+          },
+          {
+            id: "hiring-microsite-generic-inline-error",
+            title: "Generic inline error",
+            description:
+              "Shows a recoverable assistant-response error with a concise retry action.",
+            href: "/internal/components/hiring-microsite/generic-inline-error",
+          },
+          {
+            id: "hiring-microsite-email",
+            title: "Email",
+            description:
+              "Confirms a scheduled conversation and carries relevant concierge context into the hiring specialist handoff.",
+            href: "/internal/components/hiring-microsite/email",
           },
         ],
       },
@@ -164,6 +162,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Shows the full Premium concierge conversation experience.",
             href: "/internal/components/premium/concierge-panel",
+          },
+          {
+            id: "premium-product-recommendation-card",
+            title: "SKU card",
+            description:
+              "Displays Premium SKU recommendations inside a conversation.",
+            href: "/internal/components/premium/sku-card",
           },
           {
             id: "premium-survey-entry",
@@ -196,6 +201,27 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
       {
         title: "Premium Company Page",
         items: [
+          {
+            id: "premium-company-page-data-cards",
+            title: "Data cards",
+            description:
+              "Shows reusable metric, trend, comparison, audience, and content evidence cards used inside PCP responses.",
+            href: "/internal/components/premium-company-page/data-cards",
+          },
+          {
+            id: "premium-company-page-entity-cards",
+            title: "Entity cards",
+            description:
+              "Shows reusable product, post, job, people, company, and carousel cards used inside PCP responses.",
+            href: "/internal/components/premium-company-page/entity-cards",
+          },
+          {
+            id: "premium-company-page-insight-cards",
+            title: "Insight cards",
+            description:
+              "Showcases the reusable dashboard insight card system, routing rule, and six card types.",
+            href: "/internal/components/premium-company-page/insight-cards",
+          },
           {
             id: "premium-company-page-side-panel",
             title: "Side panel",
@@ -333,6 +359,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Signals new activity, alerts, or updates.",
             href: "/internal/components/sdui/badge",
+          },
+          {
+            id: "sdui-inline-feedback",
+            title: "Inline feedback",
+            description:
+              "Confirms an action or communicates a concise notice, error, or warning in context.",
+            href: "/internal/components/sdui/inline-feedback",
           },
           {
             id: "sdui-presence-badge",
