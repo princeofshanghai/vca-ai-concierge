@@ -1067,10 +1067,10 @@ body {
     infinite;
 }
 
-.chat-stream-word {
+.chat-stream-chunk {
   display: inline;
-  opacity: 0;
-  animation-name: chat-stream-word-fade;
+  opacity: 0.58;
+  animation-name: chat-stream-chunk-fade;
   animation-timing-function: var(--design-motion-easing-standard);
   animation-fill-mode: both;
 }
@@ -1107,65 +1107,118 @@ body {
   will-change: stroke-dasharray, stroke-dashoffset;
 }
 
-.chat-voice-waveform {
-  --chat-voice-waveform-color: var(--color-action);
+.chat-voice-speaker-highlight {
+  --chat-voice-speaker-glow: color-mix(
+    in srgb,
+    var(--color-action) 14%,
+    transparent
+  );
 
-  display: inline-flex;
-  height: 28px;
-  width: 36px;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  color: var(--chat-voice-waveform-color);
-  transition: color var(--design-motion-duration-base)
-    var(--design-motion-easing-standard);
-}
-
-.chat-voice-waveform[data-tone="agent"] {
-  --chat-voice-waveform-color: var(--figma-color-accent-5-color-accent-5);
-}
-
-.chat-voice-waveform-bar {
-  --chat-voice-bar-base: 8px;
-
-  display: block;
-  width: 3px;
-  height: var(--chat-voice-bar-base);
-  border-radius: var(--design-rounded-round);
-  background: currentColor;
-  opacity: 0.88;
-  transform-origin: center;
+  opacity: 0;
   transition:
-    height var(--design-motion-duration-base)
+    opacity var(--design-motion-duration-base)
       var(--design-motion-easing-standard),
+    border-color var(--design-motion-duration-base)
+      var(--design-motion-easing-standard),
+    background-color var(--design-motion-duration-base)
+      var(--design-motion-easing-standard);
+}
+
+.chat-voice-participant {
+  opacity: 0.68;
+  transform-origin: center;
+  will-change: transform;
+  transition:
+    transform var(--design-motion-duration-moderate)
+      var(--design-motion-easing-emphasized),
     opacity var(--design-motion-duration-base)
       var(--design-motion-easing-standard);
 }
 
-.chat-voice-waveform[data-state="idle"] .chat-voice-waveform-bar {
-  --chat-voice-bar-base: 8px;
-  opacity: 0.55;
+.chat-voice-participants [data-participant="user"] {
+  z-index: 2;
+  transform: translateX(0) scale(0.875);
 }
 
-.chat-voice-waveform[data-state="thinking"] .chat-voice-waveform-bar {
-  --chat-voice-bar-base: 10px;
-  animation: chat-voice-thinking-pulse 1200ms
-    var(--design-motion-easing-standard) infinite;
-  animation-delay: calc(var(--chat-voice-bar-index) * 65ms);
+.chat-voice-participants [data-participant="ai"] {
+  z-index: 1;
+  opacity: 0.48;
+  transform: translateX(20px) scale(0.75);
 }
 
-.chat-voice-waveform[data-state="listening"] .chat-voice-waveform-bar {
-  --chat-voice-bar-base: 18px;
-  animation: chat-voice-user-wave 820ms
-    var(--design-motion-easing-standard) infinite;
-  animation-delay: calc(var(--chat-voice-bar-index) * 56ms);
+.chat-voice-participants[data-active-speaker="user"]
+  .chat-voice-speaker-highlight,
+.chat-voice-participants[data-active-speaker="ai"]
+  .chat-voice-speaker-highlight {
+  opacity: 1;
 }
 
-.chat-voice-waveform[data-state="speaking"] .chat-voice-waveform-bar {
-  --chat-voice-bar-base: 16px;
-  animation: chat-voice-agent-wave 1120ms
+.chat-voice-participants[data-active-speaker="ai"]
+  .chat-voice-speaker-highlight {
+  --chat-voice-speaker-glow: color-mix(
+    in srgb,
+    var(--color-ai-border) 28%,
+    transparent
+  );
+}
+
+.chat-voice-participants[data-active-speaker="user"]
+  [data-participant="user"],
+.chat-voice-participants[data-active-speaker="ai"]
+  [data-participant="ai"] {
+  z-index: 2;
+  opacity: 1;
+  transform: translateX(0) scale(1.125);
+}
+
+.chat-voice-participants[data-active-speaker="user"]
+  [data-participant="ai"],
+.chat-voice-participants[data-active-speaker="ai"]
+  [data-participant="user"] {
+  z-index: 1;
+  opacity: 0.48;
+  transform: translateX(20px) scale(0.75);
+}
+
+.chat-voice-participants[data-state="idle"] .chat-voice-speaker-highlight,
+.chat-voice-participants[data-state="listening"] .chat-voice-speaker-highlight,
+.chat-voice-participants[data-state="user-speaking"]
+  .chat-voice-speaker-highlight {
+  border-color: color-mix(in srgb, var(--color-action) 44%, transparent);
+  animation: chat-voice-speaker-glow 1600ms
     var(--design-motion-easing-standard) infinite;
-  animation-delay: calc(var(--chat-voice-bar-index) * 72ms);
+}
+
+.chat-voice-participants[data-state="finalizing"]
+  .chat-voice-speaker-highlight,
+.chat-voice-participants[data-state="thinking"] .chat-voice-speaker-highlight,
+.chat-voice-participants[data-state="speaking"] .chat-voice-speaker-highlight {
+  border-color: var(--color-ai-border);
+  animation: chat-voice-speaker-glow 1240ms
+    var(--design-motion-easing-standard) infinite;
+}
+
+.chat-voice-participants[data-state="paused"] .chat-voice-participant {
+  opacity: 0.36;
+}
+
+.chat-voice-participants[data-state="blocked"] [data-participant="user"] {
+  z-index: 2;
+  opacity: 1;
+  transform: translateX(0) scale(1.125);
+}
+
+.chat-voice-participants[data-state="blocked"] [data-participant="ai"] {
+  z-index: 1;
+  opacity: 0.36;
+  transform: translateX(20px) scale(0.75);
+}
+
+.chat-voice-participants[data-state="blocked"]
+  [data-participant="user"]
+  > [data-shape] {
+  outline: 1px solid color-mix(in srgb, var(--color-negative) 58%, transparent);
+  outline-offset: 2px;
 }
 
 .chat-side-panel-layout {
@@ -1252,9 +1305,9 @@ body {
   }
 }
 
-@keyframes chat-stream-word-fade {
+@keyframes chat-stream-chunk-fade {
   from {
-    opacity: 0;
+    opacity: 0.58;
   }
 
   to {
@@ -1274,46 +1327,14 @@ body {
   }
 }
 
-@keyframes chat-voice-thinking-pulse {
+@keyframes chat-voice-speaker-glow {
   0%,
   100% {
-    height: 8px;
-    opacity: 0.42;
+    box-shadow: 0 0 0 0 transparent;
   }
 
   50% {
-    height: 14px;
-    opacity: 0.92;
-  }
-}
-
-@keyframes chat-voice-user-wave {
-  0%,
-  100% {
-    height: 8px;
-  }
-
-  28% {
-    height: 24px;
-  }
-
-  56% {
-    height: 13px;
-  }
-}
-
-@keyframes chat-voice-agent-wave {
-  0%,
-  100% {
-    height: 10px;
-  }
-
-  34% {
-    height: 18px;
-  }
-
-  68% {
-    height: 24px;
+    box-shadow: 0 0 0 4px var(--chat-voice-speaker-glow);
   }
 }
 
@@ -1921,12 +1942,17 @@ html.vca-background-trays-slide::view-transition-new(
 	  .chat-recommendation-enter,
 	  .chat-response-attachment,
 	  .chat-thinking-text,
-	  .chat-stream-word,
-	  .chat-voice-waveform-bar,
+	  .chat-stream-chunk,
+	  .chat-voice-speaker-highlight,
 	  .composer-stop-ring,
 	  .composer-stop-ring-arc {
 	    animation: none;
 	  }
+
+  .chat-voice-speaker-highlight,
+  .chat-voice-participant {
+    transition: none;
+  }
 
   .chat-thinking-text {
     background-image: none;
@@ -1935,6 +1961,10 @@ html.vca-background-trays-slide::view-transition-new(
 
   .chat-response-attachment {
     grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .chat-stream-chunk {
     opacity: 1;
   }
 }

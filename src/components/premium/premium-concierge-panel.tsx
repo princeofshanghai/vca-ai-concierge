@@ -17,7 +17,6 @@ import {
   ChatHeader,
   ChatInlineFeedback,
   ChatMessage,
-  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatResponseAttachment,
   ChatResponseBlock,
@@ -31,6 +30,10 @@ import {
   useChatLatestMessageAnchor,
   type ChatMessageStreamStatus,
 } from "@/components/chat/chat-motion";
+import {
+  getChatResponseFeedbackPolicy,
+  type ChatAssistantResponsePurpose,
+} from "@/components/chat/chat-response";
 import { PREMIUM_CONCIERGE_TITLE } from "@/lib/concierge-copy";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 
@@ -56,14 +59,9 @@ type PremiumLiveMessage = Readonly<{
   role: "assistant" | "user";
   content: string;
   status: ChatMessageStreamStatus;
-  feedbackEligible?: boolean;
+  responsePurpose?: ChatAssistantResponsePurpose;
+  recommendationPlanId?: PremiumPlanId;
   responseStopped?: boolean;
-}>;
-
-type PremiumLiveRecommendation = Readonly<{
-  id: string;
-  kind: "product-recommendation";
-  planId: PremiumPlanId;
 }>;
 
 type PremiumLiveInlineFeedback = Readonly<{
@@ -73,10 +71,7 @@ type PremiumLiveInlineFeedback = Readonly<{
   content: string;
 }>;
 
-type PremiumLiveItem =
-  | PremiumLiveMessage
-  | PremiumLiveRecommendation
-  | PremiumLiveInlineFeedback;
+type PremiumLiveItem = PremiumLiveMessage | PremiumLiveInlineFeedback;
 
 type PremiumScriptedResponse = Readonly<{
   messages: ReadonlyArray<string>;
@@ -141,9 +136,10 @@ const premiumTypedIntentRules: ReadonlyArray<
 type PremiumPendingAssistantResponse = Readonly<{
   id: string;
   text: string;
-  remainingMessages: ReadonlyArray<PremiumLiveMessage>;
-  recommendation?: PremiumLiveRecommendation;
+  responsePurpose: ChatAssistantResponsePurpose;
+  recommendationPlanId?: PremiumPlanId;
   nextPrompts?: ReadonlyArray<PremiumPromptId> | null;
+  thinkingDelayMs?: number;
 }>;
 
 function getLiveWelcomeMessage(liveMode: PremiumLiveMode) {
@@ -169,6 +165,8 @@ function getInitialLiveMessage(
     role: "assistant",
     content: "",
     status: "thinking",
+    responsePurpose:
+      liveMode === "high-signal" ? "recommendation" : "welcome",
   };
 }
 
@@ -180,12 +178,8 @@ function getInitialPendingAssistantResponse(
     return {
       id: getLiveWelcomeId(context, liveMode),
       text: getLiveWelcomeMessage(liveMode),
-      remainingMessages: [],
-      recommendation: {
-        id: `live-recommendation-${liveMode}-${context}`,
-        kind: "product-recommendation",
-        planId: "business-suite",
-      },
+      responsePurpose: "recommendation",
+      recommendationPlanId: "business-suite",
       nextPrompts: premiumHighSignalPostRecommendationPromptIds,
     };
   }
@@ -193,7 +187,7 @@ function getInitialPendingAssistantResponse(
   return {
     id: getLiveWelcomeId(context, liveMode),
     text: getLiveWelcomeMessage(liveMode),
-    remainingMessages: [],
+    responsePurpose: "welcome",
     nextPrompts: premiumPromptRowsBySurveyStep[context],
   };
 }
@@ -206,22 +200,26 @@ function renderPremiumMessageContent(content: string) {
   const parts = content.split(/(\*\*[^*]+\*\*)/g);
 
   if (parts.length === 1) {
-    return content;
+    return <span className="whitespace-pre-line">{content}</span>;
   }
 
-  return parts.map((part, index) => {
-    const strongMatch = part.match(/^\*\*(.*)\*\*$/);
+  return (
+    <span className="whitespace-pre-line">
+      {parts.map((part, index) => {
+        const strongMatch = part.match(/^\*\*(.*)\*\*$/);
 
-    if (strongMatch) {
-      return (
-        <strong key={`${part}-${index}`} className="font-semibold">
-          {strongMatch[1]}
-        </strong>
-      );
-    }
+        if (strongMatch) {
+          return (
+            <strong key={`${part}-${index}`} className="font-semibold">
+              {strongMatch[1]}
+            </strong>
+          );
+        }
 
-    return <span key={`${part}-${index}`}>{part}</span>;
-  });
+        return <span key={`${part}-${index}`}>{part}</span>;
+      })}
+    </span>
+  );
 }
 
 function buildPremiumPromptResponse({
@@ -631,26 +629,8 @@ export function PremiumConciergePanel({
       response: PremiumScriptedResponse;
       userMessage: string;
     }) => {
-      const [firstAssistantMessage = "", ...remainingAssistantMessages] =
-        response.messages;
       const assistantId = createLiveItemId("live-assistant");
       const userMessageId = createLiveItemId("live-user");
-      const remainingMessages = remainingAssistantMessages.map(
-        (content): PremiumLiveMessage => ({
-          id: createLiveItemId("live-assistant"),
-          kind: "message",
-          role: "assistant",
-          content,
-          status: "complete",
-        }),
-      );
-      const recommendation = response.recommendationPlanId
-        ? ({
-            id: createLiveItemId("live-recommendation"),
-            kind: "product-recommendation",
-            planId: response.recommendationPlanId,
-          } satisfies PremiumLiveRecommendation)
-        : undefined;
       const nextItems: Array<PremiumLiveItem> = [
         {
           id: userMessageId,
@@ -665,6 +645,9 @@ export function PremiumConciergePanel({
           role: "assistant",
           content: "",
           status: "thinking",
+          responsePurpose: response.recommendationPlanId
+            ? "recommendation"
+            : "answer",
         },
       ];
 
@@ -673,9 +656,11 @@ export function PremiumConciergePanel({
       setActivePrompts(null);
       setPendingAssistantResponse({
         id: assistantId,
-        text: firstAssistantMessage,
-        remainingMessages,
-        recommendation,
+        text: response.messages.join("\n\n"),
+        responsePurpose: response.recommendationPlanId
+          ? "recommendation"
+          : "answer",
+        recommendationPlanId: response.recommendationPlanId,
         nextPrompts: response.nextPrompts ?? null,
       });
     },
@@ -777,7 +762,7 @@ export function PremiumConciergePanel({
               {
                 ...item,
                 status: "complete" as const,
-                feedbackEligible: false,
+                responsePurpose: "stopped" as const,
                 responseStopped: true,
               },
             ];
@@ -790,25 +775,26 @@ export function PremiumConciergePanel({
       const {
         id,
         text,
-        remainingMessages,
-        recommendation,
+        responsePurpose,
+        recommendationPlanId,
         nextPrompts,
       } = response;
 
-      setLiveItems((currentItems) => {
-        const completedItems = currentItems.map((item) =>
+      setLiveItems((currentItems) =>
+        currentItems.map((item) =>
           isPremiumLiveMessage(item) && item.id === id
-            ? { ...item, content: text, status: "complete" as const }
+            ? {
+                ...item,
+                content: text,
+                responsePurpose,
+                recommendationPlanId,
+                status: "complete" as const,
+              }
             : item,
-        );
+        ),
+      );
 
-        return [
-          ...completedItems,
-          ...remainingMessages,
-          ...(recommendation ? [recommendation] : []),
-        ];
-      });
-      if (recommendation) {
+      if (recommendationPlanId) {
         setHasRecommendation(true);
       }
       setActivePrompts(nextPrompts ?? null);
@@ -867,62 +853,39 @@ export function PremiumConciergePanel({
   }
 
   function renderConversationStep(step: PremiumConversationStep, index: number) {
-    const attachedPromptStep = flow?.steps[index + 1];
-    const attachedPrompts =
-      attachedPromptStep?.kind === "prompt-row" ? attachedPromptStep.prompts : null;
-
-    if (step.kind === "prompt-row") {
-      return null;
-    }
-
-    if (step.kind === "product-recommendation") {
-      const recommendationCard = (
-        <PremiumProductRecommendationCard planId={step.planId} />
-      );
-
-      if (attachedPrompts) {
-        return (
-          <ChatResponseBlock key={step.id}>
-            {recommendationCard}
-            <ChatResponseAttachment>
-              <PremiumPromptRow
-                prompts={attachedPrompts}
-                readOnly
-                animated={false}
-              />
-            </ChatResponseAttachment>
-          </ChatResponseBlock>
-        );
-      }
-
-      return (
-        <ChatResponseBlock key={step.id}>{recommendationCard}</ChatResponseBlock>
-      );
-    }
-
-    const showFeedback = step.role === "assistant";
+    const isAssistant = step.role === "assistant";
     const timestamp = getPrototypeMessageTimestamp(index);
     const messageNode = (
-      <ChatMessage role={step.role} timestamp={showFeedback ? undefined : timestamp}>
+      <ChatMessage role={step.role} timestamp={isAssistant ? undefined : timestamp}>
         {renderPremiumMessageContent(step.content)}
       </ChatMessage>
     );
 
     return (
-      <ChatResponseBlock key={step.id}>
+      <ChatResponseBlock
+        feedbackPolicy={
+          isAssistant
+            ? getChatResponseFeedbackPolicy(step.responsePurpose ?? "answer")
+            : "none"
+        }
+        key={step.id}
+        timestamp={isAssistant ? timestamp : undefined}
+      >
         {messageNode}
-        {attachedPrompts ? (
+        {step.recommendationPlanId ? (
           <ChatResponseAttachment>
-            <PremiumPromptRow
-              prompts={attachedPrompts}
-              readOnly
-              animated={false}
+            <PremiumProductRecommendationCard
+              planId={step.recommendationPlanId}
             />
           </ChatResponseAttachment>
         ) : null}
-        {showFeedback ? (
-          <ChatResponseAttachment gap="sm">
-            <ChatMessageFeedbackFlow timestamp={timestamp} />
+        {step.prompts ? (
+          <ChatResponseAttachment>
+            <PremiumPromptRow
+              prompts={step.prompts}
+              readOnly
+              animated={false}
+            />
           </ChatResponseAttachment>
         ) : null}
       </ChatResponseBlock>
@@ -934,36 +897,13 @@ export function PremiumConciergePanel({
     index: number,
     attachedPrompts: ReadonlyArray<PremiumPromptId> | null = null,
   ) {
-    if (item.kind === "product-recommendation") {
-      const recommendationCard = (
-        <PremiumProductRecommendationCard planId={item.planId} />
-      );
-
-      if (attachedPrompts) {
-        return (
-          <ChatResponseBlock key={item.id}>
-            {recommendationCard}
-            <ChatResponseAttachment>
-              <PremiumPromptRow
-                prompts={attachedPrompts}
-                animated={false}
-                onPromptSelect={handlePromptSelect}
-              />
-            </ChatResponseAttachment>
-          </ChatResponseBlock>
-        );
-      }
-
-      return (
-        <ChatResponseBlock key={item.id}>{recommendationCard}</ChatResponseBlock>
-      );
-    }
-
     if (item.kind === "inline-feedback") {
+      const timestamp = getPrototypeMessageTimestamp(index);
+
       return (
-        <ChatInlineFeedback key={item.id} tone={item.tone}>
-          {item.content}
-        </ChatInlineFeedback>
+        <ChatResponseBlock key={item.id} timestamp={timestamp}>
+          <ChatInlineFeedback tone={item.tone}>{item.content}</ChatInlineFeedback>
+        </ChatResponseBlock>
       );
     }
 
@@ -972,11 +912,8 @@ export function PremiumConciergePanel({
     }
 
     const showStoppedFeedback = item.responseStopped === true;
-    const showFeedback =
-      item.role === "assistant" &&
-      item.status === "complete" &&
-      item.feedbackEligible !== false &&
-      !showStoppedFeedback;
+    const showAssistantFooter =
+      item.role === "assistant" && item.status === "complete";
     const timestamp = getPrototypeMessageTimestamp(index);
 
     const messageNode = (
@@ -992,8 +929,32 @@ export function PremiumConciergePanel({
     );
 
     return (
-      <ChatResponseBlock key={item.id}>
+      <ChatResponseBlock
+        feedbackPolicy={
+          showAssistantFooter
+            ? getChatResponseFeedbackPolicy(
+                showStoppedFeedback
+                  ? "stopped"
+                  : (item.responsePurpose ?? "answer"),
+              )
+            : "none"
+        }
+        key={item.id}
+        timestamp={showAssistantFooter ? timestamp : undefined}
+      >
         {messageNode}
+        {item.recommendationPlanId ? (
+          <ChatResponseAttachment>
+            <PremiumProductRecommendationCard
+              planId={item.recommendationPlanId}
+            />
+          </ChatResponseAttachment>
+        ) : null}
+        {showStoppedFeedback ? (
+          <ChatResponseAttachment gap="sm">
+            <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
+          </ChatResponseAttachment>
+        ) : null}
         {attachedPrompts ? (
           <ChatResponseAttachment>
             <PremiumPromptRow
@@ -1001,16 +962,6 @@ export function PremiumConciergePanel({
               animated={false}
               onPromptSelect={handlePromptSelect}
             />
-          </ChatResponseAttachment>
-        ) : null}
-        {showFeedback ? (
-          <ChatResponseAttachment gap="sm">
-            <ChatMessageFeedbackFlow timestamp={timestamp} />
-          </ChatResponseAttachment>
-        ) : null}
-        {showStoppedFeedback ? (
-          <ChatResponseAttachment gap="sm">
-            <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
           </ChatResponseAttachment>
         ) : null}
       </ChatResponseBlock>

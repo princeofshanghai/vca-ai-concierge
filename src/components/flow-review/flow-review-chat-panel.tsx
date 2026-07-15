@@ -2,6 +2,7 @@
 
 import {
   Fragment,
+  type ReactNode,
   type UIEvent,
   useEffect,
   useId,
@@ -15,14 +16,16 @@ import {
   ChatComposer,
   ChatHeader,
   ChatMessage,
-  ChatMessageFeedbackFlow,
   ChatPanel,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThread,
   Prompt,
   RecommendationCard,
   type ChatHeaderIdentity,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
+import { getChatResponseFeedbackPolicy } from "@/components/chat/chat-response";
 import { useChatLatestMessageAnchor } from "@/components/chat/chat-motion";
 import {
   ChatSidePanel,
@@ -384,25 +387,39 @@ function AvailabilityVariant({
   }
 
   const role = variant.role ?? "assistant";
-  const showFeedback = role === "assistant" && variant.feedbackEligible === true;
+  const feedbackPolicy =
+    role === "assistant"
+      ? getChatResponseFeedbackPolicy(variant.responsePurpose ?? "answer")
+      : "none";
 
   return (
     <>
-      {showFeedback ? (
-        <div className="flex flex-col items-start gap-sm">
+      {role === "assistant" ? (
+        <ChatResponseBlock
+          feedbackPolicy={feedbackPolicy}
+          timestamp={timestamp}
+        >
           <ChatMessage role={role}>{variant.message}</ChatMessage>
-          <ChatMessageFeedbackFlow timestamp={timestamp} />
-        </div>
+          <ChatResponseAttachment>
+            <RecommendationCard
+              title={variant.title}
+              primaryAction={variant.primaryAction}
+              secondaryAction={variant.secondaryAction}
+            />
+          </ChatResponseAttachment>
+        </ChatResponseBlock>
       ) : (
         <ChatMessage role={role} timestamp={timestamp}>
           {variant.message}
         </ChatMessage>
       )}
-      <RecommendationCard
-        title={variant.title}
-        primaryAction={variant.primaryAction}
-        secondaryAction={variant.secondaryAction}
-      />
+      {role !== "assistant" ? (
+        <RecommendationCard
+          title={variant.title}
+          primaryAction={variant.primaryAction}
+          secondaryAction={variant.secondaryAction}
+        />
+      ) : null}
     </>
   );
 }
@@ -560,34 +577,43 @@ export function MediumAvailableHandoffPreview({
   );
 }
 
-function renderStep(step: FlowReviewStep, index = 0) {
+function renderStep(
+  step: FlowReviewStep,
+  index = 0,
+  responseSurface?: ReactNode,
+) {
   if (step.kind === "message") {
     const showFeedback = shouldShowFlowReviewMessageFeedback(step);
     const showStarterPrompts = step.showStarterPromptsAfter === true;
     const timestamp = getPrototypeMessageTimestamp(index);
-    const messageNode = (
-      <ChatMessage role={step.role} timestamp={showFeedback ? undefined : timestamp}>
-        {step.content}
-      </ChatMessage>
-    );
 
-    if (showStarterPrompts || showFeedback) {
+    if (step.role === "assistant") {
       return (
-        <div key={step.id} className="flex flex-col items-start">
-          {messageNode}
+        <ChatResponseBlock
+          feedbackPolicy={showFeedback ? "rateable" : "none"}
+          key={step.id}
+          timestamp={timestamp}
+        >
+          <ChatMessage role={step.role}>{step.content}</ChatMessage>
+          {responseSurface ? (
+            <ChatResponseAttachment>{responseSurface}</ChatResponseAttachment>
+          ) : null}
           {showStarterPrompts ? (
-            <div className="mt-md w-full">
+            <ChatResponseAttachment>
               <StarterPromptRow />
-            </div>
+            </ChatResponseAttachment>
           ) : null}
-          {showFeedback ? (
-            <ChatMessageFeedbackFlow className="mt-sm" timestamp={timestamp} />
-          ) : null}
-        </div>
+        </ChatResponseBlock>
       );
     }
 
-    return <Fragment key={step.id}>{messageNode}</Fragment>;
+    return (
+      <Fragment key={step.id}>
+        <ChatMessage role={step.role} timestamp={timestamp}>
+          {step.content}
+        </ChatMessage>
+      </Fragment>
+    );
   }
 
   if (step.kind === "recommendation") {
@@ -1130,17 +1156,52 @@ export function FlowReviewChatPanel({
   }
 
   function renderReviewStep(step: FlowReviewStep, index: number) {
-    if (isHighValueFlow && step.id === "high-recommendation-card") {
-      return (
-        <ScheduledSpecialistCard
-          key={`${step.id}-${scheduledSpecialistState}`}
-          state={scheduledSpecialistState}
-          bookedMeeting={bookedMeeting}
-          onBookTime={handleBookTime}
-          onCancelMatching={handleCancelMatching}
-          onScheduleCall={handleScheduleCall}
-        />
-      );
+    const previousStep = flow.steps[index - 1];
+    const nextStep = flow.steps[index + 1];
+    const isResponseSurface =
+      step.kind === "recommendation" || step.kind === "resources";
+
+    if (
+      isResponseSurface &&
+      previousStep?.kind === "message" &&
+      previousStep.role === "assistant"
+    ) {
+      return null;
+    }
+
+    if (
+      step.kind === "message" &&
+      step.role === "assistant" &&
+      nextStep?.kind === "recommendation"
+    ) {
+      const responseSurface =
+        isHighValueFlow && nextStep.id === "high-recommendation-card" ? (
+          <ScheduledSpecialistCard
+            key={`${nextStep.id}-${scheduledSpecialistState}`}
+            state={scheduledSpecialistState}
+            bookedMeeting={bookedMeeting}
+            onBookTime={handleBookTime}
+            onCancelMatching={handleCancelMatching}
+            onScheduleCall={handleScheduleCall}
+          />
+        ) : (
+          <RecommendationCard
+            title={nextStep.title}
+            description={nextStep.description}
+            primaryAction={nextStep.primaryAction}
+            secondaryAction={nextStep.secondaryAction}
+          />
+        );
+
+      return renderStep(step, index, responseSurface);
+    }
+
+    if (
+      step.kind === "message" &&
+      step.role === "assistant" &&
+      nextStep?.kind === "resources"
+    ) {
+      return renderStep(step, index, <ResourceCards step={nextStep} />);
     }
 
     if (isMediumScheduledStep(step)) {

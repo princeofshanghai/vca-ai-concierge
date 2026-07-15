@@ -9,10 +9,13 @@ import {
   ChatMessage,
   ChatMessageContent,
   ChatPanel,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatTray,
   Prompt,
   type ChatPanelVariant,
 } from "@/components/chat";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 import {
   LinkedInGlobalNavigation,
   type LinkedInGlobalNavigationItem,
@@ -489,12 +492,19 @@ function FlagshipCareerInsightsChatSurface() {
       <ChatBody>
         <div className="flex w-full justify-center">
           <div className="flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col gap-xxl px-xxl pb-xl pt-xl">
-            <ChatMessage role="user">
+            <ChatMessage
+              role="user"
+              timestamp={getPrototypeMessageTimestamp(0)}
+            >
               {FLAGSHIP_CAREER_INSIGHTS_PROMPT}
             </ChatMessage>
 
-            <ChatMessage>
-              <ChatMessageContent>
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(1)}
+            >
+              <ChatMessage>
+                <ChatMessageContent>
                 <p>
                   Yes. Since you&apos;re on Premium Career, I can help you use
                   Career Insights to think through your next move more
@@ -526,25 +536,36 @@ function FlagshipCareerInsightsChatSurface() {
                     Learn more about Career Insights
                   </a>
                 </p>
-              </ChatMessageContent>
-            </ChatMessage>
+                </ChatMessageContent>
+              </ChatMessage>
+              {!showInsightTypes ? (
+                <ChatResponseAttachment>
+                  <div className="flex justify-start">
+                    <Prompt
+                      className="w-fit max-w-full"
+                      onPromptSelect={() => setShowInsightTypes(true)}
+                      prompt={FLAGSHIP_CAREER_INSIGHTS_FOLLOW_UP_PROMPT}
+                    />
+                  </div>
+                </ChatResponseAttachment>
+              ) : null}
+            </ChatResponseBlock>
 
-            {!showInsightTypes ? (
-              <div className="flex justify-start">
-                <Prompt
-                  className="w-fit max-w-full"
-                  onPromptSelect={() => setShowInsightTypes(true)}
-                  prompt={FLAGSHIP_CAREER_INSIGHTS_FOLLOW_UP_PROMPT}
-                />
-              </div>
-            ) : (
+            {showInsightTypes ? (
               <>
-                <ChatMessage role="user">
+                <ChatMessage
+                  role="user"
+                  timestamp={getPrototypeMessageTimestamp(2)}
+                >
                   {FLAGSHIP_CAREER_INSIGHTS_FOLLOW_UP_PROMPT}
                 </ChatMessage>
 
-                <ChatMessage>
-                  <ChatMessageContent>
+                <ChatResponseBlock
+                  feedbackPolicy="rateable"
+                  timestamp={getPrototypeMessageTimestamp(3)}
+                >
+                  <ChatMessage>
+                    <ChatMessageContent>
                     <p>
                       Premium Career can help you look at your next step from a
                       few useful angles, not just open jobs.
@@ -581,10 +602,11 @@ function FlagshipCareerInsightsChatSurface() {
                       If you set a career goal, LinkedIn can make those insights
                       more specific to the role or direction you care about.
                     </p>
-                  </ChatMessageContent>
-                </ChatMessage>
+                    </ChatMessageContent>
+                  </ChatMessage>
+                </ChatResponseBlock>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </ChatBody>
@@ -608,10 +630,16 @@ function FlagshipInMailChatSurface() {
       <ChatBody>
         <div className="flex w-full justify-center">
           <div className="flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col gap-xxl px-xxl pb-xl pt-xl">
-            <ChatMessage role="user">{FLAGSHIP_INMAIL_PROMPT}</ChatMessage>
+            <ChatMessage role="user" timestamp={getPrototypeMessageTimestamp(0)}>
+              {FLAGSHIP_INMAIL_PROMPT}
+            </ChatMessage>
 
-            <ChatMessage>
-              <ChatMessageContent>
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(1)}
+            >
+              <ChatMessage>
+                <ChatMessageContent>
                 <p>
                   Yes. Since you&apos;re on Premium Career, you can use InMail
                   to message people you&apos;re not connected to yet.
@@ -653,8 +681,9 @@ function FlagshipInMailChatSurface() {
                     Learn more about InMail
                   </a>
                 </p>
-              </ChatMessageContent>
-            </ChatMessage>
+                </ChatMessageContent>
+              </ChatMessage>
+            </ChatResponseBlock>
           </div>
         </div>
       </ChatBody>
@@ -678,10 +707,16 @@ function FlagshipBillingCycleChatSurface() {
       <ChatBody>
         <div className="flex w-full justify-center">
           <div className="flex w-full max-w-[var(--design-layout-panel-content-max)] flex-col gap-xxl px-xxl pb-xl pt-xl">
-            <ChatMessage role="user">{FLAGSHIP_BILLING_CYCLE_PROMPT}</ChatMessage>
+            <ChatMessage role="user" timestamp={getPrototypeMessageTimestamp(0)}>
+              {FLAGSHIP_BILLING_CYCLE_PROMPT}
+            </ChatMessage>
 
-            <ChatMessage>
-              <ChatMessageContent>
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(1)}
+            >
+              <ChatMessage>
+                <ChatMessageContent>
                 <p>
                   Yes. You&apos;re currently on a monthly Premium Career plan,
                   and you can still switch to annual billing to save money.
@@ -724,8 +759,9 @@ function FlagshipBillingCycleChatSurface() {
                     Learn more about changing your billing cycle
                   </a>
                 </p>
-              </ChatMessageContent>
-            </ChatMessage>
+                </ChatMessageContent>
+              </ChatMessage>
+            </ChatResponseBlock>
           </div>
         </div>
       </ChatBody>

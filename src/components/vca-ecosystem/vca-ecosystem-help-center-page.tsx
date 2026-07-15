@@ -20,9 +20,9 @@ import {
   ChatHeader,
   ChatMessage,
   ChatMessageContent,
-  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThread,
   ChatTray,
   Prompt,
@@ -481,7 +481,10 @@ function HelpAssistantPanel({
       <ChatBody>
         {isPremiumRecommendationMode ? (
           <ChatThread>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(0)}
+            >
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -510,15 +513,11 @@ function HelpAssistantPanel({
                   />
                 </div>
               </ChatResponseAttachment>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(0)}
-              />
-            </div>
+            </ChatResponseBlock>
           </ChatThread>
         ) : isPremiumLowSignalRecommendationMode ? (
           <ChatThread>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock timestamp={getPrototypeMessageTimestamp(0)}>
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -528,11 +527,7 @@ function HelpAssistantPanel({
                   <p>What are you hoping Premium helps with most?</p>
                 </ChatMessageContent>
               </ChatMessage>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(0)}
-              />
-            </div>
+            </ChatResponseBlock>
             <ChatMessage
               role="user"
               timestamp={getPrototypeMessageTimestamp(1)}
@@ -540,7 +535,10 @@ function HelpAssistantPanel({
               I&apos;m mostly trying to message people outside my network and
               see if Premium can help with my job search.
             </ChatMessage>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(2)}
+            >
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -560,15 +558,11 @@ function HelpAssistantPanel({
                   planId="career"
                 />
               </ChatResponseAttachment>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(2)}
-              />
-            </div>
+            </ChatResponseBlock>
           </ChatThread>
         ) : isPremiumInMailSupportMode ? (
           <ChatThread>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock timestamp={getPrototypeMessageTimestamp(0)}>
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -577,17 +571,17 @@ function HelpAssistantPanel({
                   </p>
                 </ChatMessageContent>
               </ChatMessage>
-              <p className="mt-sm text-body-xs text-text-meta">
-                {getPrototypeMessageTimestamp(0)}
-              </p>
-            </div>
+            </ChatResponseBlock>
             <ChatMessage
               role="user"
               timestamp={getPrototypeMessageTimestamp(1)}
             >
               How do I send an InMail message?
             </ChatMessage>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(2)}
+            >
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -609,18 +603,17 @@ function HelpAssistantPanel({
                   </p>
                 </ChatMessageContent>
               </ChatMessage>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(2)}
-              />
-            </div>
+            </ChatResponseBlock>
             <ChatMessage
               role="user"
               timestamp={getPrototypeMessageTimestamp(3)}
             >
               Yes, show me
             </ChatMessage>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock
+              feedbackPolicy="rateable"
+              timestamp={getPrototypeMessageTimestamp(4)}
+            >
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -644,15 +637,11 @@ function HelpAssistantPanel({
                   />
                 </div>
               </ChatResponseAttachment>
-              <ChatMessageFeedbackFlow
-                className="mt-sm"
-                timestamp={getPrototypeMessageTimestamp(4)}
-              />
-            </div>
+            </ChatResponseBlock>
           </ChatThread>
         ) : (
           <ChatThread>
-            <div className="flex flex-col items-start">
+            <ChatResponseBlock timestamp={getPrototypeMessageTimestamp(0)}>
               <ChatMessage>
                 <ChatMessageContent>
                   <p>
@@ -679,10 +668,7 @@ function HelpAssistantPanel({
                   </div>
                 </ChatResponseAttachment>
               ) : null}
-              <p className="mt-sm text-body-xs text-text-meta">
-                {getPrototypeMessageTimestamp(0)}
-              </p>
-            </div>
+            </ChatResponseBlock>
             {showRemoveUserGuidance ? (
             <>
               <ChatMessage
@@ -691,7 +677,10 @@ function HelpAssistantPanel({
               >
                 Help me remove a user
               </ChatMessage>
-              <div className="flex flex-col items-start">
+              <ChatResponseBlock
+                feedbackPolicy="rateable"
+                timestamp={getPrototypeMessageTimestamp(2)}
+              >
                 <ChatMessage>
                   <ChatMessageContent>
                     <p>
@@ -742,11 +731,7 @@ function HelpAssistantPanel({
                     </div>
                   </ChatResponseAttachment>
                 ) : null}
-                <ChatMessageFeedbackFlow
-                  className="mt-sm"
-                  timestamp={getPrototypeMessageTimestamp(2)}
-                />
-              </div>
+              </ChatResponseBlock>
               {showRemoveUserEntry ? (
                 <>
                   <ChatMessage
@@ -755,9 +740,10 @@ function HelpAssistantPanel({
                   >
                     Remove user
                   </ChatMessage>
-                  <div
+                  <ChatResponseBlock
+                    feedbackPolicy="rateable"
                     ref={removeUserEntryRef}
-                    className="flex flex-col items-start"
+                    timestamp={getPrototypeMessageTimestamp(4)}
                   >
                     <ChatMessage>
                       <ChatMessageContent>
@@ -775,11 +761,7 @@ function HelpAssistantPanel({
                         </p>
                       </ChatMessageContent>
                     </ChatMessage>
-                    <ChatMessageFeedbackFlow
-                      className="mt-sm"
-                      timestamp={getPrototypeMessageTimestamp(4)}
-                    />
-                  </div>
+                  </ChatResponseBlock>
                   {hasRemoveUserSearchQuery ? (
                     <>
                       <ChatMessage
@@ -788,9 +770,10 @@ function HelpAssistantPanel({
                       >
                         {removeUserSearchQuery}
                       </ChatMessage>
-                      <div
+                      <ChatResponseBlock
+                        feedbackPolicy="rateable"
                         ref={removeUserMatchesRef}
-                        className="flex flex-col items-start"
+                        timestamp={getPrototypeMessageTimestamp(6)}
                       >
                         <ChatMessage>
                           <ChatMessageContent>
@@ -822,15 +805,12 @@ function HelpAssistantPanel({
                             onSelectionChange={onRemoveUserSelectionChange}
                           />
                         </ChatResponseAttachment>
-                        <ChatMessageFeedbackFlow
-                          className="mt-sm"
-                          timestamp={getPrototypeMessageTimestamp(6)}
-                        />
-                      </div>
+                      </ChatResponseBlock>
                       {showRemoveUserConfirmation && selectedRemoveUser ? (
-                        <div
+                        <ChatResponseBlock
+                          feedbackPolicy="rateable"
                           ref={removeUserConfirmationRef}
-                          className="flex flex-col items-start"
+                          timestamp={getPrototypeMessageTimestamp(7)}
                         >
                           <ChatMessage>
                             <ChatMessageContent>
@@ -860,11 +840,7 @@ function HelpAssistantPanel({
                               ))}
                             </div>
                           </ChatResponseAttachment>
-                          <ChatMessageFeedbackFlow
-                            className="mt-sm"
-                            timestamp={getPrototypeMessageTimestamp(7)}
-                          />
-                        </div>
+                        </ChatResponseBlock>
                       ) : null}
                       {removeUserTaskState && selectedRemoveUser ? (
                         <>
@@ -874,9 +850,9 @@ function HelpAssistantPanel({
                           >
                             Yes, remove
                           </ChatMessage>
-                          <div
+                          <ChatResponseBlock
                             ref={removeUserTaskStatusRef}
-                            className="flex flex-col items-start"
+                            timestamp={getPrototypeMessageTimestamp(9)}
                           >
                             <ChatResponseAttachment gap="sm">
                               <TaskStatusCard
@@ -904,13 +880,7 @@ function HelpAssistantPanel({
                                 }
                               />
                             </ChatResponseAttachment>
-                            {removeUserTaskState === "completed" ? (
-                              <ChatMessageFeedbackFlow
-                                className="mt-sm"
-                                timestamp={getPrototypeMessageTimestamp(9)}
-                              />
-                            ) : null}
-                          </div>
+                          </ChatResponseBlock>
                         </>
                       ) : null}
                     </>

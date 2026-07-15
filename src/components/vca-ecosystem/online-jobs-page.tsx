@@ -10,10 +10,12 @@ import {
   ChatMessage,
   ChatMessageContent,
   ChatPanel,
+  ChatResponseBlock,
   ChatThread,
   startClassedViewTransition,
   type ChatPanelVariant,
 } from "@/components/chat";
+import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 import {
   LinkedInGlobalNavigation,
   type LinkedInGlobalNavigationItem,
@@ -464,11 +466,13 @@ function HelpAssistantPanel({
       />
       <ChatBody>
         <ChatThread showAiDisclaimer={false}>
-          <ChatMessage>
-            <ChatMessageContent>
-              <p>Hi how can I help you?</p>
-            </ChatMessageContent>
-          </ChatMessage>
+          <ChatResponseBlock timestamp={getPrototypeMessageTimestamp(0)}>
+            <ChatMessage>
+              <ChatMessageContent>
+                <p>Hi how can I help you?</p>
+              </ChatMessageContent>
+            </ChatMessage>
+          </ChatResponseBlock>
         </ChatThread>
       </ChatBody>
       <ChatComposer variant={variant} sendDisabled showVoiceMode={false} />

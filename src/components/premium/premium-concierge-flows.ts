@@ -1,3 +1,5 @@
+import type { ChatAssistantResponsePurpose } from "@/components/chat/chat-response";
+
 import type { PremiumPlanId } from "./premium-plan-data";
 
 export type PremiumSurveyStep = "use-case" | "goals" | "plans";
@@ -33,24 +35,12 @@ export type PremiumConversationMessage = Readonly<{
   kind: "message";
   role: "assistant" | "user";
   content: string;
+  responsePurpose?: ChatAssistantResponsePurpose;
+  recommendationPlanId?: PremiumPlanId;
+  prompts?: ReadonlyArray<PremiumPromptId>;
 }>;
 
-export type PremiumConversationRecommendation = Readonly<{
-  id: string;
-  kind: "product-recommendation";
-  planId: PremiumPlanId;
-}>;
-
-export type PremiumConversationPromptRow = Readonly<{
-  id: string;
-  kind: "prompt-row";
-  prompts: ReadonlyArray<PremiumPromptId>;
-}>;
-
-export type PremiumConversationStep =
-  | PremiumConversationMessage
-  | PremiumConversationRecommendation
-  | PremiumConversationPromptRow;
+export type PremiumConversationStep = PremiumConversationMessage;
 
 export type PremiumConversationFlow = Readonly<{
   id: PremiumReviewFlowId;
@@ -160,10 +150,7 @@ export const premiumConversationFlows: Readonly<
         kind: "message",
         role: "assistant",
         content: premiumLowSignalWelcomeMessage,
-      },
-      {
-        id: "low-welcome-prompts",
-        kind: "prompt-row",
+        responsePurpose: "welcome",
         prompts: premiumPromptRowsBySurveyStep["use-case"],
       },
       {
@@ -178,6 +165,7 @@ export const premiumConversationFlows: Readonly<
         role: "assistant",
         content:
           "Absolutely. Since Premium plans are built for different outcomes, what would make Premium feel worth it for you right now?",
+        responsePurpose: "answer",
       },
       {
         id: "low-user-goals",
@@ -190,15 +178,10 @@ export const premiumConversationFlows: Readonly<
         id: "low-assistant-goals-reflection",
         kind: "message",
         role: "assistant",
-        content:
-          "Nice, that helps. Customers and visibility are exactly the kinds of goals Premium can support.",
-      },
-      {
-        id: "low-assistant-hiring-follow-up",
-        kind: "message",
-        role: "assistant",
-        content:
-          "Before I pick a plan, one quick question: do you expect hiring to matter soon too?",
+        content: `Nice, that helps. Customers and visibility are exactly the kinds of goals Premium can support.
+
+Before I pick a plan, one quick question: do you expect hiring to matter soon too?`,
+        responsePurpose: "answer",
       },
       {
         id: "low-user-hiring",
@@ -211,30 +194,13 @@ export const premiumConversationFlows: Readonly<
         id: "low-assistant-recommendation-ready",
         kind: "message",
         role: "assistant",
-        content: "Great, that gives me enough to make a call.",
-      },
-      {
-        id: "low-assistant-recommendation-fit",
-        kind: "message",
-        role: "assistant",
-        content:
-          "I'd recommend Business Suite because it fits the full mix: finding customers, growing visibility, and keeping hiring support nearby.",
-      },
-      {
-        id: "low-assistant-trial-good-news",
-        kind: "message",
-        role: "assistant",
-        content:
-          "Good news: **you can start with the 1-month free trial**, so you can test whether it actually supports those goals before committing.",
-      },
-      {
-        id: "low-business-suite-card",
-        kind: "product-recommendation",
-        planId: "business-suite",
-      },
-      {
-        id: "low-card-prompts",
-        kind: "prompt-row",
+        content: `Great, that gives me enough to make a call.
+
+I'd recommend Business Suite because it fits the full mix: finding customers, growing visibility, and keeping hiring support nearby.
+
+Good news: **you can start with the 1-month free trial**, so you can test whether it actually supports those goals before committing.`,
+        responsePurpose: "recommendation",
+        recommendationPlanId: "business-suite",
         prompts: premiumPostRecommendationPromptIds,
       },
     ],
@@ -252,15 +218,8 @@ export const premiumConversationFlows: Readonly<
         kind: "message",
         role: "assistant",
         content: premiumHighSignalWelcomeMessage,
-      },
-      {
-        id: "high-business-suite-card",
-        kind: "product-recommendation",
-        planId: "business-suite",
-      },
-      {
-        id: "high-card-prompts",
-        kind: "prompt-row",
+        responsePurpose: "recommendation",
+        recommendationPlanId: "business-suite",
         prompts: premiumHighSignalPostRecommendationPromptIds,
       },
     ],

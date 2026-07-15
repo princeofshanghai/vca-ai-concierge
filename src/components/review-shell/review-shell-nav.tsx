@@ -19,6 +19,7 @@ import {
 
 const HIRING_ALL_INTENTS_HREF = "/hiring";
 const HIRING_PROTOTYPE_HREF = HIRING_ALL_INTENTS_HREF;
+const HIRING_FLOW_MAP_HREF = "/internal/flows";
 const PREMIUM_PROTOTYPE_HREF = "/premium";
 const PREMIUM_UPSELL_HELP_CENTER_HREF = "/premium-upsell-help-center";
 const PREMIUM_UPSELL_HELP_CENTER_AI_CONCIERGE_HREF =
@@ -84,6 +85,12 @@ const PREMIUM_COMPANY_PAGES_SHELL_OPTIONS = [
 ] as const;
 const hiringModeOptions = [
   HIRING_LIVE_NAV_ITEM,
+  {
+    id: "hiring-flow-map",
+    href: HIRING_FLOW_MAP_HREF,
+    label: "Flow map",
+    typeLabel: "Overview",
+  },
   {
     id: "high",
     href: "/internal/flows/high",
@@ -731,6 +738,7 @@ export function ReviewShellNav() {
   const searchParams = useSearchParams();
   const { isSignedIn, setIsSignedIn } = useReviewShellState();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isHiringFlowMap = pathname === HIRING_FLOW_MAP_HREF;
   const isPremiumCompanyPagesMember = pathname.startsWith(
     PREMIUM_COMPANY_PAGES_MEMBER_HREF,
   );
@@ -1053,8 +1061,10 @@ export function ReviewShellNav() {
               : isPremiumMenu
                 ? shellAwarePremiumModeOptions
                 : shellAwareHiringModeOptions;
-            const shellOptions = isProjectMenu || isVcaEcosystemMenu
-              || isPremiumUpsellHelpCenterMenu
+            const shellOptions = isProjectMenu ||
+              isVcaEcosystemMenu ||
+              isPremiumUpsellHelpCenterMenu ||
+              isHiringFlowMap
               ? []
               : isPremiumCompanyPagesMenu
                 ? premiumCompanyPagesShellOptions
@@ -1132,6 +1142,7 @@ export function ReviewShellNav() {
                           : normalizedHiringHref
                     }
                     onLoginSelect={
+                      isHiringFlowMap ||
                       isProjectMenu ||
                       isPremiumUpsellHelpCenterMenu ||
                       isVcaEcosystemMenu ||
@@ -1164,6 +1175,7 @@ export function ReviewShellNav() {
                     shellOptions={shellOptions}
                     callbackFormHeading="Call back form"
                     callbackFormOptions={
+                      !isHiringFlowMap &&
                       !isProjectMenu &&
                       !isPremiumUpsellHelpCenterMenu &&
                       !isVcaEcosystemMenu &&
@@ -1174,6 +1186,7 @@ export function ReviewShellNav() {
                     }
                     callbackFormCurrentHref={normalizedHiringCallbackFormHref}
                     showVisitorControls={
+                      !isHiringFlowMap &&
                       !isProjectMenu &&
                       !isPremiumUpsellHelpCenterMenu &&
                       !isVcaEcosystemMenu &&

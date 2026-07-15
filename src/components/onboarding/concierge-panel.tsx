@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   useCallback,
   useEffect,
   useRef,
@@ -17,7 +18,6 @@ import {
   ChatHeader,
   ChatInlineFeedback,
   ChatMessage,
-  ChatMessageFeedbackFlow,
   ChatPanel,
   ChatResponseAttachment,
   ChatResponseBlock,
@@ -36,11 +36,16 @@ import {
   type ChatMessageStreamStatus,
 } from "@/components/chat/chat-motion";
 import {
+  getChatResponseFeedbackPolicy,
+  type ChatAssistantResponsePurpose,
+} from "@/components/chat/chat-response";
+import {
   SchedulePanel,
   ScheduledSpecialistCard,
   type BookedMeeting,
   type HighValueRecommendationState,
 } from "@/components/flow-review/flow-review-chat-panel";
+import { MicrophoneVoiceBanner } from "@/components/hiring-microsite/microphone-voice-banner";
 import { Button } from "@/components/primitives/button";
 import { IdleSessionPrompt } from "@/components/primitives/idle-session-prompt";
 import { InterimLoadingState } from "@/components/primitives/interim-loading-state";
@@ -50,7 +55,6 @@ import {
   STARTER_PROMPTS,
   buildInitialAssistantResponse,
   flowReviews,
-  shouldShowFlowReviewMessageFeedback,
   type FlowReviewAvailabilityStep,
   type FlowReviewId,
   type FlowReviewRecommendationStep,
@@ -65,6 +69,11 @@ import {
   EntryLixSuccessScreen,
 } from "./entry-lix-test-screen";
 import { OnboardingScreen, type OnboardingResult } from "./onboarding-screen";
+import {
+  useBrowserSpeechInput,
+  type BrowserSpeechInputCallbacks,
+  type BrowserSpeechInputError,
+} from "./use-browser-speech-input";
 
 export type ContactSalesEntry = "default" | "lix-test";
 
@@ -92,8 +101,9 @@ type ConciergeMessage = Readonly<{
   role: "assistant" | "user";
   content: string;
   status: ChatMessageStreamStatus;
-  feedbackEligible?: boolean;
+  responsePurpose?: ChatAssistantResponsePurpose;
   responseStopped?: boolean;
+  surfaceAfter?: ConciergeSurface;
 }>;
 
 type ConciergeInlineFeedback = Readonly<{
@@ -136,6 +146,7 @@ type ConciergeSurface =
 type PendingAssistantResponse = Readonly<{
   id: string;
   text: string;
+  responsePurpose: ChatAssistantResponsePurpose;
   surfaceAfter?: ConciergeSurface;
   streamDelayScale?: number;
   voicePlaybackText?: string;
@@ -164,10 +175,6 @@ const ENTRY_LIX_FALLBACK_LEAD: OnboardingResult = {
   phoneNumber: "",
   company: "your company",
 };
-const VOICE_USER_TRANSCRIPTS = [
-  "We need to hire about 40 roles in the next two quarters.",
-  "Actually, can I talk to someone who can help us plan this?",
-] as const;
 const VOICE_AGENT_RESPONSES = [
   {
     text:
@@ -182,7 +189,20 @@ const VOICE_AGENT_RESPONSES = [
       "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
   },
 ] as const;
-const VOICE_TEXT_STREAM_DELAY_SCALE = 2.8;
+const VOICE_TEXT_STREAM_DELAY_SCALE = 8;
+
+function getVoiceInputErrorMessage(error: BrowserSpeechInputError) {
+  switch (error) {
+    case "microphone-blocked":
+      return "Allow microphone access to use voice.";
+    case "microphone-unavailable":
+      return "Microphone is unavailable. Check your device and try again.";
+    case "unsupported-browser":
+      return "Voice input isn’t supported in this browser.";
+    default:
+      return "Voice input is unavailable. Please try again.";
+  }
+}
 
 function isMessageItem(item: ConciergeThreadItem): item is ConciergeMessage {
   return item.kind === "message";
@@ -256,17 +276,6 @@ function getVoiceModeRecommendationStep(): FlowReviewRecommendationStep | null {
   return step?.kind === "recommendation" ? step : null;
 }
 
-function getInterruptedAssistantText(fullText: string, visibleText: string) {
-  const visibleLength = Math.min(visibleText.length, fullText.length);
-  const nextWordStart = fullText.slice(visibleLength).search(/\S/);
-  const partialStart =
-    nextWordStart < 0 ? visibleLength : visibleLength + nextWordStart;
-  const partialEnd = Math.min(fullText.length, partialStart + 4);
-  const nextText = fullText.slice(0, Math.max(visibleLength, partialEnd));
-
-  return nextText.trimEnd();
-}
-
 function getNextScriptedAssistantTurn({
   flowId,
   currentStepIndex,
@@ -279,7 +288,7 @@ function getNextScriptedAssistantTurn({
   content: string;
   nextStepIndex: number;
   surfaceAfter?: ConciergeSurface;
-  feedbackEligible?: boolean;
+  responsePurpose: ChatAssistantResponsePurpose;
 }> {
   const steps = flowReviews[flowId].steps;
   const assistantStepIndex = steps.findIndex(
@@ -294,6 +303,7 @@ function getNextScriptedAssistantTurn({
       content:
         "The best next step is above. You can use that card to keep going from here.",
       nextStepIndex: currentStepIndex,
+      responsePurpose: "answer",
     };
   }
 
@@ -307,6 +317,7 @@ function getNextScriptedAssistantTurn({
       content:
         "The best next step is above. You can use that card to keep going from here.",
       nextStepIndex: currentStepIndex,
+      responsePurpose: "answer",
     };
   }
 
@@ -319,7 +330,9 @@ function getNextScriptedAssistantTurn({
   return {
     content: assistantStep.content,
     nextStepIndex: surfaceAfter ? assistantStepIndex + 1 : assistantStepIndex,
-    feedbackEligible: shouldShowFlowReviewMessageFeedback(assistantStep),
+    responsePurpose:
+      assistantStep.responsePurpose ??
+      (surfaceAfter?.kind === "recommendation" ? "recommendation" : "answer"),
     ...(surfaceAfter ? { surfaceAfter } : {}),
   };
 }
@@ -413,6 +426,9 @@ export function ConciergePanel({
   const [voiceModeState, setVoiceModeState] =
     useState<VoiceModeState>("off");
   const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [voiceErrorMessage, setVoiceErrorMessage] = useState<string | null>(
+    null,
+  );
   const [voiceTurnIndex, setVoiceTurnIndex] = useState(0);
   const [pendingAssistantResponse, setPendingAssistantResponse] =
     useState<PendingAssistantResponse | null>(null);
@@ -437,7 +453,40 @@ export function ConciergePanel({
   const nextMessageIdRef = useRef(0);
   const voiceCompletionTimerRef = useRef<number | null>(null);
   const voicePlaybackTimerRef = useRef<number | null>(null);
-  const voiceTranscriptTimerRef = useRef<number | null>(null);
+  const voicePlaybackShouldResumeRef = useRef(false);
+  const voiceModeStateRef = useRef<VoiceModeState>(voiceModeState);
+  const voiceTurnIndexRef = useRef(voiceTurnIndex);
+  const resumeVoiceListeningRef = useRef<() => void>(() => undefined);
+  const speechInputCallbacksRef = useRef<BrowserSpeechInputCallbacks>({
+    onError: () => undefined,
+    onListening: () => undefined,
+    onSpeechStart: () => undefined,
+    onTranscript: () => undefined,
+    onUtteranceEnd: () => undefined,
+  });
+  const {
+    endSession: endSpeechInputSession,
+    finishSpeaking: finishSpeechInput,
+    pauseListening: pauseSpeechInput,
+    requestPermissionAndStart: requestSpeechInputPermission,
+    resumeListening: resumeSpeechInput,
+  } = useBrowserSpeechInput({
+    onError: (error) => speechInputCallbacksRef.current.onError(error),
+    onListening: () => speechInputCallbacksRef.current.onListening(),
+    onSpeechStart: () => speechInputCallbacksRef.current.onSpeechStart(),
+    onTranscript: (transcript) =>
+      speechInputCallbacksRef.current.onTranscript(transcript),
+    onUtteranceEnd: (transcript) =>
+      speechInputCallbacksRef.current.onUtteranceEnd(transcript),
+  });
+
+  useEffect(() => {
+    voiceModeStateRef.current = voiceModeState;
+  }, [voiceModeState]);
+
+  useEffect(() => {
+    voiceTurnIndexRef.current = voiceTurnIndex;
+  }, [voiceTurnIndex]);
 
   const phase: ConciergePhase = lead
     ? "chat"
@@ -472,7 +521,7 @@ export function ConciergePanel({
   } = useChatLatestMessageAnchor({
     scrollRef: chatBodyRef,
     anchorKey: latestUserMessageAnchorKey,
-    contentKey: messages,
+    contentKey: voiceTranscript.trim().length > 0 ? voiceTranscript : messages,
   });
 
   const createMessageId = useCallback((prefix: string) => {
@@ -482,11 +531,6 @@ export function ConciergePanel({
   }, []);
 
   const clearVoiceTimers = useCallback(() => {
-    if (voiceTranscriptTimerRef.current !== null) {
-      window.clearInterval(voiceTranscriptTimerRef.current);
-      voiceTranscriptTimerRef.current = null;
-    }
-
     if (voiceCompletionTimerRef.current !== null) {
       window.clearTimeout(voiceCompletionTimerRef.current);
       voiceCompletionTimerRef.current = null;
@@ -499,6 +543,8 @@ export function ConciergePanel({
   }, []);
 
   const stopVoicePlayback = useCallback(() => {
+    voicePlaybackShouldResumeRef.current = false;
+
     if (typeof window === "undefined") {
       return;
     }
@@ -514,9 +560,16 @@ export function ConciergePanel({
   }, []);
 
   const finishVoicePlayback = useCallback(() => {
-    setVoiceModeState((currentState) =>
-      currentState === "speaking" ? "idle" : currentState,
-    );
+    if (
+      !voicePlaybackShouldResumeRef.current ||
+      voiceModeStateRef.current !== "speaking"
+    ) {
+      return;
+    }
+
+    voicePlaybackShouldResumeRef.current = false;
+    setVoiceModeState("listening");
+    resumeVoiceListeningRef.current();
   }, []);
 
   const startVoicePlayback = useCallback(
@@ -531,6 +584,7 @@ export function ConciergePanel({
         typeof window.speechSynthesis !== "undefined" &&
         typeof window.SpeechSynthesisUtterance !== "undefined"
       ) {
+        voicePlaybackShouldResumeRef.current = true;
         const utterance = new window.SpeechSynthesisUtterance(text);
         utterance.rate = 1.03;
         utterance.pitch = 1;
@@ -540,6 +594,7 @@ export function ConciergePanel({
         return;
       }
 
+      voicePlaybackShouldResumeRef.current = true;
       voicePlaybackTimerRef.current = window.setTimeout(
         finishVoicePlayback,
         Math.max(2200, text.split(/\s+/).length * 260),
@@ -553,14 +608,16 @@ export function ConciergePanel({
       text: string,
       options: Readonly<{
         surfaceAfter?: ConciergeSurface;
-        feedbackEligible?: boolean;
+        responsePurpose?: ChatAssistantResponsePurpose;
         streamDelayScale?: number;
         voicePlaybackText?: string;
       }> = {},
     ) => {
       const {
         surfaceAfter,
-        feedbackEligible,
+        responsePurpose = surfaceAfter?.kind === "recommendation"
+          ? "recommendation"
+          : "answer",
         streamDelayScale,
         voicePlaybackText,
       } = options;
@@ -574,12 +631,13 @@ export function ConciergePanel({
           role: "assistant",
           content: "",
           status: "thinking",
-          feedbackEligible,
+          responsePurpose,
         },
       ]);
       setPendingAssistantResponse({
         id,
         text,
+        responsePurpose,
         surfaceAfter,
         streamDelayScale,
         voicePlaybackText,
@@ -590,19 +648,21 @@ export function ConciergePanel({
 
   const completePendingAssistantResponse = useCallback(
     (response: PendingAssistantResponse) => {
-      const { id, text, surfaceAfter } = response;
+      const { id, text, responsePurpose, surfaceAfter } = response;
 
-      setMessages((currentMessages) => {
-        const completedMessages = currentMessages.map((message) =>
+      setMessages((currentMessages) =>
+        currentMessages.map((message) =>
           isMessageItem(message) && message.id === id
-            ? { ...message, content: text, status: "complete" as const }
+            ? {
+                ...message,
+                content: text,
+                responsePurpose,
+                status: "complete" as const,
+                ...(surfaceAfter ? { surfaceAfter } : {}),
+              }
             : message,
-        );
-
-        return surfaceAfter
-          ? [...completedMessages, surfaceAfter]
-          : completedMessages;
-      });
+        ),
+      );
       setPendingAssistantResponse(null);
       onUnreadActivity?.();
     },
@@ -611,7 +671,13 @@ export function ConciergePanel({
 
   const handleAssistantStreamStart = useCallback(
     (response: PendingAssistantResponse) => {
-      if (response.voicePlaybackText) {
+      if (
+        response.voicePlaybackText &&
+        voiceModeStateRef.current !== "off" &&
+        voiceModeStateRef.current !== "paused" &&
+        voiceModeStateRef.current !== "blocked" &&
+        !isSchedulePanelOpen
+      ) {
         setVoiceModeState("speaking");
         startVoicePlayback(response.voicePlaybackText);
       }
@@ -624,7 +690,7 @@ export function ConciergePanel({
         ),
       );
     },
-    [startVoicePlayback],
+    [isSchedulePanelOpen, startVoicePlayback],
   );
 
   const handleAssistantStreamText = useCallback(
@@ -651,8 +717,9 @@ export function ConciergePanel({
     return () => {
       clearVoiceTimers();
       stopVoicePlayback();
+      endSpeechInputSession();
     };
-  }, [clearVoiceTimers, stopVoicePlayback]);
+  }, [clearVoiceTimers, endSpeechInputSession, stopVoicePlayback]);
 
   useEffect(() => {
     return () => {
@@ -684,6 +751,12 @@ export function ConciergePanel({
   }, []);
 
   const endIdleSession = useCallback(() => {
+    clearVoiceTimers();
+    stopVoicePlayback();
+    endSpeechInputSession();
+    setVoiceModeState("off");
+    setVoiceTranscript("");
+    setVoiceErrorMessage(null);
     resetIdleSession();
     if (onSessionEnd) {
       onSessionEnd();
@@ -691,7 +764,14 @@ export function ConciergePanel({
     }
 
     onClose?.();
-  }, [onClose, onSessionEnd, resetIdleSession]);
+  }, [
+    clearVoiceTimers,
+    endSpeechInputSession,
+    onClose,
+    onSessionEnd,
+    resetIdleSession,
+    stopVoicePlayback,
+  ]);
 
   useEffect(() => {
     if (!lead || isIdlePromptOpen || isAssistantBusy || isSchedulePanelOpen) {
@@ -699,6 +779,17 @@ export function ConciergePanel({
     }
 
     const idleTimer = window.setTimeout(() => {
+      if (voiceModeStateRef.current !== "off") {
+        clearVoiceTimers();
+        stopVoicePlayback();
+        pauseSpeechInput();
+        setVoiceTranscript("");
+
+        if (voiceModeStateRef.current !== "blocked") {
+          setVoiceModeState("paused");
+        }
+      }
+
       setIdleRemainingSeconds(IDLE_SESSION_SECONDS);
       setIsIdlePromptOpen(true);
     }, IDLE_PROMPT_DELAY_MS);
@@ -708,11 +799,16 @@ export function ConciergePanel({
     };
   }, [
     draft,
+    clearVoiceTimers,
     isAssistantBusy,
     isIdlePromptOpen,
     isSchedulePanelOpen,
     lead,
     messages,
+    pauseSpeechInput,
+    stopVoicePlayback,
+    voiceModeState,
+    voiceTranscript,
   ]);
 
   useEffect(() => {
@@ -744,11 +840,13 @@ export function ConciergePanel({
       resetIdleSession();
       clearVoiceTimers();
       stopVoicePlayback();
+      endSpeechInputSession();
       setLead(result);
       setPreparingLead(null);
       setDraft("");
       setVoiceModeState("off");
       setVoiceTranscript("");
+      setVoiceErrorMessage(null);
       setVoiceTurnIndex(0);
       setLiveFlowId(null);
       setLiveStepIndex(INITIAL_LIVE_SCRIPT_INDEX);
@@ -762,16 +860,19 @@ export function ConciergePanel({
           role: "assistant",
           content: "",
           status: "thinking",
+          responsePurpose: "welcome",
         },
       ]);
       setPendingAssistantResponse({
         id: assistantId,
         text: buildInitialAssistantResponse(result),
+        responsePurpose: "welcome",
       });
     },
     [
       createMessageId,
       clearVoiceTimers,
+      endSpeechInputSession,
       onSidePanelOpenChange,
       resetIdleSession,
       stopVoicePlayback,
@@ -886,12 +987,13 @@ export function ConciergePanel({
       setLatestUserMessageAnchorKey(userMessageId);
       setLiveFlowId("high");
       setLiveStepIndex(flowReviews.high.steps.length - 1);
+      setVoiceTranscript("");
       setVoiceModeState("thinking");
       setVoiceTurnIndex((currentTurnIndex) =>
         Math.max(currentTurnIndex, turnIndex + 1),
       );
       queueAssistantResponse(response.text, {
-        feedbackEligible: true,
+        responsePurpose: surfaceAfter ? "recommendation" : "answer",
         streamDelayScale: VOICE_TEXT_STREAM_DELAY_SCALE,
         surfaceAfter,
         voicePlaybackText: response.spokenText,
@@ -900,89 +1002,189 @@ export function ConciergePanel({
     [createMessageId, lead, queueAssistantResponse],
   );
 
-  const startVoiceListening = useCallback(
-    (turnIndex = voiceTurnIndex) => {
-      if (!lead) {
+  const finalizeVoiceTranscript = useCallback(
+    (transcript: string, turnIndex: number) => {
+      const committedTranscript = transcript.trim();
+
+      if (committedTranscript.length === 0) {
         return;
       }
 
-      clearVoiceTimers();
-      stopVoicePlayback();
-      setVoiceModeState("listening");
-      setVoiceTranscript("");
-
-      const transcript =
-        VOICE_USER_TRANSCRIPTS[
-          Math.min(turnIndex, VOICE_USER_TRANSCRIPTS.length - 1)
-        ];
-      const words = transcript.split(" ");
-      let wordIndex = 0;
-
-      voiceTranscriptTimerRef.current = window.setInterval(() => {
-        wordIndex += 1;
-        setVoiceTranscript(words.slice(0, wordIndex).join(" "));
-
-        if (wordIndex >= words.length) {
-          if (voiceTranscriptTimerRef.current !== null) {
-            window.clearInterval(voiceTranscriptTimerRef.current);
-            voiceTranscriptTimerRef.current = null;
-          }
-
-          voiceCompletionTimerRef.current = window.setTimeout(() => {
-            voiceCompletionTimerRef.current = null;
-            submitVoiceTranscript(transcript, turnIndex);
-          }, 420);
-        }
-      }, 155);
+      setVoiceModeState("finalizing");
+      voiceCompletionTimerRef.current = window.setTimeout(() => {
+        voiceCompletionTimerRef.current = null;
+        submitVoiceTranscript(committedTranscript, turnIndex);
+      }, 420);
     },
-    [
-      clearVoiceTimers,
-      lead,
-      stopVoicePlayback,
-      submitVoiceTranscript,
-      voiceTurnIndex,
-    ],
+    [submitVoiceTranscript],
   );
 
-  const handleVoiceModeStart = useCallback(() => {
+  const resumeLiveVoiceListening = useCallback(() => {
+    if (
+      voiceModeStateRef.current === "off" ||
+      voiceModeStateRef.current === "blocked"
+    ) {
+      return;
+    }
+
+    setVoiceErrorMessage(null);
+    setVoiceTranscript("");
     setVoiceModeState("listening");
-    startVoiceListening();
-  }, [startVoiceListening]);
+    void resumeSpeechInput();
+  }, [resumeSpeechInput]);
+
+  useEffect(() => {
+    resumeVoiceListeningRef.current = resumeLiveVoiceListening;
+  }, [resumeLiveVoiceListening]);
+
+  useEffect(() => {
+    speechInputCallbacksRef.current = {
+      onError: (error) => {
+        clearVoiceTimers();
+        stopVoicePlayback();
+        endSpeechInputSession();
+        setVoiceTranscript("");
+        setVoiceErrorMessage(getVoiceInputErrorMessage(error));
+        setVoiceModeState("blocked");
+      },
+      onListening: () => {
+        if (
+          voiceModeStateRef.current === "off" ||
+          voiceModeStateRef.current === "paused" ||
+          voiceModeStateRef.current === "blocked"
+        ) {
+          return;
+        }
+
+        setVoiceErrorMessage(null);
+        setVoiceModeState("listening");
+      },
+      onSpeechStart: () => {
+        if (voiceModeStateRef.current === "listening") {
+          setVoiceModeState("user-speaking");
+        }
+      },
+      onTranscript: (transcript) => {
+        setVoiceTranscript(transcript);
+
+        if (
+          transcript.length > 0 &&
+          (voiceModeStateRef.current === "listening" ||
+            voiceModeStateRef.current === "user-speaking")
+        ) {
+          setVoiceModeState("user-speaking");
+        }
+      },
+      onUtteranceEnd: (transcript) => {
+        if (transcript.trim().length === 0) {
+          if (
+            voiceModeStateRef.current === "listening" ||
+            voiceModeStateRef.current === "user-speaking"
+          ) {
+            voiceCompletionTimerRef.current = window.setTimeout(() => {
+              voiceCompletionTimerRef.current = null;
+              resumeVoiceListeningRef.current();
+            }, 120);
+          }
+          return;
+        }
+
+        finalizeVoiceTranscript(transcript, voiceTurnIndexRef.current);
+      },
+    };
+  }, [
+    clearVoiceTimers,
+    endSpeechInputSession,
+    finalizeVoiceTranscript,
+    stopVoicePlayback,
+  ]);
+
+  const handleVoiceModeStart = useCallback(() => {
+    if (!lead) {
+      return;
+    }
+
+    clearVoiceTimers();
+    stopVoicePlayback();
+    setVoiceTranscript("");
+    setVoiceErrorMessage(null);
+    setVoiceModeState("requesting");
+    void requestSpeechInputPermission();
+  }, [clearVoiceTimers, lead, requestSpeechInputPermission, stopVoicePlayback]);
 
   const handleVoiceModeExit = useCallback(() => {
     clearVoiceTimers();
     stopVoicePlayback();
+    endSpeechInputSession();
     setVoiceModeState("off");
     setVoiceTranscript("");
-  }, [clearVoiceTimers, stopVoicePlayback]);
+    setVoiceErrorMessage(null);
+  }, [clearVoiceTimers, endSpeechInputSession, stopVoicePlayback]);
+
+  const handleVoiceCommit = useCallback(() => {
+    if (voiceModeState !== "user-speaking") {
+      return;
+    }
+
+    clearVoiceTimers();
+    setVoiceModeState("finalizing");
+
+    if (!finishSpeechInput()) {
+      pauseSpeechInput();
+      if (voiceTranscript.trim().length > 0) {
+        finalizeVoiceTranscript(voiceTranscript, voiceTurnIndex);
+      } else {
+        resumeLiveVoiceListening();
+      }
+    }
+  }, [
+    clearVoiceTimers,
+    finishSpeechInput,
+    finalizeVoiceTranscript,
+    pauseSpeechInput,
+    resumeLiveVoiceListening,
+    voiceModeState,
+    voiceTranscript,
+    voiceTurnIndex,
+  ]);
 
   const handleVoiceInterrupt = useCallback(() => {
     clearVoiceTimers();
     stopVoicePlayback();
 
     if (pendingAssistantResponse) {
-      const { id, text } = pendingAssistantResponse;
+      const { id } = pendingAssistantResponse;
+      const stoppedFeedback = createResponseStoppedFeedback(
+        createMessageId("response-stopped"),
+      );
 
       setPendingAssistantResponse(null);
       setMessages((currentMessages) =>
-        currentMessages.map((message) =>
-          isMessageItem(message) && message.id === id
-            ? {
-                ...message,
-                content: getInterruptedAssistantText(text, message.content),
-                status: "complete" as const,
-                feedbackEligible: false,
-              }
-            : message,
-        ),
+        currentMessages.flatMap((message) => {
+          if (!isMessageItem(message) || message.id !== id) {
+            return [message];
+          }
+
+          return message.content.trim().length === 0
+            ? [stoppedFeedback]
+            : [
+                {
+                  ...message,
+                  status: "complete" as const,
+                  responsePurpose: "stopped" as const,
+                  responseStopped: true,
+                },
+              ];
+        }),
       );
     }
 
-    startVoiceListening();
+    resumeLiveVoiceListening();
   }, [
     clearVoiceTimers,
+    createMessageId,
     pendingAssistantResponse,
-    startVoiceListening,
+    resumeLiveVoiceListening,
     stopVoicePlayback,
   ]);
 
@@ -1022,7 +1224,7 @@ export function ConciergePanel({
       }
       queueAssistantResponse(nextTurn.content, {
         surfaceAfter: nextTurn.surfaceAfter,
-        feedbackEligible: nextTurn.feedbackEligible,
+        responsePurpose: nextTurn.responsePurpose,
         ...(isVoiceModeActive
           ? {
               streamDelayScale: VOICE_TEXT_STREAM_DELAY_SCALE,
@@ -1069,7 +1271,7 @@ export function ConciergePanel({
               {
                 ...message,
                 status: "complete" as const,
-                feedbackEligible: false,
+                responsePurpose: "stopped" as const,
                 responseStopped: true,
               },
             ];
@@ -1093,23 +1295,54 @@ export function ConciergePanel({
   }, []);
 
   const handleOpenSchedulePanel = useCallback(() => {
+    if (isVoiceModeActive) {
+      clearVoiceTimers();
+      stopVoicePlayback();
+      endSpeechInputSession();
+      setVoiceTranscript("");
+      setVoiceErrorMessage(null);
+      setVoiceModeState("paused");
+    }
+
     setScheduledSpecialistState("scheduling");
     onSidePanelOpenChange?.(true);
-  }, [onSidePanelOpenChange]);
+  }, [
+    clearVoiceTimers,
+    endSpeechInputSession,
+    isVoiceModeActive,
+    onSidePanelOpenChange,
+    stopVoicePlayback,
+  ]);
 
   const handleBackToChat = useCallback(() => {
     setScheduledSpecialistState("matched");
     onSidePanelOpenChange?.(false);
-  }, [onSidePanelOpenChange]);
+
+    if (isVoiceModeActive) {
+      resumeLiveVoiceListening();
+    }
+  }, [isVoiceModeActive, onSidePanelOpenChange, resumeLiveVoiceListening]);
 
   const handleBookMeeting = useCallback(
     (meeting: BookedMeeting) => {
       setBookedMeeting(meeting);
       setScheduledSpecialistState("booked");
       onSidePanelOpenChange?.(false);
+
+      if (isVoiceModeActive) {
+        resumeLiveVoiceListening();
+      }
     },
-    [onSidePanelOpenChange],
+    [isVoiceModeActive, onSidePanelOpenChange, resumeLiveVoiceListening],
   );
+
+  const handleContinueIdleSession = useCallback(() => {
+    resetIdleSession();
+
+    if (voiceModeStateRef.current === "paused") {
+      resumeLiveVoiceListening();
+    }
+  }, [resetIdleSession, resumeLiveVoiceListening]);
 
   function handleChatBodyScroll(event: UIEvent<HTMLDivElement>) {
     handleLatestScroll();
@@ -1123,58 +1356,26 @@ export function ConciergePanel({
     );
   }
 
-  function shouldShowStarterPrompts(
-    message: ConciergeThreadItem,
-    index: number,
-  ) {
+  function shouldShowStarterPrompts(message: ConciergeThreadItem) {
     if (!lead || isAssistantBusy) {
       return false;
     }
 
     return (
       isMessageItem(message) &&
-      index === 0 &&
       !hasUserMessages &&
       message.role === "assistant" &&
+      message.responsePurpose === "welcome" &&
       message.status === "complete"
     );
   }
 
-  function shouldShowMessageFeedback(
-    message: ConciergeThreadItem,
-    index: number,
-  ) {
-    return (
-      lead !== null &&
-      hasUserMessages &&
-      isMessageItem(message) &&
-      message.role === "assistant" &&
-      message.status === "complete" &&
-      message.feedbackEligible === true &&
-      !shouldShowStarterPrompts(message, index)
-    );
-  }
-
-  function renderThreadItem(message: ConciergeThreadItem, index: number) {
-    const showFeedback = shouldShowMessageFeedback(message, index);
-    const showStarterPrompts = shouldShowStarterPrompts(message, index);
-    const showStoppedFeedback =
-      isMessageItem(message) && message.responseStopped === true;
-    const timestamp = getPrototypeMessageTimestamp(index);
-
-    if (message.kind === "inline-feedback") {
-      return (
-        <ChatInlineFeedback key={message.id} tone={message.tone}>
-          {message.content}
-        </ChatInlineFeedback>
-      );
-    }
-
-    if (message.kind === "recommendation") {
-      if (isScheduledSpecialistRecommendation(message.step)) {
+  function renderConciergeSurface(surface: ConciergeSurface) {
+    if (surface.kind === "recommendation") {
+      if (isScheduledSpecialistRecommendation(surface.step)) {
         return (
           <ScheduledSpecialistCard
-            key={`${message.id}-${scheduledSpecialistState}`}
+            key={`${surface.id}-${scheduledSpecialistState}`}
             state={scheduledSpecialistState}
             bookedMeeting={bookedMeeting}
             onBookTime={handleFindConsultant}
@@ -1186,34 +1387,52 @@ export function ConciergePanel({
 
       return (
         <RecommendationCard
-          key={message.id}
-          title={message.step.title}
-          description={message.step.description}
-          primaryAction={message.step.primaryAction}
-          secondaryAction={message.step.secondaryAction}
+          title={surface.step.title}
+          description={surface.step.description}
+          primaryAction={surface.step.primaryAction}
+          secondaryAction={surface.step.secondaryAction}
         />
       );
     }
 
-    if (message.kind === "resources") {
-      return <ResourceCards key={message.id} step={message.step} />;
+    if (surface.kind === "resources") {
+      return <ResourceCards step={surface.step} />;
     }
 
-    if (message.kind === "availability") {
-      if (isScheduledSpecialistAvailability(message.step)) {
-        return (
-          <ScheduledSpecialistCard
-            key={`${message.id}-${scheduledSpecialistState}`}
-            state={scheduledSpecialistState}
-            bookedMeeting={bookedMeeting}
-            onBookTime={handleFindConsultant}
-            onCancelMatching={handleCancelMatching}
-            onScheduleCall={handleOpenSchedulePanel}
-          />
-        );
-      }
+    if (isScheduledSpecialistAvailability(surface.step)) {
+      return (
+        <ScheduledSpecialistCard
+          key={`${surface.id}-${scheduledSpecialistState}`}
+          state={scheduledSpecialistState}
+          bookedMeeting={bookedMeeting}
+          onBookTime={handleFindConsultant}
+          onCancelMatching={handleCancelMatching}
+          onScheduleCall={handleOpenSchedulePanel}
+        />
+      );
+    }
 
-      return <AvailabilityCard key={message.id} step={message.step} />;
+    return <AvailabilityCard step={surface.step} />;
+  }
+
+  function renderThreadItem(message: ConciergeThreadItem, index: number) {
+    const showStarterPrompts = shouldShowStarterPrompts(message);
+    const showStoppedFeedback =
+      isMessageItem(message) && message.responseStopped === true;
+    const timestamp = getPrototypeMessageTimestamp(index);
+
+    if (message.kind === "inline-feedback") {
+      return (
+        <ChatResponseBlock key={message.id} timestamp={timestamp}>
+          <ChatInlineFeedback tone={message.tone}>{message.content}</ChatInlineFeedback>
+        </ChatResponseBlock>
+      );
+    }
+
+    if (message.kind !== "message") {
+      return (
+        <Fragment key={message.id}>{renderConciergeSurface(message)}</Fragment>
+      );
     }
 
     if (message.status === "thinking") {
@@ -1231,10 +1450,29 @@ export function ConciergePanel({
         {message.content}
       </ChatMessage>
     );
+    const showAssistantFooter =
+      message.role === "assistant" && message.status === "complete";
 
     return (
-      <ChatResponseBlock key={message.id}>
+      <ChatResponseBlock
+        feedbackPolicy={
+          showAssistantFooter
+            ? getChatResponseFeedbackPolicy(
+                showStoppedFeedback
+                  ? "stopped"
+                  : (message.responsePurpose ?? "answer"),
+              )
+            : "none"
+        }
+        key={message.id}
+        timestamp={showAssistantFooter ? timestamp : undefined}
+      >
         {messageNode}
+        {message.surfaceAfter ? (
+          <ChatResponseAttachment>
+            {renderConciergeSurface(message.surfaceAfter)}
+          </ChatResponseAttachment>
+        ) : null}
         {showStarterPrompts ? (
           <ChatResponseAttachment>
             <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
@@ -1248,11 +1486,6 @@ export function ConciergePanel({
             </div>
           </ChatResponseAttachment>
         ) : null}
-        {showFeedback ? (
-          <ChatResponseAttachment gap="sm">
-            <ChatMessageFeedbackFlow timestamp={timestamp} />
-          </ChatResponseAttachment>
-        ) : null}
         {showStoppedFeedback ? (
           <ChatResponseAttachment gap="sm">
             <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
@@ -1262,9 +1495,22 @@ export function ConciergePanel({
     );
   }
 
+  const microphoneNotice =
+    voiceModeState === "blocked" ? (
+      <MicrophoneVoiceBanner
+        message={voiceErrorMessage ?? undefined}
+      />
+    ) : undefined;
   const thread = lead ? (
     <ChatThread aria-live="polite" aria-busy={isAssistantBusy || undefined}>
       {messages.map(renderThreadItem)}
+      {(voiceModeState === "user-speaking" ||
+        voiceModeState === "finalizing") &&
+      voiceTranscript.trim().length > 0 ? (
+        <ChatMessage aria-hidden="true" className="opacity-70" role="user">
+          {voiceTranscript}
+        </ChatMessage>
+      ) : null}
       {isSchedulePanelOpen ? (
         <div aria-hidden="true" className="h-lg shrink-0" />
       ) : null}
@@ -1331,11 +1577,12 @@ export function ConciergePanel({
             </ChatBody>
             <ChatComposer
               variant={variant}
+              notice={microphoneNotice}
               showTopDivider={hasChatBodyScrolled}
               isResponding={isAssistantBusy}
               onStopResponse={handleStopAssistantResponse}
+              onVoiceCommit={handleVoiceCommit}
               onVoiceInterrupt={handleVoiceInterrupt}
-              onVoiceListen={startVoiceListening}
               onVoiceModeExit={handleVoiceModeExit}
               onVoiceModeStart={handleVoiceModeStart}
               showAttachAction={false}
@@ -1350,7 +1597,6 @@ export function ConciergePanel({
               }
               voiceModeActive={isVoiceModeActive}
               voiceState={visibleVoiceState}
-              voiceTranscript={voiceTranscript}
             />
           </>
         )
@@ -1392,7 +1638,7 @@ export function ConciergePanel({
           timeRemaining={`${formatIdleTime(idleRemainingSeconds)} remaining`}
           primaryActionLabel="Continue chat"
           secondaryActionLabel="End chat"
-          onPrimaryAction={resetIdleSession}
+          onPrimaryAction={handleContinueIdleSession}
           onSecondaryAction={endIdleSession}
         />
       ) : null}

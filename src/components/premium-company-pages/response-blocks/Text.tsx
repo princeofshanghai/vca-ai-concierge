@@ -1,10 +1,7 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
-import {
-  CHAT_ASSISTANT_STREAM_WORD_FADE_MS,
-  splitIntoStreamChunks,
-  type ChatMessageStreamStatus,
-} from "@/components/chat/chat-motion";
+import { type ChatMessageStreamStatus } from "@/components/chat/chat-motion";
+import { ChatStreamingText } from "@/components/chat/chat-ui";
 
 type TextTone = "default" | "insight";
 
@@ -56,21 +53,7 @@ export function Text({
 }
 
 export function StreamingText({ text }: Readonly<{ text: string }>) {
-  return (
-    <>
-      {splitIntoStreamChunks(text).map((chunk, index) => (
-        <span
-          className="chat-stream-word"
-          key={index}
-          style={{
-            animationDuration: `${CHAT_ASSISTANT_STREAM_WORD_FADE_MS}ms`,
-          }}
-        >
-          {chunk}
-        </span>
-      ))}
-    </>
-  );
+  return <ChatStreamingText text={text} />;
 }
 
 export function TextRecommendationList({

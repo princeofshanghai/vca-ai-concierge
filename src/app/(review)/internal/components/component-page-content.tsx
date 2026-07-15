@@ -21,6 +21,7 @@ import {
   type HighValueRecommendationState,
   type MediumAvailableHandoffState,
 } from "@/components/flow-review/flow-review-chat-panel";
+import { HiringConfirmationEmail } from "@/components/hiring-microsite/hiring-confirmation-email";
 import { premiumConversationFlows } from "@/components/premium/premium-concierge-flows";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
@@ -37,6 +38,10 @@ import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
 import { Icon, iconMetadata, type IconSize } from "@/components/primitives/icon";
+import {
+  InlineFeedback,
+  type InlineFeedbackTone,
+} from "@/components/primitives/inline-feedback";
 import { IdleSessionPrompt } from "@/components/primitives/idle-session-prompt";
 import { InterimLoadingState } from "@/components/primitives/interim-loading-state";
 import { NavLinkItemHorizontal } from "@/components/primitives/nav-link-item-horizontal";
@@ -89,6 +94,8 @@ import {
 } from "@/components/premium-company-pages/persona";
 
 import {
+  HiringGenericInlineErrorDemo,
+  HiringMicrophoneVoiceBannerDemo,
   PremiumConciergePanelDemo,
   PremiumFabDemo,
   PremiumFabReviewPreview,
@@ -103,6 +110,7 @@ import {
   SduiEntityDemo,
   SduiGhostButtonDemo,
   SduiGhostIconButtonDemo,
+  SduiInlineFeedbackDemo,
   SduiNavLinkItemHorizontalDemo,
   SduiOverlayButtonIconDemo,
   SduiPillDemo,
@@ -263,6 +271,16 @@ const tagTones = [
   { label: "Neutral", tone: "neutral" },
   { label: "Supportive 5", tone: "supportive-5" },
 ] as const;
+
+const inlineFeedbackTones: ReadonlyArray<{
+  label: string;
+  tone: InlineFeedbackTone;
+}> = [
+  { label: "Positive", tone: "positive" },
+  { label: "Negative", tone: "negative" },
+  { label: "Neutral", tone: "neutral" },
+  { label: "Caution", tone: "caution" },
+];
 const badgeExamples = [
   { label: "Alert dot", tone: "alert", size: "large", count: undefined },
   { label: "Alert counter", tone: "alert", size: "small", count: 99 },
@@ -1006,7 +1024,7 @@ function SharedVoiceModePage({ item }: Readonly<{ item: ComponentNavItem }>) {
     <ComponentPageShell item={item} section="Shared">
       <PreviewSection
         title="Demo"
-        description="A click-through mock for the composer-only voice layer. The transcript and cards remain in the normal chat thread while the composer handles listening, thinking, speaking, interruption, and idle voice states."
+        description="A click-through mock of the compact voice control. Live recognition appears as a provisional user message in the normal thread, then the center indicator changes speaker while the AI responds."
       >
         <SharedVoiceModeDemo />
       </PreviewSection>
@@ -1026,6 +1044,12 @@ function SharedVoiceModePage({ item }: Readonly<{ item: ComponentNavItem }>) {
             Structured cards render silently. The assistant should always speak
             a short framing sentence first, then let cards appear visually
             without reading their contents aloud.
+          </p>
+          <p>
+            Visual task panels hide the voice controls, stop audio, and release
+            the microphone while the visitor completes the focused task. Voice
+            mode resumes when the visitor returns to chat or completes the
+            task.
           </p>
         </div>
       </PreviewSection>
@@ -1119,6 +1143,106 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             </div>
           </PreviewMoment>
         </PreviewMomentStack>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function HiringEmailThemeComparison({
+  meetingFormat,
+}: Readonly<{ meetingFormat: "online" | "phone" }>) {
+  return (
+    <div className="min-w-[44rem] space-y-12">
+      <section aria-label="Light theme email preview">
+        <PreviewExampleHeading>Light theme</PreviewExampleHeading>
+        <div className="flex justify-center rounded-lg bg-background-neutral-soft px-xxxl py-12">
+          <HiringConfirmationEmail meetingFormat={meetingFormat} />
+        </div>
+      </section>
+
+      <section aria-label="Dark theme email preview">
+        <PreviewExampleHeading>Dark theme</PreviewExampleHeading>
+        <div className="flex justify-center rounded-lg bg-[#1f1f1f] px-xxxl py-12">
+          <HiringConfirmationEmail meetingFormat={meetingFormat} theme="dark" />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function HiringMicrositeEmailPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Hiring microsite">
+      <PreviewSection
+        title="Phone call"
+        description="The phone-call confirmation keeps the full phone number next to the call instruction so the meeting format is immediately clear."
+      >
+        <HiringEmailThemeComparison meetingFormat="phone" />
+      </PreviewSection>
+
+      <PreviewSection
+        title="Online meeting"
+        description="The online confirmation uses the same email structure and appends mocked Microsoft Teams details below the LinkedIn sign-off."
+      >
+        <HiringEmailThemeComparison meetingFormat="online" />
+      </PreviewSection>
+
+      <PreviewSection title="Design intent">
+        <dl className="grid max-w-[64rem] gap-xxxl md:grid-cols-3">
+          <div className="space-y-sm border-t border-border-faint pt-lg">
+            <dt className="text-heading-md text-text">Preserve familiarity</dt>
+            <dd className="text-body-sm-open text-text-meta">
+              The original greeting, paragraphs, notes, and sign-off remain
+              recognizable across both formats.
+            </dd>
+          </div>
+          <div className="space-y-sm border-t border-border-faint pt-lg">
+            <dt className="text-heading-md text-text">Personalize lightly</dt>
+            <dd className="text-body-sm-open text-text-meta">
+              The visitor and matched specialist are named without adding a new
+              content section.
+            </dd>
+          </div>
+          <div className="space-y-sm border-t border-border-faint pt-lg">
+            <dt className="text-heading-md text-text">Clarify the essentials</dt>
+            <dd className="text-body-sm-open text-text-meta">
+              Meeting format, contact instructions, and optional notes are
+              separated into predictable sections.
+            </dd>
+          </div>
+        </dl>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function HiringMicrositeMicrophoneVoiceBannerPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Hiring microsite">
+      <PreviewSection
+        title="Blocked microphone"
+        description="The visitor remains in voice mode, but the inactive microphone indicator makes it clear that speech is not being captured. End voice returns to the standard composer. This mock does not request microphone access."
+      >
+        <HiringMicrophoneVoiceBannerDemo />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function HiringMicrositeGenericInlineErrorPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Hiring microsite">
+      <PreviewSection
+        title="Failed response"
+        description="The error replaces the failed assistant response. Retry replays the turn and loads a mocked response in this demo, while the standard composer stays available. No Hiring prototype request logic is connected."
+      >
+        <HiringGenericInlineErrorDemo />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -3009,6 +3133,29 @@ function SduiBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
+function SduiInlineFeedbackPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="SDUI Reference">
+      <PreviewSection title="Demo">
+        <SduiInlineFeedbackDemo />
+      </PreviewSection>
+      <PreviewSection
+        title="Tones"
+        description="Use the tone that matches the meaning of the feedback. Severity does not determine whether the message interrupts assistive technology."
+      >
+        <div className="flex min-h-[28.5rem] w-full max-w-[32rem] flex-col items-start justify-center gap-[64px] rounded-[32px] border border-border-faint bg-background px-[96px] py-[64px]">
+          {inlineFeedbackTones.map(({ label, tone }) => (
+            <InlineFeedback action={<span>Link</span>} key={tone} tone={tone}>
+              Feedback text.
+              <span className="sr-only"> {label} feedback.</span>
+            </InlineFeedback>
+          ))}
+        </div>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 function SduiPresenceBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
@@ -3165,6 +3312,12 @@ export function ComponentPageContent({
       return <SharedPromptsPage item={item} />;
     case "shared-action-card":
       return <SharedActionCardPage item={item} />;
+    case "hiring-microsite-email":
+      return <HiringMicrositeEmailPage item={item} />;
+    case "hiring-microsite-microphone-voice-banner":
+      return <HiringMicrositeMicrophoneVoiceBannerPage item={item} />;
+    case "hiring-microsite-generic-inline-error":
+      return <HiringMicrositeGenericInlineErrorPage item={item} />;
     case "shared-choice-card":
       return <SharedChoiceCardPage item={item} />;
     case "shared-task-status-card":
@@ -3233,6 +3386,8 @@ export function ComponentPageContent({
       return <SduiTagPage item={item} />;
     case "sdui-badge":
       return <SduiBadgePage item={item} />;
+    case "sdui-inline-feedback":
+      return <SduiInlineFeedbackPage item={item} />;
     case "sdui-presence-badge":
       return <SduiPresenceBadgePage item={item} />;
     case "sdui-progress-indicator-circular":
