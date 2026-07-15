@@ -102,7 +102,6 @@ const hiringModeOptions = [
     href: "/internal/flows/medium",
     label: "Medium intent",
     typeLabel: "Static",
-    showSubmenu: false,
     options: [
       {
         id: "medium-available",
