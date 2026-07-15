@@ -89,7 +89,8 @@ const hiringModeOptions = [
     id: "hiring-flow-map",
     href: HIRING_FLOW_MAP_HREF,
     label: "Flow map",
-    typeLabel: "Overview",
+    typeLabel: "Static",
+    hasDividerAfter: true,
   },
   {
     id: "high",
@@ -98,7 +99,10 @@ const hiringModeOptions = [
   },
   {
     id: "medium",
+    href: "/internal/flows/medium",
     label: "Medium intent",
+    typeLabel: "Static",
+    showSubmenu: false,
     options: [
       {
         id: "medium-available",

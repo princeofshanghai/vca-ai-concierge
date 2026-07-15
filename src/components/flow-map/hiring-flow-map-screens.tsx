@@ -63,6 +63,7 @@ type StaticHiringScreenProps = Readonly<{
   }>;
   panelWidth?: "collapsed" | "schedule";
   surface?: "default" | "welcome";
+  tall?: boolean;
   transparentHeader?: boolean;
 }>;
 
@@ -129,14 +130,18 @@ function StaticHiringScreen({
   headerIdentity,
   panelWidth = "collapsed",
   surface = "default",
+  tall = false,
   transparentHeader = false,
 }: StaticHiringScreenProps) {
   const outerWidth = compact ? 450 : 720;
-  const outerHeight = compact ? 281.25 : 450;
   const previewScale = outerWidth / 1280;
+  const sourceHeight = tall ? 1280 : 800;
+  const outerHeight = compact ? 281.25 : sourceHeight * previewScale;
   const panelClassName =
     panelWidth === "schedule"
-      ? "!h-[728px] !w-[896px] !rounded-t-md !rounded-b-none"
+      ? tall
+        ? "!h-[1208px] !w-[896px] !rounded-t-md !rounded-b-none"
+        : "!h-[728px] !w-[896px] !rounded-t-md !rounded-b-none"
       : "!h-[728px] !w-[400px] !rounded-t-md !rounded-b-none";
 
   return (
@@ -147,7 +152,10 @@ function StaticHiringScreen({
       <div
         aria-hidden="true"
         inert
-        className="pointer-events-none absolute left-0 top-0 h-[800px] w-[1280px] origin-top-left overflow-hidden"
+        className={[
+          "pointer-events-none absolute left-0 top-0 w-[1280px] origin-top-left overflow-hidden",
+          tall ? "h-[1280px]" : "h-[800px]",
+        ].join(" ")}
         style={{ transform: `scale(${previewScale})` }}
       >
         <HiringPageBackdrop />
@@ -405,7 +413,7 @@ function ScheduleConversation({ tier }: Readonly<{ tier: "high" | "medium" }>) {
           </AssistantResponse>
         </ChatThread>
       }
-      sidePanel={<HighValueSchedulePanelPreview />}
+      sidePanel={<HighValueSchedulePanelPreview showAvailableTimes />}
     />
   );
 }
@@ -508,6 +516,7 @@ export function HiringFlowCheckpointScreen({
       compact={compact}
       panelWidth={isSchedule ? "schedule" : "collapsed"}
       surface={isEntrySurface ? "welcome" : "default"}
+      tall={isSchedule}
       transparentHeader={isEntrySurface}
       headerIdentity={
         isRepresentative
@@ -525,8 +534,10 @@ function StatePreview({
   label,
 }: Readonly<{ children: ReactNode; label: string }>) {
   return (
-    <article className="flex min-w-[380px] flex-col gap-md rounded-lg border border-border-faint bg-background p-xl shadow-raised-faint">
-      <p className="text-control-sm text-text-meta">{label}</p>
+    <article className="flex min-w-[400px] flex-col gap-lg rounded-lg border border-border-faint bg-background p-xl shadow-raised-faint">
+      <p className="text-[20px] font-medium leading-tight text-text-meta">
+        {label}
+      </p>
       <div className="pointer-events-none flex min-h-[180px] items-start">
         {children}
       </div>
@@ -536,7 +547,7 @@ function StatePreview({
 
 export function HighValueStateGallery() {
   return (
-    <div className="flex gap-lg">
+    <div className="flex gap-xl">
       {HIGH_STATES.map(({ label, state }) => (
         <StatePreview key={state} label={label}>
           <HighValueMatchCardPreview
@@ -551,7 +562,7 @@ export function HighValueStateGallery() {
 
 export function MediumValueStateGallery() {
   return (
-    <div className="flex gap-lg">
+    <div className="flex gap-xl">
       {MEDIUM_STATES.map(({ label, state }) => (
         <StatePreview key={state} label={label}>
           <MediumAvailableHandoffPreview state={state} />

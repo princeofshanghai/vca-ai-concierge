@@ -145,12 +145,14 @@ type FlowReviewSidePanel = "schedule" | null;
 type SchedulePanelProps = Readonly<{
   visualState?: SchedulePanelVisualState;
   initialScrollPosition?: SchedulePanelInitialScrollPosition;
+  initialDate?: MeetingDate | null;
   onBack: () => void;
   onBook: (meeting: BookedMeeting) => void;
 }>;
 
 export type HighValueSchedulePanelPreviewProps = Readonly<{
   state?: SchedulePanelVisualState;
+  showAvailableTimes?: boolean;
 }>;
 
 const MEETING_DATE_DETAILS: Record<MeetingDate, string> = {
@@ -764,6 +766,7 @@ export function HighValueMatchCardPreview({
 export function SchedulePanel({
   visualState = "default",
   initialScrollPosition = "top",
+  initialDate = null,
   onBack,
   onBook,
 }: SchedulePanelProps) {
@@ -774,7 +777,7 @@ export function SchedulePanel({
   const [selectedFormat, setSelectedFormat] =
     useState<MeetingFormat>("Online meeting");
   const [selectedDate, setSelectedDate] = useState<MeetingDate | null>(
-    isConfirmingPreview ? MEETING_DATES[0] : null,
+    isConfirmingPreview ? MEETING_DATES[0] : initialDate,
   );
   const [selectedTime, setSelectedTime] = useState<MeetingTime | null>(
     isConfirmingPreview ? MEETING_TIMES[0] : null,
@@ -993,6 +996,7 @@ export function SchedulePanel({
 
 export function HighValueSchedulePanelPreview({
   state = "default",
+  showAvailableTimes = false,
 }: HighValueSchedulePanelPreviewProps) {
   const [previewKey, setPreviewKey] = useState(0);
 
@@ -1001,6 +1005,7 @@ export function HighValueSchedulePanelPreview({
       key={`${state}-${previewKey}`}
       visualState={state}
       initialScrollPosition={state === "confirming" ? "footer" : "top"}
+      initialDate={showAvailableTimes ? MEETING_DATES[0] : null}
       onBack={() => {}}
       onBook={() => setPreviewKey((key) => key + 1)}
     />

@@ -52,9 +52,9 @@ type ConnectorProps = Readonly<{
   path: string;
 }>;
 
-const BOARD_WIDTH = 8340;
-const BOARD_HEIGHT = 5750;
-const MIN_SCALE = 0.075;
+const BOARD_WIDTH = 10800;
+const BOARD_HEIGHT = 7420;
+const MIN_SCALE = 0.06;
 const MAX_SCALE = 1.6;
 const FIT_TOP_INSET = 112;
 const FIT_EDGE_GAP = 24;
@@ -64,221 +64,221 @@ const FLOW_NODES: ReadonlyArray<FlowNodeProps> = [
     checkpoint: "entry-choice",
     title: "Choose how to connect",
     summary: "The visitor opens Contact sales and chooses AI chat or a callback.",
-    x: 180,
-    y: 2700,
+    x: 200,
+    y: 3540,
   },
   {
     checkpoint: "callback-form",
     title: "Share contact details",
     summary: "The visitor completes the existing sales callback form.",
-    x: 1180,
-    y: 280,
+    x: 1600,
+    y: 420,
   },
   {
     checkpoint: "callback-success",
     title: "Contact request confirmed",
     summary: "LinkedIn confirms the request and still offers immediate AI help.",
-    x: 2260,
-    y: 280,
+    x: 3000,
+    y: 420,
   },
   {
     checkpoint: "onboarding-signed-in",
     title: "Confirm lead details",
     summary: "Signed-in identity prefills the form; company context is still required.",
-    x: 1180,
-    y: 2700,
+    x: 1600,
+    y: 3540,
   },
   {
     checkpoint: "onboarding-signed-out",
     compact: true,
     title: "Signed-out variant",
     summary: "LinkedIn sign-in is offered before the same required form.",
-    x: 1310,
-    y: 3310,
+    x: 1750,
+    y: 4300,
   },
   {
     checkpoint: "welcome",
     title: "Begin the conversation",
     summary: "The concierge welcomes Jamie and offers clear starter prompts.",
-    x: 2260,
-    y: 2700,
+    x: 3000,
+    y: 3540,
   },
   {
     checkpoint: "high-qualification",
     title: "Urgent hiring ramp",
     summary: "Jamie shares large volume, specialized roles, and sourcing pressure.",
-    x: 3350,
-    y: 900,
+    x: 4500,
+    y: 1580,
   },
   {
     checkpoint: "high-recommendation",
     title: "Recommend an AE meeting",
     summary: "The concierge commits to a consultant-led hiring plan.",
-    x: 4380,
-    y: 900,
+    x: 5900,
+    y: 1580,
   },
   {
     checkpoint: "high-schedule",
     title: "Choose a meeting time",
     summary: "Jamie selects the meeting format, date, and time.",
-    x: 6500,
-    y: 900,
+    x: 8300,
+    y: 1580,
   },
   {
     checkpoint: "high-booked",
     title: "AE meeting booked",
     summary: "The confirmed meeting becomes the clear terminal outcome.",
-    x: 7500,
-    y: 900,
+    x: 9700,
+    y: 1580,
   },
   {
     checkpoint: "medium-qualification",
     title: "Manager-led hiring need",
     summary: "Jamie describes a few urgent roles without a dedicated recruiter.",
-    x: 3350,
-    y: 2800,
+    x: 4500,
+    y: 3540,
   },
   {
     checkpoint: "medium-recommendation",
     title: "Recommend an SDR handoff",
     summary: "Hiring Pro fits, and Jamie asks to speak with someone.",
-    x: 4380,
-    y: 2800,
+    x: 5900,
+    y: 3540,
   },
   {
     checkpoint: "medium-connected",
     title: "Specialist joins live chat",
     summary: "An available specialist enters the thread and continues in context.",
-    x: 6500,
-    y: 2800,
+    x: 8300,
+    y: 3540,
   },
   {
     checkpoint: "medium-schedule",
-    title: "Schedule the fallback",
-    summary: "Unavailable or failed live chat resolves to the same scheduling path.",
-    x: 6500,
-    y: 4050,
+    title: "SDR unavailable — schedule a call",
+    summary: "No SDR is online for a live handoff, so the concierge offers a scheduled conversation instead.",
+    x: 8300,
+    y: 4750,
   },
   {
     checkpoint: "medium-booked",
     title: "SDR meeting booked",
     summary: "The fallback ends with a confirmed specialist conversation.",
-    x: 7500,
-    y: 4050,
+    x: 9700,
+    y: 4750,
   },
   {
     checkpoint: "low-qualification",
     title: "One role for now",
     summary: "Jamie describes a one-off need and a preference to move independently.",
-    x: 3350,
-    y: 5100,
+    x: 4500,
+    y: 6540,
   },
   {
     checkpoint: "low-resources",
     title: "Recommend self-serve resources",
     summary: "The concierge provides a useful next step without a sales handoff.",
-    x: 4380,
-    y: 5100,
+    x: 5900,
+    y: 6540,
   },
 ];
 
 const CONNECTORS: ReadonlyArray<ConnectorProps> = [
   {
-    label: "Have someone contact me",
-    path: "M 900 2990 C 1040 2990 980 570 1180 570",
-    labelX: 930,
-    labelY: 1620,
+    label: "Callback route",
+    path: "M 920 3900 C 1240 3900 1260 780 1600 780",
+    labelX: 1080,
+    labelY: 2260,
   },
   {
-    label: "Chat with AI assistant",
-    path: "M 900 2990 L 1180 2990",
-    labelX: 930,
-    labelY: 2945,
+    label: "AI concierge route",
+    path: "M 920 3900 L 1600 3900",
+    labelX: 1080,
+    labelY: 3830,
   },
   {
-    label: "Submit",
-    path: "M 1900 570 L 2260 570",
-    labelX: 2010,
-    labelY: 525,
+    label: "Callback request submitted",
+    path: "M 2320 780 L 3000 780",
+    labelX: 2410,
+    labelY: 710,
   },
   {
     dashed: true,
-    label: "Chat with AI",
-    path: "M 2980 570 C 3220 570 3070 2490 1900 2990",
-    labelX: 2920,
-    labelY: 1710,
+    label: "Continue to AI concierge",
+    path: "M 3720 780 C 4050 780 3900 3220 2320 3900",
+    labelX: 3700,
+    labelY: 2320,
   },
   {
-    label: "Start chat",
-    path: "M 1900 2990 L 2260 2990",
-    labelX: 2015,
-    labelY: 2945,
+    label: "Begin qualification",
+    path: "M 2320 3900 L 3000 3900",
+    labelX: 2440,
+    labelY: 3830,
   },
   {
-    label: "Large hiring ramp",
-    path: "M 2980 2990 C 3180 2990 3150 1190 3350 1190",
-    labelX: 3060,
-    labelY: 2030,
+    label: "Classify: High intent",
+    path: "M 3720 3900 C 4100 3900 4100 1940 4500 1940",
+    labelX: 3860,
+    labelY: 2820,
   },
   {
-    label: "A few manager-led roles",
-    path: "M 2980 2990 L 3350 3090",
-    labelX: 3030,
-    labelY: 2980,
+    label: "Classify: Medium intent",
+    path: "M 3720 3900 L 4500 3900",
+    labelX: 3870,
+    labelY: 3830,
   },
   {
-    label: "One role for now",
-    path: "M 2980 2990 C 3180 2990 3150 5390 3350 5390",
-    labelX: 3060,
-    labelY: 4220,
+    label: "Classify: Low intent",
+    path: "M 3720 3900 C 4100 3900 4100 6900 4500 6900",
+    labelX: 3860,
+    labelY: 5360,
   },
   {
-    label: "Shares urgency and sourcing needs",
-    path: "M 4070 1190 L 4380 1190",
-    labelX: 4090,
-    labelY: 1145,
+    label: "Route to AE meeting",
+    path: "M 5220 1940 L 5900 1940",
+    labelX: 5350,
+    labelY: 1870,
   },
   {
-    label: "Find a consultant",
-    path: "M 5100 1190 L 6500 1190",
-    labelX: 5600,
-    labelY: 1145,
+    label: "Offer scheduling",
+    path: "M 6620 1940 C 7200 1940 7650 2080 8300 2080",
+    labelX: 7350,
+    labelY: 1910,
   },
   {
-    label: "Confirm meeting",
-    path: "M 7220 1190 L 7500 1190",
-    labelX: 7260,
-    labelY: 1145,
+    label: "Meeting confirmed",
+    path: "M 9020 2080 C 9300 2080 9400 1940 9700 1940",
+    labelX: 9180,
+    labelY: 1870,
   },
   {
-    label: "Asks to speak with someone",
-    path: "M 4070 3090 L 4380 3090",
-    labelX: 4090,
-    labelY: 3045,
+    label: "Route to SDR handoff",
+    path: "M 5220 3900 L 5900 3900",
+    labelX: 5320,
+    labelY: 3830,
   },
   {
-    label: "Chat now",
-    path: "M 5100 3090 L 6500 3090",
-    labelX: 5640,
-    labelY: 3045,
+    label: "SDR available: Start live handoff",
+    path: "M 6620 3900 L 8300 3900",
+    labelX: 7100,
+    labelY: 3830,
   },
   {
-    label: "Live chat unavailable or interrupted",
-    path: "M 5100 3150 C 5940 3150 5900 4340 6500 4340",
-    labelX: 5500,
-    labelY: 3690,
+    label: "Live SDR unavailable: Offer scheduling",
+    path: "M 6620 3980 C 7350 3980 7550 5250 8300 5250",
+    labelX: 7100,
+    labelY: 4580,
   },
   {
-    label: "Confirm meeting",
-    path: "M 7220 4340 L 7500 4340",
-    labelX: 7260,
-    labelY: 4295,
+    label: "Meeting confirmed",
+    path: "M 9020 5250 C 9300 5250 9400 5110 9700 5110",
+    labelX: 9180,
+    labelY: 5040,
   },
   {
-    label: "Moves at their own pace",
-    path: "M 4070 5390 L 4380 5390",
-    labelX: 4090,
-    labelY: 5345,
+    label: "Recommend self-serve",
+    path: "M 5220 6900 L 5900 6900",
+    labelX: 5350,
+    labelY: 6830,
   },
 ];
 
@@ -299,11 +299,11 @@ function FlowNode({
       className="pointer-events-none absolute m-0"
       style={{ left: x, top: y, width: compact ? 450 : 720 }}
     >
-      <figcaption className="mb-lg min-h-[76px] max-w-[640px]">
-        <h3 className="text-[24px] font-semibold leading-tight text-text">
+      <figcaption className="mb-xl min-h-[136px] max-w-[700px]">
+        <h3 className="text-[40px] font-semibold leading-[1.12] tracking-[-0.02em] text-text">
           {title}
         </h3>
-        <p className="mt-xs text-[16px] leading-relaxed text-text-meta">
+        <p className="mt-sm text-[22px] leading-[1.45] text-text-meta">
           {summary}
         </p>
       </figcaption>
@@ -315,21 +315,21 @@ function FlowNode({
 function LaneHeader({ eyebrow, href, title, x, y }: LaneHeaderProps) {
   return (
     <section
-      className="absolute flex w-[720px] items-end justify-between border-b-2 border-action/25 pb-md"
+      className="absolute flex w-[980px] items-end justify-between border-b-[3px] border-action/25 pb-lg"
       style={{ left: x, top: y }}
     >
       <div>
-        <p className="text-[14px] font-semibold tracking-[0.08em] text-action uppercase">
+        <p className="text-[18px] font-semibold tracking-[0.08em] text-action uppercase">
           {eyebrow}
         </p>
-        <h2 className="mt-xs text-[32px] font-semibold leading-tight text-text">
+        <h2 className="mt-sm text-[48px] font-semibold leading-[1.08] tracking-[-0.02em] text-text">
           {title}
         </h2>
       </div>
       <Link
         data-canvas-control
         href={href}
-        className="pointer-events-auto inline-flex h-10 items-center gap-xs rounded-round border border-action bg-background px-lg text-control-sm text-action shadow-sm transition-colors hover:bg-action-background-transparent-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
+        className="pointer-events-auto inline-flex h-12 items-center gap-sm rounded-round border border-action bg-background px-xl text-[18px] font-semibold text-action shadow-sm transition-colors hover:bg-action-background-transparent-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
       >
         Open full flow
         <Icon name="arrow-right" size="small" />
@@ -344,7 +344,7 @@ function ConnectorLabels() {
       {CONNECTORS.map((connector) => (
         <span
           key={`${connector.label}-${connector.labelX}-${connector.labelY}`}
-          className="pointer-events-none absolute rounded-round border border-border-faint bg-background px-md py-sm text-[14px] font-medium leading-none text-text-meta shadow-sm"
+          className="pointer-events-none absolute rounded-round border border-border-faint bg-background px-lg py-md text-[22px] font-semibold leading-none text-text-meta shadow-sm"
           style={{ left: connector.labelX, top: connector.labelY }}
         >
           {connector.label}
@@ -366,14 +366,14 @@ function BoardConnectors() {
       <defs>
         <marker
           id="flow-map-arrow"
-          markerWidth="12"
-          markerHeight="12"
-          refX="10"
-          refY="6"
+          markerWidth="8"
+          markerHeight="8"
+          refX="7"
+          refY="4"
           orient="auto"
           markerUnits="strokeWidth"
         >
-          <path d="M 0 0 L 12 6 L 0 12 z" fill="rgba(0, 0, 0, 0.45)" />
+          <path d="M 0 0 L 8 4 L 0 8 z" fill="rgba(0, 0, 0, 0.4)" />
         </marker>
       </defs>
       {CONNECTORS.map((connector) => (
@@ -382,7 +382,7 @@ function BoardConnectors() {
           d={connector.path}
           fill="none"
           stroke="rgba(0, 0, 0, 0.32)"
-          strokeWidth="4"
+          strokeWidth="3.5"
           strokeDasharray={connector.dashed ? "14 12" : undefined}
           markerEnd="url(#flow-map-arrow)"
         />
@@ -410,10 +410,12 @@ function StateGallery({
       style={{ left: x, top: y }}
     >
       <div className="mb-lg">
-        <h3 className="text-[22px] font-semibold leading-tight text-text">
+        <h3 className="text-[34px] font-semibold leading-tight tracking-[-0.01em] text-text">
           {title}
         </h3>
-        <p className="mt-xs text-[15px] text-text-meta">{summary}</p>
+        <p className="mt-sm text-[20px] leading-relaxed text-text-meta">
+          {summary}
+        </p>
       </div>
       {children}
     </section>
@@ -733,36 +735,36 @@ export function HiringFlowMap() {
             eyebrow="Alternate contact path"
             title="Sales callback"
             href="/hiring?contactSales=open"
-            x={1140}
-            y={90}
+            x={1560}
+            y={120}
           />
           <LaneHeader
             eyebrow="AI concierge entry"
             title="Shared beginning"
             href="/hiring"
-            x={1140}
-            y={2500}
+            x={1560}
+            y={3250}
           />
           <LaneHeader
             eyebrow="Internal routing tier"
             title="AE meeting · High value"
             href="/internal/flows/high"
-            x={3310}
-            y={690}
+            x={4460}
+            y={1300}
           />
           <LaneHeader
             eyebrow="Internal routing tier"
             title="SDR handoff · Medium value"
             href="/internal/flows/medium/available"
-            x={3310}
-            y={2590}
+            x={4460}
+            y={3250}
           />
           <LaneHeader
             eyebrow="Internal routing tier"
             title="Self-serve · Low value"
             href="/internal/flows/low"
-            x={3310}
-            y={4890}
+            x={4460}
+            y={6250}
           />
 
           {FLOW_NODES.map((node) => (
@@ -772,16 +774,16 @@ export function HiringFlowMap() {
           <StateGallery
             title="Consultant match card states"
             summary="Every meaningful state remains visible without repeating the full shell."
-            x={4380}
-            y={1510}
+            x={5900}
+            y={2520}
           >
             <HighValueStateGallery />
           </StateGallery>
           <StateGallery
             title="Live handoff and fallback card states"
             summary="Availability, connection, failure, and booked outcomes are shown together."
-            x={3350}
-            y={3470}
+            x={4500}
+            y={4300}
           >
             <MediumValueStateGallery />
           </StateGallery>
@@ -804,7 +806,7 @@ export function HiringFlowMap() {
               <button
                 data-canvas-control
                 type="button"
-                onClick={() => focusLane(1800, 750, 0.2)}
+                onClick={() => focusLane(2600, 450, 0.3)}
                 className="h-8 rounded-round bg-background-neutral-soft px-md text-control-sm text-text-meta hover:text-text focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
               >
                 Callback
@@ -812,7 +814,7 @@ export function HiringFlowMap() {
               <button
                 data-canvas-control
                 type="button"
-                onClick={() => focusLane(5250, 1500, 0.16)}
+                onClick={() => focusLane(6500, 1900, 0.28)}
                 className="h-8 rounded-round bg-background-neutral-soft px-md text-control-sm text-text-meta hover:text-text focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
               >
                 High
@@ -820,7 +822,7 @@ export function HiringFlowMap() {
               <button
                 data-canvas-control
                 type="button"
-                onClick={() => focusLane(5250, 3600, 0.16)}
+                onClick={() => focusLane(6500, 3900, 0.26)}
                 className="h-8 rounded-round bg-background-neutral-soft px-md text-control-sm text-text-meta hover:text-text focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
               >
                 Medium
@@ -828,7 +830,7 @@ export function HiringFlowMap() {
               <button
                 data-canvas-control
                 type="button"
-                onClick={() => focusLane(4300, 5350, 0.2)}
+                onClick={() => focusLane(5600, 6500, 0.32)}
                 className="h-8 rounded-round bg-background-neutral-soft px-md text-control-sm text-text-meta hover:text-text focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-action-focus-ring"
               >
                 Low
