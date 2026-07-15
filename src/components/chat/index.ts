@@ -65,3 +65,12 @@ export {
   type ChatSidePanelLayoutProps,
   type ChatSidePanelProps,
 } from "./chat-side-panel";
+export {
+  ChatSystemEvent,
+  LiveAgentHandoff,
+  type LiveAgentHandoffAgent,
+  type LiveAgentHandoffContent,
+  type LiveAgentHandoffProps,
+  type LiveAgentHandoffState,
+  type LiveAgentHandoffStateContent,
+} from "./live-agent-handoff";

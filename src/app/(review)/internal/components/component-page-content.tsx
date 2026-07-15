@@ -5,14 +5,13 @@ import {
   ChatBody,
   ChatComposer,
   ChatHeader,
-  ChatInlineFeedback,
   ChatMessage,
   ChatMessageContent,
   ChatPanel,
-  ChatThinkingMessage,
   ChatThread,
   Prompt,
 } from "@/components/chat/chat-ui";
+import { ChatSystemEvent } from "@/components/chat/live-agent-handoff";
 import {
   HighValueMatchCardPreview,
   HighValueSchedulePanelPreview,
@@ -22,9 +21,7 @@ import {
   type MediumAvailableHandoffState,
 } from "@/components/flow-review/flow-review-chat-panel";
 import { HiringConfirmationEmail } from "@/components/hiring-microsite/hiring-confirmation-email";
-import { premiumConversationFlows } from "@/components/premium/premium-concierge-flows";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
-import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
 import {
   PremiumUpsellBadge,
@@ -96,7 +93,6 @@ import {
 import {
   HiringGenericInlineErrorDemo,
   HiringMicrophoneVoiceBannerDemo,
-  PremiumConciergePanelDemo,
   PremiumFabDemo,
   PremiumFabReviewPreview,
   PremiumPlanCardDemo,
@@ -123,16 +119,25 @@ import {
   SharedActionCardDemo,
   SharedChoiceCardDemo,
   SharedComposerDemo,
+  SharedComposerPlacement,
   SharedConfirmationDemo,
   SharedConfirmationVariants,
   SharedEndChatCsatDemo,
+  SharedEndChatCsatUsageDemo,
   SharedFeedbackDemo,
   SharedFeedbackVariants,
   SharedHeaderDemo,
-  SharedHeaderVariants,
+  SharedHeaderIdentityDemo,
+  SharedHeaderPresentationDemo,
+  SharedHeaderProductExample,
+  SharedLiveAgentHandoffDemo,
+  LiveAgentHandoffUsageDemo,
   SharedMessagesDemo,
+  SharedResponseStatesDemo,
   SharedPromptsDemo,
   SharedShellDemo,
+  SharedShellEntryPointBehaviorDemo,
+  SharedShellExpandableBehaviorDemo,
   SharedShellHiringMicrositeDemo,
   SharedShellPremiumSurveyDemo,
   SharedSidePanelDemo,
@@ -415,6 +420,27 @@ function PageHeader({
   );
 }
 
+function ComponentLibraryBodyCopy({
+  children,
+  className,
+}: Readonly<{
+  children: ReactNode;
+  className?: string;
+}>) {
+  return (
+    <p
+      className={[
+        "text-[15px] font-normal leading-[22px] text-text",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {children}
+    </p>
+  );
+}
+
 function PreviewSection({
   title,
   description,
@@ -431,9 +457,9 @@ function PreviewSection({
           {title}
         </h2>
         {description ? (
-          <p className="max-w-2xl text-body-sm-open text-text-meta">
+          <ComponentLibraryBodyCopy className="max-w-2xl">
             {description}
-          </p>
+          </ComponentLibraryBodyCopy>
         ) : null}
       </div>
       <div className="component-library-preview overflow-x-auto pb-1">
@@ -487,6 +513,16 @@ function PreviewExampleHeading({
     >
       {children}
     </Heading>
+  );
+}
+
+function PreviewSubsectionHeading({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <h4 className="text-[16px] font-medium leading-6 text-text">
+      {children}
+    </h4>
   );
 }
 
@@ -878,9 +914,161 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <SharedHeaderDemo />
       </PreviewSection>
       <PreviewSection title="Variants">
-        <SharedHeaderVariants />
+        <div className="max-w-[48rem]">
+          <PreviewExampleHeading>Identity</PreviewExampleHeading>
+          <ComponentLibraryBodyCopy>
+            The header identifies whether the conversation is with an AI agent
+            or a live representative.
+          </ComponentLibraryBodyCopy>
+        </div>
+        <PreviewMomentStack className="mt-xxxl">
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>AI agent</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                The default header identifies the agent chat and provides
+                controls for managing the current view.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderIdentityDemo identity="ai-agent" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>Live agent</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                When a live agent joins, the header replaces the AI identity
+                with the representative&apos;s avatar, presence, and name.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderIdentityDemo identity="live-agent" />
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+      <PreviewSection title="Behavior">
+        <div className="max-w-[48rem]">
+          <PreviewExampleHeading>Actions</PreviewExampleHeading>
+          <ComponentLibraryBodyCopy>
+            The header exposes expand, minimize, and close actions based on its
+            current presentation.
+          </ComponentLibraryBodyCopy>
+        </div>
+        <PreviewMomentStack className="mt-xxxl">
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>Panel</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                The panel header can expand, dock, or close when those actions
+                are available.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderPresentationDemo presentation="panel" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>
+                Expanded dialog
+              </PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                The expanded dialog replaces the expand action with collapse
+                while keeping dock and close available.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderPresentationDemo presentation="expanded" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>Docked tray</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                The compact tray header exposes a single action to open the
+                agent chat.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderPresentationDemo presentation="tray" />
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+      <PreviewSection title="Examples">
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <div className="max-w-[48rem]">
+              <PreviewExampleHeading>
+                LTS hiring microsite
+              </PreviewExampleHeading>
+              <ComponentLibraryBodyCopy>
+                The LTS hiring microsite labels the agent chat as Contact sales.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderProductExample product="hiring" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem]">
+              <PreviewExampleHeading>Premium survey</PreviewExampleHeading>
+              <ComponentLibraryBodyCopy>
+                The Premium survey labels the agent chat as Help assistant.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedHeaderProductExample product="premium" />
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
+  );
+}
+
+function MessagesPlacementConversation() {
+  return (
+    <ChatPanelReferenceFrame className="flex h-[720px] flex-col">
+      <ChatHeader
+        identity={{
+          type: "representative",
+          name: "David S.",
+          role: "Sales consultant",
+        }}
+        showCloseAction={false}
+      />
+      <ChatBody>
+        <ChatThread showAiDisclaimer={false}>
+          <ChatMessage>
+            Hi Jamie. I can help you understand which hiring solution fits your
+            team.
+          </ChatMessage>
+          <ChatMessage role="user" timestamp="1:04 PM">
+            We need to hire 40 roles this quarter.
+          </ChatMessage>
+          <ChatMessage>
+            <ChatMessageContent>
+              <p>Here&apos;s a simple place to start:</p>
+              <ul>
+                <li>Confirm your priority roles.</li>
+                <li>Compare sourcing and hiring options.</li>
+              </ul>
+            </ChatMessageContent>
+          </ChatMessage>
+          <ChatMessage role="user" timestamp="1:05 PM">
+            Can I speak with a sales consultant about the best option?
+          </ChatMessage>
+          <ChatMessage>
+            No problem, I&apos;ll connect you with an agent now.
+          </ChatMessage>
+          <ChatSystemEvent>
+            David S. joined the chat · 9:37 PM
+          </ChatSystemEvent>
+          <ChatMessage
+            role="representative"
+            authorName="David S."
+            avatarLabel="David S., Live agent"
+            timestamp="9:37 PM"
+          >
+            Hi Jamie, I can help you plan the next step.
+          </ChatMessage>
+        </ChatThread>
+      </ChatBody>
+      <ChatComposer
+        sendDisabled
+        showAttachAction={false}
+        showVoiceMode={false}
+      />
+    </ChatPanelReferenceFrame>
   );
 }
 
@@ -890,60 +1078,52 @@ function SharedMessagesPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedMessagesDemo />
       </PreviewSection>
-      <PreviewSection title="Message states">
-        <PreviewMomentStack>
+      <PreviewSection title="Example">
+        <MessagesPlacementConversation />
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedLiveAgentHandoffPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedLiveAgentHandoffDemo />
+      </PreviewSection>
+
+      <PreviewSection title="Usage">
+        <ComponentLibraryBodyCopy className="max-w-[44rem]">
+          Trigger each example to see the handoff move from connecting to
+          connected.
+        </ComponentLibraryBodyCopy>
+        <PreviewMomentStack className="mt-xxxl">
           <PreviewMoment>
-            <PreviewExampleHeading>AI assistant</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
-            </ChatThreadReferenceFrame>
+            <PreviewExampleHeading>
+              General support (Used across VCA use cases including Premium
+              Company Pages)
+            </PreviewExampleHeading>
+            <LiveAgentHandoffUsageDemo product="support" />
           </PreviewMoment>
           <PreviewMoment>
-            <PreviewExampleHeading>Member or visitor</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <ChatMessage role="user" timestamp="1:04 PM">
-                We need to ramp hiring fast this quarter.
-              </ChatMessage>
-            </ChatThreadReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Live agent</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <ChatMessage
-                role="representative"
-                authorName="David S."
-                avatarLabel="David S., Live agent"
-                timestamp="9:37 PM"
-              >
-                Hey Jamie, how can I help you?
-              </ChatMessage>
-            </ChatThreadReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Thinking and stopped</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <ChatThinkingMessage />
-              <div className="flex justify-start">
-                <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
-              </div>
-            </ChatThreadReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Rich content</PreviewExampleHeading>
-            <ChatThreadReferenceFrame>
-              <ChatMessage>
-                <ChatMessageContent>
-                  <p>Here are the fastest next steps:</p>
-                  <ul>
-                    <li>Confirm hiring volume and timeline.</li>
-                    <li>Choose whether the team needs sourcing tools.</li>
-                    <li>Route complex questions to a live agent.</li>
-                  </ul>
-                </ChatMessageContent>
-              </ChatMessage>
-            </ChatThreadReferenceFrame>
+            <PreviewExampleHeading>LTS hiring microsite</PreviewExampleHeading>
+            <LiveAgentHandoffUsageDemo product="hiring" />
           </PreviewMoment>
         </PreviewMomentStack>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function SharedResponseStatesPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Shared">
+      <PreviewSection title="Demo">
+        <SharedResponseStatesDemo />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -965,13 +1145,49 @@ function SharedFeedbackPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SharedEndChatCsatPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
-      <PreviewSection
-        title="Demo"
-        description="A reusable close-chat moment for capturing overall conversation satisfaction before ending the session."
-      >
+      <PreviewSection title="Demo">
         <SharedEndChatCsatDemo />
       </PreviewSection>
+      <PreviewSection title="Usage">
+        <ComponentLibraryBodyCopy className="max-w-[44rem]">
+          The CSAT screen appears and replaces the existing chat when the user
+          clicks X to close it.
+        </ComponentLibraryBodyCopy>
+        <div className="mt-xxxl">
+          <SharedEndChatCsatUsageDemo />
+        </div>
+      </PreviewSection>
     </ComponentPageShell>
+  );
+}
+
+function ComposerUsageShell({
+  voiceModeActive = false,
+}: Readonly<{
+  voiceModeActive?: boolean;
+}>) {
+  return (
+    <ChatPanelReferenceFrame className="flex h-[520px] flex-col">
+      <ChatHeader
+        title="Contact sales"
+        showCloseAction={false}
+        showAiMark={false}
+      />
+      <ChatBody>
+        <ChatThread showAiDisclaimer={false}>
+          <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
+          <ChatMessage role="user">
+            We need to ramp hiring fast this quarter.
+          </ChatMessage>
+        </ChatThread>
+      </ChatBody>
+      <ChatComposer
+        showAttachAction={false}
+        showVoiceMode={voiceModeActive}
+        voiceModeActive={voiceModeActive}
+        voiceState={voiceModeActive ? "listening" : "idle"}
+      />
+    </ChatPanelReferenceFrame>
   );
 }
 
@@ -981,37 +1197,25 @@ function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedComposerDemo />
       </PreviewSection>
-      <PreviewSection title="Composer states">
-        <PreviewMomentStack>
+      <PreviewSection title="Placement">
+        <SharedComposerPlacement />
+      </PreviewSection>
+      <PreviewSection title="Usage">
+        <div className="max-w-[48rem]">
+          <PreviewExampleHeading>LTS hiring microsite</PreviewExampleHeading>
+          <ComponentLibraryBodyCopy>
+            The composer defaults to text. Selecting the voice mode button
+            switches both the composer and chat to voice mode.
+          </ComponentLibraryBodyCopy>
+        </div>
+        <PreviewMomentStack className="mt-xxxl">
           <PreviewMoment>
-            <PreviewExampleHeading>Empty</PreviewExampleHeading>
-            <ChatPanelReferenceFrame>
-              <ChatComposer showVoiceMode={false} sendDisabled />
-            </ChatPanelReferenceFrame>
+            <PreviewSubsectionHeading>Text mode</PreviewSubsectionHeading>
+            <ComposerUsageShell />
           </PreviewMoment>
           <PreviewMoment>
-            <PreviewExampleHeading>Voice mode button</PreviewExampleHeading>
-            <ChatPanelReferenceFrame>
-              <ChatComposer />
-            </ChatPanelReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Draft</PreviewExampleHeading>
-            <ChatPanelReferenceFrame>
-              <ChatComposer
-                inputProps={{
-                  "aria-label": "Long message draft",
-                  defaultValue:
-                    "We have several hiring teams moving at different speeds, and I need a path that works for a small pilot now but can still scale.",
-                }}
-              />
-            </ChatPanelReferenceFrame>
-          </PreviewMoment>
-          <PreviewMoment>
-            <PreviewExampleHeading>Responding</PreviewExampleHeading>
-            <ChatPanelReferenceFrame>
-              <ChatComposer isResponding />
-            </ChatPanelReferenceFrame>
+            <PreviewSubsectionHeading>Voice mode</PreviewSubsectionHeading>
+            <ComposerUsageShell voiceModeActive />
           </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
@@ -1251,10 +1455,7 @@ function HiringMicrositeGenericInlineErrorPage({
 function SharedChoiceCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
-      <PreviewSection
-        title="Demo"
-        description="Use Choice card when the assistant needs the visitor to pick one option from a small set before the conversation can continue."
-      >
+      <PreviewSection title="Demo">
         <SharedChoiceCardDemo />
       </PreviewSection>
     </ComponentPageShell>
@@ -1282,11 +1483,83 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedShellDemo />
       </PreviewSection>
-      <PreviewSection title="LTS hiring microsite">
-        <SharedShellHiringMicrositeDemo />
+      <PreviewSection title="Behavior">
+        <div className="max-w-[48rem]">
+          <PreviewExampleHeading>Entry point</PreviewExampleHeading>
+          <ComponentLibraryBodyCopy>
+            The VCA container can have different entry points.
+          </ComponentLibraryBodyCopy>
+        </div>
+        <PreviewMomentStack className="mt-xxxl">
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>Persistent</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                Persistent keeps a docked tray visible in the bottom-right
+                corner. Selecting it opens the container.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedShellEntryPointBehaviorDemo behavior="persistent" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>Dismissible</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                Dismissible starts from a CTA or FAB. Closing the container
+                removes it without leaving a docked tray.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedShellEntryPointBehaviorDemo behavior="dismissable" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem] space-y-sm">
+              <PreviewSubsectionHeading>Hybrid</PreviewSubsectionHeading>
+              <ComponentLibraryBodyCopy>
+                Hybrid starts from a CTA or FAB. After opening, the container
+                can be minimized to a tray or dismissed completely.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedShellEntryPointBehaviorDemo behavior="hybrid" />
+          </PreviewMoment>
+        </PreviewMomentStack>
+        <div className="mt-16 max-w-[48rem]">
+          <PreviewExampleHeading>Expandable</PreviewExampleHeading>
+          <ComponentLibraryBodyCopy>
+            The chat panel can be expanded into an immersive, full screen
+            dialog view by clicking the button in the header.
+          </ComponentLibraryBodyCopy>
+        </div>
+        <div className="mt-xxxl">
+          <SharedShellExpandableBehaviorDemo />
+        </div>
       </PreviewSection>
-      <PreviewSection title="Premium survey">
-        <SharedShellPremiumSurveyDemo />
+      <PreviewSection title="Examples">
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <div className="max-w-[48rem]">
+              <PreviewExampleHeading>
+                LTS hiring microsite
+              </PreviewExampleHeading>
+              <ComponentLibraryBodyCopy>
+                The LTS hiring microsite keeps the agent chat discoverable in a
+                tray docked in the bottom-right corner. Visitors can open it
+                from the tray or a Contact sales CTA, then minimize it back to
+                the tray.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedShellHiringMicrositeDemo />
+          </PreviewMoment>
+          <PreviewMoment>
+            <div className="max-w-[48rem]">
+              <PreviewExampleHeading>Premium survey</PreviewExampleHeading>
+              <ComponentLibraryBodyCopy>
+                The Premium survey opens a tray from Help me decide. Closing
+                the chat removes it without leaving a docked tray.
+              </ComponentLibraryBodyCopy>
+            </div>
+            <SharedShellPremiumSurveyDemo />
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1340,6 +1613,7 @@ function SharedInterimStatePage({ item }: Readonly<{ item: ComponentNavItem }>) 
                 placeholder: "Send a message",
               }}
               showAttachAction={false}
+              showVoiceMode={false}
             />
           </ChatPanel>
         </ChatShellContainerPreview>
@@ -1375,6 +1649,7 @@ function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                 placeholder: "Send a message",
               }}
               showAttachAction={false}
+              showVoiceMode={false}
             />
             <IdleSessionPrompt
               title="Still there?"
@@ -1411,7 +1686,7 @@ function SduiConfirmationPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 
 function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
-    <ComponentPageShell item={item} section="Premium">
+    <ComponentPageShell item={item} section="Premium survey">
       <PreviewSection title="Demo">
         <PremiumFabDemo />
       </PreviewSection>
@@ -1426,7 +1701,7 @@ function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) 
 
 function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
-    <ComponentPageShell item={item} section="Premium">
+    <ComponentPageShell item={item} section="Premium survey">
       <PreviewSection title="Demo">
         <PremiumPlanCardDemo />
       </PreviewSection>
@@ -1434,25 +1709,6 @@ function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) 
         <ChatThreadReferenceFrame>
           <PremiumProductRecommendationCard />
         </ChatThreadReferenceFrame>
-      </PreviewSection>
-    </ComponentPageShell>
-  );
-}
-
-function PremiumConciergePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
-  return (
-    <ComponentPageShell item={item} section="Premium">
-      <PreviewSection title="Demo">
-        <PremiumConciergePanelDemo />
-      </PreviewSection>
-      <PreviewSection title="High-signal transcript">
-        <div className="h-[48rem] max-h-[calc(100dvh-8rem)] w-[var(--design-layout-panel-collapsed-width)] overflow-hidden rounded-lg bg-background-neutral-soft">
-          <PremiumConciergePanel
-            className="md:!h-full"
-            flow={premiumConversationFlows.high}
-            showCloseAction={false}
-          />
-        </div>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1622,8 +1878,8 @@ function PremiumCompanyPageSidePanelPage({
   return (
     <ComponentPageShell item={item} section="Premium Company Page">
       <PreviewSection
-        title="Chat shell examples"
-        description="PCP detail panels open inside the VCA shell so the chat history stays visible beside the focused content."
+        title="Chat container examples"
+        description="PCP detail panels open inside the VCA container so the chat history stays visible beside the focused content."
       >
         <PreviewMomentStack>
           {pcpSidePanelExamples.map(({ kind, title }) => (
@@ -1649,11 +1905,11 @@ function PremiumCompanyPageEntityCardsPage({
       >
         <PreviewMomentStack>
           <PreviewMoment>
-            <PreviewExampleHeading>Shell + actions</PreviewExampleHeading>
+            <PreviewExampleHeading>Container + actions</PreviewExampleHeading>
             <ChatThreadReferenceFrame context="collapsed">
               <ChatCardShell>
                 <div className="space-y-md p-xl">
-                  <h3 className="text-heading-md text-text">Card shell</h3>
+                  <h3 className="text-heading-md text-text">Card container</h3>
                   <p className="text-body-sm-open text-text">
                     Standard border, radius, width, and raised-faint shadow for
                     reusable PCP entity cards.
@@ -1955,14 +2211,14 @@ function PremiumCompanyPageInsightCardsPage({
 
       <PreviewSection
         title="Today’s action base cards"
-        description="These are the real-product onboarding actions that share the same surface and shell. Actions stay inline as blue text links."
+        description="These are the real-product onboarding actions that share the same surface and container. Actions stay inline as blue text links."
       >
         <PcpTodayActionCardsPreview />
       </PreviewSection>
 
       <PreviewSection
         title="AI insight card catalog"
-        description="AI insight cards use the same shell with added provenance, an inline AI Ask action, optional visuals, and signal pills. Audience-fit cards can use paired avatars when the insight is about visitor quality; Tier 2 profile signals use blue."
+        description="AI insight cards use the same container with added provenance, an inline AI Ask action, optional visuals, and signal pills. Audience-fit cards can use paired avatars when the insight is about visitor quality; Tier 2 profile signals use blue."
       >
         <PcpInsightCardSystemPreview />
       </PreviewSection>
@@ -3300,6 +3556,10 @@ export function ComponentPageContent({
       return <SharedHeaderPage item={item} />;
     case "shared-messages":
       return <SharedMessagesPage item={item} />;
+    case "shared-live-agent-handoff":
+      return <SharedLiveAgentHandoffPage item={item} />;
+    case "shared-response-states":
+      return <SharedResponseStatesPage item={item} />;
     case "shared-feedback":
       return <SharedFeedbackPage item={item} />;
     case "shared-end-chat-csat":
@@ -3332,8 +3592,6 @@ export function ComponentPageContent({
       return <PremiumSurveyEntryPage item={item} />;
     case "premium-product-recommendation-card":
       return <PremiumProductCardPage item={item} />;
-    case "premium-concierge-panel":
-      return <PremiumConciergePanelPage item={item} />;
     case "premium-upsell-badge":
       return <PremiumUpsellBadgePage item={item} />;
     case "premium-upsell-result-card":

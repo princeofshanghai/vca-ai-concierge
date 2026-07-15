@@ -32,6 +32,10 @@ import {
   ChatSidePanelLayout,
 } from "@/components/chat/chat-side-panel";
 import {
+  LiveAgentHandoff,
+  type LiveAgentHandoffContent,
+} from "@/components/chat/live-agent-handoff";
+import {
   startClassedViewTransition,
   useChatLatestMessageAnchor,
   type ChatMessageStreamStatus,
@@ -46,7 +50,6 @@ import { Icon, type IconName } from "@/components/primitives/icon";
 import { OverlayButtonIcon } from "@/components/primitives/overlay-button-icon";
 import { Pill } from "@/components/primitives/pill";
 import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
-import { ProgressIndicatorCircular } from "@/components/primitives/progress-indicator-circular";
 import {
   SduiReactionIcon,
   type SduiReactionIconType,
@@ -1178,54 +1181,36 @@ function VeloraProductSidePanel({
 function VcaLiveSupportHandoff({
   state,
 }: Readonly<{ state: "connecting" | "connected" }>) {
+  const content: LiveAgentHandoffContent = {
+    available: {
+      title: "Chat with live support",
+      actionLabel: "Start live chat",
+    },
+    connecting: {
+      title: "Connecting you now...",
+    },
+    connected: {
+      title: `Connected to ${PCP_LIVE_SUPPORT_AGENT.name}`,
+    },
+    unavailable: {
+      title: "Live support is unavailable right now",
+      description: "Try again later.",
+      actionLabel: "Try again",
+    },
+    failed: {
+      title: "We couldn't connect you to live support",
+      description: "Try again.",
+      actionLabel: "Try again",
+    },
+  };
+
   return (
-    <>
-      <article
-        role="status"
-        aria-live="polite"
-        className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text"
-      >
-        {state === "connecting" ? (
-          <div className="flex items-center gap-md">
-            <ProgressIndicatorCircular
-              aria-label="Connecting"
-              size={20}
-              type="indeterminate"
-            />
-            <h2 className="text-heading-md">Connecting you now</h2>
-          </div>
-        ) : null}
-        {state === "connected" ? (
-          <div className="flex items-center gap-sm">
-            <span
-              aria-hidden="true"
-              className="inline-flex size-6 shrink-0 items-center justify-center text-checked [&_svg]:size-6"
-            >
-              <Icon name="signal-success" size="medium" />
-            </span>
-            <h2 className="text-heading-md">
-              Connected to {PCP_LIVE_SUPPORT_AGENT.name}
-            </h2>
-          </div>
-        ) : null}
-      </article>
-      {state === "connected" ? (
-        <div className="flex flex-col gap-lg">
-          <p className="chat-message-enter text-center text-body-xs text-text-meta">
-            {PCP_LIVE_SUPPORT_AGENT.name} joined the chat -{" "}
-            {PCP_LIVE_SUPPORT_AGENT.timestamp}
-          </p>
-          <ChatMessage
-            role="representative"
-            authorName={PCP_LIVE_SUPPORT_AGENT.name}
-            avatarLabel={`${PCP_LIVE_SUPPORT_AGENT.name}, ${PCP_LIVE_SUPPORT_AGENT.role}`}
-            timestamp={PCP_LIVE_SUPPORT_AGENT.timestamp}
-          >
-            {PCP_LIVE_SUPPORT_AGENT.message}
-          </ChatMessage>
-        </div>
-      ) : null}
-    </>
+    <LiveAgentHandoff
+      state={state}
+      agent={PCP_LIVE_SUPPORT_AGENT}
+      content={content}
+      connectedMessage={PCP_LIVE_SUPPORT_AGENT.message}
+    />
   );
 }
 

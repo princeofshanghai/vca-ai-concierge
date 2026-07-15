@@ -553,14 +553,9 @@ export function PremiumSurveyPage({
           className="fixed bottom-0 left-4 right-4 z-40 mx-auto w-[calc(100vw_-_32px)] max-w-[var(--design-layout-chat-tray-width)] md:left-auto md:right-6 md:mx-0 md:w-[min(calc(100vw_-_48px),var(--design-layout-chat-tray-width))]"
           title={PREMIUM_CONCIERGE_TITLE}
           onOpen={openChat}
-          onVariantToggle={() => {
-            setChatPanelVariant("expanded");
-            openChat();
-          }}
-          openActionPosition="after-close"
-          onClose={hasChatConversationStarted ? requestCloseChat : undefined}
-          showCloseAction={hasChatConversationStarted}
           showAiMark={false}
+          showCloseAction={false}
+          trayHeight="header"
         />
       ) : null}
 

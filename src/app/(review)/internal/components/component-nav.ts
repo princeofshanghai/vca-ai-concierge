@@ -21,7 +21,40 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
     title: "VCA components",
     groups: [
       {
-        title: "Cards",
+        title: "Core UI",
+        items: [
+          {
+            id: "shared-shell",
+            title: "Container",
+            description:
+              "The overall UI container for the VCA agent chat.",
+            href: "/internal/components/shared/shell",
+          },
+          {
+            id: "shared-composer",
+            title: "Composer",
+            description:
+              "Lets members or visitors type and send a message to the concierge.",
+            href: "/internal/components/shared/composer",
+          },
+          {
+            id: "shared-header",
+            title: "Header",
+            description:
+              "Displays the agent identity and actions for managing the current chat view.",
+            href: "/internal/components/shared/header",
+          },
+          {
+            id: "shared-messages",
+            title: "Messages",
+            description:
+              "Displays chat messages for members, visitors, the AI agent, and live agents.",
+            href: "/internal/components/shared/messages",
+          },
+        ],
+      },
+      {
+        title: "Shared",
         items: [
           {
             id: "shared-choice-card",
@@ -31,27 +64,8 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/shared/choice-card",
           },
           {
-            id: "shared-task-status-card",
-            title: "Task status card",
-            description:
-              "Shows in-progress and completed states for assistant-run tasks.",
-            href: "/internal/components/shared/task-status-card",
-          },
-        ],
-      },
-      {
-        title: "Shared",
-        items: [
-          {
-            id: "shared-composer",
-            title: "Composer",
-            description:
-              "Lets members or visitors type and send a message to the concierge.",
-            href: "/internal/components/shared/composer",
-          },
-          {
             id: "shared-end-chat-csat",
-            title: "End chat CSAT",
+            title: "CSAT",
             description:
               "Lets visitors rate the overall conversation before ending a chat.",
             href: "/internal/components/shared/end-chat-csat",
@@ -64,12 +78,6 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/shared/feedback",
           },
           {
-            id: "shared-header",
-            title: "Header",
-            description: "Displays the concierge identity and key controls.",
-            href: "/internal/components/shared/header",
-          },
-          {
             id: "shared-idle-session",
             title: "Idle session",
             description:
@@ -78,17 +86,24 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           },
           {
             id: "shared-interim-state",
-            title: "Interim state",
+            title: "Initiating state",
             description:
               "Shows a calm waiting moment while an assistant or session is prepared.",
             href: "/internal/components/shared/interim-state",
           },
           {
-            id: "shared-messages",
-            title: "Messages",
+            id: "shared-live-agent-handoff",
+            title: "Live agent handoff",
             description:
-              "Displays chat messages for members, visitors, the AI agent, and live agents.",
-            href: "/internal/components/shared/messages",
+              "Connects a visitor to a live agent and communicates each handoff state.",
+            href: "/internal/components/shared/live-agent-handoff",
+          },
+          {
+            id: "shared-response-states",
+            title: "Response states",
+            description:
+              "Shows transient states while the AI prepares, streams, or stops a response.",
+            href: "/internal/components/shared/response-states",
           },
           {
             id: "shared-prompts",
@@ -98,18 +113,18 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             href: "/internal/components/shared/prompts",
           },
           {
-            id: "shared-shell",
-            title: "Shell",
-            description:
-              "The overall UI container for the VCA AI Concierge experience.",
-            href: "/internal/components/shared/shell",
-          },
-          {
             id: "shared-side-panel",
             title: "Side panel",
             description:
               "Supports a focused task alongside the conversation.",
             href: "/internal/components/shared/side-panel",
+          },
+          {
+            id: "shared-task-status-card",
+            title: "Task status card",
+            description:
+              "Shows in-progress and completed states for assistant-run tasks.",
+            href: "/internal/components/shared/task-status-card",
           },
           {
             id: "shared-voice-mode",
@@ -146,7 +161,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           },
           {
             id: "hiring-microsite-email",
-            title: "Email",
+            title: "Meeting Email",
             description:
               "Confirms a scheduled conversation and carries relevant concierge context into the hiring specialist handoff.",
             href: "/internal/components/hiring-microsite/email",
@@ -154,15 +169,8 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
         ],
       },
       {
-        title: "Premium",
+        title: "Premium survey",
         items: [
-          {
-            id: "premium-concierge-panel",
-            title: "Concierge panel",
-            description:
-              "Shows the full Premium concierge conversation experience.",
-            href: "/internal/components/premium/concierge-panel",
-          },
           {
             id: "premium-product-recommendation-card",
             title: "SKU card",
@@ -226,7 +234,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "premium-company-page-side-panel",
             title: "Side panel",
             description:
-              "Shows PCP detail panels inside the VCA chat shell.",
+              "Shows PCP detail panels inside the VCA chat container.",
             href: "/internal/components/premium-company-page/side-panel",
           },
           {

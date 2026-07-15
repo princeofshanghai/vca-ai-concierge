@@ -1069,7 +1069,7 @@ body {
 
 .chat-stream-chunk {
   display: inline;
-  opacity: 0.58;
+  opacity: 0.2;
   animation-name: chat-stream-chunk-fade;
   animation-timing-function: var(--design-motion-easing-standard);
   animation-fill-mode: both;
@@ -1307,7 +1307,7 @@ body {
 
 @keyframes chat-stream-chunk-fade {
   from {
-    opacity: 0.58;
+    opacity: 0.2;
   }
 
   to {

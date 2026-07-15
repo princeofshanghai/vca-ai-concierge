@@ -4,7 +4,6 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { MouseEvent } from "react";
 
 import Image from "next/image";
-import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
 
 import {
@@ -32,6 +31,7 @@ import type { FlowReview } from "@/lib/conversation-flows";
 import type { HiringShellMode } from "@/lib/hiring-shell";
 
 import { HiringHeader, type HiringHeaderNavHref } from "./hiring-header";
+import { communityProBold } from "./hiring-fonts";
 
 type LandingPageProps = Readonly<{
   contactSalesEntry?: ContactSalesEntry;
@@ -41,13 +41,6 @@ type LandingPageProps = Readonly<{
   reviewMediumHandoffState?: MediumAvailableHandoffState;
   shellMode?: HiringShellMode;
 }>;
-
-const communityProBold = localFont({
-  src: "./CommunityPro-BoldWEB.woff2",
-  weight: "700",
-  style: "normal",
-  display: "swap",
-});
 
 export function LandingPage({
   contactSalesEntry = "default",

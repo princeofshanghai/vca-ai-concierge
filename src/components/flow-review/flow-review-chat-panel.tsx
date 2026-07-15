@@ -26,6 +26,11 @@ import {
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
 import { getChatResponseFeedbackPolicy } from "@/components/chat/chat-response";
+import {
+  LiveAgentHandoff,
+  type LiveAgentHandoffContent,
+  type LiveAgentHandoffState,
+} from "@/components/chat/live-agent-handoff";
 import { useChatLatestMessageAnchor } from "@/components/chat/chat-motion";
 import {
   ChatSidePanel,
@@ -447,111 +452,53 @@ function MediumAvailableHandoff({
     return null;
   }
 
-  return (
-    <>
+  if (isFallbackSchedulingState && bookedMeeting) {
+    return (
       <article
-        role={state === "initial" ? undefined : "status"}
-        aria-live={state === "initial" ? undefined : "polite"}
+        role="status"
+        aria-live="polite"
         className="chat-message-enter flex w-full max-w-[21.5rem] flex-col gap-lg rounded-md border border-ai-border bg-background p-xl pr-md text-text"
       >
-        {state === "connecting" ? (
-          <div className="space-y-sm">
-            <div className="flex items-center gap-md">
-              <MatchingEntityStack />
-              <h2 className="text-heading-md">Connecting you now...</h2>
-            </div>
-            <p className="text-body-sm-open text-text-meta">
-              This can take up to 3 minutes.
-            </p>
-          </div>
-        ) : null}
-        {isFallbackSchedulingState && bookedMeeting ? (
-          <>
-            <SpecialistHeader
-              title={getBookedMeetingTitle(bookedMeeting)}
-              booked
-            />
-            <BookedMeetingDetails meeting={bookedMeeting} />
-          </>
-        ) : null}
-        {isFallbackSchedulingState ? (
-          bookedMeeting ? null : (
-            <>
-              <div className="space-y-xs">
-                <h2 className="text-heading-md">
-                  {state === "failed"
-                    ? "We couldn't connect you to live chat"
-                    : "Live chat is unavailable right now"}
-                </h2>
-                <p className="text-body-sm-open text-text-meta">
-                  {state === "failed"
-                    ? "Schedule a call with a sales specialist instead."
-                    : "Choose a time to talk with a sales specialist instead."}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-sm">
-                <Button
-                  size="small"
-                  className="px-pill-padding-inline"
-                  onClick={onBookTime}
-                >
-                  Schedule a call
-                </Button>
-              </div>
-            </>
-          )
-        ) : null}
-        {state === "connected" ? (
-          <div className="flex items-center gap-sm">
-            <span
-              aria-hidden="true"
-              className="inline-flex size-6 shrink-0 items-center justify-center text-checked [&_svg]:size-6"
-            >
-              <Icon name="signal-success" size="medium" />
-            </span>
-            <h2 className="text-heading-md">
-              Connected to {LIVE_HIRING_SPECIALIST.name}
-            </h2>
-          </div>
-        ) : null}
-        {state === "initial" ? (
-          <>
-            <Entity
-              size={40}
-              label={`${LIVE_HIRING_SPECIALIST.name}, ${LIVE_HIRING_SPECIALIST.role}`}
-            />
-            <div className="space-y-xs">
-              <h2 className="text-heading-md">{variant.title}</h2>
-            </div>
-          </>
-        ) : null}
-        {state === "initial" ? (
-          <Button
-            size="small"
-            className="w-fit px-pill-padding-inline"
-            onClick={onStartChat}
-          >
-            {variant.primaryAction}
-          </Button>
-        ) : null}
+        <SpecialistHeader title={getBookedMeetingTitle(bookedMeeting)} booked />
+        <BookedMeetingDetails meeting={bookedMeeting} />
       </article>
-      {state === "connected" ? (
-        <div className="flex flex-col gap-lg">
-          <p className="chat-message-enter text-center text-body-xs text-text-meta">
-            {LIVE_HIRING_SPECIALIST.name} joined the chat -{" "}
-            {LIVE_HIRING_SPECIALIST.timestamp}
-          </p>
-          <ChatMessage
-            role="representative"
-            authorName={LIVE_HIRING_SPECIALIST.name}
-            avatarLabel={`${LIVE_HIRING_SPECIALIST.name}, ${LIVE_HIRING_SPECIALIST.role}`}
-            timestamp={LIVE_HIRING_SPECIALIST.timestamp}
-          >
-            {variant.message}
-          </ChatMessage>
-        </div>
-      ) : null}
-    </>
+    );
+  }
+
+  const handoffState: LiveAgentHandoffState =
+    state === "initial" ? "available" : state;
+  const content: LiveAgentHandoffContent = {
+    available: {
+      title: variant.title,
+      actionLabel: variant.primaryAction,
+    },
+    connecting: {
+      title: "Connecting you now...",
+      description: "This can take up to 3 minutes.",
+    },
+    connected: {
+      title: `Connected to ${LIVE_HIRING_SPECIALIST.name}`,
+    },
+    unavailable: {
+      title: "Live chat is unavailable right now",
+      description: "Choose a time to talk with a sales specialist instead.",
+      actionLabel: "Schedule a call",
+    },
+    failed: {
+      title: "We couldn't connect you to live chat",
+      description: "Schedule a call with a sales specialist instead.",
+      actionLabel: "Schedule a call",
+    },
+  };
+
+  return (
+    <LiveAgentHandoff
+      state={handoffState}
+      agent={LIVE_HIRING_SPECIALIST}
+      content={content}
+      connectedMessage={variant.message}
+      onAction={state === "initial" ? onStartChat : onBookTime}
+    />
   );
 }
 

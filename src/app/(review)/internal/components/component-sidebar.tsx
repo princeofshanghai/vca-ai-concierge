@@ -77,11 +77,11 @@ export function ComponentSidebar() {
                 id={`component-section-${section.title
                   .toLowerCase()
                   .replaceAll(" ", "-")}`}
-                className="space-y-6"
+                className="space-y-8"
               >
                 {section.groups.map((group) => (
                   <div key={group.title} className="space-y-2">
-                    <h3 className="px-md text-[12px] font-medium leading-4 text-text-meta">
+                    <h3 className="px-md text-[13px] font-medium leading-5 text-text-meta">
                       {group.title}
                     </h3>
                     <div className="space-y-1">

@@ -852,7 +852,7 @@ export function ChatHeader({
           ) : null}
         </div>
       ) : headerIdentity?.type === "representative" ? (
-        <div className="flex min-w-0 items-center gap-sm">
+        <div className="flex min-w-0 items-center gap-md">
           <RepresentativeAvatar identity={headerIdentity} />
           <span className="min-w-0 truncate text-heading-md text-text">
             {headerIdentity.name}

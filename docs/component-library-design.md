@@ -41,7 +41,7 @@ Show the component directly when the component is already a surface. Demo is the
 Good examples:
 
 - Headers
-- Chat shells
+- Chat containers
 - Chat panels
 - Side panels
 - Action cards
@@ -87,7 +87,7 @@ Good examples:
 - Booking panels
 - Side panel use cases
 - Concierge panel states
-- Shell variants
+- Container variants
 - Composer states
 - Message types
 
@@ -109,7 +109,7 @@ In short: product moments use rows; atomic inventories can use grids.
 Use shared pages for reusable UI patterns, then show product-specific examples inside those pages.
 
 - Action card is the shared pattern for recommended next steps. Hiring, Premium, and future use cases should appear as examples on the Action card page unless they become meaningfully different components.
-- Side panel is a shared shell capability for focused tasks alongside the chat. Booking is one use case inside the Side panel page, not the base pattern itself.
+- Side panel is a shared container capability for focused tasks alongside the chat. Booking is one use case inside the Side panel page, not the base pattern itself.
 - Keep product-specific examples discoverable through clear section headings on the shared page before adding a separate sidebar page.
 
 ## State Spacing Rules
@@ -133,6 +133,13 @@ Component library styling should improve the review page only. It should not cha
 - If a preview needs more breathing room, add it around the preview, not inside the product component.
 - If a product component looks wrong in both the library and the real prototype, call that out before changing the component itself.
 
+## Documentation Typography
+
+- Keep the component page introduction styling unchanged.
+- Use `ComponentLibraryBodyCopy` for section descriptions and Usage copy: 15px, regular weight, 22px line height, and default dark text.
+- Keep documentation typography separate from VCA product typography.
+- Components rendered inside previews should continue to use their existing VCA tokens and styles.
+
 ## Sections
 
 - Component name
@@ -144,7 +151,7 @@ Component library styling should improve the review page only. It should not cha
 - Use `h1` for the component page title.
 - Use `h2` for major preview sections.
 - Use `PreviewExampleHeading` for titled examples inside a preview.
-- Use `h3` for peer examples, like shell variants or message types.
+- Use `h3` for peer examples, like container variants or message types.
 - Use `h4` for nested example groups, like button variants inside a size.
 - Keep tiny state captions, like `default`, `hover`, and `disabled`, as plain text.
 

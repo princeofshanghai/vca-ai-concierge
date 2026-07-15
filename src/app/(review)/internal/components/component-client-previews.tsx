@@ -40,6 +40,12 @@ import {
   ChatSidePanelLayout,
 } from "@/components/chat/chat-side-panel";
 import {
+  LiveAgentHandoff,
+  type LiveAgentHandoffAgent,
+  type LiveAgentHandoffContent,
+  type LiveAgentHandoffState,
+} from "@/components/chat/live-agent-handoff";
+import {
   useChatAssistantStream,
   useChatLatestMessageAnchor,
 } from "@/components/chat/chat-motion";
@@ -52,10 +58,7 @@ import {
   type MediumAvailableHandoffState,
 } from "@/components/flow-review/flow-review-chat-panel";
 import { MicrophoneVoiceBanner } from "@/components/hiring-microsite/microphone-voice-banner";
-import {
-  premiumConversationFlows,
-  type PremiumReviewFlowId,
-} from "@/components/premium/premium-concierge-flows";
+import { communityProBold } from "@/components/landing/hiring-fonts";
 import {
   InsightCard,
   type InsightCardAction,
@@ -156,6 +159,8 @@ type ShellDemoVersion =
   | "persistent"
   | "hybrid"
   | "floating-card";
+type ContainerDemoType = "card" | "tray";
+type ContainerEntryBehavior = "persistent" | "hybrid" | "dismissable";
 type ShellDemoDevice = "desktop" | "mobile";
 type ShellDemoState = "closed" | "tray" | "panel";
 type ShellDemoPanelRenderProps = Readonly<{
@@ -285,11 +290,6 @@ const tabItemTones: ReadonlyArray<DemoOption<TabItemHorizontalTone>> = [
   { label: "Overlay", value: "overlay" },
 ];
 
-const chatContextOptions: ReadonlyArray<DemoOption<ComponentLibraryContext>> = [
-  { label: "Mobile", value: "mobile" },
-  { label: "Desktop", value: "collapsed" },
-];
-
 const chatContextDisplayOptions: ReadonlyArray<
   DemoOption<ComponentLibraryContext> & Readonly<{ icon: IconName }>
 > = [
@@ -297,11 +297,9 @@ const chatContextDisplayOptions: ReadonlyArray<
   { label: "Desktop", value: "collapsed", icon: "monitor" },
 ];
 
-const shellDemoVersionOptions: ReadonlyArray<DemoOption<ShellDemoVersion>> = [
-  { label: "Floating card", value: "floating-card" },
-  { label: "Tray (persistent)", value: "persistent" },
-  { label: "Tray (hybrid)", value: "hybrid" },
-  { label: "Tray (hidden)", value: "dismissable" },
+const containerDemoTypeOptions: ReadonlyArray<DemoOption<ContainerDemoType>> = [
+  { label: "Tray", value: "tray" },
+  { label: "Card", value: "card" },
 ];
 
 const shellDemoDeviceOptions: ReadonlyArray<
@@ -315,6 +313,7 @@ const shellDemoDesktopHeight = 820;
 const shellDemoDesktopHeaderGap = 72;
 const shellDemoDesktopPanelCollapsedHeight =
   shellDemoDesktopHeight - shellDemoDesktopHeaderGap;
+const shellDemoDesktopCardHeight = shellDemoDesktopHeight - 2 - 52 - 24 - 24;
 const shellDemoDesktopPanelExpandedHeight =
   shellDemoDesktopHeight - 48;
 const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
@@ -369,14 +368,21 @@ function SegmentedControl<T extends string>({
   options,
   value,
   onChange,
+  disabled = false,
 }: Readonly<{
   label: string;
   options: ReadonlyArray<DemoOption<T>>;
   value: T;
   onChange: (value: T) => void;
+  disabled?: boolean;
 }>) {
   return (
-    <div className="flex min-w-0 flex-col gap-[8px]">
+    <div
+      className={cx(
+        "flex min-w-0 flex-col gap-[8px]",
+        disabled && "opacity-50",
+      )}
+    >
       {renderControlLabel(label)}
       <div className="inline-flex w-fit max-w-full flex-wrap gap-0.5 rounded-[10px] border border-[#d7dce2] bg-background p-0.5">
         {options.map((option) => {
@@ -387,8 +393,9 @@ function SegmentedControl<T extends string>({
               key={option.value}
               type="button"
               aria-pressed={isSelected}
+              disabled={disabled}
               className={cx(
-                "min-h-[30px] rounded-[7px] border px-[11px] text-[14px] font-medium leading-none transition-[background-color,border-color,color,box-shadow] duration-150 ease-out",
+                "min-h-[30px] rounded-[7px] border px-[11px] text-[14px] font-medium leading-none transition-[background-color,border-color,color,box-shadow] duration-150 ease-out disabled:cursor-not-allowed",
                 isSelected
                   ? "shadow-none"
                   : "border-[#dfe3e8] bg-background text-text-meta hover:border-[#cfd5dc] hover:text-text",
@@ -454,18 +461,26 @@ function ToggleControl({
   label,
   checked,
   onChange,
+  disabled = false,
 }: Readonly<{
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }>) {
   return (
-    <label className="flex min-h-9 min-w-[12rem] items-center justify-between gap-md rounded-[10px] border border-[#d7dce2] bg-background px-md text-[14px] font-medium text-text shadow-[0_1px_1px_rgba(0,0,0,0.03)]">
+    <label
+      className={cx(
+        "flex min-h-9 min-w-[12rem] items-center justify-between gap-md rounded-[10px] border border-[#d7dce2] bg-background px-md text-[14px] font-medium text-text shadow-[0_1px_1px_rgba(0,0,0,0.03)]",
+        disabled && "cursor-not-allowed opacity-50",
+      )}
+    >
       <span>{label}</span>
       <input
         type="checkbox"
         role="switch"
         checked={checked}
+        disabled={disabled}
         className="peer sr-only"
         onChange={(event) => onChange(event.currentTarget.checked)}
       />
@@ -957,15 +972,13 @@ function ChatSurfaceDemoFrame({
 }
 
 function ShellDemoBackdrop({
-  body,
   ctaLabel,
   onOpen,
   title,
 }: Readonly<{
-  body: string;
-  ctaLabel: string;
-  onOpen: () => void;
-  title: string;
+  ctaLabel?: string;
+  onOpen?: () => void;
+  title?: string;
 }>) {
   return (
     <>
@@ -979,17 +992,18 @@ function ShellDemoBackdrop({
         </span>
       </header>
       <section className="flex min-h-0 flex-1 items-center justify-center bg-background-neutral-soft px-6 text-center">
-        <div className="flex max-w-[28rem] flex-col items-center gap-lg">
-          <div className="space-y-xs">
-            <h3 className="text-heading-lg text-text">{title}</h3>
-            <p className="text-body-sm-open text-text-meta">
-              {body}
-            </p>
+        {title || (ctaLabel && onOpen) ? (
+          <div className="flex max-w-[28rem] flex-col items-center gap-lg">
+            {title ? (
+              <h3 className="text-heading-lg text-text">{title}</h3>
+            ) : null}
+            {ctaLabel && onOpen ? (
+              <Button size="small" onClick={onOpen}>
+                {ctaLabel}
+              </Button>
+            ) : null}
           </div>
-          <Button size="small" onClick={onOpen}>
-            {ctaLabel}
-          </Button>
-        </div>
+        ) : null}
       </section>
     </>
   );
@@ -1039,7 +1053,11 @@ function ShellDemoPanel({
           {content.showRecommendation ? <RecommendationCard /> : null}
         </ChatThread>
       </ChatBody>
-      <ChatComposer variant={variant} />
+      <ChatComposer
+        variant={variant}
+        showAttachAction={false}
+        showVoiceMode={false}
+      />
     </ChatPanel>
   );
 }
@@ -1084,7 +1102,7 @@ function ShellDemoSurface({
     : panelVariant === "expanded"
       ? "md:!h-[var(--shell-demo-panel-expanded-height)] md:!w-full"
       : isFloatingCard
-        ? "md:!h-[var(--shell-demo-panel-collapsed-height)] md:!w-full md:!rounded-panel"
+        ? "md:!h-[var(--shell-demo-card-height)] md:!w-full md:!rounded-panel"
         : "md:!h-[var(--shell-demo-panel-collapsed-height)] md:!w-full md:!rounded-t-md md:!rounded-b-none";
   const panelPositionClass = isMobile
     ? "absolute inset-0 z-20"
@@ -1204,6 +1222,7 @@ function ShellDemoFrame({
         {
           "--shell-demo-desktop-height": `${shellDemoDesktopHeight}px`,
           "--shell-demo-panel-collapsed-height": `${shellDemoDesktopPanelCollapsedHeight}px`,
+          "--shell-demo-card-height": `${shellDemoDesktopCardHeight}px`,
           "--shell-demo-panel-expanded-height": `${shellDemoDesktopPanelExpandedHeight}px`,
         } as CSSProperties
       }
@@ -1214,28 +1233,105 @@ function ShellDemoFrame({
 }
 
 export function SharedShellDemo() {
-  const [version, setVersion] = useState<ShellDemoVersion>("persistent");
+  const [type, setType] = useState<ContainerDemoType>("tray");
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
-  const [shellState, setShellState] = useState<ShellDemoState>(
-    getInitialShellDemoState("persistent"),
-  );
+  const [shellState, setShellState] = useState<ShellDemoState>("panel");
   const [panelVariant, setPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
+  const version: ShellDemoVersion =
+    type === "card" ? "floating-card" : "persistent";
 
-  function resetShell(nextVersion = version) {
+  function resetShell() {
     setPanelVariant("collapsed");
-    setShellState(getInitialShellDemoState(nextVersion));
+    setShellState("panel");
   }
 
-  function handleVersionChange(nextVersion: ShellDemoVersion) {
-    setVersion(nextVersion);
-    resetShell(nextVersion);
+  function handleTypeChange(nextType: ContainerDemoType) {
+    setType(nextType);
+    resetShell();
   }
 
   function handleDeviceChange(nextDevice: ShellDemoDevice) {
     setDevice(nextDevice);
     resetShell();
   }
+
+  function openPanel() {
+    setPanelVariant("collapsed");
+    setShellState("panel");
+  }
+
+  function openExpandedPanel() {
+    setPanelVariant("expanded");
+    setShellState("panel");
+  }
+
+  function closeShell() {
+    setPanelVariant("collapsed");
+    setShellState(type === "tray" ? "tray" : "closed");
+  }
+
+  function dockShell() {
+    setPanelVariant("collapsed");
+    setShellState("tray");
+  }
+
+  function togglePanelVariant() {
+    setPanelVariant((currentVariant) =>
+      currentVariant === "collapsed" ? "expanded" : "collapsed",
+    );
+  }
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="Type"
+            value={type}
+            options={containerDemoTypeOptions}
+            onChange={handleTypeChange}
+          />
+          <DemoDeviceControl
+            value={device}
+            onChange={handleDeviceChange}
+            ariaLabel="Container preview device"
+          />
+        </>
+      }
+      previewClassName="w-full"
+    >
+      <ShellDemoFrame
+        device={device}
+        renderBackdrop={() => <ShellDemoBackdrop />}
+        renderPanel={(panelProps) => (
+          <ShellDemoPanel
+            {...panelProps}
+            content={genericShellDemoContent}
+          />
+        )}
+        version={version}
+        shellState={shellState}
+        shellTitle={genericShellDemoContent.title}
+        panelVariant={panelVariant}
+        onClose={closeShell}
+        onDock={dockShell}
+        onOpen={openPanel}
+        onOpenExpanded={openExpandedPanel}
+        onVariantToggle={togglePanelVariant}
+      />
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function SharedShellEntryPointBehaviorDemo({
+  behavior,
+}: Readonly<{ behavior: ContainerEntryBehavior }>) {
+  const [shellState, setShellState] = useState<ShellDemoState>(
+    getInitialShellDemoState(behavior),
+  );
+  const [panelVariant, setPanelVariant] =
+    useState<ChatPanelVariant>("collapsed");
 
   function openPanel() {
     setPanelVariant("collapsed");
@@ -1264,41 +1360,73 @@ export function SharedShellDemo() {
   }
 
   return (
-    <ContextualComponentDemoSection
-      controls={
-        <>
-          <SegmentedControl
-            label="Version"
-            value={version}
-            options={shellDemoVersionOptions}
-            onChange={handleVersionChange}
-          />
-          <DemoDeviceControl
-            value={device}
-            onChange={handleDeviceChange}
-            ariaLabel="Shell preview device"
-          />
-        </>
-      }
-      previewClassName="w-full"
-    >
+    <ContextualComponentDemoSection previewClassName="w-full">
       <ShellDemoFrame
-        device={device}
+        device="desktop"
         renderBackdrop={(handleOpen) => (
           <ShellDemoBackdrop
-            title="Sample page"
-            body="Click the button to open the shell and see where it lives on the page."
-            ctaLabel="Open shell"
-            onOpen={handleOpen}
+            title={behavior === "persistent" ? undefined : "Open the container"}
+            ctaLabel={behavior === "persistent" ? undefined : "Open container"}
+            onOpen={behavior === "persistent" ? undefined : handleOpen}
           />
         )}
         renderPanel={(panelProps) => (
-          <ShellDemoPanel
-            {...panelProps}
-            content={genericShellDemoContent}
-          />
+          <ShellDemoPanel {...panelProps} content={genericShellDemoContent} />
         )}
-        version={version}
+        version={behavior}
+        shellState={shellState}
+        shellTitle={genericShellDemoContent.title}
+        panelVariant={panelVariant}
+        onClose={closeShell}
+        onDock={dockShell}
+        onOpen={openPanel}
+        onOpenExpanded={openExpandedPanel}
+        onVariantToggle={togglePanelVariant}
+      />
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function SharedShellExpandableBehaviorDemo() {
+  const [shellState, setShellState] = useState<ShellDemoState>("panel");
+  const [panelVariant, setPanelVariant] =
+    useState<ChatPanelVariant>("expanded");
+
+  function openPanel() {
+    setPanelVariant("collapsed");
+    setShellState("panel");
+  }
+
+  function openExpandedPanel() {
+    setPanelVariant("expanded");
+    setShellState("panel");
+  }
+
+  function closeShell() {
+    setPanelVariant("collapsed");
+    setShellState("tray");
+  }
+
+  function dockShell() {
+    setPanelVariant("collapsed");
+    setShellState("tray");
+  }
+
+  function togglePanelVariant() {
+    setPanelVariant((currentVariant) =>
+      currentVariant === "collapsed" ? "expanded" : "collapsed",
+    );
+  }
+
+  return (
+    <ContextualComponentDemoSection previewClassName="w-full">
+      <ShellDemoFrame
+        device="desktop"
+        renderBackdrop={() => <ShellDemoBackdrop />}
+        renderPanel={(panelProps) => (
+          <ShellDemoPanel {...panelProps} content={genericShellDemoContent} />
+        )}
+        version="persistent"
         shellState={shellState}
         shellTitle={genericShellDemoContent.title}
         panelVariant={panelVariant}
@@ -1323,9 +1451,9 @@ function HiringMicrositeBackdrop({
         <Image
           src="/assets/logo-lockup.svg"
           alt="LinkedIn Hire"
-          width={162}
-          height={27}
-          className="h-[27px] w-[162px]"
+          width={130}
+          height={22}
+          className="h-[22px] w-[130px]"
         />
         <div className="flex items-center gap-5">
           <nav
@@ -1358,10 +1486,14 @@ function HiringMicrositeBackdrop({
         </div>
         <div className="flex max-w-[514px] flex-col items-start gap-8">
           <div className="space-y-3">
-            <p className="text-[16px] font-bold uppercase leading-[1.25] tracking-[0.32px] text-text">
+            <p
+              className={`${communityProBold.className} text-[13px] font-bold uppercase leading-4 tracking-[0.26px] text-text`}
+            >
               Hire with LinkedIn
             </p>
-            <h3 className="max-w-[514px] text-[56px] font-bold leading-[1.16] text-text">
+            <h3
+              className={`${communityProBold.className} max-w-[514px] text-[44px] font-bold leading-[1.16] text-text`}
+            >
               Hire the people you need
             </h3>
           </div>
@@ -1569,7 +1701,7 @@ export function SharedConfirmationVariants() {
 }
 
 export function SharedShellHiringMicrositeDemo() {
-  const [shellState, setShellState] = useState<ShellDemoState>("closed");
+  const [shellState, setShellState] = useState<ShellDemoState>("tray");
   const [panelVariant, setPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
 
@@ -1580,7 +1712,7 @@ export function SharedShellHiringMicrositeDemo() {
 
   function closeShell() {
     setPanelVariant("collapsed");
-    setShellState("closed");
+    setShellState("tray");
   }
 
   function togglePanelVariant() {
@@ -1599,7 +1731,7 @@ export function SharedShellHiringMicrositeDemo() {
         renderPanel={(panelProps) => (
           <ShellDemoPanel {...panelProps} content={hiringShellDemoContent} />
         )}
-        version="dismissable"
+        version="persistent"
         shellState={shellState}
         shellTitle={HIRING_CONCIERGE_TITLE}
         panelVariant={panelVariant}
@@ -1681,6 +1813,7 @@ export function HiringGenericInlineErrorDemo() {
         <ChatComposer
           isResponding={phase === "loading"}
           showAttachAction={false}
+          showVoiceMode={false}
         />
       </ChatPanel>
     </div>
@@ -1785,206 +1918,152 @@ export function SharedShellPremiumSurveyDemo() {
 }
 
 export function SharedHeaderDemo() {
-  const [mode, setMode] = useState("hiring");
-  const [hasLiveAgent, setHasLiveAgent] = useState(false);
-  const [shellVersion, setShellVersion] =
-    useState<ShellDemoVersion>("persistent");
-  const [isDocked, setIsDocked] = useState(true);
-  const [showAiMark, setShowAiMark] = useState(false);
-  const [hasUnreadMessage, setHasUnreadMessage] = useState(false);
-  const [device, setDevice] = useState<ShellDemoDevice>("desktop");
-  const isMobile = device === "mobile";
-  const isPersistent = shellVersion === "persistent";
-  const hasDockAction = shellVersion === "persistent" || shellVersion === "hybrid";
-  const shouldShowDockedTray = hasDockAction && isDocked;
-  const panelVariant = getPanelVariantForContext(
-    isMobile ? "mobile" : "collapsed",
+  const [identity, setIdentity] = useState<"ai-agent" | "live-agent">(
+    "ai-agent",
   );
+  const [showAiMark, setShowAiMark] = useState(false);
   const headerIdentity =
-    hasLiveAgent
+    identity === "live-agent"
       ? ({
           type: "representative",
           name: "David S.",
           role: "Sales consultant",
         } as const)
       : undefined;
-  const headerTitle =
-    mode === "premium" ? PREMIUM_CONCIERGE_TITLE : HIRING_CONCIERGE_TITLE;
-
-  function handleLiveAgentChange(nextHasLiveAgent: boolean) {
-    setHasLiveAgent(nextHasLiveAgent);
-    if (!nextHasLiveAgent) {
-      setHasUnreadMessage(false);
-    }
-  }
-
-  function handleHeaderShellChange(nextShellVersion: ShellDemoVersion) {
-    setShellVersion(nextShellVersion);
-    setIsDocked(nextShellVersion === "persistent");
-  }
-
-  function dockHeaderDemo() {
-    if (hasDockAction) {
-      setIsDocked(true);
-    }
-  }
-
-  function openHeaderDemo() {
-    setIsDocked(false);
-  }
 
   return (
     <ContextualComponentDemoSection
       controls={
         <>
           <SegmentedControl
-            label="Header"
-            value={mode}
+            label="Identity"
+            value={identity}
             options={[
-              { label: "Hiring", value: "hiring" },
-              { label: "Premium", value: "premium" },
+              { label: "AI agent", value: "ai-agent" },
+              { label: "Live agent", value: "live-agent" },
             ]}
-            onChange={setMode}
+            onChange={setIdentity}
           />
-          <ToggleControl
-            label="Live agent"
-            checked={hasLiveAgent}
-            onChange={handleLiveAgentChange}
-          />
-          {!hasLiveAgent ? (
+          {identity === "ai-agent" ? (
             <ToggleControl
               label="AI icon"
               checked={showAiMark}
               onChange={setShowAiMark}
             />
           ) : null}
-          <SegmentedControl
-            label="Shell"
-            value={shellVersion}
-            options={shellDemoVersionOptions}
-            onChange={handleHeaderShellChange}
-          />
-          {hasLiveAgent ? (
-            <ToggleControl
-              label="Unread message"
-              checked={hasUnreadMessage}
-              onChange={setHasUnreadMessage}
-            />
-          ) : null}
-          <DemoDeviceControl value={device} onChange={setDevice} />
         </>
       }
     >
-      <ChatSurfaceDemoFrame device={device} height="short">
-        {shouldShowDockedTray ? (
-          <div className="relative flex min-h-0 flex-1 items-center justify-center bg-background-neutral-soft px-xl text-center">
-            <p className="max-w-[18rem] text-body-sm-open text-text-meta">
-              Docked tray uses the compact header treatment.
-            </p>
-            <ChatTray
-              aria-label="Open AI Concierge chat"
-              badge={hasLiveAgent && hasUnreadMessage}
-              badgeLabel="Unread message"
-              className={
-                isMobile
-                  ? "absolute bottom-0 left-0 right-0 w-full max-w-none"
-                  : "absolute bottom-0 right-0"
-              }
-              identity={headerIdentity}
-              title={headerTitle}
-              onOpen={openHeaderDemo}
-              onVariantToggle={undefined}
-              openActionPosition={isPersistent ? "after-variant" : undefined}
-              onClose={shellVersion === "hybrid" ? openHeaderDemo : undefined}
-              showCloseAction={shellVersion === "hybrid"}
-              showAiMark={showAiMark}
-              trayHeight="header"
-            />
-          </div>
-        ) : (
-          <ChatHeader
-            variant={panelVariant}
-            identity={headerIdentity}
-            title={headerTitle}
-            onClose={hasDockAction ? dockHeaderDemo : undefined}
-            onMinimizeToTray={hasDockAction ? dockHeaderDemo : undefined}
-            onVariantToggle={isMobile ? undefined : () => {}}
-            showCloseAction
-            showAiMark={showAiMark}
-          />
-        )}
-        {!shouldShowDockedTray ? (
-          <div className="flex min-h-0 flex-1 items-center justify-center bg-background-neutral-soft px-xl text-center">
-            <p className="max-w-[18rem] text-body-sm-open text-text-meta">
-              Header controls adapt to the selected shell and device.
-            </p>
-          </div>
-        ) : null}
-      </ChatSurfaceDemoFrame>
+      <HeaderVariantReferenceFrame>
+        <ChatHeader
+          identity={headerIdentity}
+          title="AI assistant"
+          onClose={() => {}}
+          onMinimizeToTray={() => {}}
+          onVariantToggle={() => {}}
+          showAiMark={identity === "ai-agent" && showAiMark}
+        />
+      </HeaderVariantReferenceFrame>
     </ContextualComponentDemoSection>
   );
 }
 
 function HeaderVariantReferenceFrame({
   children,
-}: Readonly<{ children: ReactNode }>) {
+  variant = "collapsed",
+}: Readonly<{ children: ReactNode; variant?: ChatPanelVariant }>) {
   return (
     <ChatPanel
-      variant="collapsed"
-      className="!h-auto border-b-0 md:!w-[var(--design-layout-panel-collapsed-width)]"
+      variant={variant}
+      className={cx(
+        "!h-auto border-b-0",
+        variant === "expanded"
+          ? "md:!w-[var(--design-layout-panel-expanded-width)]"
+          : "md:!w-[var(--design-layout-panel-collapsed-width)]",
+      )}
     >
       {children}
     </ChatPanel>
   );
 }
 
-export function SharedHeaderVariants() {
+export function SharedHeaderIdentityDemo({
+  identity,
+}: Readonly<{ identity: "ai-agent" | "live-agent" }>) {
+  const headerIdentity =
+    identity === "live-agent"
+      ? ({
+          type: "representative",
+          name: "David S.",
+          role: "Sales consultant",
+        } as const)
+      : undefined;
+
   return (
-    <div className="space-y-16">
-      <section>
-        <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
-          LTS hiring microsite
-        </h3>
-        <HeaderVariantReferenceFrame>
-          <ChatHeader
-            title={HIRING_CONCIERGE_TITLE}
-            onVariantToggle={() => {}}
-            showAiMark={false}
-          />
-        </HeaderVariantReferenceFrame>
-      </section>
-      <section>
-        <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
-          Premium survey
-        </h3>
-        <HeaderVariantReferenceFrame>
-          <ChatHeader
-            title={PREMIUM_CONCIERGE_TITLE}
-            onVariantToggle={() => {}}
-            showAiMark={false}
-          />
-        </HeaderVariantReferenceFrame>
-      </section>
-      <section>
-        <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
-          Live agent
-        </h3>
-        <p className="mb-md max-w-[40rem] text-body-sm-open text-text-meta">
-          Used once a live agent joins. The header shows the agent avatar and
-          name so it feels clear that a person is now helping.
-        </p>
-        <HeaderVariantReferenceFrame>
-          <ChatHeader
-            identity={{
-              type: "representative",
-              name: "David S.",
-              role: "Sales consultant",
-            }}
-            onVariantToggle={() => {}}
-          />
-        </HeaderVariantReferenceFrame>
-      </section>
-    </div>
+    <HeaderVariantReferenceFrame>
+      <ChatHeader
+        identity={headerIdentity}
+        title="AI assistant"
+        onClose={() => {}}
+        onMinimizeToTray={() => {}}
+        onVariantToggle={() => {}}
+        showAiMark={false}
+      />
+    </HeaderVariantReferenceFrame>
+  );
+}
+
+export function SharedHeaderPresentationDemo({
+  presentation,
+}: Readonly<{ presentation: "panel" | "expanded" | "tray" }>) {
+  if (presentation === "tray") {
+    return (
+      <div className="w-[var(--design-layout-chat-tray-width)] max-w-full">
+        <ChatTray
+          aria-label="Open agent chat"
+          title="AI assistant"
+          onOpen={() => {}}
+          showAiMark={false}
+          showCloseAction={false}
+          trayHeight="header"
+        />
+      </div>
+    );
+  }
+
+  const variant = presentation === "expanded" ? "expanded" : "collapsed";
+
+  return (
+    <HeaderVariantReferenceFrame variant={variant}>
+      <ChatHeader
+        variant={variant}
+        title="AI assistant"
+        onClose={() => {}}
+        onMinimizeToTray={() => {}}
+        onVariantToggle={() => {}}
+        showAiMark={false}
+      />
+    </HeaderVariantReferenceFrame>
+  );
+}
+
+export function SharedHeaderProductExample({
+  product,
+}: Readonly<{ product: "hiring" | "premium" }>) {
+  return (
+    <HeaderVariantReferenceFrame>
+      <ChatHeader
+        title={
+          product === "hiring"
+            ? HIRING_CONCIERGE_TITLE
+            : PREMIUM_CONCIERGE_TITLE
+        }
+        onClose={() => {}}
+        onMinimizeToTray={product === "hiring" ? () => {} : undefined}
+        onVariantToggle={() => {}}
+        showAiMark={false}
+      />
+    </HeaderVariantReferenceFrame>
   );
 }
 
@@ -1997,14 +2076,13 @@ export function SharedMessagesDemo() {
     <ComponentDemoSection
       controls={
         <>
-          <SelectControl
+          <SegmentedControl
             label="Message type"
             value={messageType}
             options={[
               { label: "AI assistant", value: "ai" },
-              { label: "Member or visitor", value: "user" },
+              { label: "Member", value: "user" },
               { label: "Live agent", value: "agent" },
-              { label: "Thinking", value: "thinking" },
               { label: "Rich content", value: "rich" },
             ]}
             onChange={setMessageType}
@@ -2027,13 +2105,6 @@ export function SharedMessagesDemo() {
           >
             Hey Jamie, how can I help you?
           </ChatMessage>
-        ) : messageType === "thinking" ? (
-          <div className="space-y-xs">
-            <ChatThinkingMessage />
-            <div className="flex justify-start">
-              <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
-            </div>
-          </div>
         ) : messageType === "rich" ? (
           <ChatMessage>
             <ChatMessageContent>
@@ -2047,6 +2118,332 @@ export function SharedMessagesDemo() {
           </ChatMessage>
         ) : (
           <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
+        )}
+      </ChatThreadContextFrame>
+    </ComponentDemoSection>
+  );
+}
+
+const hiringLiveAgent: LiveAgentHandoffAgent = {
+  name: "David S.",
+  role: "Sales consultant",
+  timestamp: "9:37 PM",
+};
+
+const hiringLiveAgentContent: LiveAgentHandoffContent = {
+  available: {
+    title: "Chat with a sales specialist",
+    actionLabel: "Start live chat",
+  },
+  connecting: {
+    title: "Connecting you now...",
+    description: "This can take up to 3 minutes.",
+  },
+  connected: {
+    title: "Connected to David S.",
+  },
+  unavailable: {
+    title: "Live chat is unavailable right now",
+    description: "Choose a time to talk with a sales specialist instead.",
+    actionLabel: "Schedule a call",
+  },
+  failed: {
+    title: "We couldn't connect you to live chat",
+    description: "Schedule a call with a sales specialist instead.",
+    actionLabel: "Schedule a call",
+  },
+};
+
+const supportLiveAgent: LiveAgentHandoffAgent = {
+  name: "Maya R.",
+  role: "Velora live support",
+  timestamp: "9:37 PM",
+};
+
+const supportLiveAgentContent: LiveAgentHandoffContent = {
+  available: {
+    title: "Chat with live support",
+    actionLabel: "Start live chat",
+  },
+  connecting: {
+    title: "Connecting you now...",
+  },
+  connected: {
+    title: "Connected to Maya R.",
+  },
+  unavailable: {
+    title: "Live support is unavailable right now",
+    description: "Try again later.",
+    actionLabel: "Try again",
+  },
+  failed: {
+    title: "We couldn't connect you to live support",
+    description: "Try again.",
+    actionLabel: "Try again",
+  },
+};
+
+export function SharedLiveAgentHandoffDemo() {
+  const [state, setState] = useState<LiveAgentHandoffState>("available");
+  const [context, setContext] =
+    useState<ComponentLibraryContext>("collapsed");
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="State"
+            value={state}
+            options={[
+              { label: "Available", value: "available" },
+              { label: "Connecting", value: "connecting" },
+              { label: "Connected", value: "connected" },
+              { label: "Unavailable", value: "unavailable" },
+              { label: "Failed", value: "failed" },
+            ]}
+            onChange={setState}
+          />
+          <ChatContextControl value={context} onChange={setContext} />
+        </>
+      }
+    >
+      <ChatThreadContextFrame context={context}>
+        <LiveAgentHandoff
+          state={state}
+          agent={hiringLiveAgent}
+          content={hiringLiveAgentContent}
+          connectedMessage="Hi Jamie, I can help you plan the next step."
+          onAction={() => {}}
+        />
+      </ChatThreadContextFrame>
+    </ComponentDemoSection>
+  );
+}
+
+type LiveAgentUsageProduct = "hiring" | "support";
+type LiveAgentUsageStage = "ready" | "connecting" | "connected";
+
+export function LiveAgentHandoffUsageDemo({
+  product,
+}: Readonly<{ product: LiveAgentUsageProduct }>) {
+  const [stage, setStage] = useState<LiveAgentUsageStage>("ready");
+  const isHiring = product === "hiring";
+  const [draft, setDraft] = useState(isHiring ? "" : "live agent");
+  const agent = isHiring ? hiringLiveAgent : supportLiveAgent;
+  const content = isHiring
+    ? hiringLiveAgentContent
+    : supportLiveAgentContent;
+
+  useEffect(() => {
+    if (stage !== "connecting") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setStage("connected"), 1200);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [stage]);
+
+  function resetDemo() {
+    setStage("ready");
+    setDraft(isHiring ? "" : "live agent");
+  }
+
+  function sendLiveAgentRequest() {
+    if (isHiring || stage !== "ready" || draft.trim().length === 0) {
+      return;
+    }
+
+    setStage("connecting");
+    setDraft("");
+  }
+
+  return (
+    <div
+      className="space-y-lg"
+      data-testid={`live-agent-handoff-usage-${product}`}
+    >
+      <div className="flex justify-end">
+        <button
+          type="button"
+          className="rounded-[8px] border border-[#d7dce2] bg-background px-[12px] py-[7px] text-[13px] font-medium text-text transition-colors hover:bg-[#f3f5f7]"
+          onClick={resetDemo}
+        >
+          Reset demo
+        </button>
+      </div>
+      <ChatSurfaceDemoFrame device="desktop" height="tall">
+        <ChatHeader
+          title={isHiring ? "Contact sales" : "Velora Assistant"}
+          identity={
+            stage === "connected"
+              ? {
+                  type: "representative",
+                  name: agent.name,
+                  role: agent.role,
+                }
+              : undefined
+          }
+          showCloseAction={false}
+          showAiMark={false}
+        />
+        <ChatBody className="min-h-0 flex-1 overflow-y-auto">
+          <ChatThread showAiDisclaimer={false}>
+            <ChatMessage>
+              {isHiring
+                ? "I can help with your hiring needs. What would you like to do?"
+                : "How can I help with Velora today?"}
+            </ChatMessage>
+            {!isHiring && stage !== "ready" ? (
+              <ChatMessage role="user">live agent</ChatMessage>
+            ) : null}
+            {isHiring || stage !== "ready" ? (
+              <LiveAgentHandoff
+                state={stage === "ready" ? "available" : stage}
+                agent={agent}
+                content={content}
+                connectedMessage={
+                  isHiring
+                    ? "Hi Jamie, I can help you plan the next step."
+                    : "How can I help you?"
+                }
+                onAction={
+                  isHiring && stage === "ready"
+                    ? () => setStage("connecting")
+                    : undefined
+                }
+              />
+            ) : null}
+          </ChatThread>
+        </ChatBody>
+        <ChatComposer
+          showAttachAction={false}
+          showVoiceMode={false}
+          sendDisabled={isHiring || stage !== "ready"}
+          inputProps={{
+            value: draft,
+            disabled: isHiring || stage !== "ready",
+            "aria-label": "Message",
+            onChange: (event) => setDraft(event.currentTarget.value),
+            onKeyDown: (event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendLiveAgentRequest();
+              }
+            },
+          }}
+          onSend={sendLiveAgentRequest}
+        />
+      </ChatSurfaceDemoFrame>
+    </div>
+  );
+}
+
+const responseStatesDemoText =
+  "Based on your timeline, Recruiter could help your team source and engage qualified candidates more quickly while keeping the hiring process organized across teams.";
+
+type ResponseStatesDemoPendingResponse = Readonly<{
+  id: string;
+  text: string;
+  streamDelayScale: number;
+  thinkingDelayMs: number;
+}>;
+
+export function SharedResponseStatesDemo() {
+  const [responseState, setResponseState] = useState("thinking");
+  const [context, setContext] =
+    useState<ComponentLibraryContext>("collapsed");
+  const [streamText, setStreamText] = useState("");
+  const [pendingResponse, setPendingResponse] =
+    useState<ResponseStatesDemoPendingResponse | null>(null);
+  const streamRunRef = useRef(0);
+
+  const handleStreamStart = useCallback(() => {
+    setStreamText("");
+  }, []);
+
+  const handleStreamText = useCallback(
+    (_response: ResponseStatesDemoPendingResponse, visibleText: string) => {
+      setStreamText(visibleText);
+    },
+    [],
+  );
+
+  const handleStreamComplete = useCallback(
+    (response: ResponseStatesDemoPendingResponse) => {
+      setStreamText(response.text);
+      setPendingResponse(null);
+    },
+    [],
+  );
+
+  useChatAssistantStream({
+    pendingResponse,
+    onStreamStart: handleStreamStart,
+    onStreamText: handleStreamText,
+    onComplete: handleStreamComplete,
+  });
+
+  function handleResponseStateChange(nextState: string) {
+    setResponseState(nextState);
+
+    if (nextState !== "in-progress") {
+      setPendingResponse(null);
+      setStreamText("");
+      return;
+    }
+
+    streamRunRef.current += 1;
+    setStreamText("");
+    setPendingResponse({
+      id: `response-states-demo-${streamRunRef.current}`,
+      text: responseStatesDemoText,
+      streamDelayScale: 7,
+      thinkingDelayMs: 0,
+    });
+  }
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <>
+          <SegmentedControl
+            label="Response state"
+            value={responseState}
+            options={[
+              { label: "Thinking", value: "thinking" },
+              { label: "In progress", value: "in-progress" },
+              { label: "Stopped", value: "stopped" },
+            ]}
+            onChange={handleResponseStateChange}
+          />
+          <ChatContextControl value={context} onChange={setContext} />
+        </>
+      }
+    >
+      <ChatThreadContextFrame context={context}>
+        {responseState === "thinking" ? (
+          <ChatThinkingMessage />
+        ) : responseState === "in-progress" ? (
+          <ChatMessage
+            aria-busy="true"
+            streamStatus="streaming"
+            streamText={streamText}
+          >
+            {responseStatesDemoText}
+          </ChatMessage>
+        ) : (
+          <div className="space-y-xs">
+            <ChatMessage>
+              Based on your timeline, Recruiter could help your team source
+            </ChatMessage>
+            <div className="flex justify-start">
+              <ChatInlineFeedback tone="neutral">
+                Response stopped.
+              </ChatInlineFeedback>
+            </div>
+          </div>
         )}
       </ChatThreadContextFrame>
     </ComponentDemoSection>
@@ -2082,6 +2479,52 @@ export function SharedEndChatCsatDemo() {
         />
       </ChatPanel>
     </ComponentDemoSection>
+  );
+}
+
+export function SharedEndChatCsatUsageDemo() {
+  const [showCsat, setShowCsat] = useState(false);
+
+  return (
+    <ContextualComponentDemoSection>
+      <div data-testid="csat-usage-demo">
+        <ChatSurfaceDemoFrame device="desktop" height="tall">
+          <ChatHeader
+            title="Contact sales"
+            showAiMark={false}
+            onClose={() => setShowCsat(true)}
+          />
+          {showCsat ? (
+            <ChatEndFeedbackScreen
+              onBackToChat={() => setShowCsat(false)}
+              onEndChat={() => {}}
+            />
+          ) : (
+            <>
+              <ChatBody>
+                <ChatThread showAiDisclaimer={false}>
+                  <ChatMessage>
+                    Hi Jamie. I can help you understand which hiring solution
+                    fits your team.
+                  </ChatMessage>
+                  <ChatMessage role="user" timestamp="1:04 PM">
+                    We need to hire 40 roles this quarter.
+                  </ChatMessage>
+                  <ChatMessage>
+                    I can help you compare the best options and next steps.
+                  </ChatMessage>
+                </ChatThread>
+              </ChatBody>
+              <ChatComposer
+                sendDisabled
+                showAttachAction={false}
+                showVoiceMode={false}
+              />
+            </>
+          )}
+        </ChatSurfaceDemoFrame>
+      </div>
+    </ContextualComponentDemoSection>
   );
 }
 
@@ -2150,8 +2593,8 @@ export function SharedFeedbackVariants() {
 
 export function SharedComposerDemo() {
   const [state, setState] = useState("empty");
-  const [showVoiceMode, setShowVoiceMode] = useState(false);
-  const [showAttachAction, setShowAttachAction] = useState(true);
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
+  const [showAttachAction, setShowAttachAction] = useState(false);
   const [responseStopped, setResponseStopped] = useState(false);
   const [device, setDevice] = useState<ShellDemoDevice>("desktop");
   const panelVariant = getPanelVariantForContext(
@@ -2173,26 +2616,60 @@ export function SharedComposerDemo() {
             value={state}
             options={[
               { label: "Empty", value: "empty" },
-              { label: "Draft", value: "draft" },
-              { label: "Responding", value: "responding" },
+              { label: "Multiline", value: "draft" },
+              { label: "In progress", value: "responding" },
             ]}
             onChange={handleStateChange}
+            disabled={voiceModeActive}
           />
           <ToggleControl
             label="Voice mode"
-            checked={showVoiceMode}
-            onChange={setShowVoiceMode}
+            checked={voiceModeActive}
+            onChange={setVoiceModeActive}
           />
           <ToggleControl
             label="Add file"
             checked={showAttachAction}
             onChange={setShowAttachAction}
+            disabled={voiceModeActive}
           />
           <DemoDeviceControl value={device} onChange={setDevice} />
         </>
       }
     >
-      <ChatSurfaceDemoFrame device={device}>
+      <ChatPanelContextFrame
+        context={device === "mobile" ? "mobile" : "collapsed"}
+      >
+        <ChatComposer
+          key={`${state}-${device}`}
+          variant={panelVariant}
+          isResponding={isResponding}
+          onStopResponse={() => setResponseStopped(true)}
+          onVoiceModeExit={() => setVoiceModeActive(false)}
+          sendDisabled={state !== "draft"}
+          showAttachAction={showAttachAction}
+          showVoiceMode={voiceModeActive}
+          voiceModeActive={voiceModeActive}
+          voiceState={voiceModeActive ? "listening" : "idle"}
+          inputProps={
+            state === "draft"
+              ? {
+                  "aria-label": "Long message draft",
+                  defaultValue:
+                    "We have several hiring teams moving at different speeds, and I need a path that works for a small pilot now but can still scale.",
+                }
+              : undefined
+          }
+        />
+      </ChatPanelContextFrame>
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function SharedComposerPlacement() {
+  return (
+    <ContextualComponentDemoSection>
+      <ChatSurfaceDemoFrame device="desktop">
         <ChatHeader
           title={HIRING_CONCIERGE_TITLE}
           showCloseAction={false}
@@ -2204,30 +2681,13 @@ export function SharedComposerDemo() {
             <ChatMessage role="user">
               We need to ramp hiring fast this quarter.
             </ChatMessage>
-            {state === "responding" && responseStopped ? (
-              <div className="flex justify-start">
-                <ChatInlineFeedback tone="neutral">Response stopped.</ChatInlineFeedback>
-              </div>
-            ) : null}
           </ChatThread>
         </ChatBody>
         <ChatComposer
-          key={`${state}-${device}`}
-          variant={panelVariant}
-          isResponding={isResponding}
-          onStopResponse={() => setResponseStopped(true)}
-          sendDisabled={state !== "draft" && !showVoiceMode}
-          showAttachAction={showAttachAction}
-          showVoiceMode={showVoiceMode}
-          inputProps={
-            state === "draft"
-              ? {
-                  "aria-label": "Long message draft",
-                  defaultValue:
-                    "We have several hiring teams moving at different speeds, and I need a path that works for a small pilot now but can still scale.",
-                }
-              : undefined
-          }
+          variant="collapsed"
+          sendDisabled
+          showAttachAction={false}
+          showVoiceMode={false}
         />
       </ChatSurfaceDemoFrame>
     </ContextualComponentDemoSection>
@@ -2557,6 +3017,7 @@ export function SharedVoiceModeDemo() {
           onVoiceModeExit={exitVoiceMode}
           onVoiceModeStart={() => startListening()}
           sendDisabled={draft.trim().length === 0}
+          showAttachAction={false}
           showVoiceMode
           voiceModeActive={voiceModeOn}
           voiceState={voiceState}
@@ -2625,15 +3086,11 @@ const choiceCardPeople = [
 ] as const;
 
 export function SharedChoiceCardDemo() {
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
   const [selectedId, setSelectedId] = useState<string | null>("maya-chen");
 
   return (
-    <ContextualComponentDemoSection
-      controls={<ChatContextControl value={context} onChange={setContext} />}
-    >
-      <ChatThreadContextFrame context={context}>
+    <ContextualComponentDemoSection>
+      <ChatThreadContextFrame context="collapsed">
         <ChatMessage>
           <ChatMessageContent>
             <p>
@@ -2941,7 +3398,7 @@ export function SharedSidePanelDemo() {
             value={view}
             options={[
               { label: "Panel only", value: "panel" },
-              { label: "In chat shell", value: "shell" },
+              { label: "In chat container", value: "shell" },
             ]}
             onChange={setView}
           />
@@ -3410,54 +3867,6 @@ export function PremiumPlanCardDemo() {
           showPrice={showPrice}
         />
       </ChatThreadContextFrame>
-    </ComponentDemoSection>
-  );
-}
-
-export function PremiumConciergePanelDemo() {
-  const [signal, setSignal] = useState<PremiumReviewFlowId>("high");
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
-
-  return (
-    <ComponentDemoSection
-      controls={
-        <>
-          <SegmentedControl
-            label="Signal"
-            value={signal}
-            options={[
-              { label: "Low", value: "low" },
-              { label: "High", value: "high" },
-            ]}
-            onChange={setSignal}
-          />
-          <SegmentedControl
-            label="Context"
-            value={context}
-            options={chatContextOptions}
-            onChange={setContext}
-          />
-        </>
-      }
-    >
-      <div
-        className={cx(
-          "h-[48rem] max-h-[calc(100dvh-8rem)] overflow-hidden rounded-lg bg-background-neutral-soft",
-          getChatContextWidthClass(context),
-        )}
-      >
-        <PremiumConciergePanel
-          key={`${signal}-${context}`}
-          className={cx(
-            context !== "mobile" && "md:!h-full",
-            getMobilePanelOverrideClass(context),
-          )}
-          flow={premiumConversationFlows[signal]}
-          showCloseAction={false}
-          variant={getPanelVariantForContext(context)}
-        />
-      </div>
     </ComponentDemoSection>
   );
 }
