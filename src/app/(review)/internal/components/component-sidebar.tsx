@@ -25,15 +25,19 @@ export function ComponentSidebar() {
   const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
-  >(() =>
-    Object.fromEntries(
+  >(() => {
+    const hasActiveSection = componentNavGroups.some((section) =>
+      sectionHasActivePage(section, pathname),
+    );
+
+    return Object.fromEntries(
       componentNavGroups.map((section) => [
         section.title,
-        section.title === "VCA components" ||
-          sectionHasActivePage(section, pathname),
+        sectionHasActivePage(section, pathname) ||
+          (!hasActiveSection && section.title === "VCA"),
       ]),
-    ),
-  );
+    );
+  });
 
   return (
     <aside className="border-b border-border-faint bg-background px-6 pb-xl sm:px-10 lg:fixed lg:bottom-0 lg:left-0 lg:top-0 lg:w-[15rem] lg:overflow-y-auto lg:border-r lg:border-b-0 lg:px-lg lg:pb-lg lg:pt-0 lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden">

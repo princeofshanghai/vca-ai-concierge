@@ -197,7 +197,7 @@ function ScriptedResponseTurnContent({
       streamText,
     }) ?? (
       <ResponseText
-        className="chat-message-enter"
+        className={shouldAnimateResponse ? undefined : "chat-message-enter"}
         streamStatus={streamStatus}
         streamText={streamText}
       >

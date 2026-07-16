@@ -38,6 +38,7 @@ import { TextArea } from "@/components/primitives/text-area";
 
 import {
   CHAT_ASSISTANT_STREAM_CHUNK_FADE_MS,
+  CHAT_ASSISTANT_THINKING_SWEEP_MS,
   splitIntoStreamChunks,
   type ChatMessageStreamStatus,
 } from "./chat-motion";
@@ -161,6 +162,7 @@ type ChatBodyProps = HTMLAttributes<HTMLDivElement> & {
 
 type ChatMessageProps = HTMLAttributes<HTMLDivElement> & {
   role?: ChatMessageRole;
+  animateEntrance?: boolean;
   authorName?: string;
   avatarLabel?: string;
   avatarSrc?: string;
@@ -993,7 +995,16 @@ export function ChatThinkingMessage({
         aria-label="AI Concierge is thinking"
         className="text-body-sm-open text-text-meta"
       >
-        <span className="chat-thinking-text">Thinking</span>
+        <span
+          className="chat-thinking-text"
+          style={
+            {
+              "--chat-thinking-sweep-duration": `${CHAT_ASSISTANT_THINKING_SWEEP_MS}ms`,
+            } as CSSProperties
+          }
+        >
+          Thinking
+        </span>
       </div>
     </div>
   );
@@ -1019,6 +1030,7 @@ export function ChatStreamingText({ text }: Readonly<{ text: string }>) {
 
 export function ChatMessage({
   role = "assistant",
+  animateEntrance,
   authorName,
   avatarLabel,
   avatarSrc,
@@ -1031,6 +1043,8 @@ export function ChatMessage({
 }: ChatMessageProps) {
   const isUser = role === "user";
   const isRepresentative = role === "representative";
+  const shouldAnimateEntrance =
+    animateEntrance ?? !(role === "assistant" && streamStatus !== undefined);
   const hasRepresentativeMeta =
     isRepresentative && Boolean(authorName || timestamp);
   const hasStandaloneTimestamp = Boolean(timestamp) && !hasRepresentativeMeta;
@@ -1040,7 +1054,8 @@ export function ChatMessage({
       {...props}
       data-chat-message-role={role}
       className={cx(
-        "chat-message-enter flex w-full",
+        shouldAnimateEntrance && "chat-message-enter",
+        "flex w-full",
         isUser && "justify-end",
         className,
       )}

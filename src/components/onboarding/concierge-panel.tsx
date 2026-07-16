@@ -30,6 +30,7 @@ import {
 } from "@/components/chat/chat-ui";
 import { ChatSidePanelLayout } from "@/components/chat/chat-side-panel";
 import {
+  CHAT_ASSISTANT_VOICE_STREAM_DELAY_SCALE,
   startClassedViewTransition,
   useChatAssistantStream,
   useChatLatestMessageAnchor,
@@ -189,7 +190,6 @@ const VOICE_AGENT_RESPONSES = [
       "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
   },
 ] as const;
-const VOICE_TEXT_STREAM_DELAY_SCALE = 8;
 
 function getVoiceInputErrorMessage(error: BrowserSpeechInputError) {
   switch (error) {
@@ -994,7 +994,7 @@ export function ConciergePanel({
       );
       queueAssistantResponse(response.text, {
         responsePurpose: surfaceAfter ? "recommendation" : "answer",
-        streamDelayScale: VOICE_TEXT_STREAM_DELAY_SCALE,
+        streamDelayScale: CHAT_ASSISTANT_VOICE_STREAM_DELAY_SCALE,
         surfaceAfter,
         voicePlaybackText: response.spokenText,
       });
@@ -1227,7 +1227,7 @@ export function ConciergePanel({
         responsePurpose: nextTurn.responsePurpose,
         ...(isVoiceModeActive
           ? {
-              streamDelayScale: VOICE_TEXT_STREAM_DELAY_SCALE,
+              streamDelayScale: CHAT_ASSISTANT_VOICE_STREAM_DELAY_SCALE,
               voicePlaybackText: nextTurn.content,
             }
           : {}),

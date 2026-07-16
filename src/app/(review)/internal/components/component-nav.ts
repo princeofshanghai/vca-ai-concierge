@@ -18,7 +18,7 @@ export type ComponentNavSection = Readonly<{
 
 export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
   {
-    title: "VCA components",
+    title: "VCA",
     groups: [
       {
         title: "Core UI",
@@ -34,96 +34,53 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "shared-composer",
             title: "Composer",
             description:
-              "Lets members or visitors type and send a message to the concierge.",
+              "Input field that lets users communicate with the AI agent",
             href: "/internal/components/shared/composer",
           },
           {
             id: "shared-header",
             title: "Header",
-            description:
-              "Displays the agent identity and actions for managing the current chat view.",
+            description: "Shows name of the AI chat and contains global actions",
             href: "/internal/components/shared/header",
           },
           {
             id: "shared-messages",
             title: "Messages",
             description:
-              "Displays chat messages for members, visitors, the AI agent, and live agents.",
+              "Displays chat messages for users, the AI agent, and live agents",
             href: "/internal/components/shared/messages",
-          },
-        ],
-      },
-      {
-        title: "Shared",
-        items: [
-          {
-            id: "shared-choice-card",
-            title: "Choice card",
-            description:
-              "Lets visitors choose one item from a small set of assistant-provided options before continuing.",
-            href: "/internal/components/shared/choice-card",
-          },
-          {
-            id: "shared-end-chat-csat",
-            title: "CSAT",
-            description:
-              "Lets visitors rate the overall conversation before ending a chat.",
-            href: "/internal/components/shared/end-chat-csat",
-          },
-          {
-            id: "shared-feedback",
-            title: "Feedback",
-            description:
-              "Lets visitors rate an assistant response and optionally share why.",
-            href: "/internal/components/shared/feedback",
-          },
-          {
-            id: "shared-idle-session",
-            title: "Idle session",
-            description:
-              "Prompts visitors to continue or end a chat after inactivity.",
-            href: "/internal/components/shared/idle-session",
-          },
-          {
-            id: "shared-interim-state",
-            title: "Initiating state",
-            description:
-              "Shows a calm waiting moment while an assistant or session is prepared.",
-            href: "/internal/components/shared/interim-state",
-          },
-          {
-            id: "shared-live-agent-handoff",
-            title: "Live agent handoff",
-            description:
-              "Connects a visitor to a live agent and communicates each handoff state.",
-            href: "/internal/components/shared/live-agent-handoff",
-          },
-          {
-            id: "shared-response-states",
-            title: "Response states",
-            description:
-              "Shows transient states while the AI prepares, streams, or stops a response.",
-            href: "/internal/components/shared/response-states",
           },
           {
             id: "shared-prompts",
             title: "Prompts",
             description:
-              "Shows suggested questions members or visitors can choose from.",
+              "Shows suggested questions or actions that users can choose from",
             href: "/internal/components/shared/prompts",
           },
           {
             id: "shared-side-panel",
             title: "Side panel",
             description:
-              "Supports a focused task alongside the conversation.",
+              "Enables a side panel inside the chat container to keep the user focused",
             href: "/internal/components/shared/side-panel",
+          },
+        ],
+      },
+      {
+        title: "Interaction patterns",
+        items: [
+          {
+            id: "shared-choice-card",
+            title: "Choice card",
+            description:
+              "Lets users choose one item from a small set of assistant-provided options before continuing.",
+            href: "/internal/components/shared/choice-card",
           },
           {
             id: "shared-task-status-card",
             title: "Task status card",
             description:
-              "Shows in-progress and completed states for assistant-run tasks.",
+              "Shows completion status for AI agent run tasks",
             href: "/internal/components/shared/task-status-card",
           },
           {
@@ -136,34 +93,91 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
         ],
       },
       {
+        title: "States & handoffs",
+        items: [
+          {
+            id: "shared-interim-state",
+            title: "Initiating state",
+            description:
+              "Shows a calm waiting moment while the AI agent is being prepared",
+            href: "/internal/components/shared/interim-state",
+          },
+          {
+            id: "shared-response-states",
+            title: "Response states",
+            description:
+              "Shows transient states while the AI prepares, streams, or stops a response.",
+            href: "/internal/components/shared/response-states",
+          },
+          {
+            id: "shared-inline-error",
+            title: "Inline error",
+            description:
+              "Shows a failed AI response with a retry action.",
+            href: "/internal/components/shared/inline-error",
+          },
+          {
+            id: "shared-idle-session",
+            title: "Idle session",
+            description:
+              "Prompts users to continue or end a chat after inactivity.",
+            href: "/internal/components/shared/idle-session",
+          },
+          {
+            id: "shared-live-agent-handoff",
+            title: "Live agent handoff",
+            description:
+              "Connects a user to a live agent and communicates each handoff state.",
+            href: "/internal/components/shared/live-agent-handoff",
+          },
+        ],
+      },
+      {
+        title: "Feedback & completion",
+        items: [
+          {
+            id: "shared-feedback",
+            title: "Feedback",
+            description:
+              "Lets users rate an assistant response and optionally share why.",
+            href: "/internal/components/shared/feedback",
+          },
+          {
+            id: "shared-end-chat-csat",
+            title: "CSAT",
+            description:
+              "Lets users rate the overall conversation before ending a chat.",
+            href: "/internal/components/shared/end-chat-csat",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Project-specific",
+    groups: [
+      {
         title: "Hiring microsite",
         items: [
           {
             id: "shared-action-card",
-            title: "Sales card",
+            title: "Sales handoff card",
             description:
-              "Shows AE and SDR connection paths for high- and medium-intent sales moments.",
+              "Connects users with a sales specialist through live chat or a scheduled conversation.",
             href: "/internal/components/shared/sales-card",
           },
           {
             id: "hiring-microsite-microphone-voice-banner",
             title: "Microphone voice banner",
             description:
-              "Shows blocked microphone access in context of the Hiring chat panel.",
+              "Shows error message to inform user that their microphone access is blocked",
             href: "/internal/components/hiring-microsite/microphone-voice-banner",
-          },
-          {
-            id: "hiring-microsite-generic-inline-error",
-            title: "Generic inline error",
-            description:
-              "Shows a recoverable assistant-response error with a concise retry action.",
-            href: "/internal/components/hiring-microsite/generic-inline-error",
           },
           {
             id: "hiring-microsite-email",
             title: "Meeting Email",
             description:
-              "Confirms a scheduled conversation and carries relevant concierge context into the hiring specialist handoff.",
+              "Email sent to user after meeting or phone call is booked",
             href: "/internal/components/hiring-microsite/email",
           },
         ],
@@ -180,7 +194,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           },
           {
             id: "premium-survey-entry",
-            title: "Floating Action Button",
+            title: "Entry FAB (Premium survey)",
             description:
               "Opens the Premium concierge from the Premium experience.",
             href: "/internal/components/premium/survey-entry",
@@ -239,7 +253,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           },
           {
             id: "premium-company-page-vca-fab",
-            title: "VCA FAB",
+            title: "Entry FAB (Premium Company Page)",
             description:
               "Opens the Premium Company Page VCA from page surfaces.",
             href: "/internal/components/premium-company-page/vca-fab",
@@ -249,7 +263,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
     ],
   },
   {
-    title: "SDUI components",
+    title: "SDUI",
     groups: [
       {
         title: "Buttons",
@@ -297,7 +311,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "sdui-pill",
             title: "Pill",
-            description: "Lets members or visitors make a lightweight choice.",
+            description: "Lets users make a lightweight choice.",
             href: "/internal/components/sdui/pill",
           },
           {
@@ -404,7 +418,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "sdui-entity",
             title: "Entity",
             description:
-              "Represents a member, visitor, company, or live agent.",
+              "Represents a user, company, or live agent.",
             href: "/internal/components/sdui/entity",
           },
           {
@@ -442,6 +456,8 @@ export const componentNavItems: ReadonlyArray<ComponentNavItem> =
 export const defaultComponentHref = "/internal/components/shared/shell";
 
 const componentRouteAliases: Record<string, string> = {
+  "/internal/components/hiring-microsite/generic-inline-error":
+    "/internal/components/shared/inline-error",
   "/internal/components/premium/product-recommendation-card":
     "/internal/components/premium/sku-card",
   "/internal/components/shared/action-card": "/internal/components/shared/sales-card",

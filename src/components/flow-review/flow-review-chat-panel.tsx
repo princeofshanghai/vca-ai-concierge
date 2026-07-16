@@ -474,7 +474,7 @@ function MediumAvailableHandoff({
     },
     connecting: {
       title: "Connecting you now...",
-      description: "This can take up to 3 minutes.",
+      description: "This usually takes under a minute.",
     },
     connected: {
       title: `Connected to ${LIVE_HIRING_SPECIALIST.name}`,

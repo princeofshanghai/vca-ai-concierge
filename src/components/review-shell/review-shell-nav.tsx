@@ -48,15 +48,18 @@ const HIRING_LIVE_NAV_ITEM = {
 const HIRING_SHELL_OPTIONS = [
   {
     id: "hiring-shell-tray",
-    label: "Tray (persistent)",
-  },
-  {
-    id: "hiring-shell-hybrid",
-    label: "Tray (hybrid)",
+    label: "Persistent",
+    value: "persistent",
   },
   {
     id: "hiring-shell-default",
-    label: "Tray (hidden)",
+    label: "Dismissible",
+    value: "dismissible",
+  },
+  {
+    id: "hiring-shell-hybrid",
+    label: "Hybrid",
+    value: "hybrid",
   },
 ] as const;
 const PREMIUM_SHELL_OPTIONS = [
@@ -286,7 +289,8 @@ type ReviewDestination = Readonly<{
     | "vca-ecosystem";
 }>;
 
-type HiringShellLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
+type HiringEntryPointLabel = (typeof HIRING_SHELL_OPTIONS)[number]["label"];
+type HiringEntryPointValue = (typeof HIRING_SHELL_OPTIONS)[number]["value"];
 type HiringCallbackFormLabel = "On" | "Off";
 type PremiumShellLabel = (typeof PREMIUM_SHELL_OPTIONS)[number]["label"];
 type PremiumCompanyPagesShellLabel =
@@ -356,7 +360,7 @@ function getPremiumCompanyPagesPlaceholderStoryLabel(pathname: string) {
 
 function getPrototypeMetaLabel(
   pathname: string,
-  hiringShellLabel?: HiringShellLabel,
+  hiringEntryPointLabel?: HiringEntryPointLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
   premiumUpsellAiSignalLabel?: PremiumUpsellAiSignalLabel,
@@ -460,7 +464,7 @@ function getPrototypeMetaLabel(
 
 function getPrototypeDestination(
   pathname: string,
-  hiringShellLabel?: HiringShellLabel,
+  hiringEntryPointLabel?: HiringEntryPointLabel,
   premiumShellLabel?: PremiumShellLabel,
   premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
   premiumUpsellAiSignalLabel?: PremiumUpsellAiSignalLabel,
@@ -519,7 +523,7 @@ function getPrototypeDestination(
         : "hiring",
     metaLabel: getPrototypeMetaLabel(
       pathname,
-      hiringShellLabel,
+      hiringEntryPointLabel,
       premiumShellLabel,
       premiumUpsellSignalLabel,
       premiumUpsellAiSignalLabel,
@@ -530,7 +534,7 @@ function getPrototypeDestination(
 
 function getReviewDestinations(
   pathname: string,
-  hiringShellLabel?: HiringShellLabel,
+  hiringEntryPointLabel?: HiringEntryPointLabel,
   premiumShellLabel?: PremiumShellLabel,
   componentProductLens: ComponentProductLens = "hiring",
   premiumUpsellSignalLabel?: PremiumUpsellSignalLabel,
@@ -541,7 +545,7 @@ function getReviewDestinations(
     HOME_DESTINATION,
     getPrototypeDestination(
       pathname,
-      hiringShellLabel,
+      hiringEntryPointLabel,
       premiumShellLabel,
       premiumUpsellSignalLabel,
       premiumUpsellAiSignalLabel,
@@ -565,12 +569,15 @@ function withHiringCallbackForm(
   );
 }
 
-function withHiringShell(href: string, shellLabel: HiringShellLabel) {
-  if (shellLabel === "Tray (persistent)") {
+function withHiringShell(
+  href: string,
+  entryPoint: HiringEntryPointValue,
+) {
+  if (entryPoint === "persistent") {
     return withQueryParam(href, "shell", null);
   }
 
-  if (shellLabel === "Tray (hidden)") {
+  if (entryPoint === "dismissible") {
     return withQueryParam(href, "shell", "default");
   }
 
@@ -579,7 +586,7 @@ function withHiringShell(href: string, shellLabel: HiringShellLabel) {
 
 function withHiringPrototypeSettings(
   href: string,
-  shellLabel: HiringShellLabel,
+  entryPoint: HiringEntryPointValue,
   callbackFormLabel: HiringCallbackFormLabel,
 ) {
   const hrefWithCallbackForm =
@@ -587,7 +594,7 @@ function withHiringPrototypeSettings(
       ? withHiringCallbackForm(href, callbackFormLabel)
       : href;
 
-  return withHiringShell(hrefWithCallbackForm, shellLabel);
+  return withHiringShell(hrefWithCallbackForm, entryPoint);
 }
 
 function withPremiumShell(href: string, shellLabel: PremiumShellLabel) {
@@ -672,18 +679,18 @@ function getHiringShellOptions(
 
   return HIRING_SHELL_OPTIONS.map((option) => ({
     ...option,
-    href: withHiringShell(baseHref, option.label),
+    href: withHiringShell(baseHref, option.value),
   }));
 }
 
-function getHiringCallbackFormOptions(shellLabel: HiringShellLabel) {
+function getHiringCallbackFormOptions(entryPoint: HiringEntryPointValue) {
   return [
     {
       id: "hiring-callback-form-on",
       label: "On",
       href: withHiringPrototypeSettings(
         HIRING_ALL_INTENTS_HREF,
-        shellLabel,
+        entryPoint,
         "On",
       ),
     },
@@ -692,7 +699,7 @@ function getHiringCallbackFormOptions(shellLabel: HiringShellLabel) {
       label: "Off",
       href: withHiringPrototypeSettings(
         HIRING_ALL_INTENTS_HREF,
-        shellLabel,
+        entryPoint,
         "Off",
       ),
     },
@@ -748,28 +755,32 @@ export function ReviewShellNav() {
   const currentSearch = searchParams.toString();
   const currentHref = currentSearch ? `${pathname}?${currentSearch}` : pathname;
   const vcaShellParam = searchParams.get("vcaShell");
-  const activeHiringShellLabel: HiringShellLabel =
+  const activeHiringEntryPoint: HiringEntryPointValue =
     searchParams.get("shell") === "tray" ||
     searchParams.get("shell") === "persistent-tray"
-      ? "Tray (persistent)"
+      ? "persistent"
       : searchParams.get("shell") === "hybrid"
-      ? "Tray (hybrid)"
+      ? "hybrid"
       : searchParams.get("shell") === "default" ||
           searchParams.get("shell") === "dismissable-tray"
-        ? "Tray (hidden)"
-        : "Tray (persistent)";
+        ? "dismissible"
+        : "persistent";
+  const activeHiringEntryPointLabel =
+    HIRING_SHELL_OPTIONS.find(
+      (option) => option.value === activeHiringEntryPoint,
+    )?.label ?? "Persistent";
   const activeHiringCallbackFormLabel: HiringCallbackFormLabel =
     searchParams.get("callbackForm") === "off" ? "Off" : "On";
   const normalizedHiringHref =
     withHiringPrototypeSettings(
       pathname,
-      activeHiringShellLabel,
+      activeHiringEntryPoint,
       activeHiringCallbackFormLabel,
     );
   const normalizedHiringCallbackFormHref =
     withHiringPrototypeSettings(
       HIRING_ALL_INTENTS_HREF,
-      activeHiringShellLabel,
+      activeHiringEntryPoint,
       activeHiringCallbackFormLabel,
     );
   const activePremiumShellLabel: PremiumShellLabel =
@@ -866,7 +877,7 @@ export function ReviewShellNav() {
         href: "href" in option && option.href
           ? withHiringPrototypeSettings(
               option.href,
-              activeHiringShellLabel,
+              activeHiringEntryPoint,
               activeHiringCallbackFormLabel,
             )
           : undefined,
@@ -877,14 +888,14 @@ export function ReviewShellNav() {
                 href: childOption.href
                   ? withHiringPrototypeSettings(
                       childOption.href,
-                      activeHiringShellLabel,
+                      activeHiringEntryPoint,
                       activeHiringCallbackFormLabel,
                     )
                   : undefined,
               }))
             : undefined,
       })),
-    [activeHiringCallbackFormLabel, activeHiringShellLabel],
+    [activeHiringCallbackFormLabel, activeHiringEntryPoint],
   );
   const shellAwarePremiumModeOptions = useMemo(
     () =>
@@ -969,8 +980,8 @@ export function ReviewShellNav() {
     [activeHiringCallbackFormLabel, pathname],
   );
   const hiringCallbackFormOptions = useMemo(
-    () => getHiringCallbackFormOptions(activeHiringShellLabel),
-    [activeHiringShellLabel],
+    () => getHiringCallbackFormOptions(activeHiringEntryPoint),
+    [activeHiringEntryPoint],
   );
   const premiumShellOptions = useMemo(
     () => getPremiumShellOptions(pathname),
@@ -988,7 +999,7 @@ export function ReviewShellNav() {
     () =>
       getReviewDestinations(
         pathname,
-        activeHiringShellLabel,
+        activeHiringEntryPointLabel,
         activePremiumShellLabel,
         componentProductLens,
         activePremiumUpsellSignalLabel,
@@ -996,7 +1007,7 @@ export function ReviewShellNav() {
         activePremiumUpsellAiSummarySignalLabel,
       ),
     [
-      activeHiringShellLabel,
+      activeHiringEntryPointLabel,
       activePremiumUpsellAiSummarySignalLabel,
       activePremiumUpsellAiSignalLabel,
       activePremiumUpsellSignalLabel,
@@ -1016,7 +1027,7 @@ export function ReviewShellNav() {
         pathname === HIRING_ALL_INTENTS_HREF
           ? HIRING_ALL_INTENTS_HREF
           : HIRING_PROTOTYPE_HREF,
-        activeHiringShellLabel,
+        activeHiringEntryPoint,
         activeHiringCallbackFormLabel,
       ),
     );
@@ -1174,9 +1185,9 @@ export function ReviewShellNav() {
                           ? "Choose view"
                           : "Choose flow"
                     }
-                    shellHeading="UI"
+                    shellHeading="Entry point"
                     shellOptions={shellOptions}
-                    callbackFormHeading="Call back form"
+                    callbackFormHeading="Callback form"
                     callbackFormOptions={
                       !isHiringFlowMap &&
                       !isProjectMenu &&
