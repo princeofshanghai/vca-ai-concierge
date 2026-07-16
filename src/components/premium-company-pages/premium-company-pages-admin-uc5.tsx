@@ -1579,7 +1579,7 @@ function FormattedInsightResponseText({
   const blocks = splitTextBlocks(text);
 
   return (
-    <ResponseText className="chat-message-enter">
+    <ResponseText>
       {blocks.map((block, index) => (
         <p
           className={cx(
@@ -1756,7 +1756,7 @@ function PageEngagementResponseText({
   const blocks = splitTextBlocks(text);
 
   return (
-    <ResponseText className="chat-message-enter">
+    <ResponseText>
       {blocks.map((block, index) => {
         const blockType = getPageEngagementBlockType(block);
         const previousBlock = blocks[index - 1] ?? "";

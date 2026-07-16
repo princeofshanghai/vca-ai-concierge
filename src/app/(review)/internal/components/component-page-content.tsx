@@ -91,7 +91,6 @@ import {
 } from "@/components/premium-company-pages/persona";
 
 import {
-  HiringGenericInlineErrorDemo,
   HiringMicrophoneVoiceBannerDemo,
   PremiumFabDemo,
   PremiumFabReviewPreview,
@@ -130,6 +129,7 @@ import {
   SharedHeaderIdentityDemo,
   SharedHeaderPresentationDemo,
   SharedHeaderProductExample,
+  SharedInlineErrorDemo,
   SharedLiveAgentHandoffDemo,
   LiveAgentHandoffUsageDemo,
   SharedMessagesDemo,
@@ -1251,8 +1251,8 @@ function SharedVoiceModePage({ item }: Readonly<{ item: ComponentNavItem }>) {
           </p>
           <p>
             Visual task panels hide the voice controls, stop audio, and release
-            the microphone while the visitor completes the focused task. Voice
-            mode resumes when the visitor returns to chat or completes the
+            the microphone while the user completes the focused task. Voice
+            mode resumes when the user returns to chat or completes the
             task.
           </p>
         </div>
@@ -1306,7 +1306,7 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             </PreviewExampleHeading>
             <p className="max-w-[44rem] text-body-sm-open text-text-meta">
               Use when the conversation has enough buying signal to route the
-              visitor toward a scheduled AE conversation.
+              user toward a scheduled AE conversation.
             </p>
             <div className="space-y-12">
               {highValueMatchCardStates.map(({ label, state, bookedMeeting }) => (
@@ -1405,7 +1405,7 @@ function HiringMicrositeEmailPage({
           <div className="space-y-sm border-t border-border-faint pt-lg">
             <dt className="text-heading-md text-text">Personalize lightly</dt>
             <dd className="text-body-sm-open text-text-meta">
-              The visitor and matched specialist are named without adding a new
+              The user and matched specialist are named without adding a new
               content section.
             </dd>
           </div>
@@ -1429,7 +1429,7 @@ function HiringMicrositeMicrophoneVoiceBannerPage({
     <ComponentPageShell item={item} section="Hiring microsite">
       <PreviewSection
         title="Blocked microphone"
-        description="The visitor remains in voice mode, but the inactive microphone indicator makes it clear that speech is not being captured. End voice returns to the standard composer. This mock does not request microphone access."
+        description="The user remains in voice mode, but the inactive microphone indicator makes it clear that speech is not being captured. End voice returns to the standard composer. This mock does not request microphone access."
       >
         <HiringMicrophoneVoiceBannerDemo />
       </PreviewSection>
@@ -1437,16 +1437,16 @@ function HiringMicrositeMicrophoneVoiceBannerPage({
   );
 }
 
-function HiringMicrositeGenericInlineErrorPage({
+function SharedInlineErrorPage({
   item,
 }: Readonly<{ item: ComponentNavItem }>) {
   return (
-    <ComponentPageShell item={item} section="Hiring microsite">
+    <ComponentPageShell item={item} section="VCA">
       <PreviewSection
         title="Failed response"
-        description="The error replaces the failed assistant response. Retry replays the turn and loads a mocked response in this demo, while the standard composer stays available. No Hiring prototype request logic is connected."
+        description="The error replaces the failed AI response. Retry replays the turn and loads a mocked response while the standard composer stays available."
       >
-        <HiringGenericInlineErrorDemo />
+        <SharedInlineErrorDemo />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1542,7 +1542,7 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
               </PreviewExampleHeading>
               <ComponentLibraryBodyCopy>
                 The LTS hiring microsite keeps the agent chat discoverable in a
-                tray docked in the bottom-right corner. Visitors can open it
+                tray docked in the bottom-right corner. Users can open it
                 from the tray or a Contact sales CTA, then minimize it back to
                 the tray.
               </ComponentLibraryBodyCopy>
@@ -3560,6 +3560,8 @@ export function ComponentPageContent({
       return <SharedLiveAgentHandoffPage item={item} />;
     case "shared-response-states":
       return <SharedResponseStatesPage item={item} />;
+    case "shared-inline-error":
+      return <SharedInlineErrorPage item={item} />;
     case "shared-feedback":
       return <SharedFeedbackPage item={item} />;
     case "shared-end-chat-csat":
@@ -3576,8 +3578,6 @@ export function ComponentPageContent({
       return <HiringMicrositeEmailPage item={item} />;
     case "hiring-microsite-microphone-voice-banner":
       return <HiringMicrositeMicrophoneVoiceBannerPage item={item} />;
-    case "hiring-microsite-generic-inline-error":
-      return <HiringMicrositeGenericInlineErrorPage item={item} />;
     case "shared-choice-card":
       return <SharedChoiceCardPage item={item} />;
     case "shared-task-status-card":

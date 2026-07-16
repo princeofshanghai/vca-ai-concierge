@@ -12,6 +12,7 @@ import { ChatMessage } from "./chat-ui";
 export type LiveAgentHandoffState =
   | "available"
   | "connecting"
+  | "delayed"
   | "connected"
   | "unavailable"
   | "failed";
@@ -31,7 +32,12 @@ export type LiveAgentHandoffStateContent = Readonly<{
 }>;
 
 export type LiveAgentHandoffContent = Readonly<
-  Record<LiveAgentHandoffState, LiveAgentHandoffStateContent>
+  Record<
+    Exclude<LiveAgentHandoffState, "delayed">,
+    LiveAgentHandoffStateContent
+  > & {
+    delayed?: LiveAgentHandoffStateContent;
+  }
 >;
 
 export type LiveAgentHandoffProps = Readonly<{
@@ -42,7 +48,9 @@ export type LiveAgentHandoffProps = Readonly<{
   onAction?: () => void;
 }>;
 
-export function ChatSystemEvent({ children }: Readonly<{ children: ReactNode }>) {
+export function ChatSystemEvent({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <p className="chat-message-enter text-center text-body-xs text-text-meta">
       {children}
@@ -57,9 +65,16 @@ export function LiveAgentHandoff({
   connectedMessage,
   onAction,
 }: LiveAgentHandoffProps) {
-  const stateContent = content[state];
+  const stateContent =
+    state === "delayed"
+      ? (content.delayed ?? content.connecting)
+      : content[state];
+  const isConnecting = state === "connecting" || state === "delayed";
   const showsAction =
-    state === "available" || state === "unavailable" || state === "failed";
+    state === "available" ||
+    state === "delayed" ||
+    state === "unavailable" ||
+    state === "failed";
 
   return (
     <>
@@ -78,12 +93,12 @@ export function LiveAgentHandoff({
 
         <div
           className={
-            state === "connecting" || state === "connected"
+            isConnecting || state === "connected"
               ? "flex items-center gap-md"
               : "space-y-xs"
           }
         >
-          {state === "connecting" ? (
+          {isConnecting ? (
             <ProgressIndicatorCircular
               aria-label="Connecting"
               size={20}

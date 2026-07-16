@@ -46,6 +46,8 @@ import {
   type LiveAgentHandoffState,
 } from "@/components/chat/live-agent-handoff";
 import {
+  CHAT_ASSISTANT_THINKING_SWEEP_MS,
+  CHAT_ASSISTANT_VOICE_STREAM_DELAY_SCALE,
   useChatAssistantStream,
   useChatLatestMessageAnchor,
 } from "@/components/chat/chat-motion";
@@ -82,7 +84,10 @@ import {
 import { PremiumConciergeFab } from "@/components/premium/premium-concierge-fab";
 import { PremiumConciergePanel } from "@/components/premium/premium-concierge-panel";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
-import { premiumPlans, type PremiumPlanId } from "@/components/premium/premium-plan-data";
+import {
+  premiumPlans,
+  type PremiumPlanId,
+} from "@/components/premium/premium-plan-data";
 import {
   PremiumEntityStack,
   PremiumLinkedInBug,
@@ -92,11 +97,20 @@ import {
 } from "@/components/premium/premium-survey-components";
 import { Badge } from "@/components/primitives/badge";
 import { Button, type ButtonProps } from "@/components/primitives/button";
-import { ButtonIcon, type ButtonIconProps } from "@/components/primitives/button-icon";
+import {
+  ButtonIcon,
+  type ButtonIconProps,
+} from "@/components/primitives/button-icon";
 import { ConfirmationDialog } from "@/components/primitives/confirmation-dialog";
 import { Entity, type EntityProps } from "@/components/primitives/entity";
-import { GhostButton, type GhostButtonProps } from "@/components/primitives/ghost-button";
-import { GhostIconButton, type GhostIconButtonProps } from "@/components/primitives/ghost-icon-button";
+import {
+  GhostButton,
+  type GhostButtonProps,
+} from "@/components/primitives/ghost-button";
+import {
+  GhostIconButton,
+  type GhostIconButtonProps,
+} from "@/components/primitives/ghost-icon-button";
 import { Icon, type IconName } from "@/components/primitives/icon";
 import {
   InlineFeedback,
@@ -123,8 +137,14 @@ import {
   type TabItemHorizontalTone,
   type TabItemHorizontalVisualState,
 } from "@/components/primitives/tab-item-horizontal";
-import { TextArea, type TextAreaProps } from "@/components/primitives/text-area";
-import { TextInput, type TextInputProps } from "@/components/primitives/text-input";
+import {
+  TextArea,
+  type TextAreaProps,
+} from "@/components/primitives/text-area";
+import {
+  TextInput,
+  type TextInputProps,
+} from "@/components/primitives/text-input";
 import {
   HIRING_CONCIERGE_TITLE,
   PREMIUM_CONCIERGE_TITLE,
@@ -136,17 +156,11 @@ type DemoOption<T extends string> = Readonly<{
 }>;
 
 type ButtonDemoState =
-  | NonNullable<ButtonProps["visualState"]>
-  | "disabled"
-  | "loading";
+  NonNullable<ButtonProps["visualState"]> | "disabled" | "loading";
 type GhostButtonDemoState =
-  | NonNullable<GhostButtonProps["visualState"]>
-  | "disabled"
-  | "loading";
+  NonNullable<GhostButtonProps["visualState"]> | "disabled" | "loading";
 type OverlayButtonIconDemoState =
-  | NonNullable<OverlayButtonIconProps["visualState"]>
-  | "disabled"
-  | "loading";
+  NonNullable<OverlayButtonIconProps["visualState"]> | "disabled" | "loading";
 type FieldContentState = "empty" | "filled" | "error" | "disabled";
 type NavLinkItemDemoState = NavLinkItemHorizontalVisualState;
 type TabItemDemoState = TabItemHorizontalVisualState;
@@ -154,11 +168,9 @@ type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
 type SidePanelDemoView = "panel" | "shell";
 type SalesCardDemoScenario = "ae" | "sdr";
 type SalesCardDemoSidePanel = "schedule" | null;
+type SalesCardDemoSdrState = MediumAvailableHandoffState | "delayed";
 type ShellDemoVersion =
-  | "dismissable"
-  | "persistent"
-  | "hybrid"
-  | "floating-card";
+  "dismissable" | "persistent" | "hybrid" | "floating-card";
 type ContainerDemoType = "card" | "tray";
 type ContainerEntryBehavior = "persistent" | "hybrid" | "dismissable";
 type ShellDemoDevice = "desktop" | "mobile";
@@ -214,19 +226,19 @@ const highValueMatchCardStates: ReadonlyArray<
     bookedMeeting?: BookedMeeting;
   }>
 > = [
-  { id: "initial", label: "AE recommendation", state: "initial" },
-  { id: "matching", label: "Matching AE", state: "matching" },
-  { id: "matched", label: "AE matched", state: "matched" },
-  { id: "scheduling", label: "Scheduling call", state: "scheduling" },
+  { id: "initial", label: "Default", state: "initial" },
+  { id: "matching", label: "Matching", state: "matching" },
+  { id: "matched", label: "Matched", state: "matched" },
+  { id: "scheduling", label: "Disabled", state: "scheduling" },
   {
     id: "booked-online",
-    label: "Online call booked",
+    label: "Booked · online",
     state: "booked",
     bookedMeeting: bookedMeetingPreview,
   },
   {
     id: "booked-phone",
-    label: "Phone call booked",
+    label: "Booked · phone",
     state: "booked",
     bookedMeeting: bookedPhoneCallPreview,
   },
@@ -235,14 +247,15 @@ const highValueMatchCardStates: ReadonlyArray<
 const mediumAvailableHandoffStates: ReadonlyArray<
   Readonly<{
     label: string;
-    state: MediumAvailableHandoffState;
+    state: SalesCardDemoSdrState;
   }>
 > = [
-  { label: "SDR online", state: "initial" },
-  { label: "Connecting to SDR", state: "connecting" },
-  { label: "Connected to SDR", state: "connected" },
-  { label: "SDR offline", state: "unavailable" },
-  { label: "Connection failed", state: "failed" },
+  { label: "Default", state: "initial" },
+  { label: "Connecting", state: "connecting" },
+  { label: "Delayed", state: "delayed" },
+  { label: "Connected", state: "connected" },
+  { label: "Offline", state: "unavailable" },
+  { label: "Failed", state: "failed" },
 ];
 
 const buttonStates: ReadonlyArray<DemoOption<ButtonDemoState>> = [
@@ -314,8 +327,7 @@ const shellDemoDesktopHeaderGap = 72;
 const shellDemoDesktopPanelCollapsedHeight =
   shellDemoDesktopHeight - shellDemoDesktopHeaderGap;
 const shellDemoDesktopCardHeight = shellDemoDesktopHeight - 2 - 52 - 24 - 24;
-const shellDemoDesktopPanelExpandedHeight =
-  shellDemoDesktopHeight - 48;
+const shellDemoDesktopPanelExpandedHeight = shellDemoDesktopHeight - 48;
 const vcaFabStates: ReadonlyArray<DemoOption<VcaFabDemoState>> = [
   { label: "Default", value: "default" },
   { label: "Hover", value: "hover" },
@@ -334,7 +346,8 @@ const genericShellDemoContent: ShellDemoContent = {
   userMessage: "Help me understand my options.",
   assistantReply: "Here are the most relevant paths to compare first.",
   secondUserMessage: "Show me the recommended next step.",
-  closingMessage: "I can keep the next step visible while you continue browsing.",
+  closingMessage:
+    "I can keep the next step visible while you continue browsing.",
 };
 
 const hiringShellDemoContent: ShellDemoContent = {
@@ -522,9 +535,7 @@ function ComponentDemoSection({
         </div>
       ) : null}
       <div className="component-library-demo-preview flex min-h-[22rem] items-center justify-center overflow-x-auto bg-background p-[64px]">
-        <div className={cx("min-w-0", previewClassName)}>
-          {children}
-        </div>
+        <div className={cx("min-w-0", previewClassName)}>{children}</div>
       </div>
     </div>
   );
@@ -549,9 +560,7 @@ function ContextualComponentDemoSection({
         </div>
       ) : null}
       <div className="component-library-demo-preview flex justify-center overflow-x-auto py-2">
-        <div className={cx("min-w-0", previewClassName)}>
-          {children}
-        </div>
+        <div className={cx("min-w-0", previewClassName)}>{children}</div>
       </div>
     </div>
   );
@@ -594,7 +603,7 @@ function ChatContextControl({
                       borderColor: "#000000",
                       color: "#ffffff",
                     }
-                : undefined
+                  : undefined
               }
               onClick={() => onChange(option.value)}
             >
@@ -611,16 +620,16 @@ function getChatContextWidthClass(context: ComponentLibraryContext) {
   return context === "mobile"
     ? "w-[var(--component-library-mobile-chat-width)]"
     : context === "expanded"
-    ? "w-[var(--design-layout-panel-expanded-width)]"
-    : "w-[var(--design-layout-panel-collapsed-width)]";
+      ? "w-[var(--design-layout-panel-expanded-width)]"
+      : "w-[var(--design-layout-panel-collapsed-width)]";
 }
 
 function getSidePanelContextWidthClass(context: ComponentLibraryContext) {
   return context === "mobile"
     ? "w-[var(--component-library-mobile-chat-width)]"
     : context === "expanded"
-    ? "w-[var(--design-layout-side-panel-expanded-surface-width)]"
-    : "w-[var(--design-layout-side-panel-collapsed-surface-width)]";
+      ? "w-[var(--design-layout-side-panel-expanded-surface-width)]"
+      : "w-[var(--design-layout-side-panel-collapsed-surface-width)]";
 }
 
 function getChatContextAssistantMaxClass(context: ComponentLibraryContext) {
@@ -735,7 +744,15 @@ function renderDemoButtonIcon(
   size: NonNullable<ButtonIconProps["size"]>,
 ) {
   if (state === "disabled") {
-    return <ButtonIcon disabled icon="placeholder" label="Action" size={size} variant={variant} />;
+    return (
+      <ButtonIcon
+        disabled
+        icon="placeholder"
+        label="Action"
+        size={size}
+        variant={variant}
+      />
+    );
   }
 
   if (state === "loading") {
@@ -1305,10 +1322,7 @@ export function SharedShellDemo() {
         device={device}
         renderBackdrop={() => <ShellDemoBackdrop />}
         renderPanel={(panelProps) => (
-          <ShellDemoPanel
-            {...panelProps}
-            content={genericShellDemoContent}
-          />
+          <ShellDemoPanel {...panelProps} content={genericShellDemoContent} />
         )}
         version={version}
         shellState={shellState}
@@ -1518,7 +1532,7 @@ function PremiumSurveyBackdrop({
       <header className="flex h-[52px] items-center justify-between border-b border-border-faint bg-background px-6">
         <PremiumLinkedInBug className="size-[26px] [&_span]:!size-[26px]" />
         <PremiumProgressIndicator progress={25} />
-        <Entity size={32} label="Signed-in member" />
+        <Entity size={32} label="Signed-in user" />
       </header>
       <section className="bg-background px-6 pb-7 pt-8 text-center">
         <div className="mx-auto flex max-w-[762px] flex-col items-center gap-lg">
@@ -1527,8 +1541,8 @@ function PremiumSurveyBackdrop({
               Premium members are 2.6x more likely to get hired on average
             </h3>
             <p className="text-body-md-open text-text">
-              Enjoy 1-month free on us. Cancel anytime. We&apos;ll remind you
-              7 days before your trial ends.
+              Enjoy 1-month free on us. Cancel anytime. We&apos;ll remind you 7
+              days before your trial ends.
             </p>
           </div>
           <div className="flex items-center justify-center gap-sm">
@@ -1745,10 +1759,8 @@ export function SharedShellHiringMicrositeDemo() {
   );
 }
 
-export function HiringGenericInlineErrorDemo() {
-  const [phase, setPhase] = useState<"error" | "loading" | "complete">(
-    "error",
-  );
+export function SharedInlineErrorDemo() {
+  const [phase, setPhase] = useState<"error" | "loading" | "complete">("error");
 
   useEffect(() => {
     if (phase !== "loading") {
@@ -1757,7 +1769,7 @@ export function HiringGenericInlineErrorDemo() {
 
     const responseTimer = window.setTimeout(() => {
       setPhase("complete");
-    }, 900);
+    }, CHAT_ASSISTANT_THINKING_SWEEP_MS);
 
     return () => window.clearTimeout(responseTimer);
   }, [phase]);
@@ -1772,18 +1784,18 @@ export function HiringGenericInlineErrorDemo() {
         }}
       >
         <ChatHeader
-          title={HIRING_CONCIERGE_TITLE}
+          title="AI assistant"
           showCloseAction={false}
           showAiMark={false}
         />
         <ChatBody>
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>
-              Hi Jamie. I can help you understand which LinkedIn hiring
-              solution fits Northstar Health and what the next step should be.
+              I can help you compare the available options and decide what to do
+              next.
             </ChatMessage>
             <ChatMessage role="user">
-              Which option is fastest to launch?
+              Which option is fastest to set up?
             </ChatMessage>
             {phase === "error" ? (
               <InlineFeedback
@@ -1804,8 +1816,8 @@ export function HiringGenericInlineErrorDemo() {
             {phase === "loading" ? <ChatThinkingMessage /> : null}
             {phase === "complete" ? (
               <ChatMessage>
-                For your 40-role ramp, Hiring Pro is likely the faster path to
-                launch. I can also compare it with Recruiter before you decide.
+                The standard option is usually the fastest to set up. I can
+                compare the alternatives before you decide.
               </ChatMessage>
             ) : null}
           </ChatThread>
@@ -1840,8 +1852,8 @@ export function HiringMicrophoneVoiceBannerDemo() {
         <ChatBody>
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>
-              Hi Jamie. I can help you understand which LinkedIn hiring
-              solution fits Northstar Health and what the next step should be.
+              Hi Jamie. I can help you understand which LinkedIn hiring solution
+              fits Northstar Health and what the next step should be.
             </ChatMessage>
             <ChatMessage role="user">
               We need to hire about 40 roles in the next two quarters.
@@ -2069,8 +2081,7 @@ export function SharedHeaderProductExample({
 
 export function SharedMessagesDemo() {
   const [messageType, setMessageType] = useState("ai");
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
 
   return (
     <ComponentDemoSection
@@ -2081,7 +2092,7 @@ export function SharedMessagesDemo() {
             value={messageType}
             options={[
               { label: "AI assistant", value: "ai" },
-              { label: "Member", value: "user" },
+              { label: "User", value: "user" },
               { label: "Live agent", value: "agent" },
               { label: "Rich content", value: "rich" },
             ]}
@@ -2137,7 +2148,12 @@ const hiringLiveAgentContent: LiveAgentHandoffContent = {
   },
   connecting: {
     title: "Connecting you now...",
-    description: "This can take up to 3 minutes.",
+    description: "This usually takes under a minute.",
+  },
+  delayed: {
+    title: "Still connecting you...",
+    description: "You can keep waiting or schedule a call instead.",
+    actionLabel: "Schedule a call",
   },
   connected: {
     title: "Connected to David S.",
@@ -2185,8 +2201,7 @@ const supportLiveAgentContent: LiveAgentHandoffContent = {
 
 export function SharedLiveAgentHandoffDemo() {
   const [state, setState] = useState<LiveAgentHandoffState>("available");
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
 
   return (
     <ComponentDemoSection
@@ -2231,9 +2246,7 @@ export function LiveAgentHandoffUsageDemo({
   const isHiring = product === "hiring";
   const [draft, setDraft] = useState(isHiring ? "" : "live agent");
   const agent = isHiring ? hiringLiveAgent : supportLiveAgent;
-  const content = isHiring
-    ? hiringLiveAgentContent
-    : supportLiveAgentContent;
+  const content = isHiring ? hiringLiveAgentContent : supportLiveAgentContent;
 
   useEffect(() => {
     if (stage !== "connecting") {
@@ -2346,14 +2359,12 @@ const responseStatesDemoText =
 type ResponseStatesDemoPendingResponse = Readonly<{
   id: string;
   text: string;
-  streamDelayScale: number;
   thinkingDelayMs: number;
 }>;
 
 export function SharedResponseStatesDemo() {
   const [responseState, setResponseState] = useState("thinking");
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
   const [streamText, setStreamText] = useState("");
   const [pendingResponse, setPendingResponse] =
     useState<ResponseStatesDemoPendingResponse | null>(null);
@@ -2399,7 +2410,6 @@ export function SharedResponseStatesDemo() {
     setPendingResponse({
       id: `response-states-demo-${streamRunRef.current}`,
       text: responseStatesDemoText,
-      streamDelayScale: 7,
       thinkingDelayMs: 0,
     });
   }
@@ -2456,7 +2466,8 @@ export function SharedFeedbackDemo() {
       <ChatThreadContextFrame context="collapsed">
         <div className="space-y-xs">
           <ChatMessage>
-            I would compare the lighter hiring path against Recruiter before routing you to sales.
+            I would compare the lighter hiring path against Recruiter before
+            routing you to sales.
           </ChatMessage>
           <ChatMessageFeedbackFlow timestamp="1:01 PM" />
         </div>
@@ -2473,10 +2484,7 @@ export function SharedEndChatCsatDemo() {
         className="!h-[640px] !w-[var(--design-layout-panel-collapsed-width)] md:!h-[640px] md:!w-[var(--design-layout-panel-collapsed-width)]"
       >
         <ChatHeader title="Contact sales" showAiMark={false} />
-        <ChatEndFeedbackScreen
-          onBackToChat={() => {}}
-          onEndChat={() => {}}
-        />
+        <ChatEndFeedbackScreen onBackToChat={() => {}} onEndChat={() => {}} />
       </ChatPanel>
     </ComponentDemoSection>
   );
@@ -2528,7 +2536,9 @@ export function SharedEndChatCsatUsageDemo() {
   );
 }
 
-function FeedbackVariantHeading({ children }: Readonly<{ children: ReactNode }>) {
+function FeedbackVariantHeading({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <h3 className="mb-md text-[18px] font-medium leading-6 text-text">
       {children}
@@ -2677,7 +2687,9 @@ export function SharedComposerPlacement() {
         />
         <ChatBody>
           <ChatThread showAiDisclaimer={false}>
-            <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
+            <ChatMessage>
+              I can help compare hiring options quickly.
+            </ChatMessage>
             <ChatMessage role="user">
               We need to ramp hiring fast this quarter.
             </ChatMessage>
@@ -2708,7 +2720,6 @@ type VoiceModeDemoPendingResponse = Readonly<{
   id: string;
   text: string;
   streamDelayScale: number;
-  thinkingDelayMs: number;
 }>;
 
 function getPartialVoiceDemoText(fullText: string, visibleText: string) {
@@ -2833,10 +2844,7 @@ export function SharedVoiceModeDemo() {
           Math.min(nextTurnIndex, voiceModeDemoResponses.length - 1)
         ];
 
-      setUserMessages((currentMessages) => [
-        ...currentMessages,
-        transcript,
-      ]);
+      setUserMessages((currentMessages) => [...currentMessages, transcript]);
       setVoiceTranscript("");
       setShowThinking(true);
       setVoiceState("thinking");
@@ -2846,8 +2854,7 @@ export function SharedVoiceModeDemo() {
       setPendingAssistantResponse({
         id: `voice-response-${nextTurnIndex}`,
         text: responseText,
-        streamDelayScale: 8,
-        thinkingDelayMs: 720,
+        streamDelayScale: CHAT_ASSISTANT_VOICE_STREAM_DELAY_SCALE,
       });
     },
     [],
@@ -2909,10 +2916,7 @@ export function SharedVoiceModeDemo() {
   );
 
   const finishSpeaking = useCallback(() => {
-    if (
-      voiceState !== "user-speaking" ||
-      voiceTranscript.trim().length === 0
-    ) {
+    if (voiceState !== "user-speaking" || voiceTranscript.trim().length === 0) {
       return;
     }
 
@@ -2920,13 +2924,7 @@ export function SharedVoiceModeDemo() {
     const committedTurnIndex = turnIndex;
     clearTimers();
     finalizeTranscript(committedTranscript, committedTurnIndex);
-  }, [
-    clearTimers,
-    finalizeTranscript,
-    turnIndex,
-    voiceState,
-    voiceTranscript,
-  ]);
+  }, [clearTimers, finalizeTranscript, turnIndex, voiceState, voiceTranscript]);
 
   const interruptVoice = useCallback(() => {
     clearTimers();
@@ -2969,8 +2967,8 @@ export function SharedVoiceModeDemo() {
         >
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>
-              Hi Jamie. I can help you understand which LinkedIn hiring
-              solution fits Northstar Health and what the next step should be.
+              Hi Jamie. I can help you understand which LinkedIn hiring solution
+              fits Northstar Health and what the next step should be.
             </ChatMessage>
             {userMessages.map((message, index) => (
               <ChatMessage key={`${message}-${index}`} role="user">
@@ -2978,10 +2976,13 @@ export function SharedVoiceModeDemo() {
               </ChatMessage>
             ))}
             {voiceModeOn &&
-            (voiceState === "user-speaking" ||
-              voiceState === "finalizing") &&
+            (voiceState === "user-speaking" || voiceState === "finalizing") &&
             voiceTranscript.trim().length > 0 ? (
-              <ChatMessage aria-hidden="true" className="opacity-70" role="user">
+              <ChatMessage
+                aria-hidden="true"
+                className="opacity-70"
+                role="user"
+              >
                 {voiceTranscript}
               </ChatMessage>
             ) : null}
@@ -2989,7 +2990,9 @@ export function SharedVoiceModeDemo() {
             {assistantText ? (
               <ChatMessage
                 aria-busy={voiceState === "speaking" || undefined}
-                streamStatus={voiceState === "speaking" ? "streaming" : "complete"}
+                streamStatus={
+                  voiceState === "speaking" ? "streaming" : "complete"
+                }
                 streamText={assistantText}
               >
                 {assistantFullText}
@@ -3028,10 +3031,10 @@ export function SharedVoiceModeDemo() {
 }
 
 export function SharedPromptsDemo() {
-  const [state, setState] = useState<NonNullable<PillProps["visualState"]>>("default");
+  const [state, setState] =
+    useState<NonNullable<PillProps["visualState"]>>("default");
   const [disabled, setDisabled] = useState(false);
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
 
   return (
     <ComponentDemoSection
@@ -3049,7 +3052,11 @@ export function SharedPromptsDemo() {
             ]}
             onChange={setState}
           />
-          <ToggleControl label="Disabled" checked={disabled} onChange={setDisabled} />
+          <ToggleControl
+            label="Disabled"
+            checked={disabled}
+            onChange={setDisabled}
+          />
         </>
       }
     >
@@ -3106,12 +3113,7 @@ export function SharedChoiceCardDemo() {
               id: person.id,
               label: person.name,
               description: person.email,
-              visual: (
-                <Entity
-                  size={40}
-                  src={person.avatarSrc}
-                />
-              ),
+              visual: <Entity size={40} src={person.avatarSrc} />,
             }))}
             selectedId={selectedId}
             actionLabel="Continue"
@@ -3125,10 +3127,8 @@ export function SharedChoiceCardDemo() {
 }
 
 export function SharedTaskStatusCardDemo() {
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
-  const [state, setState] =
-    useState<TaskStatusCardState>("in-progress");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
+  const [state, setState] = useState<TaskStatusCardState>("in-progress");
 
   return (
     <ContextualComponentDemoSection
@@ -3176,12 +3176,10 @@ export function SharedTaskStatusCardDemo() {
 
 export function SharedActionCardDemo() {
   const [scenario, setScenario] = useState<SalesCardDemoScenario>("ae");
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
   const [specialistState, setSpecialistState] =
     useState<SpecialistActionDemoStateId>("initial");
-  const [liveState, setLiveState] =
-    useState<MediumAvailableHandoffState>("initial");
+  const [liveState, setLiveState] = useState<SalesCardDemoSdrState>("initial");
   const [liveBookedMeeting, setLiveBookedMeeting] =
     useState<BookedMeeting | null>(null);
   const [salesCardSidePanel, setSalesCardSidePanel] =
@@ -3191,13 +3189,22 @@ export function SharedActionCardDemo() {
     highValueMatchCardStates[0];
   const variant = getPanelVariantForContext(context);
   const isLiveSidePanelOpen = scenario === "sdr" && salesCardSidePanel !== null;
-  const liveHandoffPreview = (
-    <MediumAvailableHandoffPreview
-      state={liveState}
-      bookedMeeting={liveBookedMeeting}
-      onBookTime={() => setSalesCardSidePanel("schedule")}
-    />
-  );
+  const liveHandoffPreview =
+    liveState === "delayed" ? (
+      <LiveAgentHandoff
+        state="delayed"
+        agent={hiringLiveAgent}
+        content={hiringLiveAgentContent}
+        connectedMessage="Hi Jamie, I can help you plan the next step."
+        onAction={() => setSalesCardSidePanel("schedule")}
+      />
+    ) : (
+      <MediumAvailableHandoffPreview
+        state={liveState}
+        bookedMeeting={liveBookedMeeting}
+        onBookTime={() => setSalesCardSidePanel("schedule")}
+      />
+    );
   const liveHandoffThread = (
     <ChatThread showAiDisclaimer={false}>{liveHandoffPreview}</ChatThread>
   );
@@ -3212,7 +3219,7 @@ export function SharedActionCardDemo() {
     resetLiveHandoffDemo();
   }
 
-  function handleLiveStateChange(nextLiveState: MediumAvailableHandoffState) {
+  function handleLiveStateChange(nextLiveState: SalesCardDemoSdrState) {
     setLiveState(nextLiveState);
     resetLiveHandoffDemo();
   }
@@ -3231,13 +3238,13 @@ export function SharedActionCardDemo() {
             label="Scenario"
             value={scenario}
             options={[
-              { label: "Connect with AE (high intent)", value: "ae" },
-              { label: "Connect with SDR (medium intent)", value: "sdr" },
+              { label: "AE (high intent)", value: "ae" },
+              { label: "SDR (medium intent)", value: "sdr" },
             ]}
             onChange={handleScenarioChange}
           />
           {scenario === "ae" ? (
-            <SelectControl
+            <SegmentedControl
               label="State"
               value={specialistState}
               options={highValueMatchCardStates.map(({ id, label }) => ({
@@ -3385,8 +3392,7 @@ function GenericSidePanelChatHistory() {
 
 export function SharedSidePanelDemo() {
   const [view, setView] = useState<SidePanelDemoView>("panel");
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
   const variant = getPanelVariantForContext(context);
 
   return (
@@ -3481,9 +3487,7 @@ export function VcaFabStatesPreview() {
               position="static"
               selected={value === "selected"}
               visualState={
-                value === "disabled" || value === "selected"
-                  ? "default"
-                  : value
+                value === "disabled" || value === "selected" ? "default" : value
               }
               disabled={value === "disabled"}
             />
@@ -3550,10 +3554,7 @@ function PcpContextPreviewFrame({
 }: Readonly<{ children: ReactNode; wide?: boolean }>) {
   return (
     <div
-      className={cx(
-        "w-full min-w-0",
-        wide ? "max-w-[680px]" : "max-w-[24rem]",
-      )}
+      className={cx("w-full min-w-0", wide ? "max-w-[680px]" : "max-w-[24rem]")}
     >
       {children}
     </div>
@@ -3565,10 +3566,7 @@ export function PcpVcaSidePanelShellPreview({
 }: Readonly<{ kind: PremiumCompanyPagesVcaSidePanelPreviewKind }>) {
   return (
     <SidePanelContextFrame context="collapsed">
-      <PremiumCompanyPagesVcaSidePanelPreview
-        kind={kind}
-        variant="collapsed"
-      />
+      <PremiumCompanyPagesVcaSidePanelPreview kind={kind} variant="collapsed" />
     </SidePanelContextFrame>
   );
 }
@@ -3616,7 +3614,9 @@ export function PcpInsightCardSystemPreview() {
   return (
     <div className="flex w-full flex-col gap-md">
       <section className="space-y-sm">
-        <p className="text-body-xs font-semibold text-text-meta">Lead · Tier 1</p>
+        <p className="text-body-xs font-semibold text-text-meta">
+          Lead · Tier 1
+        </p>
         <InsightCard
           action={{
             id: "view-message",
@@ -3638,9 +3638,7 @@ export function PcpInsightCardSystemPreview() {
       </section>
 
       <section className="space-y-sm">
-        <p className="text-body-xs font-semibold text-text-meta">
-          Anomaly
-        </p>
+        <p className="text-body-xs font-semibold text-text-meta">Anomaly</p>
         <InsightCard
           action={askAiAction("ask-ai-anomaly")}
           dismissLabel="Dismiss follower growth insight"
@@ -3652,9 +3650,7 @@ export function PcpInsightCardSystemPreview() {
       </section>
 
       <section className="space-y-sm">
-        <p className="text-body-xs font-semibold text-text-meta">
-          Opportunity
-        </p>
+        <p className="text-body-xs font-semibold text-text-meta">Opportunity</p>
         <InsightCard
           action={askAiAction("ask-ai-opportunity")}
           dismissLabel="Dismiss opportunity insight"
@@ -3694,9 +3690,7 @@ export function PcpInsightCardSystemPreview() {
       </section>
 
       <section className="space-y-sm">
-        <p className="text-body-xs font-semibold text-text-meta">
-          Competitive
-        </p>
+        <p className="text-body-xs font-semibold text-text-meta">Competitive</p>
         <InsightCard
           action={askAiAction("ask-ai-competitive")}
           dismissLabel="Dismiss competitive insight"
@@ -3752,21 +3746,15 @@ function PremiumFabPreviewFrame({
 }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="relative h-56 w-full min-w-[20rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-      <div className="absolute bottom-xl right-xl">
-        {children}
-      </div>
+      <div className="absolute bottom-xl right-xl">{children}</div>
     </div>
   );
 }
 
-function VcaFabPreviewFrame({
-  children,
-}: Readonly<{ children: ReactNode }>) {
+function VcaFabPreviewFrame({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="relative h-56 w-full min-w-[20rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-      <div className="absolute bottom-xl right-xl">
-        {children}
-      </div>
+      <div className="absolute bottom-xl right-xl">{children}</div>
     </div>
   );
 }
@@ -3830,8 +3818,7 @@ export function PremiumPlanCardDemo() {
   const [planId, setPlanId] = useState<PremiumPlanId>("business-suite");
   const [showAvatar, setShowAvatar] = useState(true);
   const [showPrice, setShowPrice] = useState(true);
-  const [context, setContext] =
-    useState<ComponentLibraryContext>("collapsed");
+  const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
 
   return (
     <ComponentDemoSection
@@ -3895,7 +3882,11 @@ export function SduiNavLinkItemHorizontalDemo() {
             options={navLinkItemIndicators}
             onChange={setIndicator}
           />
-          <ToggleControl label="Current" checked={current} onChange={setCurrent} />
+          <ToggleControl
+            label="Current"
+            checked={current}
+            onChange={setCurrent}
+          />
           <ToggleControl label="Badge" checked={badge} onChange={setBadge} />
           <ToggleControl
             label="Dropdown"
@@ -3941,9 +3932,21 @@ export function SduiTabItemHorizontalDemo() {
             options={tabItemTones}
             onChange={setTone}
           />
-          <ToggleControl label="Selected" checked={selected} onChange={setSelected} />
-          <ToggleControl label="Icon" checked={showIcon} onChange={setShowIcon} />
-          <ToggleControl label="Overflow" checked={overflow} onChange={setOverflow} />
+          <ToggleControl
+            label="Selected"
+            checked={selected}
+            onChange={setSelected}
+          />
+          <ToggleControl
+            label="Icon"
+            checked={showIcon}
+            onChange={setShowIcon}
+          />
+          <ToggleControl
+            label="Overflow"
+            checked={overflow}
+            onChange={setOverflow}
+          />
         </>
       }
     >
@@ -3967,7 +3970,8 @@ export function SduiTabItemHorizontalDemo() {
 }
 
 export function SduiButtonDemo() {
-  const [variant, setVariant] = useState<NonNullable<ButtonProps["variant"]>>("primary");
+  const [variant, setVariant] =
+    useState<NonNullable<ButtonProps["variant"]>>("primary");
   const [size, setSize] = useState<NonNullable<ButtonProps["size"]>>("medium");
   const [state, setState] = useState<ButtonDemoState>("default");
 
@@ -3994,7 +3998,12 @@ export function SduiButtonDemo() {
             ]}
             onChange={setSize}
           />
-          <SelectControl label="State" value={state} options={buttonStates} onChange={setState} />
+          <SelectControl
+            label="State"
+            value={state}
+            options={buttonStates}
+            onChange={setState}
+          />
         </>
       }
     >
@@ -4005,11 +4014,13 @@ export function SduiButtonDemo() {
 
 export function SduiGhostButtonDemo() {
   const [state, setState] = useState<GhostButtonDemoState>("default");
-  const [size, setSize] = useState<NonNullable<GhostButtonProps["size"]>>("small");
+  const [size, setSize] =
+    useState<NonNullable<GhostButtonProps["size"]>>("small");
   const [emphasis, setEmphasis] = useState(false);
   const [padded, setPadded] = useState(true);
-  const [iconPosition, setIconPosition] =
-    useState<"none" | "start" | "end">("end");
+  const [iconPosition, setIconPosition] = useState<"none" | "start" | "end">(
+    "end",
+  );
 
   const icon = iconPosition === "none" ? undefined : "placeholder";
   const iconAtEnd = iconPosition === "end";
@@ -4050,26 +4061,25 @@ export function SduiGhostButtonDemo() {
             ]}
             onChange={setIconPosition}
           />
-          <ToggleControl label="Emphasis" checked={emphasis} onChange={setEmphasis} />
+          <ToggleControl
+            label="Emphasis"
+            checked={emphasis}
+            onChange={setEmphasis}
+          />
           <ToggleControl label="Padded" checked={padded} onChange={setPadded} />
         </>
       }
     >
-      {renderDemoGhostButton(
-        state,
-        size,
-        emphasis,
-        padded,
-        icon,
-        iconAtEnd,
-      )}
+      {renderDemoGhostButton(state, size, emphasis, padded, icon, iconAtEnd)}
     </ComponentDemoSection>
   );
 }
 
 export function SduiButtonIconDemo() {
-  const [variant, setVariant] = useState<NonNullable<ButtonIconProps["variant"]>>("primary");
-  const [size, setSize] = useState<NonNullable<ButtonIconProps["size"]>>("small");
+  const [variant, setVariant] =
+    useState<NonNullable<ButtonIconProps["variant"]>>("primary");
+  const [size, setSize] =
+    useState<NonNullable<ButtonIconProps["size"]>>("small");
   const [state, setState] = useState<ButtonDemoState>("default");
 
   return (
@@ -4095,7 +4105,12 @@ export function SduiButtonIconDemo() {
             ]}
             onChange={setSize}
           />
-          <SelectControl label="State" value={state} options={buttonStates} onChange={setState} />
+          <SelectControl
+            label="State"
+            value={state}
+            options={buttonStates}
+            onChange={setState}
+          />
         </>
       }
     >
@@ -4109,8 +4124,7 @@ export function SduiOverlayButtonIconDemo() {
     useState<NonNullable<OverlayButtonIconProps["color"]>>("black");
   const [size, setSize] =
     useState<NonNullable<OverlayButtonIconProps["size"]>>("small");
-  const [state, setState] =
-    useState<OverlayButtonIconDemoState>("default");
+  const [state, setState] = useState<OverlayButtonIconDemoState>("default");
 
   return (
     <ComponentDemoSection
@@ -4153,7 +4167,8 @@ export function SduiOverlayButtonIconDemo() {
 export function SduiGhostIconButtonDemo() {
   const [state, setState] =
     useState<NonNullable<GhostIconButtonProps["visualState"]>>("default");
-  const [size, setSize] = useState<NonNullable<GhostIconButtonProps["size"]>>("small");
+  const [size, setSize] =
+    useState<NonNullable<GhostIconButtonProps["size"]>>("small");
   const [emphasis, setEmphasis] = useState(false);
   const [padded, setPadded] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -4182,9 +4197,17 @@ export function SduiGhostIconButtonDemo() {
             ]}
             onChange={setState}
           />
-          <ToggleControl label="Emphasis" checked={emphasis} onChange={setEmphasis} />
+          <ToggleControl
+            label="Emphasis"
+            checked={emphasis}
+            onChange={setEmphasis}
+          />
           <ToggleControl label="Padded" checked={padded} onChange={setPadded} />
-          <ToggleControl label="Loading" checked={loading} onChange={setLoading} />
+          <ToggleControl
+            label="Loading"
+            checked={loading}
+            onChange={setLoading}
+          />
         </>
       }
     >
@@ -4202,7 +4225,8 @@ export function SduiGhostIconButtonDemo() {
 }
 
 export function SduiPillDemo() {
-  const [state, setState] = useState<NonNullable<PillProps["visualState"]>>("default");
+  const [state, setState] =
+    useState<NonNullable<PillProps["visualState"]>>("default");
   const [checked, setChecked] = useState(false);
   const [disabled, setDisabled] = useState(false);
 
@@ -4221,8 +4245,16 @@ export function SduiPillDemo() {
             ]}
             onChange={setState}
           />
-          <ToggleControl label="Checked" checked={checked} onChange={setChecked} />
-          <ToggleControl label="Disabled" checked={disabled} onChange={setDisabled} />
+          <ToggleControl
+            label="Checked"
+            checked={checked}
+            onChange={setChecked}
+          />
+          <ToggleControl
+            label="Disabled"
+            checked={disabled}
+            onChange={setDisabled}
+          />
         </>
       }
     >
@@ -4258,8 +4290,16 @@ export function SduiRadioDemo() {
             ]}
             onChange={setState}
           />
-          <ToggleControl label="Checked" checked={checked} onChange={setChecked} />
-          <ToggleControl label="Disabled" checked={disabled} onChange={setDisabled} />
+          <ToggleControl
+            label="Checked"
+            checked={checked}
+            onChange={setChecked}
+          />
+          <ToggleControl
+            label="Disabled"
+            checked={disabled}
+            onChange={setDisabled}
+          />
         </>
       }
     >
@@ -4278,7 +4318,8 @@ export function SduiRadioDemo() {
 }
 
 export function SduiEntityDemo() {
-  const [shape, setShape] = useState<NonNullable<EntityProps["shape"]>>("circle");
+  const [shape, setShape] =
+    useState<NonNullable<EntityProps["shape"]>>("circle");
   const [size, setSize] = useState("48");
 
   return (
@@ -4297,7 +4338,18 @@ export function SduiEntityDemo() {
           <SelectControl
             label="Size"
             value={size}
-            options={["16", "24", "32", "40", "48", "64", "80", "96", "128", "160"].map((value) => ({
+            options={[
+              "16",
+              "24",
+              "32",
+              "40",
+              "48",
+              "64",
+              "80",
+              "96",
+              "128",
+              "160",
+            ].map((value) => ({
               label: `${value}px`,
               value,
             }))}
@@ -4316,7 +4368,8 @@ export function SduiEntityDemo() {
 }
 
 export function SduiTextInputDemo() {
-  const [size, setSize] = useState<NonNullable<TextInputProps["size"]>>("small");
+  const [size, setSize] =
+    useState<NonNullable<TextInputProps["size"]>>("small");
   const [contentState, setContentState] = useState<FieldContentState>("empty");
   const [visualState, setVisualState] =
     useState<NonNullable<TextInputProps["visualState"]>>("default");
@@ -4458,7 +4511,9 @@ export function SduiTagDemo() {
         </>
       }
     >
-      <Tag size={size} tone={tone}>Label</Tag>
+      <Tag size={size} tone={tone}>
+        Label
+      </Tag>
     </ComponentDemoSection>
   );
 }

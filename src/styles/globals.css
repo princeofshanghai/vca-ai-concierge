@@ -1058,13 +1058,14 @@ body {
     var(--color-text-meta) 62%,
     var(--color-text-meta) 100%
   );
-  background-size: 240% 100%;
-  background-position: 120% 0;
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  background-position: 0% 0;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: chat-thinking-sweep 1.6s var(--design-motion-easing-standard)
-    infinite;
+  animation: chat-thinking-sweep
+    var(--chat-thinking-sweep-duration, 1800ms) linear infinite;
 }
 
 .chat-stream-chunk {
@@ -1297,11 +1298,11 @@ body {
 
 @keyframes chat-thinking-sweep {
   from {
-    background-position: 120% 0;
+    background-position: 100% 0;
   }
 
   to {
-    background-position: -120% 0;
+    background-position: 0% 0;
   }
 }
 

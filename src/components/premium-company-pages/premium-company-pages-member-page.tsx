@@ -305,11 +305,13 @@ function VeloraVcaLogoMark({
 }
 
 function VcaAssistantMessage({
+  animateEntrance,
   children,
   streamStatus,
   streamText,
   timestamp,
 }: Readonly<{
+  animateEntrance?: boolean;
   children: ReactNode;
   streamStatus?: ChatMessageStreamStatus;
   streamText?: string;
@@ -317,6 +319,7 @@ function VcaAssistantMessage({
 }>) {
   return (
     <ChatMessage
+      animateEntrance={animateEntrance}
       streamStatus={streamStatus}
       streamText={streamText}
       timestamp={timestamp}
@@ -437,7 +440,7 @@ function VcaScriptedAssistantTurn({
       feedbackPolicy="rateable"
       id={id}
       renderText={({ streamStatus, streamText, text }) => (
-        <VcaAssistantMessage>
+        <VcaAssistantMessage animateEntrance={false}>
           <FormattedVcaAssistantText
             highlights={highlights}
             links={links}
