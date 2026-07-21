@@ -12,7 +12,11 @@ import {
 import { flushSync } from "react-dom";
 
 import { startClassedViewTransition } from "@/components/chat/chat-motion";
-import { Prompt, type ChatPanelVariant } from "@/components/chat/chat-ui";
+import {
+  ChatEndFeedbackScreen,
+  Prompt,
+  type ChatPanelVariant,
+} from "@/components/chat/chat-ui";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { Button } from "@/components/primitives/button";
 import { ButtonIcon } from "@/components/primitives/button-icon";
@@ -4245,11 +4249,13 @@ function AdminVcaFabEntry({
   chatPanelId,
   onOpen,
   onPromptSelect,
+  showPrompts,
   style,
 }: Readonly<{
   chatPanelId: string;
   onOpen: () => void;
   onPromptSelect: (view: AdminUc5SelfInitiatedView) => void;
+  showPrompts: boolean;
   style: CSSProperties;
 }>) {
   return (
@@ -4257,14 +4263,16 @@ function AdminVcaFabEntry({
       className="pcp-ai-messaging-surface group fixed bottom-6 right-6 z-50 md:bottom-[var(--pcp-admin-ai-fab-bottom)]"
       style={style}
     >
-      <FabPromptStack
-        items={ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => ({
-          id: item.id,
-          prompt: item.prompt,
-          value: item.id,
-        }))}
-        onPromptSelect={onPromptSelect}
-      />
+      {showPrompts ? (
+        <FabPromptStack
+          items={ADMIN_UC5_SELF_INITIATED_PROMPTS.map((item) => ({
+            id: item.id,
+            prompt: item.prompt,
+            value: item.id,
+          }))}
+          onPromptSelect={onPromptSelect}
+        />
+      ) : null}
       <VcaFab
         adminTone="gold"
         chatPanelId={chatPanelId}
@@ -4287,6 +4295,11 @@ function PremiumCompanyPagesAdminVcaShell({
   const agentPanelId = useId();
   const nextTurnIdRef = useRef(0);
   const [isAgentOpen, setIsAgentOpen] = useState(initialAgentOpen);
+  const [hasAgentSession, setHasAgentSession] = useState(initialAgentOpen);
+  const [agentSessionKey, setAgentSessionKey] = useState(0);
+  const [hasAgentConversationStarted, setHasAgentConversationStarted] =
+    useState(false);
+  const [isEndChatFeedbackOpen, setIsEndChatFeedbackOpen] = useState(false);
   const [agentPanelVariant, setAgentPanelVariant] =
     useState<ChatPanelVariant>("collapsed");
   const [activeInsight, setActiveInsight] =
@@ -4323,6 +4336,10 @@ function PremiumCompanyPagesAdminVcaShell({
 
   function handleInsightSelect(insight: AdminUc5InsightSelection) {
     runAdminMessagingSurfaceTransition(() => {
+      setAgentSessionKey((currentKey) => currentKey + 1);
+      setHasAgentSession(true);
+      setHasAgentConversationStarted(true);
+      setIsEndChatFeedbackOpen(false);
       setActiveInsight(insight);
       setInitialSelfInitiatedView(null);
       setInitialSelfInitiatedPrompt(undefined);
@@ -4335,6 +4352,18 @@ function PremiumCompanyPagesAdminVcaShell({
 
   function handleOpenAgentFromFab() {
     runAdminMessagingSurfaceTransition(() => {
+      if (hasAgentSession) {
+        setIsEndChatFeedbackOpen(false);
+        setAgentPanelVariant("collapsed");
+        setIsAgentOpen(true);
+
+        return;
+      }
+
+      setAgentSessionKey((currentKey) => currentKey + 1);
+      setHasAgentSession(true);
+      setHasAgentConversationStarted(false);
+      setIsEndChatFeedbackOpen(false);
       setActiveInsight(null);
       setInitialSelfInitiatedView(null);
       setInitialSelfInitiatedPrompt(undefined);
@@ -4350,6 +4379,10 @@ function PremiumCompanyPagesAdminVcaShell({
     prompt?: string,
   ) {
     runAdminMessagingSurfaceTransition(() => {
+      setAgentSessionKey((currentKey) => currentKey + 1);
+      setHasAgentSession(true);
+      setHasAgentConversationStarted(true);
+      setIsEndChatFeedbackOpen(false);
       setActiveInsight(null);
       setInitialSelfInitiatedView(view);
       setInitialSelfInitiatedPrompt(prompt);
@@ -4360,14 +4393,44 @@ function PremiumCompanyPagesAdminVcaShell({
     });
   }
 
-  function handleCloseAgent() {
+  function handleMinimizeAgentToFab() {
     runAdminMessagingSurfaceTransition(() => {
       setIsAgentOpen(false);
       setAgentPanelVariant("collapsed");
-      setAgentDraft("");
+      setIsEndChatFeedbackOpen(false);
+    });
+  }
+
+  function handleEndAgentChat() {
+    runAdminMessagingSurfaceTransition(() => {
+      setIsAgentOpen(false);
+      setHasAgentSession(false);
+      setHasAgentConversationStarted(false);
+      setIsEndChatFeedbackOpen(false);
+      setAgentPanelVariant("collapsed");
+      setActiveInsight(null);
       setInitialSelfInitiatedView(null);
       setInitialSelfInitiatedPrompt(undefined);
+      setAgentThreadTurns([]);
+      setAgentDraft("");
     });
+  }
+
+  function handleRequestCloseAgent() {
+    if (!hasAgentConversationStarted || isEndChatFeedbackOpen) {
+      handleEndAgentChat();
+      return;
+    }
+
+    setIsEndChatFeedbackOpen(true);
+  }
+
+  function handleBackToAgentChat() {
+    setIsEndChatFeedbackOpen(false);
+  }
+
+  function handleAgentConversationStart() {
+    setHasAgentConversationStarted(true);
   }
 
   function handleCollapseAgentPanel() {
@@ -4393,6 +4456,7 @@ function PremiumCompanyPagesAdminVcaShell({
   }
 
   function handleAgentFollowUpSelect(followUp: AdminUc5FollowUp) {
+    setHasAgentConversationStarted(true);
     setAgentThreadTurns((currentTurns) => [
       ...currentTurns,
       {
@@ -4411,6 +4475,7 @@ function PremiumCompanyPagesAdminVcaShell({
       return;
     }
 
+    setHasAgentConversationStarted(true);
     setAgentThreadTurns((currentTurns) => [
       ...currentTurns,
       buildAdminUc5PrototypeFallbackTurn(trimmedDraft, createTurnId()),
@@ -4460,47 +4525,67 @@ function PremiumCompanyPagesAdminVcaShell({
           chatPanelId={agentPanelId}
           onOpen={handleOpenAgentFromFab}
           onPromptSelect={handleOpenSelfInitiatedView}
+          showPrompts={!hasAgentSession}
           style={agentFabStyle}
         />
       ) : null}
 
       {isAgentOpen ? (
-        <>
-          <button
-            aria-label="Collapse expanded Velora AI"
-            className={cx(
-              "fixed inset-0 z-30 hidden bg-overlay-dim md:block",
-              !isAgentExpanded && "pointer-events-none opacity-0",
-            )}
-            onClick={handleCollapseAgentPanel}
-            type="button"
+        <button
+          aria-label="Collapse expanded Velora AI"
+          className={cx(
+            "fixed inset-0 z-30 hidden bg-overlay-dim md:block",
+            !isAgentExpanded && "pointer-events-none opacity-0",
+          )}
+          onClick={handleCollapseAgentPanel}
+          type="button"
+        />
+      ) : null}
+
+      {hasAgentSession ? (
+        <div
+          className={cx(
+            "pcp-ai-messaging-surface fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform,opacity] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
+            agentPanelPositionClass,
+            isAgentOpen
+              ? "translate-y-0 opacity-100"
+              : "pointer-events-none translate-y-[var(--design-motion-distance-surface-y)] opacity-0",
+          )}
+          role="dialog"
+          aria-label="Velora AI"
+          aria-hidden={!isAgentOpen}
+          inert={!isAgentOpen}
+        >
+          <AdminUc5AgentPanel
+            key={agentSessionKey}
+            activeInsight={activeInsight}
+            draft={agentDraft}
+            endFeedbackScreen={
+              isEndChatFeedbackOpen ? (
+                <ChatEndFeedbackScreen
+                  onBackToChat={handleBackToAgentChat}
+                  onEndChat={handleEndAgentChat}
+                />
+              ) : undefined
+            }
+            initialSelfInitiatedPrompt={initialSelfInitiatedPrompt}
+            initialSelfInitiatedView={initialSelfInitiatedView}
+            panelId={agentPanelId}
+            threadTurns={agentThreadTurns}
+            variant={agentPanelVariant}
+            onClose={handleRequestCloseAgent}
+            onConversationStart={handleAgentConversationStart}
+            onDraftChange={handleAgentDraftChange}
+            onDraftClear={handleAgentDraftClear}
+            onFollowUpSelect={handleAgentFollowUpSelect}
+            onInsightSelect={handleInsightSelect}
+            onMinimizeToTray={
+              showVcaFabEntry ? handleMinimizeAgentToFab : undefined
+            }
+            onSend={handleAgentSend}
+            onVariantToggle={handleToggleAgentPanelVariant}
           />
-          <div
-            className={cx(
-              "pcp-ai-messaging-surface fixed inset-[var(--design-layout-mobile-panel-inset)] z-40 w-[var(--design-layout-mobile-panel-width)] transition-[width,height,top,left,right,bottom,transform] duration-[var(--design-motion-duration-moderate)] ease-emphasized motion-reduce:duration-[var(--design-motion-duration-instant)]",
-              agentPanelPositionClass,
-            )}
-            role="dialog"
-            aria-label="Velora AI"
-          >
-            <AdminUc5AgentPanel
-              activeInsight={activeInsight}
-              draft={agentDraft}
-              initialSelfInitiatedPrompt={initialSelfInitiatedPrompt}
-              initialSelfInitiatedView={initialSelfInitiatedView}
-              panelId={agentPanelId}
-              threadTurns={agentThreadTurns}
-              variant={agentPanelVariant}
-              onClose={handleCloseAgent}
-              onDraftChange={handleAgentDraftChange}
-              onDraftClear={handleAgentDraftClear}
-              onFollowUpSelect={handleAgentFollowUpSelect}
-              onInsightSelect={handleInsightSelect}
-              onSend={handleAgentSend}
-              onVariantToggle={handleToggleAgentPanelVariant}
-            />
-          </div>
-        </>
+        </div>
       ) : null}
     </>
   );
