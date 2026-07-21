@@ -20,6 +20,7 @@ export {
   ChatThinkingMessage,
   ChatThread,
   Prompt,
+  PromptGroup,
   RecommendationCard,
   type ChatEndFeedbackRating,
   type ChatEndFeedbackSubmission,
@@ -32,6 +33,8 @@ export {
   type ChatPanelSurface,
   type ChatPanelVariant,
   type PromptProps,
+  type PromptGroupLayout,
+  type PromptGroupProps,
   type PromptVisualState,
 } from "./chat-ui";
 

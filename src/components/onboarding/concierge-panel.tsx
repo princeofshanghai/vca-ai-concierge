@@ -24,6 +24,7 @@ import {
   ChatThinkingMessage,
   ChatThread,
   Prompt,
+  PromptGroup,
   RecommendationCard,
   type ChatComposerVoiceState,
   type ChatPanelVariant,
@@ -185,9 +186,9 @@ const VOICE_AGENT_RESPONSES = [
   },
   {
     text:
-      "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
+      "The best next step is a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
     spokenText:
-      "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
+      "The best next step is a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
   },
 ] as const;
 
@@ -1475,7 +1476,9 @@ export function ConciergePanel({
         ) : null}
         {showStarterPrompts ? (
           <ChatResponseAttachment>
-            <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+            <PromptGroup
+              layout={variant === "expanded" ? "inline" : "stacked"}
+            >
               {STARTER_PROMPTS.map((prompt) => (
                 <Prompt
                   key={prompt}
@@ -1483,7 +1486,7 @@ export function ConciergePanel({
                   onPromptSelect={handleStarterPromptSelect}
                 />
               ))}
-            </div>
+            </PromptGroup>
           </ChatResponseAttachment>
         ) : null}
         {showStoppedFeedback ? (

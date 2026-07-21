@@ -12,14 +12,6 @@ import {
   Prompt,
 } from "@/components/chat/chat-ui";
 import { ChatSystemEvent } from "@/components/chat/live-agent-handoff";
-import {
-  HighValueMatchCardPreview,
-  HighValueSchedulePanelPreview,
-  MediumAvailableHandoffPreview,
-  type BookedMeeting,
-  type HighValueRecommendationState,
-  type MediumAvailableHandoffState,
-} from "@/components/flow-review/flow-review-chat-panel";
 import { HiringConfirmationEmail } from "@/components/hiring-microsite/hiring-confirmation-email";
 import { LinkedInGlobalNavigation } from "@/components/global-navigation";
 import { PremiumProductRecommendationCard } from "@/components/premium/premium-product-recommendation-card";
@@ -92,11 +84,14 @@ import {
 
 import {
   HiringMicrophoneVoiceBannerDemo,
+  HiringSidePanelUsageDemo,
   PremiumFabDemo,
   PremiumFabReviewPreview,
   PremiumPlanCardDemo,
+  PcpAdminInputFirstStartSurfacePreview,
   PcpInboxAiContextStripPreview,
   PcpInsightCardSystemPreview,
+  PcpSidePanelUsageDemo,
   PcpTodayActionCardsPreview,
   PcpVcaSidePanelShellPreview,
   SduiBadgeDemo,
@@ -115,10 +110,11 @@ import {
   SduiTabItemHorizontalDemo,
   SduiTextAreaDemo,
   SduiTextInputDemo,
+  SalesHandoffScenarioDemo,
   SharedActionCardDemo,
   SharedChoiceCardDemo,
   SharedComposerDemo,
-  SharedComposerPlacement,
+  SharedComposerUsageDemo,
   SharedConfirmationDemo,
   SharedConfirmationVariants,
   SharedEndChatCsatDemo,
@@ -135,6 +131,8 @@ import {
   SharedMessagesDemo,
   SharedResponseStatesDemo,
   SharedPromptsDemo,
+  SharedPromptsPlacementDemo,
+  SharedPromptsUsageDemo,
   SharedShellDemo,
   SharedShellEntryPointBehaviorDemo,
   SharedShellExpandableBehaviorDemo,
@@ -176,7 +174,6 @@ const overlayButtonIconRows = [
 ] as const;
 
 const entitySizes = [160, 128, 96, 80, 64, 48, 40, 32, 24, 16] as const;
-const promptStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
 const pillStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
 const radioStates = ["default", "hover", "active", "disabled"] as const;
 const textInputSizes = [
@@ -346,61 +343,6 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-const bookedMeetingPreview: BookedMeeting = {
-  format: "Online meeting",
-  date: "Tue, Apr 28",
-  time: "9:00 AM",
-  contact: "jamie.chen@northstarhealth.com",
-};
-
-const bookedPhoneCallPreview: BookedMeeting = {
-  format: "Phone call",
-  date: "Tue, Apr 28",
-  time: "9:00 AM",
-  contact: "+1 (415) 555-0172",
-};
-
-const highValueMatchCardStates: ReadonlyArray<
-  Readonly<{
-    label: string;
-    state: HighValueRecommendationState;
-    bookedMeeting?: BookedMeeting;
-  }>
-> = [
-  { label: "AE recommendation", state: "initial" },
-  { label: "Matching AE", state: "matching" },
-  { label: "AE matched", state: "matched" },
-  { label: "Scheduling call", state: "scheduling" },
-  {
-    label: "Online call booked",
-    state: "booked",
-    bookedMeeting: bookedMeetingPreview,
-  },
-  {
-    label: "Phone call booked",
-    state: "booked",
-    bookedMeeting: bookedPhoneCallPreview,
-  },
-];
-
-const mediumAvailableHandoffStates: ReadonlyArray<
-  Readonly<{
-    label: string;
-    state: MediumAvailableHandoffState;
-  }>
-> = [
-  { label: "SDR online", state: "initial" },
-  { label: "Connecting to SDR", state: "connecting" },
-  { label: "Connected to SDR", state: "connected" },
-  { label: "SDR offline", state: "unavailable" },
-  { label: "Connection failed", state: "failed" },
-];
-
-const highValueBookingPanelStates = [
-  { label: "Default", state: "default" },
-  { label: "Confirming", state: "confirming" },
-] as const;
-
 function PageHeader({
   title,
   description,
@@ -496,15 +438,22 @@ function PreviewExampleHeading({
   children,
   className: extraClassName,
   level = "h3",
+  withBottomMargin = true,
 }: Readonly<{
   children: ReactNode;
   className?: string;
   level?: "h3" | "h4";
+  withBottomMargin?: boolean;
 }>) {
   const Heading = level;
   const headingClassName =
     level === "h3"
-      ? "mb-md text-[18px] font-medium leading-6 text-text"
+      ? [
+          withBottomMargin ? "mb-md" : null,
+          "text-[18px] font-medium leading-6 text-text",
+        ]
+          .filter(Boolean)
+          .join(" ")
       : "text-body-xs font-medium leading-[1.25] text-text-meta";
 
   return (
@@ -523,6 +472,23 @@ function PreviewSubsectionHeading({
     <h4 className="text-[16px] font-medium leading-6 text-text">
       {children}
     </h4>
+  );
+}
+
+function PreviewExampleIntro({
+  title,
+  children,
+}: Readonly<{
+  title: ReactNode;
+  children: ReactNode;
+}>) {
+  return (
+    <div className="max-w-[44rem] space-y-sm">
+      <PreviewExampleHeading withBottomMargin={false}>
+        {title}
+      </PreviewExampleHeading>
+      <ComponentLibraryBodyCopy>{children}</ComponentLibraryBodyCopy>
+    </div>
   );
 }
 
@@ -562,14 +528,6 @@ function getChatContextWidthClass(context: ComponentLibraryContext) {
     : context === "expanded"
     ? "w-[var(--design-layout-panel-expanded-width)]"
     : "w-[var(--design-layout-panel-collapsed-width)]";
-}
-
-function getSidePanelContextWidthClass(context: ComponentLibraryContext) {
-  return context === "mobile"
-    ? "w-[var(--component-library-mobile-chat-width)]"
-    : context === "expanded"
-    ? "w-[var(--design-layout-side-panel-expanded-surface-width)]"
-    : "w-[var(--design-layout-side-panel-collapsed-surface-width)]";
 }
 
 function getChatContextAssistantMaxClass(context: ComponentLibraryContext) {
@@ -629,28 +587,6 @@ function ChatThreadReferenceFrame({
         <ChatThread showAiDisclaimer={false}>{children}</ChatThread>
       </div>
     </ChatPanelReferenceFrame>
-  );
-}
-
-function SidePanelReferenceFrame({
-  context = "collapsed",
-  children,
-}: Readonly<{
-  context?: ComponentLibraryContext;
-  children: ReactNode;
-}>) {
-  return (
-    <div
-      className={[
-        "max-h-[calc(100dvh-8rem)] overflow-hidden border border-border-faint bg-background-neutral-soft",
-        context === "mobile"
-          ? "h-[var(--component-library-mobile-chat-height)] rounded-none"
-          : "h-[48rem] rounded-lg",
-        getSidePanelContextWidthClass(context),
-      ].join(" ")}
-    >
-      {children}
-    </div>
   );
 }
 
@@ -863,20 +799,6 @@ function renderGhostButtonState(
   );
 }
 
-function renderPromptState(state: (typeof promptStates)[number]) {
-  if (state === "disabled") {
-    return <Prompt disabled prompt="We need to ramp hiring fast this quarter." />;
-  }
-
-  return (
-    <Prompt
-      prompt="We need to ramp hiring fast this quarter."
-      tabIndex={-1}
-      visualState={state}
-    />
-  );
-}
-
 function renderPillState(
   state: (typeof pillStates)[number],
   checked = false,
@@ -913,77 +835,41 @@ function SharedHeaderPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedHeaderDemo />
       </PreviewSection>
-      <PreviewSection title="Variants">
-        <div className="max-w-[48rem]">
-          <PreviewExampleHeading>Identity</PreviewExampleHeading>
-          <ComponentLibraryBodyCopy>
-            The header identifies whether the conversation is with an AI agent
-            or a live representative.
-          </ComponentLibraryBodyCopy>
-        </div>
-        <PreviewMomentStack className="mt-xxxl">
+      <PreviewSection
+        title="Usage"
+        description="The header shows who the user is chatting with. When a live agent joins, the AI identity is replaced by the agent’s avatar, presence, and name."
+      >
+        <PreviewMomentStack>
           <PreviewMoment>
-            <div className="max-w-[48rem] space-y-sm">
-              <PreviewSubsectionHeading>AI agent</PreviewSubsectionHeading>
-              <ComponentLibraryBodyCopy>
-                The default header identifies the agent chat and provides
-                controls for managing the current view.
-              </ComponentLibraryBodyCopy>
-            </div>
+            <PreviewExampleHeading withBottomMargin={false}>
+              AI agent
+            </PreviewExampleHeading>
             <SharedHeaderIdentityDemo identity="ai-agent" />
           </PreviewMoment>
           <PreviewMoment>
-            <div className="max-w-[48rem] space-y-sm">
-              <PreviewSubsectionHeading>Live agent</PreviewSubsectionHeading>
-              <ComponentLibraryBodyCopy>
-                When a live agent joins, the header replaces the AI identity
-                with the representative&apos;s avatar, presence, and name.
-              </ComponentLibraryBodyCopy>
-            </div>
+            <PreviewExampleHeading withBottomMargin={false}>
+              Live agent
+            </PreviewExampleHeading>
             <SharedHeaderIdentityDemo identity="live-agent" />
           </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
-      <PreviewSection title="Behavior">
-        <div className="max-w-[48rem]">
-          <PreviewExampleHeading>Actions</PreviewExampleHeading>
-          <ComponentLibraryBodyCopy>
-            The header exposes expand, minimize, and close actions based on its
-            current presentation.
-          </ComponentLibraryBodyCopy>
-        </div>
-        <PreviewMomentStack className="mt-xxxl">
+      <PreviewSection
+        title="Behavior"
+        description="The chat container header can include actions to dock, expand, and close the chat."
+      >
+        <PreviewMomentStack>
           <PreviewMoment>
-            <div className="max-w-[48rem] space-y-sm">
-              <PreviewSubsectionHeading>Panel</PreviewSubsectionHeading>
-              <ComponentLibraryBodyCopy>
-                The panel header can expand, dock, or close when those actions
-                are available.
-              </ComponentLibraryBodyCopy>
-            </div>
+            <PreviewExampleIntro title="Panel">
+              Includes dock, expand, and close.
+            </PreviewExampleIntro>
             <SharedHeaderPresentationDemo presentation="panel" />
           </PreviewMoment>
           <PreviewMoment>
-            <div className="max-w-[48rem] space-y-sm">
-              <PreviewSubsectionHeading>
-                Expanded dialog
-              </PreviewSubsectionHeading>
-              <ComponentLibraryBodyCopy>
-                The expanded dialog replaces the expand action with collapse
-                while keeping dock and close available.
-              </ComponentLibraryBodyCopy>
-            </div>
+            <PreviewExampleIntro title="Expanded">
+              Replaces expand with collapse while keeping dock and close.
+            </PreviewExampleIntro>
             <SharedHeaderPresentationDemo presentation="expanded" />
-          </PreviewMoment>
-          <PreviewMoment>
-            <div className="max-w-[48rem] space-y-sm">
-              <PreviewSubsectionHeading>Docked tray</PreviewSubsectionHeading>
-              <ComponentLibraryBodyCopy>
-                The compact tray header exposes a single action to open the
-                agent chat.
-              </ComponentLibraryBodyCopy>
-            </div>
-            <SharedHeaderPresentationDemo presentation="tray" />
           </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
@@ -1048,7 +934,7 @@ function MessagesPlacementConversation() {
             Can I speak with a sales consultant about the best option?
           </ChatMessage>
           <ChatMessage>
-            No problem, I&apos;ll connect you with an agent now.
+            No problem, I&apos;ll connect you with a sales consultant now.
           </ChatMessage>
           <ChatSystemEvent>
             David S. joined the chat · 9:37 PM
@@ -1056,7 +942,7 @@ function MessagesPlacementConversation() {
           <ChatMessage
             role="representative"
             authorName="David S."
-            avatarLabel="David S., Live agent"
+            avatarLabel="David S., Sales consultant"
             timestamp="9:37 PM"
           >
             Hi Jamie, I can help you plan the next step.
@@ -1161,61 +1047,27 @@ function SharedEndChatCsatPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
-function ComposerUsageShell({
-  voiceModeActive = false,
-}: Readonly<{
-  voiceModeActive?: boolean;
-}>) {
-  return (
-    <ChatPanelReferenceFrame className="flex h-[520px] flex-col">
-      <ChatHeader
-        title="Contact sales"
-        showCloseAction={false}
-        showAiMark={false}
-      />
-      <ChatBody>
-        <ChatThread showAiDisclaimer={false}>
-          <ChatMessage>I can help compare hiring options quickly.</ChatMessage>
-          <ChatMessage role="user">
-            We need to ramp hiring fast this quarter.
-          </ChatMessage>
-        </ChatThread>
-      </ChatBody>
-      <ChatComposer
-        showAttachAction={false}
-        showVoiceMode={voiceModeActive}
-        voiceModeActive={voiceModeActive}
-        voiceState={voiceModeActive ? "listening" : "idle"}
-      />
-    </ChatPanelReferenceFrame>
-  );
-}
-
 function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
       <PreviewSection title="Demo">
         <SharedComposerDemo />
       </PreviewSection>
-      <PreviewSection title="Placement">
-        <SharedComposerPlacement />
-      </PreviewSection>
       <PreviewSection title="Usage">
-        <div className="max-w-[48rem]">
-          <PreviewExampleHeading>LTS hiring microsite</PreviewExampleHeading>
-          <ComponentLibraryBodyCopy>
-            The composer defaults to text. Selecting the voice mode button
-            switches both the composer and chat to voice mode.
-          </ComponentLibraryBodyCopy>
-        </div>
-        <PreviewMomentStack className="mt-xxxl">
+        <PreviewMomentStack>
           <PreviewMoment>
-            <PreviewSubsectionHeading>Text mode</PreviewSubsectionHeading>
-            <ComposerUsageShell />
+            <PreviewExampleIntro title="General">
+              For most use cases, the VCA composer is a simple text input for
+              sending messages.
+            </PreviewExampleIntro>
+            <SharedComposerUsageDemo useCase="general" />
           </PreviewMoment>
           <PreviewMoment>
-            <PreviewSubsectionHeading>Voice mode</PreviewSubsectionHeading>
-            <ComposerUsageShell voiceModeActive />
+            <PreviewExampleIntro title="LTS hiring microsite">
+              The LTS hiring microsite adds voice mode. Selecting the voice
+              button switches the composer between text and voice input.
+            </PreviewExampleIntro>
+            <SharedComposerUsageDemo useCase="hiring" />
           </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
@@ -1267,25 +1119,31 @@ function SharedPromptsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedPromptsDemo />
       </PreviewSection>
-      <PreviewSection title="Prompt examples">
-        <ChatThreadReferenceFrame>
-          <div className="flex flex-wrap gap-sm">
-            <Prompt prompt="We need to ramp hiring fast this quarter." />
-            <Prompt prompt="Help me compare Recruiter and Hiring Pro.">
-              Compare products
-            </Prompt>
-          </div>
-        </ChatThreadReferenceFrame>
+      <PreviewSection
+        title="Usage"
+        description="Prompts suggest relevant next steps. Selecting one sends its text as a user message."
+      >
+        <SharedPromptsUsageDemo />
       </PreviewSection>
-      <PreviewSection title="Interaction states">
-        <div className="flex flex-wrap items-start gap-lg">
-          {promptStates.map((state) => (
-            <div key={state} className="space-y-sm">
-              <p className="text-body-xs text-text-meta">{state}</p>
-              {renderPromptState(state)}
-            </div>
-          ))}
-        </div>
+      <PreviewSection
+        title="Placement"
+        description="Prompt layout adapts to the available chat-container width."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleIntro title="Panel">
+              Prompts stack vertically in the standard-width chat panel.
+            </PreviewExampleIntro>
+            <SharedPromptsPlacementDemo context="collapsed" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleIntro title="Expanded">
+              Prompts appear inline and wrap when needed in the expanded chat
+              panel.
+            </PreviewExampleIntro>
+            <SharedPromptsPlacementDemo context="expanded" />
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1298,53 +1156,25 @@ function SharedActionCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <SharedActionCardDemo />
       </PreviewSection>
 
-      <PreviewSection title="Routing scenarios">
+      <PreviewSection
+        title="Scenarios"
+        description="Sales handoff cards appear after a lead is qualified as high or medium intent. High-intent leads are routed to a scheduled conversation, while medium-intent leads are offered live chat."
+      >
         <PreviewMomentStack>
           <PreviewMoment>
-            <PreviewExampleHeading>
-              Connect with AE (high intent)
-            </PreviewExampleHeading>
-            <p className="max-w-[44rem] text-body-sm-open text-text-meta">
-              Use when the conversation has enough buying signal to route the
-              user toward a scheduled AE conversation.
-            </p>
-            <div className="space-y-12">
-              {highValueMatchCardStates.map(({ label, state, bookedMeeting }) => (
-                <PreviewMoment key={`${state}-${label}`}>
-                  <PreviewExampleHeading level="h4">
-                    {label}
-                  </PreviewExampleHeading>
-                  <ChatThreadReferenceFrame>
-                    <HighValueMatchCardPreview
-                      state={state}
-                      bookedMeeting={bookedMeeting}
-                    />
-                  </ChatThreadReferenceFrame>
-                </PreviewMoment>
-              ))}
-            </div>
+            <PreviewExampleIntro title="High intent">
+              Connects the user with a matched sales consultant to schedule a
+              conversation.
+            </PreviewExampleIntro>
+            <SalesHandoffScenarioDemo intent="high" />
           </PreviewMoment>
 
           <PreviewMoment>
-            <PreviewExampleHeading>
-              Connect with SDR (medium intent)
-            </PreviewExampleHeading>
-            <p className="max-w-[44rem] text-body-sm-open text-text-meta">
-              Use when the flow should try live SDR chat first, then fall back
-              to scheduling if the SDR is offline or the connection fails.
-            </p>
-            <div className="space-y-12">
-              {mediumAvailableHandoffStates.map(({ label, state }) => (
-                <PreviewMoment key={state}>
-                  <PreviewExampleHeading level="h4">
-                    {label}
-                  </PreviewExampleHeading>
-                  <ChatThreadReferenceFrame>
-                    <MediumAvailableHandoffPreview state={state} />
-                  </ChatThreadReferenceFrame>
-                </PreviewMoment>
-              ))}
-            </div>
+            <PreviewExampleIntro title="Medium intent">
+              Offers live chat with an available sales consultant, with
+              scheduling as a fallback.
+            </PreviewExampleIntro>
+            <SalesHandoffScenarioDemo intent="medium" />
           </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
@@ -1405,8 +1235,8 @@ function HiringMicrositeEmailPage({
           <div className="space-y-sm border-t border-border-faint pt-lg">
             <dt className="text-heading-md text-text">Personalize lightly</dt>
             <dd className="text-body-sm-open text-text-meta">
-              The user and matched specialist are named without adding a new
-              content section.
+              The user and matched sales consultant are named without adding a
+              new content section.
             </dd>
           </div>
           <div className="space-y-sm border-t border-border-faint pt-lg">
@@ -1427,10 +1257,7 @@ function HiringMicrositeMicrophoneVoiceBannerPage({
 }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Hiring microsite">
-      <PreviewSection
-        title="Blocked microphone"
-        description="The user remains in voice mode, but the inactive microphone indicator makes it clear that speech is not being captured. End voice returns to the standard composer. This mock does not request microphone access."
-      >
+      <PreviewSection title="Demo">
         <HiringMicrophoneVoiceBannerDemo />
       </PreviewSection>
     </ComponentPageShell>
@@ -1443,8 +1270,8 @@ function SharedInlineErrorPage({
   return (
     <ComponentPageShell item={item} section="VCA">
       <PreviewSection
-        title="Failed response"
-        description="The error replaces the failed AI response. Retry replays the turn and loads a mocked response while the standard composer stays available."
+        title="Demo"
+        description="Uses SDUI’s Inline feedback component to show general errors and offer a retry action."
       >
         <SharedInlineErrorDemo />
       </PreviewSection>
@@ -1571,18 +1398,25 @@ function SharedSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedSidePanelDemo />
       </PreviewSection>
-      <PreviewSection title="LTS microsite examples">
+      <PreviewSection
+        title="Usage"
+        description="Side panels keep the conversation available while users complete a focused task or review details. This preserves context and reduces the chance they abandon the conversation."
+      >
         <PreviewMomentStack>
-          {highValueBookingPanelStates.map(({ label, state }) => (
-            <PreviewMoment key={state}>
-              <PreviewExampleHeading>
-                Booking side panel · {label}
-              </PreviewExampleHeading>
-              <SidePanelReferenceFrame>
-                <HighValueSchedulePanelPreview state={state} />
-              </SidePanelReferenceFrame>
-            </PreviewMoment>
-          ))}
+          <PreviewMoment>
+            <PreviewExampleIntro title="LTS hiring microsite">
+              Users can schedule a conversation with a sales consultant without
+              leaving the chat.
+            </PreviewExampleIntro>
+            <HiringSidePanelUsageDemo />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleIntro title="Premium Company Pages">
+              Users can inspect relevant company content while keeping the
+              related conversation visible.
+            </PreviewExampleIntro>
+            <PcpSidePanelUsageDemo />
+          </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
@@ -1593,8 +1427,8 @@ function SharedInterimStatePage({ item }: Readonly<{ item: ComponentNavItem }>) 
   return (
     <ComponentPageShell item={item} section="Shared">
       <PreviewSection
-        title="Assistant setup"
-        description="A reusable neutral state for short delays before a chat, session, or workflow is ready."
+        title="Demo"
+        description="Shown on initial load while the AI agent is getting ready, so users know the chat is working."
       >
         <ChatShellContainerPreview>
           <ChatPanel
@@ -1626,8 +1460,8 @@ function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
       <PreviewSection
-        title="Chat inactivity"
-        description="A reusable overlay for asking whether someone wants to keep a session open after a quiet period."
+        title="Demo"
+        description="Prompts users to continue or end the chat after a period of inactivity."
       >
         <ChatShellContainerPreview>
           <ChatPanel
@@ -1889,6 +1723,21 @@ function PremiumCompanyPageSidePanelPage({
             </PreviewMoment>
           ))}
         </PreviewMomentStack>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function PremiumCompanyPageInputFirstStartSurfacePage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium Company Page">
+      <PreviewSection
+        title="Demo"
+        description="Earlier PCP admin input-first opening, preserved as an exploration. The live assistant now uses the standard conversation-first opening."
+      >
+        <PcpAdminInputFirstStartSurfacePreview />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -3600,6 +3449,8 @@ export function ComponentPageContent({
       return <PremiumCompanyPageVcaFabPage item={item} />;
     case "premium-company-page-side-panel":
       return <PremiumCompanyPageSidePanelPage item={item} />;
+    case "premium-company-page-input-first-start-surface":
+      return <PremiumCompanyPageInputFirstStartSurfacePage item={item} />;
     case "premium-company-page-entity-cards":
       return <PremiumCompanyPageEntityCardsPage item={item} />;
     case "premium-company-page-data-cards":

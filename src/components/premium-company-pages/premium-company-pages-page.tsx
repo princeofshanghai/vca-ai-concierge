@@ -291,6 +291,7 @@ type AnalyticsContextualPromptSlotProps =
     Readonly<{
       contextualPrompts?: ReadonlyArray<AnalyticsContextualPrompt>;
       flush?: boolean;
+      presentation?: "dashboard" | "default";
       showDivider?: boolean;
     }>;
 
@@ -332,6 +333,59 @@ const performanceCards: Array<PerformanceCardData> = [
     title: "Visitors from audiences",
     value: "18.4K",
     label: "Premium insight",
+    premium: true,
+  },
+];
+
+const currentStandardPerformanceCards: ReadonlyArray<PerformanceCardData> = [
+  {
+    title: "Search appearances",
+    value: "2,640",
+    delta: "15%",
+    deltaTone: "negative",
+  },
+  {
+    title: "Followers",
+    value: "420",
+    delta: "8%",
+    deltaTone: "positive",
+  },
+  {
+    title: "Post impressions",
+    value: "38.4K",
+    delta: "15%",
+    deltaTone: "positive",
+  },
+  {
+    title: "Page visitors",
+    value: "4,280",
+    delta: "15%",
+    deltaTone: "negative",
+  },
+];
+
+const currentPremiumPerformanceCards: ReadonlyArray<PerformanceCardData> = [
+  {
+    title: "Who visited your Page",
+    premium: true,
+  },
+  {
+    title: "Visits from audiences",
+    value: "18.4K",
+    premium: true,
+  },
+  {
+    title: "Leaders engagement",
+    value: "8.5K",
+    delta: "7.4%",
+    deltaTone: "positive",
+    premium: true,
+  },
+  {
+    title: "Content engagers",
+    value: "97",
+    delta: "4.8%",
+    deltaTone: "positive",
     premium: true,
   },
 ];
@@ -926,11 +980,13 @@ function ContextualAiPromptRow({
   flush = false,
   onInsightSelect,
   onSelfInitiatedViewSelect,
+  presentation = "default",
   prompts,
   showDivider = true,
 }: AnalyticsContextualPromptHandlers &
   Readonly<{
     flush?: boolean;
+    presentation?: "dashboard" | "default";
     prompts: ReadonlyArray<AnalyticsContextualPrompt>;
     showDivider?: boolean;
   }>) {
@@ -967,7 +1023,11 @@ function ContextualAiPromptRow({
       <div className="flex flex-wrap items-start gap-sm">
         {prompts.map((prompt) => (
           <Prompt
-            className="md:max-w-none"
+            className={cx(
+              "md:max-w-none",
+              presentation === "dashboard" &&
+                "min-h-[56px] !rounded-sm !p-lg",
+            )}
             key={prompt.label}
             onPromptSelect={handlePromptSelect}
             prompt={prompt.label}
@@ -979,7 +1039,16 @@ function ContextualAiPromptRow({
                 name="signal-ai"
                 size="small"
               />
-              <span className="min-w-0 font-semibold">{prompt.label}</span>
+              <span
+                className={cx(
+                  "min-w-0",
+                  presentation === "dashboard"
+                    ? "font-normal"
+                    : "font-semibold",
+                )}
+              >
+                {prompt.label}
+              </span>
             </span>
           </Prompt>
         ))}
@@ -993,6 +1062,7 @@ function ContextualAiPromptSlot({
   flush,
   onInsightSelect,
   onSelfInitiatedViewSelect,
+  presentation,
   showDivider,
 }: AnalyticsContextualPromptSlotProps) {
   if (
@@ -1008,6 +1078,7 @@ function ContextualAiPromptSlot({
       flush={flush}
       onInsightSelect={onInsightSelect}
       onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+      presentation={presentation}
       prompts={contextualPrompts}
       showDivider={showDivider}
     />
@@ -1066,11 +1137,13 @@ function InlineAction({ children }: Readonly<{ children: string }>) {
 function RailSection({
   items,
   activeItem,
+  onItemSelect,
   story,
   withPremiumIcon = false,
 }: Readonly<{
   items: ReadonlyArray<string | { label: string; icon?: IconName }>;
   activeItem?: string;
+  onItemSelect?: (label: string) => void;
   story: PremiumCompanyPagesAdminStory;
   withPremiumIcon?: boolean;
 }>) {
@@ -1115,6 +1188,7 @@ function RailSection({
           <button
             key={label}
             className={itemClassName}
+            onClick={() => onItemSelect?.(label)}
             type="button"
           >
             {itemContent}
@@ -1127,9 +1201,11 @@ function RailSection({
 
 function PageRail({
   activeItem,
+  onOpenAssistant,
   story,
 }: Readonly<{
   activeItem: string;
+  onOpenAssistant: () => void;
   story: PremiumCompanyPagesAdminStory;
 }>) {
   return (
@@ -1215,7 +1291,16 @@ function PageRail({
       <div className="mx-xxl my-sm h-px bg-border-faint" />
       <RailSection items={secondaryRailItems} story={story} />
       <div className="mx-xxl my-sm h-px bg-border-faint" />
-      <RailSection items={premiumRailItems} story={story} withPremiumIcon />
+      <RailSection
+        items={premiumRailItems}
+        onItemSelect={(label) => {
+          if (label === "Chat with assistant") {
+            onOpenAssistant();
+          }
+        }}
+        story={story}
+        withPremiumIcon
+      />
     </aside>
   );
 }
@@ -1291,6 +1376,77 @@ function PerformanceCard({
         </p>
       ) : null}
     </article>
+  );
+}
+
+function GroupedPerformanceMetric({
+  title,
+  value,
+  delta,
+  deltaTone,
+}: PerformanceCardData) {
+  return (
+    <article className="min-w-0">
+      {title === "Who visited your Page" ? <AvatarPile /> : null}
+      {value ? (
+        <div className="flex min-w-0 flex-wrap items-end gap-sm">
+          <p className="text-heading-xl tracking-normal text-text">{value}</p>
+          {delta ? (
+            <span
+              className={cx(
+                "inline-flex items-center gap-[1px] text-control-sm",
+                deltaTone === "positive" ? "text-positive" : "text-negative",
+              )}
+            >
+              <Icon
+                aria-hidden="true"
+                className="shrink-0"
+                name={deltaTone === "positive" ? "caret-up" : "caret-down"}
+                size="small"
+              />
+              <span>{delta}</span>
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      <h3
+        className={cx(
+          "text-control-sm text-action",
+          value ? "mt-xs" : "mt-md",
+        )}
+      >
+        {title}
+      </h3>
+    </article>
+  );
+}
+
+function GroupedPerformanceMetrics({
+  items,
+  premium = false,
+}: Readonly<{
+  items: ReadonlyArray<PerformanceCardData>;
+  premium?: boolean;
+}>) {
+  return (
+    <section className="rounded-sm border border-border-faint bg-background px-xl py-xxl">
+      {premium ? (
+        <div className="flex items-center gap-sm text-body-md text-text-meta">
+          <PremiumChipSmall />
+          <span>Exclusive Premium insights</span>
+        </div>
+      ) : null}
+      <div
+        className={cx(
+          "grid gap-x-xl gap-y-xxl sm:grid-cols-2 xl:grid-cols-4",
+          premium && "mt-xxl",
+        )}
+      >
+        {items.map((item) => (
+          <GroupedPerformanceMetric key={item.title} {...item} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -2559,7 +2715,6 @@ function DashboardContent({
             <AdminPerformanceDigestCard
               activeInsightId={activeInsightId}
               onInsightSelect={onDigestInsightSelect}
-              showAssistantSetupAction={story === "current"}
               showFollowerGrowthInsight={story === "old"}
             />
           </div>
@@ -2571,40 +2726,64 @@ function DashboardContent({
               <div>
                 <h2 className="text-heading-lg text-text">Track performance</h2>
                 <p className="mt-xs text-body-md text-text-meta">
-                  Grow your page 3x faster by leveraging insights and analytics.
+                  {story === "current"
+                    ? "Grow your Page 3x faster with insights and analytics from the past 7 days."
+                    : "Grow your page 3x faster by leveraging insights and analytics."}
                 </p>
               </div>
-              <CarouselControls
-                canGoNext={
-                  performanceCardPageIndex < maxPerformanceCardPageIndex
-                }
-                canGoPrevious={performanceCardPageIndex > 0}
-                nextLabel="Next performance insights"
-                onNext={handleNextPerformanceCards}
-                onPrevious={handlePreviousPerformanceCards}
-                previousLabel="Previous performance insights"
-              />
-            </div>
-
-            <div className="mt-lg grid gap-md sm:grid-cols-2 xl:grid-cols-4">
-              {visiblePerformanceCards.map((card) => (
-                <PerformanceCard key={card.title} {...card} />
-              ))}
-            </div>
-
-            <div className="mt-md flex justify-center gap-md" aria-hidden="true">
-              {Array.from({ length: performanceCardPageCount }, (_, index) => (
-                <span
-                  className={cx(
-                    "size-[6px] rounded-round",
-                    index === performanceCardPageIndex
-                      ? "bg-text"
-                      : "border border-border-subtle",
-                  )}
-                  key={index}
+              {story !== "current" ? (
+                <CarouselControls
+                  canGoNext={
+                    performanceCardPageIndex < maxPerformanceCardPageIndex
+                  }
+                  canGoPrevious={performanceCardPageIndex > 0}
+                  nextLabel="Next performance insights"
+                  onNext={handleNextPerformanceCards}
+                  onPrevious={handlePreviousPerformanceCards}
+                  previousLabel="Previous performance insights"
                 />
-              ))}
+              ) : null}
             </div>
+
+            {story === "current" ? (
+              <div className="mt-xxl space-y-lg">
+                <GroupedPerformanceMetrics
+                  items={currentStandardPerformanceCards}
+                />
+                <GroupedPerformanceMetrics
+                  items={currentPremiumPerformanceCards}
+                  premium
+                />
+              </div>
+            ) : (
+              <>
+                <div className="mt-lg grid gap-md sm:grid-cols-2 xl:grid-cols-4">
+                  {visiblePerformanceCards.map((card) => (
+                    <PerformanceCard key={card.title} {...card} />
+                  ))}
+                </div>
+
+                <div
+                  className="mt-md flex justify-center gap-md"
+                  aria-hidden="true"
+                >
+                  {Array.from(
+                    { length: performanceCardPageCount },
+                    (_, index) => (
+                      <span
+                        className={cx(
+                          "size-[6px] rounded-round",
+                          index === performanceCardPageIndex
+                            ? "bg-text"
+                            : "border border-border-subtle",
+                        )}
+                        key={index}
+                      />
+                    ),
+                  )}
+                </div>
+              </>
+            )}
 
             {story === "current" ? (
               <div className="mt-lg">
@@ -2613,6 +2792,7 @@ function DashboardContent({
                   flush
                   onInsightSelect={onDigestInsightSelect}
                   onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
+                  presentation="dashboard"
                   showDivider={false}
                 />
               </div>
@@ -4023,17 +4203,23 @@ function AnalyticsContent({
 function PremiumCompanyPagesAdminShell({
   activeItem,
   children,
+  onOpenAssistant,
   story,
 }: Readonly<{
   activeItem: string;
   children: ReactNode;
+  onOpenAssistant: () => void;
   story: PremiumCompanyPagesAdminStory;
 }>) {
   return (
     <main className="min-h-dvh bg-background-neutral-soft text-text">
       <LinkedInGlobalNavigation profileSrc={pcpAdminPersona.avatarSrc} />
       <div className="mx-auto grid w-full max-w-[1145px] gap-lg px-lg pb-[112px] pt-xxl lg:grid-cols-[225px_minmax(0,888px)] lg:gap-[32px] lg:px-0 lg:py-xxl">
-        <PageRail activeItem={activeItem} story={story} />
+        <PageRail
+          activeItem={activeItem}
+          onOpenAssistant={onOpenAssistant}
+          story={story}
+        />
         {children}
       </div>
     </main>
@@ -4246,7 +4432,11 @@ function PremiumCompanyPagesAdminVcaShell({
 
   return (
     <>
-      <PremiumCompanyPagesAdminShell activeItem={activeItem} story={story}>
+      <PremiumCompanyPagesAdminShell
+        activeItem={activeItem}
+        onOpenAssistant={handleOpenAgentFromFab}
+        story={story}
+      >
         {children({
           activeInsightId: isAgentOpen ? activeInsight?.id ?? null : null,
           onInsightSelect: handleInsightSelect,
@@ -4305,6 +4495,7 @@ function PremiumCompanyPagesAdminVcaShell({
               onDraftChange={handleAgentDraftChange}
               onDraftClear={handleAgentDraftClear}
               onFollowUpSelect={handleAgentFollowUpSelect}
+              onInsightSelect={handleInsightSelect}
               onSend={handleAgentSend}
               onVariantToggle={handleToggleAgentPanelVariant}
             />

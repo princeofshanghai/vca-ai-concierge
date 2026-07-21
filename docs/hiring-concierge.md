@@ -56,7 +56,7 @@ The visitor-facing rules. Every screen and every turn should be defensible again
 - Skeptical of anything that feels like a disguised lead form.
 - Not trying to avoid sales, but not ready for a discovery call before knowing if the product fits.
 
-**JTBD:** *"As a talent leader under pressure to hire faster, I want to quickly understand which LinkedIn hiring solution fits my team's situation, so I can take the right next step with confidence - whether that means exploring on my own or talking to a rep who already knows my context."*
+**JTBD:** *"As a talent leader under pressure to hire faster, I want to quickly understand which LinkedIn hiring solution fits my team's situation, so I can take the right next step with confidence - whether that means exploring on my own or talking to a sales consultant who already knows my context."*
 
 Jamie is a buyer-influencer, not the final signer. The persona is deliberately problem-led ("my team is behind") rather than product-led ("I want Recruiter").
 
@@ -90,13 +90,13 @@ Implication: "Every route is a good route" does not mean "every route produces a
 
 ## Three-tier routing model
 
-Routing is multi-outcome, not "book a meeting or nothing." Internally, every visitor is sorted into one of three value tiers. These tier names (`high`/`medium`/`low value`) and the roles (`AE`/`SDR`) are **internal language only** - the user never sees them. **"Hiring specialist"** is the user-facing umbrella term.
+Routing is multi-outcome, not "book a meeting or nothing." Internally, every visitor is sorted into one of three value tiers. These tier names (`high`/`medium`/`low value`) and the roles (`AE`/`SDR`) are **internal language only** - the user never sees them. **"Sales consultant"** is the canonical user-facing term across AI responses, handoff cards, live chat, scheduling, and confirmation messages. The unchanged external system-prompt reference still contains older `rep` and `specialist` terminology; do not carry those labels into prototype UI copy.
 
 | Tier | Who they talk to | How it plays out | Outcome |
 |---|---|---|---|
 | **High value** | AE (Account Executive) | Book a meeting with an AE. | Strong MQL, sales-ready. |
 | **Medium value** | SDR (Sales Development Rep) | If an SDR is online -> live chat in-thread. If not -> schedule a meeting with an SDR. | MQL, SDR engages. |
-| **Low value** | No rep | Point to helpful links and resources (e.g. posting a job directly, relevant product pages, case studies, learning resources). | Lead, not an MQL. |
+| **Low value** | No sales handoff | Point to helpful links and resources (e.g. posting a job directly, relevant product pages, case studies, learning resources). | Lead, not an MQL. |
 
 Key points for the rebuild:
 
@@ -118,7 +118,7 @@ That LinkedIn can replace a static Contact Sales form with a product consultant 
 - A marketing landing context for LinkedIn Hiring solutions, with entry from sales CTAs.
 - A light onboarding / prefill step before chat.
 - A guide-first chat that greets with context, orients the user, answers fit questions about the hiring products, asks lightweight follow-ups, narrows to a likely-fit product, and commits to a next step.
-- Specialist handoff flows for the three tiers: AE booking (high value), SDR live chat or scheduled meeting (medium value), and a helpful-resources path (low value).
+- Sales consultant handoff flows for high- and medium-value routes, plus a helpful-resources path for low-value visitors.
 - A believable booking flow (for AE and SDR scheduled meetings).
 - Graceful handling of curious-but-not-ready, pricing interest, off-topic, and wrong-fit visitors.
 

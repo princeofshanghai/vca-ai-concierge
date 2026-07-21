@@ -481,12 +481,12 @@ function MediumAvailableHandoff({
     },
     unavailable: {
       title: "Live chat is unavailable right now",
-      description: "Choose a time to talk with a sales specialist instead.",
+      description: "Choose a time to talk with a sales consultant instead.",
       actionLabel: "Schedule a call",
     },
     failed: {
       title: "We couldn't connect you to live chat",
-      description: "Schedule a call with a sales specialist instead.",
+      description: "Schedule a call with a sales consultant instead.",
       actionLabel: "Schedule a call",
     },
   };
