@@ -253,7 +253,7 @@ export const flowReviews: Readonly<Record<FlowReviewId, FlowReview>> = {
         kind: "message",
         role: "assistant",
         content:
-          "That is the right context to bring into a sales consultant conversation. You have urgent volume, specialized roles, an existing recruiting team, and stakeholders who need confidence in the plan. I am going to match you with a sales consultant who can help shape the first-wave Recruiter + Hiring Assistant plan.",
+          "That is the right context for a sales consultant conversation. You have urgent volume, specialized roles, an existing recruiting team, and stakeholders who need confidence in the plan. The next step is to find someone who can help shape the first-wave Recruiter + Hiring Assistant plan.",
       },
       {
         id: "high-recommendation-card",

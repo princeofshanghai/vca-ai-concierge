@@ -25,10 +25,12 @@ import {
   ChatMessageFeedbackFlow,
   ChatPanel,
   ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThinkingMessage,
   ChatThread,
   ChatTray,
   Prompt,
+  PromptGroup,
   RecommendationCard,
   type ChatComposerVoiceState,
   type ChatFeedbackReason,
@@ -52,7 +54,9 @@ import {
   useChatLatestMessageAnchor,
 } from "@/components/chat/chat-motion";
 import {
+  FlowReviewChatPanel,
   HighValueMatchCardPreview,
+  HighValueSchedulePanelPreview,
   MediumAvailableHandoffPreview,
   SchedulePanel,
   type BookedMeeting,
@@ -74,6 +78,7 @@ import {
   PremiumCompanyPagesVcaSidePanelPreview,
   type PremiumCompanyPagesVcaSidePanelPreviewKind,
 } from "@/components/premium-company-pages/premium-company-pages-member-page";
+import { AdminAssistantStartSurface } from "@/components/premium-company-pages/premium-company-pages-admin-uc5";
 import { PremiumCompanyPagesInboxContextStripPreview } from "@/components/premium-company-pages/premium-company-pages-page";
 import { pcpCompetitorNames } from "@/components/premium-company-pages/persona";
 import { TodayActionCard } from "@/components/premium-company-pages/today-action-card";
@@ -130,6 +135,7 @@ import {
   PresenceBadge,
   type PresenceBadgeProps,
 } from "@/components/primitives/presence-badge";
+import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 import { Radio, type RadioProps } from "@/components/primitives/radio";
 import { Tag, type TagProps } from "@/components/primitives/tag";
 import {
@@ -149,6 +155,10 @@ import {
   HIRING_CONCIERGE_TITLE,
   PREMIUM_CONCIERGE_TITLE,
 } from "@/lib/concierge-copy";
+import {
+  flowReviews,
+  getMediumFlowReview,
+} from "@/lib/conversation-flows";
 
 type DemoOption<T extends string> = Readonly<{
   label: string;
@@ -165,14 +175,25 @@ type FieldContentState = "empty" | "filled" | "error" | "disabled";
 type NavLinkItemDemoState = NavLinkItemHorizontalVisualState;
 type TabItemDemoState = TabItemHorizontalVisualState;
 type ComponentLibraryContext = "mobile" | "collapsed" | "expanded";
-type SidePanelDemoView = "panel" | "shell";
 type SalesCardDemoScenario = "ae" | "sdr";
 type SalesCardDemoSidePanel = "schedule" | null;
 type SalesCardDemoSdrState = MediumAvailableHandoffState | "delayed";
+type SalesHandoffScenarioIntent = "high" | "medium";
 type ShellDemoVersion =
   "dismissable" | "persistent" | "hybrid" | "floating-card";
 type ContainerDemoType = "card" | "tray";
 type ContainerEntryBehavior = "persistent" | "hybrid" | "dismissable";
+
+const highIntentSalesHandoffScenarioFlow = {
+  ...flowReviews.high,
+  steps: flowReviews.high.steps.slice(-2),
+};
+
+const mediumIntentSalesHandoffFlow = getMediumFlowReview("available");
+const mediumIntentSalesHandoffScenarioFlow = {
+  ...mediumIntentSalesHandoffFlow,
+  steps: mediumIntentSalesHandoffFlow.steps.slice(-2),
+};
 type ShellDemoDevice = "desktop" | "mobile";
 type ShellDemoState = "closed" | "tray" | "panel";
 type ShellDemoPanelRenderProps = Readonly<{
@@ -1860,7 +1881,7 @@ export function HiringMicrophoneVoiceBannerDemo() {
             </ChatMessage>
             <ChatMessage>
               You&apos;re describing an urgent, high-volume hiring ramp. I can
-              help you compare options or connect you with a hiring specialist.
+              help you compare options or connect you with a sales consultant.
             </ChatMessage>
           </ChatThread>
         </ChatBody>
@@ -2027,22 +2048,7 @@ export function SharedHeaderIdentityDemo({
 
 export function SharedHeaderPresentationDemo({
   presentation,
-}: Readonly<{ presentation: "panel" | "expanded" | "tray" }>) {
-  if (presentation === "tray") {
-    return (
-      <div className="w-[var(--design-layout-chat-tray-width)] max-w-full">
-        <ChatTray
-          aria-label="Open agent chat"
-          title="AI assistant"
-          onOpen={() => {}}
-          showAiMark={false}
-          showCloseAction={false}
-          trayHeight="header"
-        />
-      </div>
-    );
-  }
-
+}: Readonly<{ presentation: "panel" | "expanded" }>) {
   const variant = presentation === "expanded" ? "expanded" : "collapsed";
 
   return (
@@ -2111,7 +2117,7 @@ export function SharedMessagesDemo() {
           <ChatMessage
             role="representative"
             authorName="David S."
-            avatarLabel="David S., Live agent"
+            avatarLabel="David S., Sales consultant"
             timestamp="9:37 PM"
           >
             Hey Jamie, how can I help you?
@@ -2123,7 +2129,7 @@ export function SharedMessagesDemo() {
               <ul>
                 <li>Confirm hiring volume and timeline.</li>
                 <li>Choose whether the team needs sourcing tools.</li>
-                <li>Route complex questions to a live agent.</li>
+                <li>Route complex questions to a sales consultant.</li>
               </ul>
             </ChatMessageContent>
           </ChatMessage>
@@ -2143,7 +2149,7 @@ const hiringLiveAgent: LiveAgentHandoffAgent = {
 
 const hiringLiveAgentContent: LiveAgentHandoffContent = {
   available: {
-    title: "Chat with a sales specialist",
+    title: "Chat with a sales consultant",
     actionLabel: "Start live chat",
   },
   connecting: {
@@ -2160,12 +2166,12 @@ const hiringLiveAgentContent: LiveAgentHandoffContent = {
   },
   unavailable: {
     title: "Live chat is unavailable right now",
-    description: "Choose a time to talk with a sales specialist instead.",
+    description: "Choose a time to talk with a sales consultant instead.",
     actionLabel: "Schedule a call",
   },
   failed: {
     title: "We couldn't connect you to live chat",
-    description: "Schedule a call with a sales specialist instead.",
+    description: "Schedule a call with a sales consultant instead.",
     actionLabel: "Schedule a call",
   },
 };
@@ -2676,30 +2682,43 @@ export function SharedComposerDemo() {
   );
 }
 
-export function SharedComposerPlacement() {
+export function SharedComposerUsageDemo({
+  useCase,
+}: Readonly<{ useCase: "general" | "hiring" }>) {
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
+  const isHiring = useCase === "hiring";
+
   return (
     <ContextualComponentDemoSection>
       <ChatSurfaceDemoFrame device="desktop">
         <ChatHeader
-          title={HIRING_CONCIERGE_TITLE}
+          title={isHiring ? "Contact sales" : "AI assistant"}
           showCloseAction={false}
           showAiMark={false}
         />
         <ChatBody>
           <ChatThread showAiDisclaimer={false}>
             <ChatMessage>
-              I can help compare hiring options quickly.
+              {isHiring
+                ? "I can help compare hiring options quickly."
+                : "How can I help you today?"}
             </ChatMessage>
             <ChatMessage role="user">
-              We need to ramp hiring fast this quarter.
+              {isHiring
+                ? "We need to ramp hiring fast this quarter."
+                : "Help me compare my options."}
             </ChatMessage>
           </ChatThread>
         </ChatBody>
         <ChatComposer
           variant="collapsed"
+          onVoiceModeExit={() => setVoiceModeActive(false)}
+          onVoiceModeStart={() => setVoiceModeActive(true)}
           sendDisabled
           showAttachAction={false}
-          showVoiceMode={false}
+          showVoiceMode={isHiring}
+          voiceModeActive={isHiring && voiceModeActive}
+          voiceState={voiceModeActive ? "listening" : "idle"}
         />
       </ChatSurfaceDemoFrame>
     </ContextualComponentDemoSection>
@@ -2713,7 +2732,7 @@ const voiceModeDemoTranscripts = [
 
 const voiceModeDemoResponses = [
   "You are describing an urgent, high-volume hiring ramp. I can match you with a sales consultant who can help shape the first-wave plan.",
-  "Absolutely. I will set up a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
+  "The best next step is a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
 ] as const;
 
 type VoiceModeDemoPendingResponse = Readonly<{
@@ -3030,6 +3049,11 @@ export function SharedVoiceModeDemo() {
   );
 }
 
+const promptUsageOptions = [
+  "Help me compare my options.",
+  "What should I do next?",
+] as const;
+
 export function SharedPromptsDemo() {
   const [state, setState] =
     useState<NonNullable<PillProps["visualState"]>>("default");
@@ -3068,6 +3092,94 @@ export function SharedPromptsDemo() {
         />
       </ChatThreadContextFrame>
     </ComponentDemoSection>
+  );
+}
+
+export function SharedPromptsUsageDemo() {
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null);
+
+  return (
+    <ComponentDemoSection
+      controls={
+        <button
+          type="button"
+          disabled={!selectedPrompt}
+          className="rounded-[8px] border border-[#d7dce2] bg-background px-[12px] py-[7px] text-[13px] font-medium text-text transition-colors hover:bg-[#f3f5f7] disabled:cursor-not-allowed disabled:opacity-40"
+          onClick={() => setSelectedPrompt(null)}
+        >
+          Reset demo
+        </button>
+      }
+    >
+      <ChatPanelContextFrame context="collapsed">
+        <ChatHeader
+          title="AI assistant"
+          showAiMark={false}
+          showCloseAction={false}
+        />
+        <div className="flex min-h-[18rem] justify-center py-xl">
+          <ChatThread showAiDisclaimer={false}>
+            <ChatResponseBlock>
+              <ChatMessage>
+                I can help you understand your options and decide what to do
+                next.
+              </ChatMessage>
+              {!selectedPrompt ? (
+                <ChatResponseAttachment>
+                  <PromptGroup layout="stacked">
+                    {promptUsageOptions.map((prompt) => (
+                      <Prompt
+                        key={prompt}
+                        prompt={prompt}
+                        onPromptSelect={setSelectedPrompt}
+                      />
+                    ))}
+                  </PromptGroup>
+                </ChatResponseAttachment>
+              ) : null}
+            </ChatResponseBlock>
+            {selectedPrompt ? (
+              <ChatMessage role="user">{selectedPrompt}</ChatMessage>
+            ) : null}
+          </ChatThread>
+        </div>
+      </ChatPanelContextFrame>
+    </ComponentDemoSection>
+  );
+}
+
+export function SharedPromptsPlacementDemo({
+  context,
+}: Readonly<{ context: "collapsed" | "expanded" }>) {
+  const layout = context === "expanded" ? "inline" : "stacked";
+
+  return (
+    <ContextualComponentDemoSection>
+      <ChatPanelContextFrame context={context}>
+        <ChatHeader
+          variant={getPanelVariantForContext(context)}
+          title="AI assistant"
+          showAiMark={false}
+          showCloseAction={false}
+        />
+        <div className="flex justify-center py-xl">
+          <ChatThread showAiDisclaimer={false}>
+            <ChatResponseBlock>
+              <ChatMessage>
+                Here are a few ways I can help you move forward.
+              </ChatMessage>
+              <ChatResponseAttachment>
+                <PromptGroup layout={layout}>
+                  {promptUsageOptions.map((prompt) => (
+                    <Prompt key={prompt} prompt={prompt} />
+                  ))}
+                </PromptGroup>
+              </ChatResponseAttachment>
+            </ChatResponseBlock>
+          </ChatThread>
+        </div>
+      </ChatPanelContextFrame>
+    </ContextualComponentDemoSection>
   );
 }
 
@@ -3170,6 +3282,44 @@ export function SharedTaskStatusCardDemo() {
           />
         </ChatResponseAttachment>
       </ChatThreadContextFrame>
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function SalesHandoffScenarioDemo({
+  intent,
+}: Readonly<{ intent: SalesHandoffScenarioIntent }>) {
+  const [demoKey, setDemoKey] = useState(0);
+  const flow =
+    intent === "high"
+      ? highIntentSalesHandoffScenarioFlow
+      : mediumIntentSalesHandoffScenarioFlow;
+
+  return (
+    <ContextualComponentDemoSection
+      previewClassName="w-full"
+      controls={
+        <button
+          type="button"
+          className="rounded-[8px] border border-[#d7dce2] bg-background px-[12px] py-[7px] text-[13px] font-medium text-text transition-colors hover:bg-[#f3f5f7]"
+          onClick={() => setDemoKey((key) => key + 1)}
+        >
+          Reset demo
+        </button>
+      }
+    >
+      <SidePanelContextFrame context="collapsed">
+        <div className="flex h-full justify-center">
+          <FlowReviewChatPanel
+            key={`${intent}-${demoKey}`}
+            flow={flow}
+            variant="collapsed"
+            className="md:!h-full"
+            showCloseAction={false}
+            showHeaderAiMark={false}
+          />
+        </div>
+      </SidePanelContextFrame>
     </ContextualComponentDemoSection>
   );
 }
@@ -3391,7 +3541,7 @@ function GenericSidePanelChatHistory() {
 }
 
 export function SharedSidePanelDemo() {
-  const [view, setView] = useState<SidePanelDemoView>("panel");
+  const [showPanelOnly, setShowPanelOnly] = useState(false);
   const [context, setContext] = useState<ComponentLibraryContext>("collapsed");
   const variant = getPanelVariantForContext(context);
 
@@ -3399,21 +3549,17 @@ export function SharedSidePanelDemo() {
     <ComponentDemoSection
       controls={
         <>
-          <SegmentedControl
-            label="View"
-            value={view}
-            options={[
-              { label: "Panel only", value: "panel" },
-              { label: "In chat container", value: "shell" },
-            ]}
-            onChange={setView}
+          <ToggleControl
+            label="Show panel only"
+            checked={showPanelOnly}
+            onChange={setShowPanelOnly}
           />
           <ChatContextControl value={context} onChange={setContext} />
         </>
       }
     >
       <SidePanelContextFrame context={context}>
-        {view === "panel" ? (
+        {showPanelOnly ? (
           <GenericSidePanelDemoContent />
         ) : (
           <ChatPanel
@@ -3428,15 +3574,93 @@ export function SharedSidePanelDemo() {
               showAiMark={false}
               variant={variant}
             />
-            <ChatSidePanelLayout
-              history={<GenericSidePanelChatHistory />}
-              sidePanel={<GenericSidePanelDemoContent />}
-              variant={variant}
-            />
+            {context === "mobile" ? (
+              <GenericSidePanelDemoContent />
+            ) : (
+              <ChatSidePanelLayout
+                history={<GenericSidePanelChatHistory />}
+                sidePanel={<GenericSidePanelDemoContent />}
+                variant={variant}
+              />
+            )}
           </ChatPanel>
         )}
       </SidePanelContextFrame>
     </ComponentDemoSection>
+  );
+}
+
+function HiringSidePanelChatHistory() {
+  return (
+    <ChatThread showAiDisclaimer={false}>
+      <ChatMessage>
+        I can connect you with a sales consultant who can help shape your
+        hiring plan.
+      </ChatMessage>
+      <ChatMessage role="user" timestamp="1:03 PM">
+        I&apos;d like to schedule a call.
+      </ChatMessage>
+      <ChatMessage>Choose a time that works for you.</ChatMessage>
+    </ChatThread>
+  );
+}
+
+export function HiringSidePanelUsageDemo() {
+  const [state, setState] = useState<"default" | "confirming">("default");
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <SegmentedControl
+          label="State"
+          value={state}
+          options={[
+            { label: "Default", value: "default" },
+            { label: "Confirming", value: "confirming" },
+          ]}
+          onChange={setState}
+        />
+      }
+    >
+      <SidePanelContextFrame context="collapsed">
+        <ChatPanel variant="collapsed" className="md:!h-full md:!w-full">
+          <ChatHeader
+            title="Contact sales"
+            showAiMark={false}
+            variant="collapsed"
+          />
+          <ChatSidePanelLayout
+            history={<HiringSidePanelChatHistory />}
+            sidePanel={<HighValueSchedulePanelPreview state={state} />}
+            variant="collapsed"
+          />
+        </ChatPanel>
+      </SidePanelContextFrame>
+    </ContextualComponentDemoSection>
+  );
+}
+
+export function PcpSidePanelUsageDemo() {
+  const [kind, setKind] =
+    useState<PremiumCompanyPagesVcaSidePanelPreviewKind>("post");
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <SegmentedControl
+          label="Content"
+          value={kind}
+          options={[
+            { label: "Post", value: "post" },
+            { label: "Job", value: "job" },
+            { label: "Product", value: "product" },
+          ]}
+          onChange={setKind}
+        />
+      }
+    >
+      <PcpVcaSidePanelShellPreview kind={kind} />
+    </ContextualComponentDemoSection>
   );
 }
 
@@ -3561,6 +3785,38 @@ function PcpContextPreviewFrame({
   );
 }
 
+export function PcpAdminInputFirstStartSurfacePreview() {
+  const [draft, setDraft] = useState("");
+
+  return (
+    <ContextualComponentDemoSection>
+      <ChatSurfaceDemoFrame device="desktop" height="tall">
+        <ChatPanel
+          aria-label="Earlier Page assistant start surface"
+          className="!h-full !w-full !rounded-none shadow-raised-faint md:!h-full md:!w-full md:!rounded-sm"
+          id="pcp-admin-input-first-start-surface-preview"
+          variant="collapsed"
+        >
+          <ChatHeader
+            actionSize="small"
+            onClose={() => {}}
+            onVariantToggle={() => {}}
+            showAiMark={false}
+            transparent
+            variant="collapsed"
+          />
+          <AdminAssistantStartSurface
+            draft={draft}
+            onDraftChange={(event) => setDraft(event.currentTarget.value)}
+            onPromptSelect={() => {}}
+            onSend={() => setDraft("")}
+          />
+        </ChatPanel>
+      </ChatSurfaceDemoFrame>
+    </ContextualComponentDemoSection>
+  );
+}
+
 export function PcpVcaSidePanelShellPreview({
   kind,
 }: Readonly<{ kind: PremiumCompanyPagesVcaSidePanelPreviewKind }>) {
@@ -3577,12 +3833,16 @@ export function PcpTodayActionCardsPreview() {
   };
 
   return (
-    <div className="flex w-full flex-col gap-md">
+    <div className="grid w-full gap-md sm:grid-cols-2">
       <TodayActionCard
-        badge={{ label: "Premium", tone: "premium" }}
-        description="Automatically invite post-engagers to follow."
+        description="Grow new followers 6.7x faster by automatically inviting content-engagers to follow."
         dismissLabel="Dismiss Auto-Invite action"
-        headline="Turn on Auto-Invite to grow new followers 6.7x faster"
+        headline={
+          <span className="flex items-center gap-sm">
+            <PremiumChipSmall />
+            <span>Turn on Auto-Invite</span>
+          </span>
+        }
         inlineAction={{
           label: "Enable",
           onSelect: preventPreviewNavigation,
@@ -3590,11 +3850,11 @@ export function PcpTodayActionCardsPreview() {
         onDismiss={() => {}}
       />
       <TodayActionCard
-        description="Follow other Pages to stay connected to your industry and easily join relevant conversations."
-        dismissLabel="Dismiss follow other Pages action"
-        headline="Follow other Pages"
+        description="Get discovered when members search for Pages based on location."
+        dismissLabel="Dismiss Add location action"
+        headline="Add location"
         inlineAction={{
-          label: "Follow",
+          label: "Add",
           onSelect: preventPreviewNavigation,
         }}
         onDismiss={() => {}}

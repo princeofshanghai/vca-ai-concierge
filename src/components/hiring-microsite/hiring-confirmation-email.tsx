@@ -105,7 +105,7 @@ export function HiringConfirmationEmail({
 
   return (
     <article
-      aria-label={`${isDark ? "Dark" : "Light"} theme hiring specialist meeting confirmation email`}
+      aria-label={`${isDark ? "Dark" : "Light"} theme sales consultant meeting confirmation email`}
       className={cx(
         "overflow-hidden border",
         isDark
@@ -138,7 +138,7 @@ export function HiringConfirmationEmail({
 
           <p>
             Thanks for booking time with us! You&apos;re confirmed to speak with a
-            LinkedIn hiring specialist.
+            LinkedIn sales consultant.
           </p>
 
           <p>
@@ -152,7 +152,7 @@ export function HiringConfirmationEmail({
             </h3>
             <p className={cx("mt-xs", emailTextClassName)}>
               {isPhoneCall
-                ? "A LinkedIn hiring specialist will call you at (982) 710-9369 at the scheduled time."
+                ? "A LinkedIn sales consultant will call you at (982) 710-9369 at the scheduled time."
                 : "Use the Microsoft Teams link below to join."}
             </p>
           </section>

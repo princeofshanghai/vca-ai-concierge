@@ -16,6 +16,7 @@ import {
   type ReactNode,
   type TextareaHTMLAttributes,
 } from "react";
+import { createPortal } from "react-dom";
 
 import { Button } from "@/components/primitives/button";
 import { Badge } from "@/components/primitives/badge";
@@ -194,6 +195,12 @@ export type PromptProps = Omit<
   visualState?: PromptVisualState;
 };
 
+export type PromptGroupLayout = "stacked" | "inline";
+
+export type PromptGroupProps = HTMLAttributes<HTMLDivElement> & {
+  layout?: PromptGroupLayout;
+};
+
 type RecommendationCardProps = HTMLAttributes<HTMLDivElement> & {
   title?: ReactNode;
   description?: ReactNode;
@@ -354,31 +361,129 @@ function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
 
-type ComposerActionTooltipAlignment = "left" | "center" | "right";
+type ChatActionTooltipAlignment = "left" | "center" | "right";
+type ChatActionTooltipPlacement = "top" | "bottom";
+type ChatActionTooltipPosition = Readonly<{
+  left: number;
+  top: number;
+}>;
 
-function ComposerActionTooltip({
+const CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN = 8;
+
+function ChatActionTooltip({
   alignment = "center",
   children,
   label,
+  placement = "top",
 }: Readonly<{
-  alignment?: ComposerActionTooltipAlignment;
+  alignment?: ChatActionTooltipAlignment;
   children: ReactNode;
   label: string;
+  placement?: ChatActionTooltipPlacement;
 }>) {
+  const triggerRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] =
+    useState<ChatActionTooltipPosition | null>(null);
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      const tooltip = tooltipRef.current;
+
+      if (!trigger || !tooltip) {
+        return;
+      }
+
+      const triggerRect = trigger.getBoundingClientRect();
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const spacingToken = Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--design-spacing-sm",
+        ),
+      );
+      const gap = Number.isFinite(spacingToken) ? spacingToken : 8;
+      const preferredLeft =
+        alignment === "left"
+          ? triggerRect.left
+          : alignment === "right"
+            ? triggerRect.right - tooltipRect.width
+            : triggerRect.left + (triggerRect.width - tooltipRect.width) / 2;
+      const maxLeft = Math.max(
+        CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN,
+        window.innerWidth -
+          tooltipRect.width -
+          CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN,
+      );
+      const left = Math.min(
+        Math.max(preferredLeft, CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN),
+        maxLeft,
+      );
+      const preferredTop =
+        placement === "bottom"
+          ? triggerRect.bottom + gap
+          : triggerRect.top - tooltipRect.height - gap;
+      const maxTop = Math.max(
+        CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN,
+        window.innerHeight -
+          tooltipRect.height -
+          CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN,
+      );
+      const top = Math.min(
+        Math.max(preferredTop, CHAT_ACTION_TOOLTIP_VIEWPORT_MARGIN),
+        maxTop,
+      );
+
+      setPosition({ left, top });
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [alignment, isOpen, label, placement]);
+
+  const tooltip =
+    (isOpen || position) && typeof document !== "undefined"
+      ? createPortal(
+          <span
+            ref={tooltipRef}
+            aria-hidden="true"
+            className={cx(
+              "pointer-events-none fixed z-[100] w-max max-w-[13rem] rounded-xs bg-text px-sm py-xs text-left text-body-xs text-background shadow-raised transition-opacity duration-150 ease-out",
+              isOpen && position ? "opacity-100" : "opacity-0",
+            )}
+            style={{
+              left: position?.left ?? 0,
+              top: position?.top ?? 0,
+            }}
+          >
+            {label}
+          </span>,
+          document.body,
+        )
+      : null;
+
   return (
-    <span className="group/composer-tooltip relative inline-flex shrink-0">
+    <span
+      ref={triggerRef}
+      className="relative inline-flex shrink-0"
+      onFocus={() => setIsOpen(true)}
+      onBlur={() => setIsOpen(false)}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       {children}
-      <span
-        aria-hidden="true"
-        className={cx(
-          "pointer-events-none absolute bottom-[calc(100%+var(--design-spacing-sm))] z-20 w-max max-w-[13rem] rounded-xs bg-text px-sm py-xs text-left text-body-xs text-background opacity-0 shadow-raised transition-opacity duration-150 ease-out group-hover/composer-tooltip:opacity-100 group-focus-within/composer-tooltip:opacity-100",
-          alignment === "left" && "left-0",
-          alignment === "center" && "left-1/2 -translate-x-1/2",
-          alignment === "right" && "right-0",
-        )}
-      >
-        {label}
-      </span>
+      {tooltip}
     </span>
   );
 }
@@ -605,7 +710,7 @@ function RepresentativeAvatar({
 function VoiceModeButton({ onClick }: Readonly<{ onClick?: () => void }>) {
   if (onClick) {
     return (
-      <ComposerActionTooltip alignment="right" label="Start voice mode">
+      <ChatActionTooltip alignment="right" label="Start voice mode">
         <ButtonIcon
           label="Start voice mode"
           icon="voice"
@@ -613,12 +718,12 @@ function VoiceModeButton({ onClick }: Readonly<{ onClick?: () => void }>) {
           touchTarget={false}
           onClick={onClick}
         />
-      </ComposerActionTooltip>
+      </ChatActionTooltip>
     );
   }
 
   return (
-    <ComposerActionTooltip alignment="right" label={VOICE_MODE_TOOLTIP}>
+    <ChatActionTooltip alignment="right" label={VOICE_MODE_TOOLTIP}>
       <span
         role="button"
         aria-disabled="true"
@@ -629,7 +734,7 @@ function VoiceModeButton({ onClick }: Readonly<{ onClick?: () => void }>) {
           <Icon name="voice" size="small" />
         </span>
       </span>
-    </ComposerActionTooltip>
+    </ChatActionTooltip>
   );
 }
 
@@ -707,7 +812,7 @@ function ComposerAttachButton({
   }
 
   return (
-    <ComposerActionTooltip alignment="left" label={tooltip}>
+    <ChatActionTooltip alignment="left" label={tooltip}>
       <GhostIconButton
         label="Add attachment"
         icon="add"
@@ -716,7 +821,7 @@ function ComposerAttachButton({
         aria-disabled="true"
         onClick={handleAttachClick}
       />
-    </ComposerActionTooltip>
+    </ChatActionTooltip>
   );
 }
 
@@ -771,42 +876,69 @@ export function ChatHeader({
 }: ChatHeaderProps) {
   const headerIdentity: ChatHeaderIdentity | null =
     identity ?? (title ? ({ type: "ai", title } as const) : null);
+  const dockActionLabel = "Dock chat to tray";
+  const variantActionLabel = headerActionLabel[variant];
+  const closeActionLabel = "Close chat";
   const dockAction =
     onDockToggle || onMinimizeToTray ? (
-      <GhostIconButton
-        label="Dock chat to tray"
-        icon="chevron-down"
-        size={actionSize}
-        onClick={onDockToggle ?? onMinimizeToTray}
-      />
+      <ChatActionTooltip
+        alignment="right"
+        label={dockActionLabel}
+        placement="bottom"
+      >
+        <GhostIconButton
+          label={dockActionLabel}
+          icon="chevron-down"
+          size={actionSize}
+          onClick={onDockToggle ?? onMinimizeToTray}
+        />
+      </ChatActionTooltip>
     ) : null;
   const variantAction = onVariantToggle ? (
     <span className="hidden md:inline-flex">
-      <GhostIconButton
-        label={headerActionLabel[variant]}
-        icon={headerActionIcon[variant]}
-        size={actionSize}
-        onClick={onVariantToggle}
-      />
+      <ChatActionTooltip
+        alignment="right"
+        label={variantActionLabel}
+        placement="bottom"
+      >
+        <GhostIconButton
+          label={variantActionLabel}
+          icon={headerActionIcon[variant]}
+          size={actionSize}
+          onClick={onVariantToggle}
+        />
+      </ChatActionTooltip>
     </span>
   ) : null;
   const startNewChatAction = onStartNewChat ? (
-    <GhostIconButton
+    <ChatActionTooltip
+      alignment="right"
       label="Start new chat"
-      icon="compose"
-      size={actionSize}
-      onClick={onStartNewChat}
-    />
+      placement="bottom"
+    >
+      <GhostIconButton
+        label="Start new chat"
+        icon="compose"
+        size={actionSize}
+        onClick={onStartNewChat}
+      />
+    </ChatActionTooltip>
   ) : null;
 
   const backAction = onBack ? (
-    <GhostIconButton
+    <ChatActionTooltip
+      alignment="left"
       label={backLabel}
-      icon={backIcon}
-      iconSize={backIconSize}
-      size="medium"
-      onClick={onBack}
-    />
+      placement="bottom"
+    >
+      <GhostIconButton
+        label={backLabel}
+        icon={backIcon}
+        iconSize={backIconSize}
+        size="medium"
+        onClick={onBack}
+      />
+    </ChatActionTooltip>
   ) : null;
 
   return (
@@ -869,12 +1001,18 @@ export function ChatHeader({
         {startNewChatAction}
         {dockActionPosition === "after-variant" ? dockAction : null}
         {showCloseAction ? (
-          <GhostIconButton
-            label="Close chat"
-            icon="close"
-            size={actionSize}
-            onClick={onClose}
-          />
+          <ChatActionTooltip
+            alignment="right"
+            label={closeActionLabel}
+            placement="bottom"
+          >
+            <GhostIconButton
+              label={closeActionLabel}
+              icon="close"
+              size={actionSize}
+              onClick={onClose}
+            />
+          </ChatActionTooltip>
         ) : null}
       </div>
     </header>
@@ -1649,7 +1787,7 @@ export function Prompt({
       aria-label={ariaLabel ?? `Send message: ${prompt}`}
       data-visual-state={visualState}
       className={cx(
-        "inline-flex min-w-0 max-w-full select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover hover:shadow-[inset_0_0_0_1px_var(--color-border-faint)] active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
+        "inline-flex min-w-0 max-w-full self-start select-none items-center rounded-md border border-border-faint bg-background p-md text-left font-sans text-body-sm text-text outline-none transition-[background-color,box-shadow] duration-150 ease-out hover:bg-background-transparent-hover hover:shadow-[inset_0_0_0_1px_var(--color-border-faint)] active:bg-background-transparent-active focus-visible:ring-4 focus-visible:ring-neutral-focus-ring disabled:pointer-events-none disabled:cursor-not-allowed disabled:border-transparent disabled:bg-background-disabled disabled:text-text-disabled md:max-w-[var(--design-layout-panel-collapsed-width)]",
         visualState !== "default" && promptStateClasses[visualState],
         className,
       )}
@@ -1659,6 +1797,23 @@ export function Prompt({
         {label}
       </span>
     </button>
+  );
+}
+
+export function PromptGroup({
+  layout = "stacked",
+  className,
+  ...props
+}: PromptGroupProps) {
+  return (
+    <div
+      {...props}
+      className={cx(
+        "flex w-full items-start gap-sm",
+        layout === "stacked" ? "flex-col" : "flex-row flex-wrap",
+        className,
+      )}
+    />
   );
 }
 
@@ -2000,7 +2155,7 @@ export function ChatComposer({
           >
             {voiceModeActive ? (
               <>
-                <ComposerActionTooltip
+                <ChatActionTooltip
                   alignment="left"
                   label={voiceActionTooltip}
                 >
@@ -2019,7 +2174,7 @@ export function ChatComposer({
                     loading={isVoiceRequesting || isVoiceFinalizing}
                     onClick={voiceActionHandler}
                   />
-                </ComposerActionTooltip>
+                </ChatActionTooltip>
                 <div
                   role="status"
                   aria-live="polite"
@@ -2028,7 +2183,7 @@ export function ChatComposer({
                 >
                   <VoiceParticipantIndicator state={voiceState} />
                 </div>
-                <ComposerActionTooltip
+                <ChatActionTooltip
                   alignment="right"
                   label="End voice mode"
                 >
@@ -2041,7 +2196,7 @@ export function ChatComposer({
                     className="text-text"
                     onClick={onVoiceModeExit}
                   />
-                </ComposerActionTooltip>
+                </ChatActionTooltip>
               </>
             ) : null}
             {showAttachAction && !isMultiline && !voiceModeActive ? (
@@ -2082,7 +2237,7 @@ export function ChatComposer({
                     className="flex shrink-0 items-center gap-sm"
                   >
                     {shouldShowSendButton ? (
-                      <ComposerActionTooltip
+                      <ChatActionTooltip
                         alignment="right"
                         label={sendLoading ? "Sending message" : "Send message"}
                       >
@@ -2096,7 +2251,7 @@ export function ChatComposer({
                           loading={sendLoading}
                           onClick={onSend}
                         />
-                      </ComposerActionTooltip>
+                      </ChatActionTooltip>
                     ) : showVoiceMode ? (
                       <VoiceModeButton onClick={onVoiceModeStart} />
                     ) : null}

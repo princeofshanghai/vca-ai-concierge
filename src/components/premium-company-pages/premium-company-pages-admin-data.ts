@@ -35,6 +35,7 @@ export const premiumRailItems: ReadonlyArray<{
   { label: "Premium features" },
   { label: "Advertise today", icon: "radar-screen" },
   { label: "Invite to follow" },
+  { label: "Chat with assistant" },
   { label: "Settings" },
 ];
 

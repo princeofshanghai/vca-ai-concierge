@@ -163,7 +163,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "shared-action-card",
             title: "Sales handoff card",
             description:
-              "Connects users with a sales specialist through live chat or a scheduled conversation.",
+              "Connects users with a sales consultant through live chat or a scheduled conversation.",
             href: "/internal/components/shared/sales-card",
           },
           {
@@ -250,6 +250,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Shows PCP detail panels inside the VCA chat container.",
             href: "/internal/components/premium-company-page/side-panel",
+          },
+          {
+            id: "premium-company-page-input-first-start-surface",
+            title: "Input-first start surface (exploration)",
+            description:
+              "Preserves the earlier PCP admin assistant opening for future reference.",
+            href: "/internal/components/premium-company-page/input-first-start-surface",
           },
           {
             id: "premium-company-page-vca-fab",

@@ -15,8 +15,11 @@ import {
   ChatHeader,
   ChatMessage,
   ChatPanel,
+  ChatResponseAttachment,
+  ChatResponseBlock,
   ChatThread,
   Prompt,
+  PromptGroup,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
 import {
@@ -30,6 +33,7 @@ import {
 import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 import { Icon } from "@/components/primitives/icon";
+import { PremiumChipSmall } from "@/components/primitives/premium-chip-small";
 import { Tag, type TagTone } from "@/components/primitives/tag";
 import { AudienceFit as ResponseAudienceFit } from "@/components/premium-company-pages/response-blocks/AudienceFit";
 import { Chips as ResponseChips } from "@/components/premium-company-pages/response-blocks/Chips";
@@ -102,16 +106,22 @@ function ScriptedResponseTurn(
   );
 }
 
+function PremiumChatHeaderIdentity() {
+  return (
+    <span className="inline-flex items-center gap-xs text-control-sm text-text">
+      <PremiumChipSmall />
+      <span className="font-medium">Premium</span>
+    </span>
+  );
+}
+
 const ADMIN_BOOST_POST_IMAGE = "member/arbor-open-enrollment-post.png";
 const CHERI_SPARKS_AVATAR = pcpVisitorPersona.avatar;
-const ADMIN_AI_ASSISTANT_SETTINGS_HREF =
-  "/premium-company-pages/admin/settings/manage-ai-assistant";
-const ASSISTANT_SETUP_CARD_ID = "assistant-setup";
 const STORY_1A_CARD_ID = "story-1a-follower-growth";
 const STORY_1A_FOLLOWER_GROWTH_PROMPT =
   "How do I recover my follower growth?";
 const AUTO_INVITE_CARD_ID = "auto-invite";
-const FOLLOW_PAGES_CARD_ID = "follow-pages";
+const ADD_LOCATION_CARD_ID = "add-location";
 
 const postVisuals: ReadonlyArray<Readonly<{ image: string; alt: string }>> = [
   {
@@ -147,7 +157,6 @@ export type AdminUc5ThreadTurn = Readonly<{
 type AdminPerformanceDigestCardProps = Readonly<{
   activeInsightId: AdminUc5InsightId | null;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
-  showAssistantSetupAction?: boolean;
   showFollowerGrowthInsight?: boolean;
 }>;
 
@@ -158,10 +167,9 @@ type AdminUc5SelfInitiatedTurn = Readonly<{
 }>;
 
 type AdminAttentionCardId =
-  | typeof ASSISTANT_SETUP_CARD_ID
   | typeof STORY_1A_CARD_ID
   | typeof AUTO_INVITE_CARD_ID
-  | typeof FOLLOW_PAGES_CARD_ID;
+  | typeof ADD_LOCATION_CARD_ID;
 
 type AdminUc5AgentPanelProps = Readonly<{
   activeInsight: AdminUc5InsightSelection | null;
@@ -175,6 +183,7 @@ type AdminUc5AgentPanelProps = Readonly<{
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onDraftClear: () => void;
   onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
   onSend: () => void;
   onVariantToggle: () => void;
 }>;
@@ -325,6 +334,24 @@ export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   {
     id: "next-focus",
     prompt: ADMIN_NEXT_FOCUS_PROMPT,
+  },
+] as const;
+
+const ADMIN_UC5_WELCOME_PROMPTS = [
+  {
+    id: "page-performance",
+    prompt: "How is my Page performing?",
+    type: "self-initiated",
+  },
+  {
+    id: "competitor-growth",
+    prompt: "How do my competitors compare?",
+    type: "insight",
+  },
+  {
+    id: "relevant-visitors",
+    prompt: ADMIN_RELEVANT_VISITORS_PROMPT,
+    type: "self-initiated",
   },
 ] as const;
 
@@ -566,7 +593,6 @@ function MetricTrend({
 export function AdminPerformanceDigestCard({
   activeInsightId,
   onInsightSelect,
-  showAssistantSetupAction = false,
   showFollowerGrowthInsight = true,
 }: AdminPerformanceDigestCardProps) {
   const [resolvedCardIds, setResolvedCardIds] = useState<
@@ -599,29 +625,13 @@ export function AdminPerformanceDigestCard({
           className="text-heading-lg text-text"
           id="admin-performance-digest-heading"
         >
-          Today&apos;s actions
+          Grow followers 4x faster
         </h2>
       </div>
 
-      <div className="mt-xxl space-y-md">
-        {showAssistantSetupAction ? (
-          !resolvedCardIds.has(ASSISTANT_SETUP_CARD_ID) ? (
-            <TodayActionCard
-              badge={{ label: "Premium", tone: "premium" }}
-              cardHref={ADMIN_AI_ASSISTANT_SETTINGS_HREF}
-              cardLabel="Set up your AI assistant"
-              description="Engage visitors with instant replies using content you control."
-              dismissLabel="Dismiss AI assistant setup action"
-              headline="Set up your AI assistant"
-              inlineAction={{
-                href: ADMIN_AI_ASSISTANT_SETTINGS_HREF,
-                label: "Set up",
-              }}
-              onDismiss={() => resolveCard(ASSISTANT_SETUP_CARD_ID)}
-            />
-          ) : null
-        ) : showFollowerGrowthInsight &&
-          !resolvedCardIds.has(STORY_1A_CARD_ID) ? (
+      <div className="mt-xxl">
+        {showFollowerGrowthInsight &&
+        !resolvedCardIds.has(STORY_1A_CARD_ID) ? (
           <InsightCard
             active={activeInsightId === "follower-growth"}
             action={{
@@ -641,31 +651,44 @@ export function AdminPerformanceDigestCard({
             type="anomaly"
           />
         ) : null}
-        {!resolvedCardIds.has(AUTO_INVITE_CARD_ID) ? (
-          <TodayActionCard
-            badge={{ label: "Premium", tone: "premium" }}
-            description="Automatically invite post-engagers to follow."
-            dismissLabel="Dismiss Auto-Invite action"
-            headline="Turn on Auto-Invite to grow new followers 6.7x faster"
-            inlineAction={{
-              label: "Enable",
-              onSelect: () => resolveCard(AUTO_INVITE_CARD_ID),
-            }}
-            onDismiss={() => resolveCard(AUTO_INVITE_CARD_ID)}
-          />
-        ) : null}
-        {!resolvedCardIds.has(FOLLOW_PAGES_CARD_ID) ? (
-          <TodayActionCard
-            description="Follow other Pages to stay connected to your industry and easily join relevant conversations."
-            dismissLabel="Dismiss follow other Pages action"
-            headline="Follow other Pages"
-            inlineAction={{
-              label: "Follow",
-              onSelect: () => resolveCard(FOLLOW_PAGES_CARD_ID),
-            }}
-            onDismiss={() => resolveCard(FOLLOW_PAGES_CARD_ID)}
-          />
-        ) : null}
+        <div
+          className={cx(
+            "grid gap-md sm:grid-cols-2",
+            showFollowerGrowthInsight &&
+              !resolvedCardIds.has(STORY_1A_CARD_ID) &&
+              "mt-md",
+          )}
+        >
+          {!resolvedCardIds.has(AUTO_INVITE_CARD_ID) ? (
+            <TodayActionCard
+              description="Grow new followers 6.7x faster by automatically inviting content-engagers to follow."
+              dismissLabel="Dismiss Auto-Invite action"
+              headline={
+                <span className="flex items-center gap-sm">
+                  <PremiumChipSmall />
+                  <span>Turn on Auto-Invite</span>
+                </span>
+              }
+              inlineAction={{
+                label: "Enable",
+                onSelect: () => resolveCard(AUTO_INVITE_CARD_ID),
+              }}
+              onDismiss={() => resolveCard(AUTO_INVITE_CARD_ID)}
+            />
+          ) : null}
+          {!resolvedCardIds.has(ADD_LOCATION_CARD_ID) ? (
+            <TodayActionCard
+              description="Get discovered when members search for Pages based on location."
+              dismissLabel="Dismiss Add location action"
+              headline="Add location"
+              inlineAction={{
+                label: "Add",
+                onSelect: () => resolveCard(ADD_LOCATION_CARD_ID),
+              }}
+              onDismiss={() => resolveCard(ADD_LOCATION_CARD_ID)}
+            />
+          ) : null}
+        </div>
       </div>
     </section>
   );
@@ -705,6 +728,7 @@ export function AdminUc5AgentPanel({
   onDraftChange,
   onDraftClear,
   onFollowUpSelect,
+  onInsightSelect,
   onSend,
   onVariantToggle,
 }: AdminUc5AgentPanelProps) {
@@ -826,13 +850,17 @@ export function AdminUc5AgentPanel({
 
     onSend();
   }, [draft, handleSelfInitiatedViewSelect, onDraftClear, onSend]);
-  const isStartSurfaceVisible =
-    !activeInsight &&
-    selfInitiatedTurns.length === 0 &&
-    threadTurns.length === 0;
+  const showWelcome = !activeInsight && initialSelfInitiatedView === null;
   const thread = (
     <ChatThread>
       <div className="flex flex-col gap-lg">
+        {showWelcome ? (
+          <AdminAssistantWelcome
+            onInsightSelect={onInsightSelect}
+            onPromptSelect={handleSelfInitiatedViewSelect}
+          />
+        ) : null}
+
         {activeInsight && activeInsightData ? (
           <ActiveInsightThread
             insight={activeInsightData}
@@ -959,23 +987,16 @@ export function AdminUc5AgentPanel({
     >
       <ChatHeader
         actionSize={headerActionSize}
-        centerContent={
-          isStartSurfaceVisible ? undefined : <PcpAdminGoldAiMark />
-        }
+        identity={{
+          type: "ai",
+          title: <PremiumChatHeaderIdentity />,
+        }}
         onClose={onClose}
         onVariantToggle={onVariantToggle}
         showAiMark={false}
-        transparent={isStartSurfaceVisible}
         variant={variant}
       />
-      {isStartSurfaceVisible ? (
-        <AdminAssistantStartSurface
-          draft={draft}
-          onDraftChange={onDraftChange}
-          onPromptSelect={handleSelfInitiatedViewSelect}
-          onSend={handleComposerSend}
-        />
-      ) : isBoostPostSidePanelOpen ? (
+      {isBoostPostSidePanelOpen ? (
         <ChatSidePanelLayout
           chatBodyRef={chatBodyRef}
           history={thread}
@@ -1020,7 +1041,53 @@ export function AdminUc5AgentPanel({
   );
 }
 
-function AdminAssistantStartSurface({
+function AdminAssistantWelcome({
+  onInsightSelect,
+  onPromptSelect,
+}: Readonly<{
+  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onPromptSelect: (
+    view: AdminUc5SelfInitiatedView,
+    prompt?: string,
+  ) => void;
+}>) {
+  return (
+    <ChatResponseBlock
+      feedbackPolicy="none"
+      timestamp={getPrototypeMessageTimestamp(0)}
+    >
+      <ChatMessage>
+        Welcome back, {pcpCompanyProfile.adminFirstName}. I can help you
+        understand how {pcpCompanyProfile.name}&apos;s Page is performing,
+        compare competitors, and identify relevant visitors.
+      </ChatMessage>
+      <ChatResponseAttachment>
+        <PromptGroup>
+          {ADMIN_UC5_WELCOME_PROMPTS.map((item) => (
+            <Prompt
+              key={item.id}
+              onPromptSelect={() => {
+                if (item.type === "insight") {
+                  onInsightSelect({
+                    id: "competitor-growth",
+                    prompt: item.prompt,
+                  });
+
+                  return;
+                }
+
+                onPromptSelect(item.id, item.prompt);
+              }}
+              prompt={item.prompt}
+            />
+          ))}
+        </PromptGroup>
+      </ChatResponseAttachment>
+    </ChatResponseBlock>
+  );
+}
+
+export function AdminAssistantStartSurface({
   draft,
   onDraftChange,
   onPromptSelect,

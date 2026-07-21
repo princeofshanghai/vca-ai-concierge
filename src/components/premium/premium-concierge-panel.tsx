@@ -23,7 +23,9 @@ import {
   ChatThinkingMessage,
   ChatThread,
   Prompt,
+  PromptGroup,
   type ChatPanelVariant,
+  type PromptGroupLayout,
 } from "@/components/chat/chat-ui";
 import {
   useChatAssistantStream,
@@ -512,11 +514,13 @@ function createResponseStoppedFeedback(id: string): PremiumLiveInlineFeedback {
 }
 
 function PremiumPromptRow({
+  layout,
   prompts,
   readOnly = false,
   animated = true,
   onPromptSelect,
 }: Readonly<{
+  layout: PromptGroupLayout;
   prompts: ReadonlyArray<PremiumPromptId>;
   readOnly?: boolean;
   animated?: boolean;
@@ -528,7 +532,7 @@ function PremiumPromptRow({
         .filter(Boolean)
         .join(" ")}
     >
-      <div className="flex max-w-[33rem] flex-wrap gap-sm pr-sm">
+      <PromptGroup layout={layout}>
         {prompts.map((promptId) => {
           const label = getPromptLabel(promptId);
 
@@ -547,7 +551,7 @@ function PremiumPromptRow({
             />
           );
         })}
-      </div>
+      </PromptGroup>
     </div>
   );
 }
@@ -882,6 +886,7 @@ export function PremiumConciergePanel({
         {step.prompts ? (
           <ChatResponseAttachment>
             <PremiumPromptRow
+              layout={variant === "expanded" ? "inline" : "stacked"}
               prompts={step.prompts}
               readOnly
               animated={false}
@@ -958,6 +963,7 @@ export function PremiumConciergePanel({
         {attachedPrompts ? (
           <ChatResponseAttachment>
             <PremiumPromptRow
+              layout={variant === "expanded" ? "inline" : "stacked"}
               prompts={attachedPrompts}
               animated={false}
               onPromptSelect={handlePromptSelect}
