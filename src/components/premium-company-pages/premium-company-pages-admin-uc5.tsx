@@ -4,7 +4,9 @@ import Image from "next/image";
 import {
   type ChangeEvent,
   type ComponentProps,
+  type ReactNode,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -22,9 +24,11 @@ import {
   PromptGroup,
   type ChatPanelVariant,
 } from "@/components/chat/chat-ui";
+import { useChatLatestMessageAnchor } from "@/components/chat/chat-motion";
 import {
-  useChatLatestMessageAnchor,
-} from "@/components/chat/chat-motion";
+  LiveAgentHandoff,
+  type LiveAgentHandoffContent,
+} from "@/components/chat/live-agent-handoff";
 import { getPrototypeMessageTimestamp } from "@/lib/prototype-timestamps";
 import {
   ChatSidePanel,
@@ -122,6 +126,39 @@ const STORY_1A_FOLLOWER_GROWTH_PROMPT =
   "How do I recover my follower growth?";
 const AUTO_INVITE_CARD_ID = "auto-invite";
 const ADD_LOCATION_CARD_ID = "add-location";
+const ADMIN_LIVE_SUPPORT_CONNECT_DELAY_MS = 1200;
+
+const PCP_ADMIN_LIVE_SUPPORT_AGENT = {
+  name: "Maya R.",
+  role: "LinkedIn Premium Page support",
+  timestamp: getPrototypeMessageTimestamp(2),
+} as const;
+
+const PCP_ADMIN_LIVE_SUPPORT_CONTENT: LiveAgentHandoffContent = {
+  available: {
+    title: "Chat with LinkedIn Page support",
+    actionLabel: "Start live chat",
+  },
+  connecting: {
+    title: "Connecting you now...",
+    description: "This usually takes under a minute.",
+  },
+  connected: {
+    title: `Connected to ${PCP_ADMIN_LIVE_SUPPORT_AGENT.name}`,
+  },
+  unavailable: {
+    title: "Live support is unavailable right now",
+    description: "Try again later.",
+    actionLabel: "Try again",
+  },
+  failed: {
+    title: "We couldn't connect you to live support",
+    description: "Try again.",
+    actionLabel: "Try again",
+  },
+};
+
+type AdminLiveAgentStage = "idle" | "connecting" | "connected";
 
 const postVisuals: ReadonlyArray<Readonly<{ image: string; alt: string }>> = [
   {
@@ -174,16 +211,19 @@ type AdminAttentionCardId =
 type AdminUc5AgentPanelProps = Readonly<{
   activeInsight: AdminUc5InsightSelection | null;
   draft: string;
+  endFeedbackScreen?: ReactNode;
   initialSelfInitiatedPrompt?: string;
   initialSelfInitiatedView?: AdminUc5SelfInitiatedView | null;
   panelId: string;
   threadTurns: ReadonlyArray<AdminUc5ThreadTurn>;
   variant: ChatPanelVariant;
   onClose: () => void;
+  onConversationStart: () => void;
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onDraftClear: () => void;
   onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
   onInsightSelect: (insight: AdminUc5InsightSelection) => void;
+  onMinimizeToTray?: () => void;
   onSend: () => void;
   onVariantToggle: () => void;
 }>;
@@ -357,6 +397,49 @@ const ADMIN_UC5_WELCOME_PROMPTS = [
 
 function normalizeSelfInitiatedPrompt(prompt: string) {
   return prompt.trim().toLocaleLowerCase().replace(/[?!.]+$/u, "");
+}
+
+export function isAdminUc5LiveAgentRequest(prompt: string) {
+  const normalizedPrompt = prompt
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/[^\p{L}\p{N}\s'-]/gu, " ")
+    .replace(/\s+/gu, " ");
+
+  if (!normalizedPrompt) {
+    return false;
+  }
+
+  const directRequests = new Set([
+    "agent",
+    "agent please",
+    "human",
+    "human agent",
+    "human agent please",
+    "human please",
+    "live agent",
+    "live agent please",
+    "live support",
+    "real person",
+    "representative",
+    "representative please",
+    "support agent",
+    "support agent please",
+  ]);
+
+  if (directRequests.has(normalizedPrompt)) {
+    return true;
+  }
+
+  const connectionRequest =
+    /\b(?:chat|connect|message|speak|talk|transfer)\b.*\b(?:agent|human|person|someone|representative|support)\b/u;
+  const explicitRequest =
+    /\b(?:get|need|request|want)\b(?:\s+\w+){0,4}\s+(?:an?\s+)?(?:live\s+|human\s+|support\s+)?(?:agent|human|person|someone|representative|support)\b/u;
+
+  return (
+    connectionRequest.test(normalizedPrompt) ||
+    explicitRequest.test(normalizedPrompt)
+  );
 }
 
 function isEngagementSupportPrompt(prompt: string) {
@@ -719,16 +802,19 @@ function MiniAvatarPile({
 export function AdminUc5AgentPanel({
   activeInsight,
   draft,
+  endFeedbackScreen,
   initialSelfInitiatedPrompt,
   initialSelfInitiatedView = null,
   panelId,
   threadTurns,
   variant,
   onClose,
+  onConversationStart,
   onDraftChange,
   onDraftClear,
   onFollowUpSelect,
   onInsightSelect,
+  onMinimizeToTray,
   onSend,
   onVariantToggle,
 }: AdminUc5AgentPanelProps) {
@@ -752,6 +838,11 @@ export function AdminUc5AgentPanel({
         ]
       : [],
   );
+  const [liveAgentStage, setLiveAgentStage] =
+    useState<AdminLiveAgentStage>("idle");
+  const [liveAgentMessages, setLiveAgentMessages] = useState<
+    ReadonlyArray<string>
+  >([]);
   const {
     busyTurnCount,
     handleScriptedTurnBusyChange,
@@ -766,7 +857,11 @@ export function AdminUc5AgentPanel({
   const latestSelfInitiatedTurn =
     selfInitiatedTurns[selfInitiatedTurns.length - 1];
   const latestThreadTurn = threadTurns[threadTurns.length - 1];
-  const latestUserMessageAnchorKey = latestThreadTurn
+  const latestLiveAgentMessage =
+    liveAgentMessages[liveAgentMessages.length - 1];
+  const latestUserMessageAnchorKey = latestLiveAgentMessage
+    ? `live-agent:${liveAgentMessages.length}:${latestLiveAgentMessage}`
+    : latestThreadTurn
     ? `turn:${latestThreadTurn.id}`
     : latestSelfInitiatedTurn
       ? `self-initiated:${latestSelfInitiatedTurn.id}`
@@ -780,8 +875,20 @@ export function AdminUc5AgentPanel({
   } = useChatLatestMessageAnchor({
     scrollRef: chatBodyRef,
     anchorKey: latestUserMessageAnchorKey,
-    contentKey: `${activeInsight?.id ?? "none"}:${selfInitiatedTurns.length}:${threadTurns.length}:${busyTurnCount}:${isBoostPostSidePanelOpen}`,
+    contentKey: `${activeInsight?.id ?? "none"}:${selfInitiatedTurns.length}:${threadTurns.length}:${busyTurnCount}:${isBoostPostSidePanelOpen}:${liveAgentStage}:${liveAgentMessages.length}`,
   });
+
+  useEffect(() => {
+    if (liveAgentStage !== "connecting") {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLiveAgentStage("connected");
+    }, ADMIN_LIVE_SUPPORT_CONNECT_DELAY_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [liveAgentStage]);
   const handleThreadContentChange = useCallback(() => {
     handleLatestScroll();
   }, [handleLatestScroll]);
@@ -810,8 +917,14 @@ export function AdminUc5AgentPanel({
 
     shouldCollapseAfterBoostPostPanelRef.current = false;
   }, [onVariantToggle, variant]);
+  const handleMinimizeToTray = useCallback(() => {
+    setIsBoostPostSidePanelOpen(false);
+    shouldCollapseAfterBoostPostPanelRef.current = false;
+    onMinimizeToTray?.();
+  }, [onMinimizeToTray]);
   const handleSelfInitiatedViewSelect = useCallback(
     (view: AdminUc5SelfInitiatedView, prompt?: string) => {
+      onConversationStart();
       const nextTurnId = selfInitiatedTurnIdRef.current;
 
       selfInitiatedTurnIdRef.current += 1;
@@ -824,7 +937,7 @@ export function AdminUc5AgentPanel({
         },
       ]);
     },
-    [],
+    [onConversationStart],
   );
   const handleSelfInitiatedPromptSelect = useCallback(
     (prompt: string) => {
@@ -839,17 +952,50 @@ export function AdminUc5AgentPanel({
     [handleSelfInitiatedViewSelect],
   );
   const handleComposerSend = useCallback(() => {
-    const view = getSelfInitiatedViewForPrompt(draft.trim());
+    const prompt = draft.trim();
+
+    if (!prompt || liveAgentStage === "connecting") {
+      return;
+    }
+
+    onConversationStart();
+
+    if (liveAgentStage === "connected") {
+      setLiveAgentMessages((currentMessages) => [
+        ...currentMessages,
+        prompt,
+      ]);
+      onDraftClear();
+
+      return;
+    }
+
+    if (isAdminUc5LiveAgentRequest(prompt)) {
+      setLiveAgentMessages([prompt]);
+      setLiveAgentStage("connecting");
+      onDraftClear();
+
+      return;
+    }
+
+    const view = getSelfInitiatedViewForPrompt(prompt);
 
     if (view) {
-      handleSelfInitiatedViewSelect(view, draft.trim());
+      handleSelfInitiatedViewSelect(view, prompt);
       onDraftClear();
 
       return;
     }
 
     onSend();
-  }, [draft, handleSelfInitiatedViewSelect, onDraftClear, onSend]);
+  }, [
+    draft,
+    handleSelfInitiatedViewSelect,
+    liveAgentStage,
+    onConversationStart,
+    onDraftClear,
+    onSend,
+  ]);
   const showWelcome = !activeInsight && initialSelfInitiatedView === null;
   const thread = (
     <ChatThread>
@@ -974,6 +1120,28 @@ export function AdminUc5AgentPanel({
             turn={turn}
           />
         ))}
+
+        {liveAgentStage !== "idle" && liveAgentMessages[0] ? (
+          <>
+            <ChatMessage role="user">{liveAgentMessages[0]}</ChatMessage>
+            <LiveAgentHandoff
+              state={liveAgentStage}
+              agent={PCP_ADMIN_LIVE_SUPPORT_AGENT}
+              content={PCP_ADMIN_LIVE_SUPPORT_CONTENT}
+              connectedMessage="Hi, I’m Maya from LinkedIn Page support. How can I help?"
+            />
+            {liveAgentStage === "connected"
+              ? liveAgentMessages.slice(1).map((message, index) => (
+                  <ChatMessage
+                    key={`live-agent-message-${index}-${message}`}
+                    role="user"
+                  >
+                    {message}
+                  </ChatMessage>
+                ))
+              : null}
+          </>
+        ) : null}
       </div>
     </ChatThread>
   );
@@ -987,16 +1155,31 @@ export function AdminUc5AgentPanel({
     >
       <ChatHeader
         actionSize={headerActionSize}
-        identity={{
-          type: "ai",
-          title: <PremiumChatHeaderIdentity />,
-        }}
+        identity={
+          liveAgentStage === "connected"
+            ? {
+                type: "representative",
+                name: PCP_ADMIN_LIVE_SUPPORT_AGENT.name,
+                role: PCP_ADMIN_LIVE_SUPPORT_AGENT.role,
+              }
+            : {
+                type: "ai",
+                title: <PremiumChatHeaderIdentity />,
+              }
+        }
         onClose={onClose}
-        onVariantToggle={onVariantToggle}
+        onMinimizeToTray={
+          endFeedbackScreen || !onMinimizeToTray
+            ? undefined
+            : handleMinimizeToTray
+        }
+        onVariantToggle={endFeedbackScreen ? undefined : onVariantToggle}
         showAiMark={false}
         variant={variant}
       />
-      {isBoostPostSidePanelOpen ? (
+      {endFeedbackScreen ? (
+        endFeedbackScreen
+      ) : isBoostPostSidePanelOpen ? (
         <ChatSidePanelLayout
           chatBodyRef={chatBodyRef}
           history={thread}
@@ -1020,16 +1203,22 @@ export function AdminUc5AgentPanel({
           </ChatBody>
           <ChatComposer
             inputProps={{
-              "aria-label": "Message Page assistant",
+              "aria-label":
+                liveAgentStage === "connected"
+                  ? `Message ${PCP_ADMIN_LIVE_SUPPORT_AGENT.name}`
+                  : "Message Page assistant",
               onChange: onDraftChange,
               placeholder: "Send message",
-              disabled: isAssistantBusy,
+              disabled:
+                isAssistantBusy || liveAgentStage === "connecting",
               value: draft,
             }}
             isResponding={isAssistantBusy}
             onSend={handleComposerSend}
             onStopResponse={handleStopAssistantResponse}
-            sendDisabled={isAssistantBusy}
+            sendDisabled={
+              isAssistantBusy || liveAgentStage === "connecting"
+            }
             showAttachAction={false}
             showTopDivider
             showVoiceMode={false}
