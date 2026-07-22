@@ -10,6 +10,7 @@ import {
   ChatPanel,
   ChatThread,
   Prompt,
+  PromptGroup,
 } from "@/components/chat/chat-ui";
 import { ChatSystemEvent } from "@/components/chat/live-agent-handoff";
 import { HiringConfirmationEmail } from "@/components/hiring-microsite/hiring-confirmation-email";
@@ -1666,6 +1667,280 @@ function PremiumCompanyPageVcaFabPage({
         <PreviewCard title="Opening prompts">
           <PcpVisitorPromptCardPreview />
         </PreviewCard>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+const pcpPromptTypeRows = [
+  {
+    type: "Starter",
+    purpose: "Introduce VCA's core capabilities",
+    shown: "When the assistant opens",
+    quantity: "3",
+  },
+  {
+    type: "Contextual",
+    purpose: "Help interpret the current surface",
+    shown: "Within a relevant Page section",
+    quantity: "1 per section; max 2 per page",
+  },
+  {
+    type: "Follow-up",
+    purpose: "Continue from VCA's answer",
+    shown: "After a response",
+    quantity: "2 by default; max 3",
+  },
+] as const;
+
+const pcpStarterPrompts = [
+  "How is my Page performing?",
+  "How do my competitors compare?",
+  "What audience is my Page reaching?",
+] as const;
+
+const pcpContextualPromptExamples = [
+  {
+    section: "Content analytics",
+    context: "Impressions are down 18.4% vs last month",
+    prompt: "Why are post impressions down?",
+  },
+  {
+    section: "Visitor analytics",
+    context: "64% of visitors match the target audience",
+    prompt: "Am I reaching the right audience?",
+  },
+  {
+    section: "Competitors",
+    context: "Follower growth comparison",
+    prompt: "Why are competitors gaining followers faster?",
+  },
+] as const;
+
+const pcpPromptBestPractices = [
+  {
+    do: "Tie contextual prompts to nearby data",
+    dont: "Place generic prompts throughout the Page",
+  },
+  {
+    do: "Help the admin interpret or decide",
+    dont: "Repeat information that is already visible",
+  },
+  {
+    do: "Keep prompts short and specific",
+    dont: "Use vague copy such as “Tell me more”",
+  },
+  {
+    do: "Offer meaningfully different choices",
+    dont: "Show multiple versions of the same question",
+  },
+  {
+    do: "Use an insight when VCA knows the conclusion",
+    dont: "Disguise a proactive insight as a prompt",
+  },
+  {
+    do: "Suppress prompts already addressed or dismissed",
+    dont: "Repeat the same prompt across surfaces",
+  },
+] as const;
+
+function PcpPromptGuidanceList({
+  items,
+}: Readonly<{ items: ReadonlyArray<string> }>) {
+  return (
+    <ul className="grid max-w-[48rem] gap-sm text-body-sm-open text-text">
+      {items.map((item) => (
+        <li className="flex items-start gap-sm" key={item}>
+          <Icon
+            aria-hidden="true"
+            className="mt-xxs shrink-0 text-positive"
+            name="check"
+            size="small"
+          />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function PremiumCompanyPagePromptsPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Premium Company Page">
+      <PreviewSection
+        title="Prompt types"
+        description="Each prompt has a distinct role in helping an enterprise Page admin begin, interpret, or continue a conversation."
+      >
+        <div className="overflow-hidden rounded-md border border-border-faint bg-background">
+          <table className="min-w-[760px] w-full border-collapse text-left text-body-sm text-text">
+            <thead className="bg-background-neutral-soft text-control-sm">
+              <tr>
+                <th className="px-lg py-md" scope="col">Type</th>
+                <th className="px-lg py-md" scope="col">Purpose</th>
+                <th className="px-lg py-md" scope="col">When shown</th>
+                <th className="px-lg py-md" scope="col">Quantity</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-faint">
+              {pcpPromptTypeRows.map((row) => (
+                <tr key={row.type}>
+                  <th className="px-lg py-lg text-control-sm" scope="row">
+                    {row.type}
+                  </th>
+                  <td className="px-lg py-lg text-text-meta">{row.purpose}</td>
+                  <td className="px-lg py-lg text-text-meta">{row.shown}</td>
+                  <td className="px-lg py-lg text-text-meta">{row.quantity}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Starter prompts"
+        description="Broad questions that introduce the main jobs VCA can help with. They remain consistent across admin surfaces."
+      >
+        <PreviewMomentStack>
+          <PcpPromptGuidanceList
+            items={[
+              "Show three when the assistant opens.",
+              "Represent three distinct admin jobs.",
+              "Avoid reacting to temporary data changes or duplicating intent.",
+            ]}
+          />
+          <PreviewMoment>
+            <PreviewExampleIntro title="Assistant opening">
+              Give admins a small, stable set of ways to begin.
+            </PreviewExampleIntro>
+            <ChatThreadReferenceFrame>
+              <ChatMessage>
+                Welcome back, Rose. I can help you understand how Velora&apos;s
+                Page is performing and what deserves attention.
+              </ChatMessage>
+              <PromptGroup>
+                {pcpStarterPrompts.map((prompt) => (
+                  <Prompt key={prompt} prompt={prompt} />
+                ))}
+              </PromptGroup>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Contextual prompts"
+        description="Questions tied to the Page, tab, section, metric, or entity the admin is currently viewing."
+      >
+        <PreviewMomentStack>
+          <div className="grid max-w-[64rem] gap-xl lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <PcpPromptGuidanceList
+              items={[
+                "Show only when the prompt is locally relevant and answerable.",
+                "Add interpretation or a decision beyond the visible data.",
+                "Suppress prompts that were already shown, answered, or dismissed.",
+              ]}
+            />
+            <aside className="rounded-md border border-ai-border bg-ai-background-soft p-lg text-body-sm-open text-text">
+              <p className="text-control-sm">Quantity</p>
+              <p className="mt-xs text-text-meta">
+                Show one per section, no more than two per Page, and avoid more
+                than one in the same viewport.
+              </p>
+            </aside>
+          </div>
+          <div className="grid gap-xl lg:grid-cols-3">
+            {pcpContextualPromptExamples.map((example) => (
+              <PreviewCard
+                description={example.context}
+                key={example.section}
+                title={example.section}
+              >
+                <div className="rounded-md border border-border-faint bg-background p-lg shadow-raised-faint">
+                  <Prompt prompt={example.prompt} />
+                </div>
+              </PreviewCard>
+            ))}
+          </div>
+          <aside className="max-w-[48rem] rounded-md border-l-4 border-premium-brand bg-premium-gradient-base-a p-lg text-body-sm-open text-text">
+            <p className="text-control-sm">Prompt or insight?</p>
+            <p className="mt-xs">
+              If VCA already has a noteworthy conclusion, show an insight
+              instead of making the admin ask for it.
+            </p>
+          </aside>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Follow-up prompts"
+        description="Questions shown after an answer that help the admin investigate further or take the next step."
+      >
+        <PreviewMomentStack>
+          <PcpPromptGuidanceList
+            items={[
+              "Show two by default: one to investigate and one to act.",
+              "Inherit the context of the current conversation.",
+              "Use three only when the paths are meaningfully different.",
+            ]}
+          />
+          <PreviewMoment>
+            <PreviewExampleIntro title="Investigate, then act">
+              Follow-ups should move the admin forward without repeating the
+              original question.
+            </PreviewExampleIntro>
+            <ChatThreadReferenceFrame>
+              <ChatMessage>
+                Post impressions fell 18.4% this month. Velora posted less
+                frequently, while engagement on the posts that did publish
+                remained healthy. This suggests a distribution problem rather
+                than a content-quality problem.
+              </ChatMessage>
+              <PromptGroup>
+                <Prompt prompt="Show the posts that performed best" />
+                <Prompt prompt="What should I post next?" />
+              </PromptGroup>
+            </ChatThreadReferenceFrame>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Best practices"
+        description="Use prompts to create a clear next step, not to fill every available surface."
+      >
+        <div className="overflow-hidden rounded-md border border-border-faint bg-background">
+          <table className="min-w-[680px] w-full border-collapse text-left text-body-sm text-text">
+            <thead className="bg-background-neutral-soft text-control-sm">
+              <tr>
+                <th className="w-1/2 px-lg py-md" scope="col">Do</th>
+                <th className="w-1/2 px-lg py-md" scope="col">Don&apos;t</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-faint">
+              {pcpPromptBestPractices.map((practice) => (
+                <tr key={practice.do}>
+                  <td className="px-lg py-lg align-top">
+                    <span className="inline-flex items-start gap-sm">
+                      <Icon
+                        aria-hidden="true"
+                        className="mt-xxs shrink-0 text-positive"
+                        name="check"
+                        size="small"
+                      />
+                      <span>{practice.do}</span>
+                    </span>
+                  </td>
+                  <td className="px-lg py-lg align-top text-text-meta">
+                    {practice.dont}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -3447,6 +3722,8 @@ export function ComponentPageContent({
       return <PremiumUpsellResultCardPage item={item} />;
     case "premium-company-page-vca-fab":
       return <PremiumCompanyPageVcaFabPage item={item} />;
+    case "premium-company-page-prompts":
+      return <PremiumCompanyPagePromptsPage item={item} />;
     case "premium-company-page-side-panel":
       return <PremiumCompanyPageSidePanelPage item={item} />;
     case "premium-company-page-input-first-start-surface":

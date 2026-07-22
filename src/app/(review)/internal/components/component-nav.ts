@@ -224,6 +224,13 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
         title: "Premium Company Page",
         items: [
           {
+            id: "premium-company-page-prompts",
+            title: "Prompts",
+            description:
+              "Defines suggested questions that help enterprise Page admins discover, interpret, and continue VCA conversations.",
+            href: "/internal/components/premium-company-page/prompts",
+          },
+          {
             id: "premium-company-page-data-cards",
             title: "Data cards",
             description:

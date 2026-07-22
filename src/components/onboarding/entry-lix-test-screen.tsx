@@ -193,7 +193,7 @@ export function EntryLixChoiceScreen({
           />
           <EntryLixOptionCard
             icon="person"
-            title="Have someone contact me"
+            title="Submit this form and we'll be in touch shortly"
             description="Share your details and a sales consultant will be in touch"
             onClick={onFillOutForm}
           />
@@ -310,7 +310,7 @@ function EntryLixSelectField({
 
 export function EntryLixLeadFormScreen({
   onSubmit,
-  title = "Have someone contact me",
+  title = "Submit this form and we'll be in touch shortly",
 }: EntryLixLeadFormScreenProps) {
   const [form, setForm] = useState<EntryLixFormState>(initialFormState);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
@@ -407,10 +407,7 @@ export function EntryLixLeadFormScreen({
             {title}
           </h2>
           <p className="mt-sm text-body-xs text-text-meta">
-            Forms submitted between 9:00 AM and 12:00 PM PST Monday-Friday will
-            receive a response within 2 hours. Forms submitted after 12:00 PM
-            PST may receive a response on the next business day (excluding
-            weekends and holidays).
+            Please give our team up to one business day to get back to you.
           </p>
         </div>
 
