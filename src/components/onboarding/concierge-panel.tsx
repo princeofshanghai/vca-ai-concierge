@@ -1626,7 +1626,9 @@ export function ConciergePanel({
         <OnboardingScreen
           key={isSignedIn ? "signed-in" : "signed-out"}
           headline={
-            contactSalesEntry === "lix-test" ? "Before we begin" : undefined
+            contactSalesEntry === "lix-test"
+              ? "Confirm your details to get started"
+              : undefined
           }
           isSignedIn={isSignedIn}
           onSubmit={handleOnboardingSubmit}

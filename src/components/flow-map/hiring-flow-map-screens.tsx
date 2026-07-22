@@ -242,8 +242,8 @@ function WelcomeConversation() {
   return (
     <ConversationSurface>
       <ChatMessage role="assistant">
-        Hi Jamie. I can help you understand which LinkedIn hiring solution fits
-        Northstar Health and what the next step should be.
+        Hi Jamie, I can help you understand which LinkedIn hiring solutions will
+        work best for you and connect you to our sales team.
       </ChatMessage>
       <ChatResponseAttachment>
         <div className="flex flex-wrap gap-sm pr-sm">
@@ -453,7 +453,7 @@ function renderCheckpoint(checkpoint: HiringFlowCheckpoint) {
     case "onboarding-signed-in":
       return (
         <OnboardingScreen
-          headline="Before we begin"
+          headline="Confirm your details to get started"
           isSignedIn
           onSubmit={() => {}}
           showAiMark={false}
@@ -463,7 +463,7 @@ function renderCheckpoint(checkpoint: HiringFlowCheckpoint) {
     case "onboarding-signed-out":
       return (
         <OnboardingScreen
-          headline="Before we begin"
+          headline="Confirm your details to get started"
           isSignedIn={false}
           onSubmit={() => {}}
           showAiMark={false}

@@ -109,7 +109,7 @@ export const FLOW_REVIEW_NAV_ITEMS: ReadonlyArray<
 ];
 
 export function buildInitialAssistantResponse(lead: LeadContext): string {
-  return `Hi ${lead.firstName}. I can help you understand which LinkedIn hiring solution fits ${lead.company} and what the next step should be.`;
+  return `Hi ${lead.firstName}, I can help you understand which LinkedIn hiring solutions will work best for you and connect you to our sales team.`;
 }
 
 export function buildFollowUpAssistantResponse(
