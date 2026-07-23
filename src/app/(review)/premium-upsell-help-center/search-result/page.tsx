@@ -4,9 +4,8 @@ import { VcaEcosystemHelpCenterSearchResultPage } from "@/components/vca-ecosyst
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Upsell Search Result",
-  description:
-    "Search result surface for the Premium upsell in Help Center prototype.",
+  title: "Premium Upsell — Search Result",
+  description: "Design for Premium guidance in Help Center search results.",
 });
 
 export default function PremiumUpsellSearchResultRoute() {

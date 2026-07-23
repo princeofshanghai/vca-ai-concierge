@@ -4,9 +4,8 @@ import { PremiumCompanyPagesAdminAnalyticsPage } from "@/components/premium-comp
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Current State Analytics",
-  description:
-    "Baseline Premium Company Page analytics prototype without contextual VCA prompt chips.",
+  title: "Premium Company Pages — Current Analytics",
+  description: "Current Page analytics design used as the comparison baseline.",
 });
 
 export default function PremiumCompanyPagesCurrentStateAnalyticsRoute() {

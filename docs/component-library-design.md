@@ -140,6 +140,15 @@ Component library styling should improve the review page only. It should not cha
 - Keep documentation typography separate from VCA product typography.
 - Components rendered inside previews should continue to use their existing VCA tokens and styles.
 
+## Internal Annotations
+
+- Use `ComponentLibraryAnnotation` for concise scope, constraint, or interpretation notes intended only for stakeholders.
+- Keep the optional label inline with the annotation text.
+- Let the full text wrap naturally; do not truncate or clamp it.
+- Do not place annotations inside real product examples or prototypes.
+- Use `ComponentLibraryDemoGuidance` above an interactive example when the user needs a short instruction and a consistent reset action.
+- Keep demo guidance to one direct sentence. Preserve any essential Demo controls as secondary controls before the reset action.
+
 ## Sections
 
 - Component name

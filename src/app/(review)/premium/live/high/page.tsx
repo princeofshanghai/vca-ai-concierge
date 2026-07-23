@@ -5,9 +5,8 @@ import { createPageMetadata } from "@/lib/metadata";
 import { getPremiumShellMode } from "@/lib/premium-shell";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Concierge: High signal (interactive)",
-  description:
-    "Interactive high-signal Premium AI concierge recommendation prototype.",
+  title: "Premium Concierge — High Signal Interactive",
+  description: "Interactive design prototype for high-signal Premium recommendations.",
 });
 
 type PremiumHighSignalLivePageProps = Readonly<{

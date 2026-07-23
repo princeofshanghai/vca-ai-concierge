@@ -4,9 +4,8 @@ import { PremiumCompanyPagesAdminAnalyticsPage } from "@/components/premium-comp
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Admin Analytics",
-  description:
-    "Scripted Premium Company Page analytics prototype for Velora admin content performance.",
+  title: "Premium Company Pages — Analytics",
+  description: "Design for AI-supported Page analytics.",
 });
 
 type PremiumCompanyPagesAdminAnalyticsRouteProps = Readonly<{

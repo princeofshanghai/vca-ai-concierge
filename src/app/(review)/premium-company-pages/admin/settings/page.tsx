@@ -4,9 +4,8 @@ import { PremiumCompanyPagesAdminSettingsPage } from "@/components/premium-compa
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Admin Settings",
-  description:
-    "Scripted Premium Company Page admin settings prototype for VCA onboarding.",
+  title: "Premium Company Pages — Settings",
+  description: "Design for setting up and managing the AI assistant.",
 });
 
 export default function PremiumCompanyPagesAdminSettingsRoute() {

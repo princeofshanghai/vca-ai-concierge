@@ -4,9 +4,8 @@ import { PremiumCompanyPagesAdminAnalyticsPage } from "@/components/premium-comp
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Old Admin Analytics",
-  description:
-    "Archived Premium Company Page analytics prototype with insight-card based AI surfaces.",
+  title: "Premium Company Pages — Earlier Analytics Concept",
+  description: "Earlier design exploration for AI-supported Page analytics.",
 });
 
 export default function PremiumCompanyPagesOldAdminAnalyticsRoute() {

@@ -6,9 +6,8 @@ import { createPageMetadata } from "@/lib/metadata";
 import { defaultComponentHref } from "./component-nav";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "AI Concierge Components",
-  description:
-    "Internal review surface for the VCA AI concierge shared chat system, product surfaces, and SDUI reference components.",
+  title: "VCA Component Library",
+  description: "Component designs for AI concierge experiences.",
   robots: {
     index: false,
     follow: false,

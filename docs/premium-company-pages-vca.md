@@ -11,6 +11,7 @@ Detailed source docs:
 - [Admin demo stories](./premium-company-pages-vca/admin-demo-stories.md)
 - [Visitor loop](./premium-company-pages-vca/visitor-loop.md)
 - [Design decisions](./premium-company-pages-vca/design-decisions.md)
+- [Admin AI response voice guide](./premium-company-pages-vca/ai-response-voice-guide.md)
 
 ## What This Is
 

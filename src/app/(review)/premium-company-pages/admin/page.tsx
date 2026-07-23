@@ -4,9 +4,8 @@ import { PremiumCompanyPagesPage } from "@/components/premium-company-pages/prem
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Admin View",
-  description:
-    "Admin-facing Premium Company Page dashboard prototype for the Premium Company Pages AI chat experience.",
+  title: "Premium Company Pages — Admin",
+  description: "Design prototype for the Premium Company Pages admin experience.",
 });
 
 type PremiumCompanyPagesAdminRouteProps = Readonly<{

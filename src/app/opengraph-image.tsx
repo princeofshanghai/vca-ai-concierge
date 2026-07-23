@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-import { shareImageAlt, siteDescription, siteName } from "@/lib/metadata";
+import { shareImageAlt, shareTitle, siteDescription } from "@/lib/metadata";
 
 export const alt = shareImageAlt;
 export const size = {
@@ -49,7 +49,7 @@ export default function OpenGraphImage() {
             color: "rgb(71, 85, 105)",
           }}
         >
-          AI Concierge prototypes
+          AI Concierge designs
         </div>
 
         <div
@@ -81,7 +81,7 @@ export default function OpenGraphImage() {
                 letterSpacing: "-0.05em",
               }}
             >
-              {siteName}
+              {shareTitle}
             </div>
             <div
               style={{
@@ -129,7 +129,7 @@ export default function OpenGraphImage() {
                 Premium
               </div>
             </div>
-            <div style={{ display: "flex" }}>Internal preview</div>
+            <div style={{ display: "flex" }}>Design preview</div>
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Premium Checkout",
-  description: "Static Premium checkout screenshot for prototype review.",
+  description: "Reference design for the Premium checkout experience.",
 });
 
 export default function PremiumCheckoutPage() {

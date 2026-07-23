@@ -2985,6 +2985,16 @@ function HighlightsCard(props: AnalyticsContextualPromptSlotProps = {}) {
   );
 }
 
+export function PremiumCompanyPagesContentHighlightsPromptPreview() {
+  return (
+    <HighlightsCard
+      contextualPrompts={wipContentHighlightsPromptRows}
+      onInsightSelect={() => {}}
+      onSelfInitiatedViewSelect={() => {}}
+    />
+  );
+}
+
 function AnalyticsKeyInsightsCard({
   activeInsightId,
   insights,

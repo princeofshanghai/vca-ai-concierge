@@ -2,6 +2,8 @@
 
 Use these rules when writing scripted PCP assistant responses. The goal is to keep responses conversational, but easier to scan than a single paragraph.
 
+Language and tone guidance lives in [PCP Admin AI Response Voice Guide](./ai-response-voice-guide.md). Use the voice guide as the source of truth for word choice, clarity, confidence, and plain language.
+
 ## Default Structure
 
 - Use short paragraphs for insight explanations.
@@ -30,11 +32,11 @@ For insight-style responses, use three short paragraphs:
 Example:
 
 ```text
-Your Page is reaching more relevant visitors this month.
+Your Page is reaching more of the people Velora wants to reach this month.
 
-64% of people who viewed your Page match Velora's target audience, up from 52% last month. That match is based on LinkedIn demographic signals like job function, seniority, industry, company size, and location.
+64% of people who viewed your Page match Velora's target audience, up from 52% last month.
 
-The biggest shift is quality: more visitors are in Human Resources roles at Director+ seniority, and more are coming from companies with 10,001+ employees. That suggests your Page is reaching people who are more likely to evaluate Velora, not just browse it.
+More of those visitors work in Human Resources, are director level or above, and come from companies with 10,001+ employees. This does not confirm buying intent, but it shows that the Page is reaching more of its intended audience.
 ```
 
 ## When To Use Bullets
@@ -58,5 +60,7 @@ Avoid bullets when the response is explaining a single insight. In those cases, 
 
 - Keep it clear and calm.
 - Avoid overclaiming intent from page views alone.
-- Prefer "suggests" or "signals" when interpreting behavior.
+- State observable facts directly.
+- Use "may," "likely," or "appears" when interpreting behavior.
+- Do not use "signals" as filler when the response can simply say what happened.
 - Use LinkedIn taxonomy language for visitor demographics: job function, seniority, industry, company size, location.

@@ -6,8 +6,8 @@ import { getHiringShellMode } from "@/lib/hiring-shell";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "High Flow",
-  description: "Internal chat panel review for the high AI concierge flow.",
+  title: "Hiring Concierge — High Flow",
+  description: "Design for the high-intent concierge flow.",
   robots: {
     index: false,
     follow: false,

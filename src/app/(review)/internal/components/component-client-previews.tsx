@@ -79,8 +79,13 @@ import {
   type PremiumCompanyPagesVcaSidePanelPreviewKind,
 } from "@/components/premium-company-pages/premium-company-pages-member-page";
 import { AdminAssistantStartSurface } from "@/components/premium-company-pages/premium-company-pages-admin-uc5";
-import { PremiumCompanyPagesInboxContextStripPreview } from "@/components/premium-company-pages/premium-company-pages-page";
+import { FabPromptStack } from "@/components/premium-company-pages/fab-prompt-stack";
+import {
+  PremiumCompanyPagesContentHighlightsPromptPreview,
+  PremiumCompanyPagesInboxContextStripPreview,
+} from "@/components/premium-company-pages/premium-company-pages-page";
 import { pcpCompetitorNames } from "@/components/premium-company-pages/persona";
+import { MetricWithTrend } from "@/components/premium-company-pages/response-blocks/MetricWithTrend";
 import { TodayActionCard } from "@/components/premium-company-pages/today-action-card";
 import {
   VcaFab,
@@ -160,6 +165,10 @@ import {
   getMediumFlowReview,
 } from "@/lib/conversation-flows";
 
+import { ComponentLibraryAnnotation } from "./component-library-annotation";
+import { ComponentLibraryDemoGuidance } from "./component-library-demo-guidance";
+import { PCP_STARTER_PROMPTS } from "./pcp-prompt-guidance";
+
 type DemoOption<T extends string> = Readonly<{
   label: string;
   value: T;
@@ -179,6 +188,7 @@ type SalesCardDemoScenario = "ae" | "sdr";
 type SalesCardDemoSidePanel = "schedule" | null;
 type SalesCardDemoSdrState = MediumAvailableHandoffState | "delayed";
 type SalesHandoffScenarioIntent = "high" | "medium";
+type PcpPromptDemoSurface = "fab" | "assistant" | "page" | "response";
 type ShellDemoVersion =
   "dismissable" | "persistent" | "hybrid" | "floating-card";
 type ContainerDemoType = "card" | "tray";
@@ -559,6 +569,32 @@ function ComponentDemoSection({
         <div className={cx("min-w-0", previewClassName)}>{children}</div>
       </div>
     </div>
+  );
+}
+
+export function InternalAnnotationDemo() {
+  return (
+    <ComponentDemoSection previewClassName="w-full max-w-[36rem]">
+      <div className="space-y-md">
+        <ComponentLibraryAnnotation>
+          Use annotations for concise stakeholder guidance.
+        </ComponentLibraryAnnotation>
+        <ComponentLibraryAnnotation label="MVP scope">
+          Prompts can explain and compare grounded Page data. They do not start
+          drafting or publishing actions.
+        </ComponentLibraryAnnotation>
+      </div>
+    </ComponentDemoSection>
+  );
+}
+
+export function InternalDemoGuidanceDemo() {
+  return (
+    <ComponentDemoSection previewClassName="w-full max-w-[44rem]">
+      <ComponentLibraryDemoGuidance onReset={() => undefined}>
+        Interact with the example below. Reset it at any time.
+      </ComponentLibraryDemoGuidance>
+    </ComponentDemoSection>
   );
 }
 
@@ -2730,6 +2766,15 @@ const voiceModeDemoTranscripts = [
   "Actually, can I talk to someone who can help us plan this?",
 ] as const;
 
+const pcpPromptDemoSurfaceOptions: ReadonlyArray<
+  DemoOption<PcpPromptDemoSurface>
+> = [
+  { label: "FAB hover", value: "fab" },
+  { label: "Empty assistant", value: "assistant" },
+  { label: "Page", value: "page" },
+  { label: "After response", value: "response" },
+];
+
 const voiceModeDemoResponses = [
   "You are describing an urgent, high-volume hiring ramp. I can match you with a sales consultant who can help shape the first-wave plan.",
   "The best next step is a short conversation with a sales consultant who can help you pressure-test the hiring plan.",
@@ -2751,7 +2796,7 @@ function getPartialVoiceDemoText(fullText: string, visibleText: string) {
 }
 
 export function SharedVoiceModeDemo() {
-  const [device, setDevice] = useState<ShellDemoDevice>("desktop");
+  const [device] = useState<ShellDemoDevice>("desktop");
   const [draft, setDraft] = useState("");
   const [voiceModeOn, setVoiceModeOn] = useState(false);
   const [voiceState, setVoiceState] = useState<ChatComposerVoiceState>("idle");
@@ -2962,17 +3007,14 @@ export function SharedVoiceModeDemo() {
   useEffect(() => clearTimers, [clearTimers]);
 
   return (
-    <ContextualComponentDemoSection
-      controls={
-        <>
-          <Button size="small" variant="secondary" onClick={resetDemo}>
-            Reset demo
-          </Button>
-          <DemoDeviceControl value={device} onChange={setDevice} />
-        </>
-      }
-    >
-      <ChatSurfaceDemoFrame device={device} height="tall">
+    <div className="space-y-6">
+      <ComponentLibraryDemoGuidance
+        onReset={resetDemo}
+      >
+        Start voice mode to preview a voice conversation.
+      </ComponentLibraryDemoGuidance>
+      <ContextualComponentDemoSection>
+        <ChatSurfaceDemoFrame device={device} height="tall">
         <ChatHeader
           title={HIRING_CONCIERGE_TITLE}
           showCloseAction={false}
@@ -3044,7 +3086,43 @@ export function SharedVoiceModeDemo() {
           voiceModeActive={voiceModeOn}
           voiceState={voiceState}
         />
-      </ChatSurfaceDemoFrame>
+        </ChatSurfaceDemoFrame>
+      </ContextualComponentDemoSection>
+    </div>
+  );
+}
+
+export function SharedVoiceModeComposerExample() {
+  const [speaker, setSpeaker] = useState<"user-speaking" | "speaking">(
+    "user-speaking",
+  );
+
+  return (
+    <ContextualComponentDemoSection
+      controls={
+        <SegmentedControl
+          label="Speaker"
+          value={speaker}
+          options={[
+            { label: "User", value: "user-speaking" },
+            { label: "VCA", value: "speaking" },
+          ]}
+          onChange={setSpeaker}
+        />
+      }
+    >
+      <ChatPanelContextFrame context="collapsed">
+        <ChatComposer
+          variant="collapsed"
+          onVoiceCommit={() => setSpeaker("speaking")}
+          onVoiceInterrupt={() => setSpeaker("user-speaking")}
+          onVoiceModeExit={() => undefined}
+          showAttachAction={false}
+          showVoiceMode
+          voiceModeActive
+          voiceState={speaker}
+        />
+      </ChatPanelContextFrame>
     </ContextualComponentDemoSection>
   );
 }
@@ -3145,6 +3223,254 @@ export function SharedPromptsUsageDemo() {
         </div>
       </ChatPanelContextFrame>
     </ComponentDemoSection>
+  );
+}
+
+export function PcpPromptsDemo() {
+  const [surface, setSurface] = useState<PcpPromptDemoSurface>("fab");
+
+  return (
+    <ComponentDemoSection
+      previewClassName="w-full max-w-[58rem]"
+      controls={
+        <SegmentedControl
+          label="Surface"
+          onChange={setSurface}
+          options={pcpPromptDemoSurfaceOptions}
+          value={surface}
+        />
+      }
+    >
+      {surface === "fab" ? <PcpFabPromptPreview /> : null}
+      {surface === "assistant" ? <PcpEmptyAssistantPromptPreview /> : null}
+      {surface === "page" ? <PcpPagePromptPreview /> : null}
+      {surface === "response" ? <PcpResponsePromptPreview /> : null}
+    </ComponentDemoSection>
+  );
+}
+
+function PcpStarterPromptGroup() {
+  return (
+    <PromptGroup layout="stacked">
+      {PCP_STARTER_PROMPTS.map((prompt) => (
+        <Prompt key={prompt} prompt={prompt} />
+      ))}
+    </PromptGroup>
+  );
+}
+
+function PcpAdminPreviewCanvas({
+  children,
+}: Readonly<{ children?: ReactNode }>) {
+  return (
+    <div className="absolute inset-0 min-w-[48rem] bg-background-neutral-soft text-text">
+      <div className="flex h-12 items-center gap-lg border-b border-border-faint bg-background px-lg">
+        <span className="inline-flex size-7 items-center justify-center rounded-xs bg-action text-label-xs text-background">
+          in
+        </span>
+        <span className="h-7 w-44 rounded-xs bg-background-neutral-soft" />
+        <div className="ml-auto flex items-center gap-lg text-body-xs text-text-meta">
+          <span>Home</span>
+          <span>My Network</span>
+          <span>Jobs</span>
+          <span>Messaging</span>
+        </div>
+      </div>
+      <div className="grid grid-cols-[10.5rem_minmax(0,1fr)] gap-md p-md">
+        <aside className="rounded-sm border border-border-faint bg-background p-lg">
+          <div className="flex items-center gap-sm">
+            <span className="inline-flex size-9 items-center justify-center rounded-sm bg-[#d8ece5] text-control-sm text-positive">
+              V
+            </span>
+            <div>
+              <p className="text-control-sm">Velora</p>
+              <p className="text-body-xs text-text-meta">86K followers</p>
+            </div>
+          </div>
+          <div className="mt-lg space-y-md text-body-sm text-text-meta">
+            <p>Dashboard</p>
+            <p className="font-semibold text-positive">Analytics</p>
+            <p>Feed</p>
+            <p>Activity</p>
+            <p>Inbox</p>
+            <p>Edit Page</p>
+          </div>
+        </aside>
+        <main className="min-w-0">
+          <section className="overflow-hidden rounded-sm border border-border-faint bg-background">
+            <h2 className="px-lg pt-lg text-heading-lg">Analytics</h2>
+            <div className="mt-sm flex gap-xl border-b border-border-faint px-lg text-control-sm text-text-meta">
+              <span className="border-b-2 border-positive pb-sm text-positive">
+                Content
+              </span>
+              <span>Visitors</span>
+              <span>Followers</span>
+              <span>Competitors</span>
+            </div>
+          </section>
+          <div className="mt-md">
+            {children ?? (
+              <div className="space-y-md">
+                <div className="h-16 rounded-sm border border-border-faint bg-background" />
+                <div className="h-52 rounded-sm border border-border-faint bg-background" />
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function PcpPremiumHeaderIdentity() {
+  return (
+    <span className="inline-flex items-center gap-xs text-control-sm text-text">
+      <PremiumChipSmall />
+      <span className="font-medium">Premium</span>
+    </span>
+  );
+}
+
+function PcpAdminChatPreview({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <ChatPanel
+      aria-label="Velora AI preview"
+      className="!h-full !w-full !rounded-sm shadow-raised-faint"
+      variant="collapsed"
+    >
+      <ChatHeader
+        identity={{ type: "ai", title: <PcpPremiumHeaderIdentity /> }}
+        onClose={() => {}}
+        onMinimizeToTray={() => {}}
+        onVariantToggle={() => {}}
+        showAiMark={false}
+        variant="collapsed"
+      />
+      <ChatBody>{children}</ChatBody>
+      <ChatComposer
+        inputProps={{
+          "aria-label": "Message Page assistant",
+          placeholder: "Send message",
+        }}
+        onSend={() => {}}
+        showAttachAction={false}
+        showTopDivider
+        showVoiceMode={false}
+        variant="collapsed"
+      />
+    </ChatPanel>
+  );
+}
+
+function PcpFabPromptPreview() {
+  return (
+    <div className="relative h-[34rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+      <PcpAdminPreviewCanvas />
+      <div className="group absolute bottom-[4.75rem] right-xl z-10">
+        <FabPromptStack
+          items={PCP_STARTER_PROMPTS.map((prompt, index) => ({
+            id: `pcp-demo-starter-${index}`,
+            prompt,
+            value: prompt,
+          }))}
+          onPromptSelect={() => {}}
+          visible
+        />
+        <VcaFab
+          adminTone="gold"
+          label="Open Assistant"
+          onClick={() => {}}
+          position="static"
+          variant="admin"
+        />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 flex h-12 items-center justify-end border-t border-border-faint bg-background px-xl text-control-sm shadow-raised-faint">
+        Messaging
+      </div>
+    </div>
+  );
+}
+
+function PcpEmptyAssistantPromptPreview() {
+  return (
+    <div className="relative h-[36rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+      <PcpAdminPreviewCanvas />
+      <div className="absolute inset-y-md right-md w-[25rem] max-w-[calc(100%-2rem)]">
+        <PcpAdminChatPreview>
+          <ChatThread>
+            <ChatResponseBlock>
+              <ChatMessage>
+                Welcome back, Rose. I can help you understand how
+                Velora&apos;s Page is performing, compare competitors, and
+                identify relevant visitors.
+              </ChatMessage>
+              <ChatResponseAttachment>
+                <PcpStarterPromptGroup />
+              </ChatResponseAttachment>
+            </ChatResponseBlock>
+          </ChatThread>
+        </PcpAdminChatPreview>
+      </div>
+    </div>
+  );
+}
+
+function PcpPagePromptPreview() {
+  return (
+    <div className="relative h-[34rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+      <PcpAdminPreviewCanvas>
+        <PremiumCompanyPagesContentHighlightsPromptPreview />
+      </PcpAdminPreviewCanvas>
+    </div>
+  );
+}
+
+const pcpPostImpressionsValues = [82, 86, 81, 78, 74, 70, 68, 64] as const;
+
+function PcpResponsePromptPreview() {
+  return (
+    <div className="relative h-[42rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+      <PcpAdminPreviewCanvas>
+        <PremiumCompanyPagesContentHighlightsPromptPreview />
+      </PcpAdminPreviewCanvas>
+      <div className="absolute inset-y-md right-md w-[25rem] max-w-[calc(100%-2rem)]">
+        <PcpAdminChatPreview>
+          <ChatThread>
+            <ChatMessage role="user">Why are post impressions down?</ChatMessage>
+            <ChatResponseBlock>
+              <ChatMessage>
+                <ChatMessageContent>
+                  <p>
+                    Post impressions are down <strong>18.4% this month</strong>.
+                    <strong> You posted less often</strong>, while reactions,
+                    comments, and reposts are up. Fewer people are seeing posts
+                    that are still working. Start by posting more regularly, or{" "}
+                    <strong>boost your strongest post</strong> if you need more
+                    reach.
+                  </p>
+                </ChatMessageContent>
+              </ChatMessage>
+              <ChatResponseAttachment>
+                <MetricWithTrend
+                  annotation={{ label: "", tone: "neutral" }}
+                  axisTicks={["May 10", "May 25", "Jun 8"]}
+                  delta="18.4%"
+                  deltaContext="vs last month"
+                  title="Post impressions"
+                  tone="negative"
+                  unit="impressions this month"
+                  value="64,800"
+                  values={pcpPostImpressionsValues}
+                />
+                <Prompt prompt="What post should I boost?" />
+              </ChatResponseAttachment>
+            </ChatResponseBlock>
+          </ChatThread>
+        </PcpAdminChatPreview>
+      </div>
+    </div>
   );
 }
 

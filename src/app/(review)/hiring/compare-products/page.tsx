@@ -4,8 +4,8 @@ import { HiringBlankPage } from "@/components/landing/hiring-blank-page";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Compare Products",
-  description: "Prototype placeholder for LinkedIn Hiring product comparison.",
+  title: "Compare Hiring Products",
+  description: "Design for comparing Hiring products.",
 });
 
 export default function HiringCompareProductsPage() {

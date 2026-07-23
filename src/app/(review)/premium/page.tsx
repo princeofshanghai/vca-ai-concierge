@@ -6,8 +6,7 @@ import { getPremiumShellMode } from "@/lib/premium-shell";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Premium Concierge",
-  description:
-    "Prototype survey landing surface for the LinkedIn Premium AI concierge experience.",
+  description: "Design prototype for the Premium AI concierge.",
 });
 
 type PremiumPageProps = Readonly<{

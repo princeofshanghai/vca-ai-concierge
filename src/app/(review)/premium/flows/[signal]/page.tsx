@@ -31,15 +31,16 @@ export async function generateMetadata({
   if (!isPremiumReviewFlowId(signal)) {
     return createPageMetadata({
       title: "Premium Concierge",
-      description:
-        "Prototype survey landing surface for the LinkedIn Premium AI concierge experience.",
+      description: "Design prototype for the Premium AI concierge.",
     });
   }
 
   return createPageMetadata({
-    title: `Premium Concierge: ${premiumConversationFlows[signal].label}`,
+    title: `Premium Concierge — ${signal === "low" ? "Low Signal" : "High Signal"}`,
     description:
-      "Static signal-based Premium AI concierge transcript prototype.",
+      signal === "low"
+        ? "Design flow for a concierge with limited member context."
+        : "Design flow for a concierge with strong member context.",
   });
 }
 

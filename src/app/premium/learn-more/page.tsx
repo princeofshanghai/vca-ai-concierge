@@ -5,7 +5,7 @@ import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Premium Learn More",
-  description: "Static Premium learn more screenshot for prototype review.",
+  description: "Reference design for the Premium learn-more experience.",
 });
 
 export default function PremiumLearnMorePage() {

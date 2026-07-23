@@ -1038,12 +1038,12 @@ export function ReviewShellNav() {
     triggerRef.current?.focus();
   }
 
-  function getPillClasses(isActive: boolean, extraClassName = "") {
+  function getSegmentClasses(isActive: boolean, extraClassName = "") {
     return [
-      "pointer-events-auto inline-flex min-h-8 min-w-0 items-center justify-center whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-black/5 backdrop-blur-2xl transition-colors duration-200 ease-out focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
+      "relative inline-flex min-h-8 min-w-0 items-center justify-center whitespace-nowrap px-3 py-1.5 text-[11px] font-medium tracking-[0.015em] transition-colors duration-200 ease-out focus-visible:z-30 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-500/20 sm:px-4",
       isActive
-        ? "border-sky-100 bg-sky-50/82 text-sky-900 supports-[backdrop-filter]:bg-sky-50/70"
-        : "border-slate-300/80 bg-white/50 text-slate-700 ring-slate-900/10 hover:border-slate-400/70 hover:bg-white/70 hover:text-slate-950 supports-[backdrop-filter]:bg-white/42",
+        ? "bg-sky-50/82 text-sky-900 supports-[backdrop-filter]:bg-sky-50/70"
+        : "text-slate-700 hover:bg-white/60 hover:text-slate-950",
       extraClassName,
     ].join(" ");
   }
@@ -1051,12 +1051,13 @@ export function ReviewShellNav() {
   return (
     <nav
       aria-label="Review surfaces"
-      className="pointer-events-none fixed inset-x-0 top-2 z-50 px-4 sm:top-3"
+      className="pointer-events-none fixed inset-x-0 top-2 z-50 flex justify-center px-4 sm:top-3"
     >
-      <ul className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-2 sm:gap-3">
+      <ul className="pointer-events-auto relative inline-flex min-h-8 max-w-full items-stretch rounded-full border border-slate-300/80 bg-white/50 shadow-[0_12px_32px_rgba(15,23,42,0.08),0_3px_12px_rgba(15,23,42,0.05)] ring-1 ring-slate-900/10 backdrop-blur-2xl supports-[backdrop-filter]:bg-white/42">
         {reviewDestinations.map((destination) => {
             const isActive = destination.matches(pathname);
             const hasMenu = Boolean(destination.menu);
+            const isHome = destination.href === HOME_DESTINATION.href;
             const isPremiumMenu = destination.menu === "premium";
             const isPremiumUpsellHelpCenterMenu =
               destination.menu === "premium-upsell-help-center";
@@ -1090,7 +1091,7 @@ export function ReviewShellNav() {
               return (
                 <li
                   key={destination.href}
-                  className="relative z-10 min-w-0 justify-self-center"
+                  className="z-10 min-w-0"
                 >
                   <button
                     id={TRIGGER_ID}
@@ -1107,9 +1108,9 @@ export function ReviewShellNav() {
                     ref={(element) => {
                       triggerRef.current = element;
                     }}
-                    className={getPillClasses(
+                    className={getSegmentClasses(
                       isActive,
-                      "max-w-full gap-2 sm:gap-3",
+                      "max-w-full gap-2 before:absolute before:left-0 before:top-1/2 before:h-4 before:w-px before:-translate-y-1/2 before:bg-slate-300/80 sm:gap-3",
                     )}
                   >
                     <span className="inline-flex min-w-0 items-baseline gap-2 leading-none">
@@ -1119,12 +1120,15 @@ export function ReviewShellNav() {
                       {destination.metaLabel ? (
                         <span
                           className={[
-                            "hidden max-w-[34vw] truncate border-l pl-3 text-[11px] font-medium leading-[1.05] tracking-normal md:inline",
+                            "hidden max-w-[34vw] truncate text-[11px] font-medium leading-[1.05] tracking-normal md:inline",
                             isActive
-                              ? "border-sky-700/20 text-sky-700/75"
-                              : "border-slate-300/80 text-slate-500",
+                              ? "text-sky-700/75"
+                              : "text-slate-500",
                           ].join(" ")}
                         >
+                          <span aria-hidden="true" className="mr-2">
+                            ·
+                          </span>
                           {destination.metaLabel}
                         </span>
                       ) : null}
@@ -1215,24 +1219,19 @@ export function ReviewShellNav() {
             return (
               <li
                 key={destination.href}
-                className={[
-                  "relative z-10",
-                  destination.href === HOME_DESTINATION.href
-                    ? "justify-self-start"
-                    : "justify-self-end",
-                ].join(" ")}
+                className="z-10 min-w-0"
               >
                 <IntentPrefetchLink
                   href={destination.href}
                   aria-current={isActive ? "page" : undefined}
-                  className={getPillClasses(
+                  className={getSegmentClasses(
                     isActive,
-                    destination.href === HOME_DESTINATION.href
-                      ? "gap-1 sm:gap-1.5"
-                      : "gap-1.5",
+                    isHome
+                      ? "gap-1 rounded-l-full sm:gap-1.5"
+                      : "gap-1.5 rounded-r-full before:absolute before:left-0 before:top-1/2 before:h-4 before:w-px before:-translate-y-1/2 before:bg-slate-300/80",
                   )}
                 >
-                  {destination.href === HOME_DESTINATION.href ? (
+                  {isHome ? (
                     <>
                       <HomeNavIcon />
                       <span className="hidden sm:inline">
