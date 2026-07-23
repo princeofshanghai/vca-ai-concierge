@@ -4,9 +4,8 @@ import { PremiumCompanyPagesAdminInboxPage } from "@/components/premium-company-
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Admin Inbox",
-  description:
-    "Scripted Premium Company Page inbox prototype with VCA context and suggested replies.",
+  title: "Premium Company Pages — Inbox",
+  description: "Design for AI-supported Page inbox experiences.",
 });
 
 export default function PremiumCompanyPagesAdminInboxRoute() {

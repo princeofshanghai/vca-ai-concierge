@@ -241,30 +241,30 @@ const ADMIN_PAGE_PERFORMANCE_PROMPT = "How is my page performing?";
 const ADMIN_NEXT_FOCUS_PROMPT = "What should I focus on next?";
 const ADMIN_VISITOR_AUDIENCE_PROMPT =
   "Show insights about my page visitors";
-const ADMIN_PAGE_PERFORMANCE_RESPONSE_TEXT = `Your Page is performing well on content engagement, but growth is not keeping pace with competitors.
+const ADMIN_PAGE_PERFORMANCE_RESPONSE_TEXT = `People are engaging with your posts, but your competitors are gaining followers faster.
 
-Impressions, reactions, comments, and reposts are all up this month. Your strongest post reached an 8.2% engagement rate, which suggests practical open enrollment and carrier-readiness content is resonating.
+Impressions, reactions, comments, and reposts are all up this month. Your strongest post had an 8.2% engagement rate. Practical posts about open enrollment and carrier readiness are getting the best response.
 
-The main gap is distribution. Page views are up, but unique visitors are down, custom button clicks are still low, and Velora added 420 new followers compared with ${pcpCompetitorNames[0]}'s 1,280. That suggests the content is resonating with people who see it, but the Page needs more reach and clearer conversion paths.`;
+The main challenge is reach. Page views are up, but fewer visitors are new, and custom button clicks are still low. ${pcpCompetitorNames[0]} gained 1,280 followers, compared with Velora's 420. People respond when they see your posts, but you need to reach more of them and give them a clearer reason to click.`;
 const ADMIN_PAGE_PERFORMANCE_RESPONSE_HIGHLIGHTS = [
-  "content engagement",
-  "growth is not keeping pace with competitors",
+  "People are engaging with your posts",
+  "competitors are gaining followers faster",
   "8.2% engagement rate",
   "Page views are up",
-  "unique visitors are down",
+  "fewer visitors are new",
   "custom button clicks are still low",
-  `420 new followers compared with ${pcpCompetitorNames[0]}'s 1,280`,
+  `${pcpCompetitorNames[0]} gained 1,280 followers, compared with Velora's 420`,
 ] as const;
-const VISITOR_AUDIENCE_RESPONSE_TEXT = `Your Page is reaching more relevant visitors this month.
+const VISITOR_AUDIENCE_RESPONSE_TEXT = `Your Page is reaching more of the people Velora wants to reach this month.
 
-64% of people who viewed your Page match Velora's target audience, up from 52% last month. The strongest signals are job function, seniority, and company size.
+64% of people who viewed your Page match Velora's target audience, up from 52% last month.
 
-More visitors now match Velora's core audience profile: Human Resources roles, Director+ seniority, and companies with 10,001+ employees. That suggests your Page is reaching people who are more likely to evaluate Velora, not just browse it.`;
+Most of those visitors work in Human Resources, are director level or above, and come from companies with 10,001+ employees. That does not confirm buying intent, but it shows that more of the right people are finding your Page.`;
 const VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS = [
   "64%",
   "up from 52% last month",
-  "Human Resources roles",
-  "Director+ seniority",
+  "Human Resources",
+  "director level or above",
   "10,001+ employees",
 ] as const;
 const VISITOR_AUDIENCE_RELEVANT_VISITORS_PROMPT =
@@ -274,27 +274,30 @@ const ADMIN_RELEVANT_VISITORS_PROMPT =
 const VISITOR_AUDIENCE_REACH_MORE_PROMPT = "How do I reach more of them?";
 const VISITOR_AUDIENCE_RELEVANT_VISITORS_RESPONSE_TEXT =
   "Here are a few visitors who match the strongest audience signals for Velora right now.";
-const ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT = `A few recent visitors look especially relevant for Velora.
+const ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT = `These visitors are closer to the audience Velora wants to reach.
 
-They match your target profile: HR and benefits leaders at large companies, with recent Page activity around benefits operations content.
+They are HR or benefits leaders at large companies who recently viewed content about benefits operations. Some also returned or viewed more than one post.
 
-I'd prioritize visitors who combine seniority, company size, and repeat engagement. Those signals are stronger than a single Page view on its own.`;
+Start with visitors who are senior, work at a large company, and came back more than once. That activity may show stronger interest, but it does not confirm buying intent.`;
 const ADMIN_RELEVANT_VISITORS_RESPONSE_HIGHLIGHTS = [
-  "HR and benefits leaders",
-  "large companies",
-  "seniority, company size, and repeat engagement",
+  "closer to the audience Velora wants to reach",
+  "HR or benefits leaders at large companies",
+  "returned or viewed more than one post",
+  "does not confirm buying intent",
 ] as const;
 const VISITOR_AUDIENCE_REACH_MORE_RESPONSE_TEXT =
   "Post more content for Human Resources leaders at large employers, then reuse the open enrollment and carrier-readiness proof that is already attracting relevant visitors.";
-const ADMIN_NEXT_FOCUS_RESPONSE_TEXT = `Focus on turning engagement into follower growth.
+const ADMIN_NEXT_FOCUS_RESPONSE_TEXT = `Post more often, starting with a practical checklist for HR leaders.
 
-Your content is resonating when people see it, but Velora is posting less often than similar Pages. Competitors gaining followers are using short, practical open enrollment posts with clear deadlines.
+People respond when they see your posts, but Velora published 12 posts this month. ${pcpCompetitorNames[0]} published 22. Their short open enrollment posts with clear deadlines are helping them gain followers faster.
 
-I'd make your next move a checklist-style post for HR leaders, then follow it with a Velora proof point.`;
+This week, publish one carrier-readiness checklist. Then follow it with a Velora customer example.`;
 const ADMIN_NEXT_FOCUS_RESPONSE_HIGHLIGHTS = [
-  "turning engagement into follower growth",
-  "posting less often",
-  "checklist-style post",
+  "Post more often",
+  "Velora published 12 posts this month",
+  `${pcpCompetitorNames[0]} published 22`,
+  "publish one carrier-readiness checklist",
+  "follow it with a Velora customer example",
 ] as const;
 const ADMIN_NEXT_FOCUS_DRAFT_PROMPT = "Draft a similar post";
 const ADMIN_NEXT_FOCUS_DRAFT_TEXT = `Here is a Velora version:
@@ -306,16 +309,16 @@ Before enrollment opens, HR teams should confirm carrier file readiness, eligibi
 Velora helps benefits teams see those moving parts in one workflow, so open enrollment feels coordinated before the deadline pressure hits.`;
 const ADMIN_POST_IMPRESSIONS_PROMPT = "Why are post impressions down?";
 const ADMIN_POST_IMPRESSIONS_BOOST_PROMPT = "What post should I boost?";
-const ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT = `Post impressions are down 18.4% this month. The clearest pattern is cadence: Velora posted fewer times, and two link-heavy updates had weaker early engagement.
+const ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT = `Post impressions are down 18.4% this month. You posted less often, and two posts with links got less engagement early on.
 
-The content itself is not all underperforming. Reactions, comments, and reposts are still up, which suggests people are responding when the right posts reach them. The issue looks more like distribution than topic fit.
+The posts themselves are still working. Reactions, comments, and reposts are up. The main problem is that fewer people are seeing them.
 
-I would first return to a steadier posting cadence and reuse practical benefits-operations topics organically. If you need faster reach ahead of open enrollment planning, boosting a proven post could also be a reasonable next step.`;
+Start by posting more regularly and reusing topics that already worked. If you need more reach before open enrollment, consider boosting your strongest post.`;
 const ADMIN_POST_IMPRESSIONS_RESPONSE_HIGHLIGHTS = [
   "18.4% this month",
-  "posted fewer times",
-  "distribution than topic fit",
-  "boosting a proven post could also be a reasonable next step",
+  "You posted less often",
+  "fewer people are seeing them",
+  "consider boosting your strongest post",
 ] as const;
 const ADMIN_POST_IMPRESSIONS_BOOST_RESPONSE_TEXT =
   "I'd boost the open enrollment customer story first. It already has the strongest engagement rate in the recent set, so boosting would extend content that is working instead of trying to rescue a weak post.";
@@ -345,16 +348,25 @@ const ADMIN_PAGE_ENGAGEMENT_SECTION_TITLES = [
 ] as const;
 const ADMIN_CUSTOM_BUTTON_CLICKS_PROMPT =
   "How can I get more custom button clicks?";
-const ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_TEXT = `Your custom button is getting a few clicks, but it is not converting enough Page attention yet.
+const ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_TEXT = `Only 126 visitors clicked your custom button this month, even though Page views are up.
 
-Page views are up this month, but the button only received 126 clicks. That usually means visitors are finding the Page, but the next step is either not visible enough or not specific enough for what they came to learn.
+About 4% of unique visitors clicked it. The button may be easy to miss, or its next step may not match what visitors came to learn.
 
-I would make the button action match the content that is working: point visitors toward a demo, customer proof, or open enrollment resource. Then pin or post a short update that tells HR leaders exactly why to click.`;
+Link it to one clear next step, such as a demo, customer story, or open enrollment resource. Then publish a short post that tells HR leaders what they will get when they click.`;
 const ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_HIGHLIGHTS = [
-  "not converting enough Page attention yet",
+  "Only 126 visitors clicked your custom button this month",
   "Page views are up",
-  "only received 126 clicks",
-  "demo, customer proof, or open enrollment resource",
+  "About 4% of unique visitors clicked it",
+  "one clear next step",
+  "demo, customer story, or open enrollment resource",
+] as const;
+const ADMIN_COMPETITOR_GROWTH_RESPONSE_TEXT = `${pcpCompetitorNames[0]} gained 1,280 followers this month, compared with Velora's 420. They also posted more often: 22 posts compared with Velora's 12.
+
+Their short open enrollment checklists give HR leaders practical advice tied to deadlines. Velora's strongest posts cover similar topics, but fewer people are seeing them because you publish less often.`;
+const ADMIN_COMPETITOR_GROWTH_RESPONSE_HIGHLIGHTS = [
+  `${pcpCompetitorNames[0]} gained 1,280 followers this month, compared with Velora's 420`,
+  "22 posts compared with Velora's 12",
+  "fewer people are seeing them because you publish less often",
 ] as const;
 
 export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
@@ -1560,7 +1572,7 @@ function SelfInitiatedNextFocusThread({
             id: "posting-cadence",
             children: (
               <ResponseCompare
-                dimension="Posts in the last 30 days"
+                dimension="Last 30 days"
                 rows={[
                   {
                     name: pcpCompetitorNames[0],
@@ -1589,7 +1601,7 @@ function SelfInitiatedNextFocusThread({
                     },
                   },
                 ]}
-                title="Posting cadence"
+                title="Posts published"
               />
             ),
           },
@@ -2771,17 +2783,16 @@ function CompetitorGrowthThread({
                 <ul className="mt-md list-disc space-y-sm pl-xl">
                   <li>
                     <strong className="font-semibold text-text">
-                      Publish one deadline-driven checklist.
+                      Publish one checklist this week.
                     </strong>{" "}
-                    Use a practical open enrollment or carrier-readiness angle
-                    while the topic is already earning competitor attention.
+                    Focus it on an open enrollment deadline or carrier
+                    readiness.
                   </li>
                   <li>
                     <strong className="font-semibold text-text">
-                      Pair it with Velora proof.
+                      Follow it with a customer example.
                     </strong>{" "}
-                    Follow with the Arbor Retail Group story so the response is
-                    specific to Velora, not just a copy of the competitor format.
+                    Use the Arbor Retail Group story to show how Velora helped.
                   </li>
                 </ul>
               </ResponseText>
@@ -2804,8 +2815,16 @@ function CompetitorGrowthThread({
         id="competitor-growth-insight"
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <FormattedInsightResponseText
+            emphasizeOpening={false}
+            highlights={ADMIN_COMPETITOR_GROWTH_RESPONSE_HIGHLIGHTS}
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
         stopSignal={stopSignal}
-        text={`${pcpCompetitorNames[0]} is gaining faster because they paired higher posting cadence with short, checklist-style open enrollment content. The gap is less about brand size and more about repeating practical topics HR leaders are already engaging with.`}
+        text={ADMIN_COMPETITOR_GROWTH_RESPONSE_TEXT}
       />
     </>
   );

@@ -4,9 +4,8 @@ import { VcaEcosystemHelpCenterPage } from "@/components/vca-ecosystem/vca-ecosy
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Upsell AI Concierge",
-  description:
-    "AI concierge signal variants for the Premium upsell in Help Center prototype.",
+  title: "Premium Upsell — AI Concierge",
+  description: "Design variations for AI concierge-led Premium upsell.",
 });
 
 type PremiumUpsellAiConciergeRouteProps = Readonly<{

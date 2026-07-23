@@ -6,9 +6,8 @@ import { getHiringShellMode } from "@/lib/hiring-shell";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Medium Flow - Unavailable",
-  description:
-    "Internal chat panel review for the medium AI concierge scheduled sales consultant flow.",
+  title: "Hiring Concierge — Live Sales Unavailable",
+  description: "Design for the flow when live sales support is unavailable.",
   robots: {
     index: false,
     follow: false,

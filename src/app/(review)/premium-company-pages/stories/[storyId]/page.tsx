@@ -38,9 +38,8 @@ export async function generateMetadata({
     : "Premium Company Pages Story";
 
   return createPageMetadata({
-    title: `${storyLabel} Placeholder`,
-    description:
-      "Reserved Premium Company Pages prototype story route for an unbuilt use case.",
+    title: `Premium Company Pages — ${storyLabel}`,
+    description: "Reserved for a future Premium Company Pages design.",
   });
 }
 

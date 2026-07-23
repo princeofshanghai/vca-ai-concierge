@@ -4,9 +4,8 @@ import { PremiumCompanyPagesPage } from "@/components/premium-company-pages/prem
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Current State",
-  description:
-    "Baseline Premium Company Page admin prototype without the contextual VCA prompt layer.",
+  title: "Premium Company Pages — Current State",
+  description: "Current Page admin design used as the comparison baseline.",
 });
 
 export default function PremiumCompanyPagesCurrentStateRoute() {

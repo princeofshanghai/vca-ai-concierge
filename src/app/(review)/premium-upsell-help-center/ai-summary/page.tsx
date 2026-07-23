@@ -4,9 +4,8 @@ import { VcaEcosystemHelpCenterAiSummaryPage } from "@/components/vca-ecosystem/
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Upsell AI Summary",
-  description:
-    "AI summary surface for the Premium upsell in Help Center prototype.",
+  title: "Premium Upsell — AI Summary",
+  description: "Design for an AI summary with contextual Premium guidance.",
 });
 
 type PremiumUpsellAiSummaryRouteProps = Readonly<{

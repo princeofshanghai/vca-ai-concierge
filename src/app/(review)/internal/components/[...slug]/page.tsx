@@ -30,14 +30,13 @@ export async function generateMetadata({
 
   if (!item) {
     return createPageMetadata({
-      title: "AI Concierge Components",
-      description:
-        "Internal review surface for the VCA AI concierge component system.",
+      title: "VCA Component Library",
+      description: "Component designs for AI concierge experiences.",
     });
   }
 
   return createPageMetadata({
-    title: `AI Concierge Components: ${item.title}`,
+    title: `VCA Component — ${item.title}`,
     description: item.description,
     robots: {
       index: false,

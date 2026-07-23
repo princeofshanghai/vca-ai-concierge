@@ -5,8 +5,7 @@ import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Manage AI Assistant",
-  description:
-    "Placeholder Premium Company Page AI assistant settings prototype.",
+  description: "Design for managing a Page's AI assistant.",
 });
 
 export default function PremiumCompanyPagesAdminAiAssistantSettingsRoute() {

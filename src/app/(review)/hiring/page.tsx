@@ -6,8 +6,7 @@ import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "LTS Hiring Concierge",
-  description:
-    "Prototype landing surface for the LinkedIn Hiring AI concierge experience.",
+  description: "Design prototype for the Hiring AI concierge.",
 });
 
 type HiringPrototypePageProps = Readonly<{

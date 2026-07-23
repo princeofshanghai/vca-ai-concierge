@@ -87,7 +87,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "shared-voice-mode",
             title: "Voice mode",
             description:
-              "Shows compact voice controls with a scripted transcript in the chat thread.",
+              "Allows users to have a back-and-forth conversation with VCA using voice.",
             href: "/internal/components/shared/voice-mode",
           },
         ],
@@ -227,7 +227,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "premium-company-page-prompts",
             title: "Prompts",
             description:
-              "Defines suggested questions that help enterprise Page admins discover, interpret, and continue VCA conversations.",
+              "Documents the shared Prompt component across starter, contextual, and follow-up placements for enterprise Page admins.",
             href: "/internal/components/premium-company-page/prompts",
           },
           {
@@ -455,6 +455,30 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Displays SDUI reaction illustrations for like, praise, support, recommendation, and related signals.",
             href: "/internal/components/sdui/reaction-icons",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Internal-only",
+    groups: [
+      {
+        title: "Documentation",
+        items: [
+          {
+            id: "internal-only-annotation",
+            title: "Annotation",
+            description:
+              "Adds concise internal guidance to component-library documentation.",
+            href: "/internal/components/internal-only/annotation",
+          },
+          {
+            id: "internal-only-demo-guidance",
+            title: "Demo guidance",
+            description:
+              "Explains how to use an interactive component-library example and resets it.",
+            href: "/internal/components/internal-only/demo-guidance",
           },
         ],
       },

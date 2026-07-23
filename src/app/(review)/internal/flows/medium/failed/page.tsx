@@ -6,9 +6,8 @@ import { getHiringShellMode } from "@/lib/hiring-shell";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Medium Flow - Connection Failed",
-  description:
-    "Internal chat panel review for the medium AI concierge flow when live chat connection fails.",
+  title: "Hiring Concierge — Connection Failed",
+  description: "Design for the flow when a live sales connection fails.",
   robots: {
     index: false,
     follow: false,

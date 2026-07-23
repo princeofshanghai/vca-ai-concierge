@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const siteName = "VCA AI concierge";
-export const siteDescription =
-  "Shared prototype workspace and component library for LinkedIn AI concierge surfaces.";
-export const shareImageAlt = "VCA AI concierge share preview";
+export const shareTitle = "VCA Design Prototypes";
+export const siteDescription = "Design prototypes for AI concierge experiences.";
+export const shareImageAlt = "Preview of VCA AI concierge designs";
 
 function resolveSiteUrl() {
   const configuredUrl =
@@ -44,14 +44,12 @@ export function createPageMetadata({
   robots,
   title,
 }: PageMetadataOptions): Metadata {
-  const resolvedTitle = `${title} | ${siteName}`;
-
   return {
     title,
     description,
     robots,
     openGraph: {
-      title: resolvedTitle,
+      title,
       description,
       siteName,
       type: "website",
@@ -59,7 +57,7 @@ export function createPageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: resolvedTitle,
+      title,
       description,
       images: twitterImages,
     },

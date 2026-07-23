@@ -6,19 +6,17 @@ import {
   siteDescription,
   siteName,
   siteUrl,
+  shareTitle,
   twitterImages,
 } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl,
   applicationName: siteName,
-  title: {
-    default: siteName,
-    template: `%s | ${siteName}`,
-  },
+  title: shareTitle,
   description: siteDescription,
   openGraph: {
-    title: siteName,
+    title: shareTitle,
     description: siteDescription,
     siteName,
     type: "website",
@@ -26,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: siteName,
+    title: shareTitle,
     description: siteDescription,
     images: twitterImages,
   },

@@ -86,9 +86,12 @@ import {
 import {
   HiringMicrophoneVoiceBannerDemo,
   HiringSidePanelUsageDemo,
+  InternalAnnotationDemo,
+  InternalDemoGuidanceDemo,
   PremiumFabDemo,
   PremiumFabReviewPreview,
   PremiumPlanCardDemo,
+  PcpPromptsDemo,
   PcpAdminInputFirstStartSurfacePreview,
   PcpInboxAiContextStripPreview,
   PcpInsightCardSystemPreview,
@@ -142,12 +145,15 @@ import {
   SharedSidePanelDemo,
   SharedTaskStatusCardDemo,
   SharedVoiceModeDemo,
+  SharedVoiceModeComposerExample,
   VcaFabPresenceBadgeExplorationPreview,
   VcaFabReviewPreview,
   VcaFabStatesPreview,
   VcaFabSwappableMarkPreview,
 } from "./component-client-previews";
+import { ComponentLibraryAnnotation } from "./component-library-annotation";
 import type { ComponentNavItem } from "./component-nav";
+import { PCP_STARTER_PROMPTS } from "./pcp-prompt-guidance";
 
 const buttonStates = [
   "default",
@@ -194,8 +200,13 @@ const ghostButtonStates = ghostIconButtonStates;
 const navigationIconMetadata = iconMetadata.filter(
   (icon) => "source" in icon && icon.source === "navigation",
 );
+const customIconMetadata = iconMetadata.filter(
+  (icon) => "source" in icon && icon.source === "Custom",
+);
 const systemIconMetadata = iconMetadata.filter(
-  (icon) => !("source" in icon) || icon.source !== "navigation",
+  (icon) =>
+    !("source" in icon) ||
+    (icon.source !== "navigation" && icon.source !== "Custom"),
 );
 type IconCatalogItem = (typeof iconMetadata)[number];
 const reactionIconTypeLabels: Record<SduiReactionIconType, string> = {
@@ -549,7 +560,7 @@ function ChatPanelReferenceFrame({
   return (
     <div
       className={[
-        "overflow-hidden border border-border-faint bg-background",
+        "max-w-full overflow-hidden border border-border-faint bg-background",
         context === "mobile" ? "rounded-none" : "rounded-panel",
         getChatContextWidthClass(context),
         getChatContextAssistantMaxClass(context),
@@ -1079,36 +1090,14 @@ function SharedComposerPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SharedVoiceModePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
-      <PreviewSection
-        title="Demo"
-        description="A click-through mock of the compact voice control. Live recognition appears as a provisional user message in the normal thread, then the center indicator changes speaker while the AI responds."
-      >
+      <PreviewSection title="Demo">
         <SharedVoiceModeDemo />
       </PreviewSection>
-      <PreviewSection title="Production notes">
-        <div className="max-w-[48rem] space-y-md rounded-md border border-border-faint bg-background-neutral-soft p-xl text-body-sm-open text-text-meta">
-          <p>
-            This prototype mocks speech-to-text with a scripted transcript and
-            uses browser speech synthesis as the audio fallback. Production
-            should use streaming STT and a brand-tuned TTS voice.
-          </p>
-          <p>
-            The prototype starts audio when visible text begins streaming and
-            paces the text to feel synchronized. Production should stream both
-            channels together and target sub-300ms audio cutoff for barge-in.
-          </p>
-          <p>
-            Structured cards render silently. The assistant should always speak
-            a short framing sentence first, then let cards appear visually
-            without reading their contents aloud.
-          </p>
-          <p>
-            Visual task panels hide the voice controls, stop audio, and release
-            the microphone while the user completes the focused task. Voice
-            mode resumes when the user returns to chat or completes the
-            task.
-          </p>
-        </div>
+      <PreviewSection
+        title="Composer"
+        description="Voice mode replaces the text input with an animated composer that shows whether the user or VCA is speaking and provides controls to finish, interrupt, or end the conversation."
+      >
+        <SharedVoiceModeComposerExample />
       </PreviewSection>
     </ComponentPageShell>
   );
@@ -1399,10 +1388,7 @@ function SharedSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Demo">
         <SharedSidePanelDemo />
       </PreviewSection>
-      <PreviewSection
-        title="Usage"
-        description="Side panels keep the conversation available while users complete a focused task or review details. This preserves context and reduces the chance they abandon the conversation."
-      >
+      <PreviewSection title="Usage">
         <PreviewMomentStack>
           <PreviewMoment>
             <PreviewExampleIntro title="LTS hiring microsite">
@@ -1672,31 +1658,25 @@ function PremiumCompanyPageVcaFabPage({
   );
 }
 
-const pcpPromptTypeRows = [
+const pcpPromptPlacementRows = [
   {
-    type: "Starter",
-    purpose: "Introduce VCA's core capabilities",
-    shown: "When the assistant opens",
+    pattern: "Starter",
+    surface: "FAB hover and empty assistant",
+    purpose: "Offer an entry into the three MVP use cases",
     quantity: "3",
   },
   {
-    type: "Contextual",
-    purpose: "Help interpret the current surface",
-    shown: "Within a relevant Page section",
+    pattern: "Contextual",
+    surface: "Within a relevant Page section",
+    purpose: "Help interpret the nearby data",
     quantity: "1 per section; max 2 per page",
   },
   {
-    type: "Follow-up",
-    purpose: "Continue from VCA's answer",
-    shown: "After a response",
-    quantity: "2 by default; max 3",
+    pattern: "Follow-up",
+    surface: "After a VCA response",
+    purpose: "Continue the analysis or choose a next step",
+    quantity: "2 by default",
   },
-] as const;
-
-const pcpStarterPrompts = [
-  "How is my Page performing?",
-  "How do my competitors compare?",
-  "What audience is my Page reaching?",
 ] as const;
 
 const pcpContextualPromptExamples = [
@@ -1708,7 +1688,7 @@ const pcpContextualPromptExamples = [
   {
     section: "Visitor analytics",
     context: "64% of visitors match the target audience",
-    prompt: "Am I reaching the right audience?",
+    prompt: "Which visitors look most relevant?",
   },
   {
     section: "Competitors",
@@ -1718,6 +1698,10 @@ const pcpContextualPromptExamples = [
 ] as const;
 
 const pcpPromptBestPractices = [
+  {
+    do: "Use the same starter set in FAB hover and empty chat",
+    dont: "Show one set before opening VCA and another after",
+  },
   {
     do: "Tie contextual prompts to nearby data",
     dont: "Place generic prompts throughout the Page",
@@ -1731,8 +1715,8 @@ const pcpPromptBestPractices = [
     dont: "Use vague copy such as “Tell me more”",
   },
   {
-    do: "Offer meaningfully different choices",
-    dont: "Show multiple versions of the same question",
+    do: "Map every prompt to an MVP use case and grounded tool",
+    dont: "Promise drafting, publishing, outreach, or other write actions",
   },
   {
     do: "Use an insight when VCA knows the conclusion",
@@ -1740,7 +1724,7 @@ const pcpPromptBestPractices = [
   },
   {
     do: "Suppress prompts already addressed or dismissed",
-    dont: "Repeat the same prompt across surfaces",
+    dont: "Repeat a prompt in nearby surfaces",
   },
 ] as const;
 
@@ -1770,63 +1754,89 @@ function PremiumCompanyPagePromptsPage({
   return (
     <ComponentPageShell item={item} section="Premium Company Page">
       <PreviewSection
-        title="Prompt types"
-        description="Each prompt has a distinct role in helping an enterprise Page admin begin, interpret, or continue a conversation."
+        title="Demo"
+        description="Use the surface control to see how the same Prompt component adapts across the PCP admin experience."
+      >
+        <PcpPromptsDemo />
+      </PreviewSection>
+
+      <PreviewSection
+        title="Prompt placements"
+        description="Prompt is one component. Starter, contextual, and follow-up describe where it appears and how it is used in the MVP."
       >
         <div className="overflow-hidden rounded-md border border-border-faint bg-background">
           <table className="min-w-[760px] w-full border-collapse text-left text-body-sm text-text">
             <thead className="bg-background-neutral-soft text-control-sm">
               <tr>
-                <th className="px-lg py-md" scope="col">Type</th>
+                <th className="px-lg py-md" scope="col">Pattern</th>
+                <th className="px-lg py-md" scope="col">Surface</th>
                 <th className="px-lg py-md" scope="col">Purpose</th>
-                <th className="px-lg py-md" scope="col">When shown</th>
                 <th className="px-lg py-md" scope="col">Quantity</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-faint">
-              {pcpPromptTypeRows.map((row) => (
-                <tr key={row.type}>
+              {pcpPromptPlacementRows.map((row) => (
+                <tr key={row.pattern}>
                   <th className="px-lg py-lg text-control-sm" scope="row">
-                    {row.type}
+                    {row.pattern}
                   </th>
+                  <td className="px-lg py-lg text-text-meta">{row.surface}</td>
                   <td className="px-lg py-lg text-text-meta">{row.purpose}</td>
-                  <td className="px-lg py-lg text-text-meta">{row.shown}</td>
                   <td className="px-lg py-lg text-text-meta">{row.quantity}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <ComponentLibraryAnnotation className="mt-xl" label="MVP scope">
+          Prompts ask VCA to explain, compare, summarize, recommend, or show
+          grounded Page data. They do not start drafting, publishing, outreach,
+          or other write actions.
+        </ComponentLibraryAnnotation>
       </PreviewSection>
 
       <PreviewSection
         title="Starter prompts"
-        description="Broad questions that introduce the main jobs VCA can help with. They remain consistent across admin surfaces."
+        description="Shown before a conversation begins. FAB hover previews the same starter set shown in the empty assistant."
       >
         <PreviewMomentStack>
           <PcpPromptGuidanceList
             items={[
-              "Show three when the assistant opens.",
-              "Represent three distinct admin jobs.",
-              "Avoid reacting to temporary data changes or duplicating intent.",
+              "Show the same three prompts, in the same order, in FAB hover and empty chat.",
+              "Represent Page performance, competitor monitoring, and visitor analysis.",
+              "Selecting a FAB prompt opens the assistant and runs it immediately.",
             ]}
           />
-          <PreviewMoment>
-            <PreviewExampleIntro title="Assistant opening">
-              Give admins a small, stable set of ways to begin.
-            </PreviewExampleIntro>
-            <ChatThreadReferenceFrame>
-              <ChatMessage>
-                Welcome back, Rose. I can help you understand how Velora&apos;s
-                Page is performing and what deserves attention.
-              </ChatMessage>
-              <PromptGroup>
-                {pcpStarterPrompts.map((prompt) => (
-                  <Prompt key={prompt} prompt={prompt} />
-                ))}
-              </PromptGroup>
-            </ChatThreadReferenceFrame>
-          </PreviewMoment>
+          <div className="grid gap-xl lg:grid-cols-2">
+            <PreviewCard
+              title="FAB hover"
+              description="Compact preview before the assistant opens."
+            >
+              <div className="flex min-h-72 items-end justify-end rounded-md border border-border-faint bg-background-neutral-soft p-lg">
+                <PromptGroup>
+                  {PCP_STARTER_PROMPTS.map((prompt) => (
+                    <Prompt key={prompt} prompt={prompt} />
+                  ))}
+                </PromptGroup>
+              </div>
+            </PreviewCard>
+            <PreviewCard
+              title="Empty assistant"
+              description="The same starter set after the assistant opens."
+            >
+              <ChatThreadReferenceFrame>
+                <ChatMessage>
+                  Welcome back, Rose. What would you like to understand about
+                  Velora&apos;s Page?
+                </ChatMessage>
+                <PromptGroup>
+                  {PCP_STARTER_PROMPTS.map((prompt) => (
+                    <Prompt key={prompt} prompt={prompt} />
+                  ))}
+                </PromptGroup>
+              </ChatThreadReferenceFrame>
+            </PreviewCard>
+          </div>
         </PreviewMomentStack>
       </PreviewSection>
 
@@ -1843,13 +1853,10 @@ function PremiumCompanyPagePromptsPage({
                 "Suppress prompts that were already shown, answered, or dismissed.",
               ]}
             />
-            <aside className="rounded-md border border-ai-border bg-ai-background-soft p-lg text-body-sm-open text-text">
-              <p className="text-control-sm">Quantity</p>
-              <p className="mt-xs text-text-meta">
-                Show one per section, no more than two per Page, and avoid more
-                than one in the same viewport.
-              </p>
-            </aside>
+            <ComponentLibraryAnnotation label="Quantity">
+              Show one per section, no more than two per Page, and avoid more
+              than one in the same viewport.
+            </ComponentLibraryAnnotation>
           </div>
           <div className="grid gap-xl lg:grid-cols-3">
             {pcpContextualPromptExamples.map((example) => (
@@ -1864,43 +1871,39 @@ function PremiumCompanyPagePromptsPage({
               </PreviewCard>
             ))}
           </div>
-          <aside className="max-w-[48rem] rounded-md border-l-4 border-premium-brand bg-premium-gradient-base-a p-lg text-body-sm-open text-text">
-            <p className="text-control-sm">Prompt or insight?</p>
-            <p className="mt-xs">
-              If VCA already has a noteworthy conclusion, show an insight
-              instead of making the admin ask for it.
-            </p>
-          </aside>
+          <ComponentLibraryAnnotation label="Prompt or insight?">
+            If VCA already has a noteworthy conclusion, show an insight instead
+            of making the admin ask for it.
+          </ComponentLibraryAnnotation>
         </PreviewMomentStack>
       </PreviewSection>
 
       <PreviewSection
         title="Follow-up prompts"
-        description="Questions shown after an answer that help the admin investigate further or take the next step."
+        description="Questions shown after an answer that help the admin continue the analysis or decide what to do next."
       >
         <PreviewMomentStack>
           <PcpPromptGuidanceList
             items={[
-              "Show two by default: one to investigate and one to act.",
+              "Show two by default: one to investigate and one to decide what to do next.",
               "Inherit the context of the current conversation.",
-              "Use three only when the paths are meaningfully different.",
+              "Keep every follow-up within the MVP's grounded, read-only capabilities.",
             ]}
           />
           <PreviewMoment>
-            <PreviewExampleIntro title="Investigate, then act">
+            <PreviewExampleIntro title="Investigate, then decide">
               Follow-ups should move the admin forward without repeating the
               original question.
             </PreviewExampleIntro>
             <ChatThreadReferenceFrame>
               <ChatMessage>
-                Post impressions fell 18.4% this month. Velora posted less
-                frequently, while engagement on the posts that did publish
-                remained healthy. This suggests a distribution problem rather
-                than a content-quality problem.
+                Post impressions are down 18.4% this month. You posted less
+                often, but reactions, comments, and reposts are up. Fewer
+                people are seeing posts that still perform well.
               </ChatMessage>
               <PromptGroup>
                 <Prompt prompt="Show the posts that performed best" />
-                <Prompt prompt="What should I post next?" />
+                <Prompt prompt="What should I focus on this week?" />
               </PromptGroup>
             </ChatThreadReferenceFrame>
           </PreviewMoment>
@@ -3047,6 +3050,9 @@ function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title={`System icons (${systemIconMetadata.length})`}>
         <IconCatalogGrid icons={systemIconMetadata} />
       </PreviewSection>
+      <PreviewSection title={`Custom icons (${customIconMetadata.length})`}>
+        <IconCatalogGrid icons={customIconMetadata} />
+      </PreviewSection>
     </ComponentPageShell>
   );
 }
@@ -3668,6 +3674,44 @@ function ComponentPageShell({
   );
 }
 
+function InternalAnnotationPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Internal-only">
+      <PreviewSection title="Demo">
+        <InternalAnnotationDemo />
+      </PreviewSection>
+
+      <PreviewSection title="Usage">
+        <ComponentLibraryBodyCopy className="max-w-[44rem]">
+          Use annotations to clarify scope, constraints, or interpretation for
+          stakeholders. Keep them outside product examples and prototypes.
+        </ComponentLibraryBodyCopy>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
+function InternalDemoGuidancePage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
+  return (
+    <ComponentPageShell item={item} section="Internal-only">
+      <PreviewSection title="Demo">
+        <InternalDemoGuidanceDemo />
+      </PreviewSection>
+
+      <PreviewSection title="Usage">
+        <ComponentLibraryBodyCopy className="max-w-[44rem]">
+          Place demo guidance above an interactive example when users need a
+          short instruction and a consistent way to reset it.
+        </ComponentLibraryBodyCopy>
+      </PreviewSection>
+    </ComponentPageShell>
+  );
+}
+
 export function ComponentPageContent({
   item,
 }: Readonly<{
@@ -3778,6 +3822,10 @@ export function ComponentPageContent({
       return <SduiPresenceBadgePage item={item} />;
     case "sdui-progress-indicator-circular":
       return <SduiProgressIndicatorCircularPage item={item} />;
+    case "internal-only-annotation":
+      return <InternalAnnotationPage item={item} />;
+    case "internal-only-demo-guidance":
+      return <InternalDemoGuidancePage item={item} />;
     default:
       return null;
   }

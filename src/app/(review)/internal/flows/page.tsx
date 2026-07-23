@@ -4,9 +4,8 @@ import { HiringFlowMap } from "@/components/flow-map";
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Hiring Flow Map",
-  description:
-    "Internal canvas overview of the Hiring AI Concierge journeys and states.",
+  title: "Hiring Concierge — Flow Map",
+  description: "Design overview of the Hiring Concierge flows and states.",
   robots: {
     index: false,
     follow: false,

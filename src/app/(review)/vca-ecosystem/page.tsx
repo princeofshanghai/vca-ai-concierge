@@ -5,7 +5,7 @@ import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
   title: "VCA Ecosystem",
-  description: "Collection of near term VCA UI optimization projects.",
+  description: "Design explorations for AI concierge experiences across products.",
 });
 
 export default function VcaEcosystemRoute() {

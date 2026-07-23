@@ -9,9 +9,8 @@ import {
 import { createPageMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = createPageMetadata({
-  title: "Premium Company Pages Visitor View",
-  description:
-    "Visitor-facing Premium Company Page prototype for the Premium Company Pages AI chat experience.",
+  title: "Premium Company Pages — Visitor",
+  description: "Design prototype for the Premium Company Pages visitor experience.",
 });
 
 type PremiumCompanyPagesMemberRouteProps = Readonly<{
