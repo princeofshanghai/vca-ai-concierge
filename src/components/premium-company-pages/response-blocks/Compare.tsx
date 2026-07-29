@@ -1,5 +1,6 @@
 import type { HTMLAttributes, ReactNode } from "react";
 
+import { Button } from "@/components/primitives/button";
 import { Entity } from "@/components/primitives/entity";
 
 import { pcpCompanyProfile } from "../persona";
@@ -8,6 +9,7 @@ import {
   VELORA_LOGO_TILE_BACKGROUND_STYLE,
 } from "../velora-logo-styles";
 import {
+  DataCardFooter,
   DataCardHeader,
   DataCardShell,
 } from "./DataCard";
@@ -28,8 +30,10 @@ export type CompareRow = Readonly<{
 }>;
 
 export type CompareProps = HTMLAttributes<HTMLElement> & {
+  actionLabel?: ReactNode;
   title?: ReactNode;
   dimension: ReactNode;
+  onActionSelect?: () => void;
   rows: ReadonlyArray<CompareRow>;
 };
 
@@ -104,13 +108,19 @@ function renderVisual(row: CompareRow) {
 }
 
 export function Compare({
+  actionLabel,
   title,
   dimension,
+  onActionSelect,
   rows,
   className,
   ...props
 }: CompareProps) {
   const sortedRows = [...rows].sort((firstRow, secondRow) => {
+    if (firstRow.isYou !== secondRow.isYou) {
+      return firstRow.isYou ? -1 : 1;
+    }
+
     return secondRow.value - firstRow.value;
   });
   const maxPositive = Math.max(0, ...sortedRows.map((row) => row.value));
@@ -156,10 +166,6 @@ export function Compare({
                 </div>
               </div>
               <div className="relative h-5 min-w-[96px]">
-                <span
-                  aria-hidden="true"
-                  className="absolute left-0 top-1/2 h-1.5 w-full -translate-y-1/2 rounded-round bg-border-faint"
-                />
                 {hasNegativeAndPositive ? (
                   <span
                     aria-hidden="true"
@@ -169,10 +175,7 @@ export function Compare({
                 ) : null}
                 <span
                   aria-hidden="true"
-                  className={cx(
-                    "absolute top-1/2 h-1.5 -translate-y-1/2 rounded-round",
-                    isNegative ? "bg-negative" : "bg-action",
-                  )}
+                  className="absolute top-1/2 h-2 -translate-y-1/2 rounded-xs bg-tag-neutral-background"
                   style={{
                     left: `${barLayout.left}%`,
                     width: `${barLayout.width}%`,
@@ -191,6 +194,17 @@ export function Compare({
           );
         })}
       </div>
+      {actionLabel ? (
+        <DataCardFooter>
+          <Button
+            onClick={onActionSelect}
+            size="small"
+            variant="secondary"
+          >
+            {actionLabel}
+          </Button>
+        </DataCardFooter>
+      ) : null}
     </DataCardShell>
   );
 }

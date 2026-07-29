@@ -7,6 +7,7 @@ Related docs:
 - [Framing and personas](./framing-personas.md)
 - [Admin demo stories](./admin-demo-stories.md)
 - [Design decisions](./design-decisions.md)
+- [Shared AI response formatting rules](./ai-response-formatting.md)
 - [Executive demo outline](../vca-executive-demo-outline.md)
 
 ## Story 2: Visitor Experience

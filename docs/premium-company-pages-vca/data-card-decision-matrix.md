@@ -17,11 +17,11 @@ When a user asks a question, the designer should be able to answer:
 
 ## Default Rule
 
-Default to 1 or 2 data cards per assistant answer.
+Default to one data card per assistant answer.
 
-Use 3 cards only when the user asks a broad summary question and each card adds a distinct kind of proof.
+Add no more than one supporting entity card when a specific post, company, or person makes the evidence or recommendation materially clearer.
 
-If an answer needs more than 3 cards, it probably wants a dashboard, side panel, or follow-up conversation instead of a single chat response.
+If an answer needs more than one data card and one entity card, it probably wants a dashboard, side panel, or continued conversation instead of a single initial response.
 
 ## Card Jobs
 
@@ -38,19 +38,34 @@ If an answer needs more than 3 cards, it probably wants a dashboard, side panel,
 
 | User asks | Assistant should answer | Default cards | Optional support | Avoid |
 | --- | --- | --- | --- | --- |
-| "How is my Page performing?" | Overall state plus the main issue or opportunity. | Snapshot + Trend or Comparison | Content, only if content explains the pattern. | Showing every metric available. |
-| "What should I focus on next?" | The highest-leverage next move, grounded in the main performance gap. | Comparison + one content example | Draft/action follow-up. | Generic support tips without evidence. |
-| "Why did follower growth drop?" | What changed and the likely cause. | Trend + Content | Comparison if competitors reveal the gap. | Audience avatars unless visitor quality is the cause. |
-| "How do I compare to competitors?" | Where Velora is ahead or behind. | Comparison | Content if competitor content explains the gap. | A general performance snapshot unless needed for context. |
-| "What kinds of visitors am I attracting?" | Audience quality and relevant segments. | Audience | Entity rail of people, if the next step is profile review. | Competitor or content cards. |
-| "Is my Page reaching the right audience?" | Whether visitors match target segments. | Audience | Trend if audience fit changed over time. | General engagement metrics without audience context. |
-| "What content is working?" | Which posts or themes are driving engagement. | Content | Snapshot if the user needs topline engagement first. | Competitor comparison unless the user asked why others are doing better. |
-| "Why are post impressions down?" | Whether reach fell because of cadence, early engagement, or content mix. | Trend + Content | Boost recommendation only for content already showing strong engagement. | Treating boost as the default fix before explaining the drop. |
-| "What should I post next?" | Recommendation based on evidence. | Content | Trend or Comparison if the recommendation depends on a change or gap. | Putting the recommendation inside the card. |
-| "How can I get more custom button clicks?" | Whether the Page is turning attention into action, then what to adjust. | Conversion | Content if the recommendation depends on a specific post or theme. | Repeating the same metric sentence in both the response and the card. |
-| "Why is a competitor gaining faster?" | The specific competitor pattern and implication. | Comparison + Content | Trend if timing matters. | A broad dashboard-style summary. |
-| "Are these visitors worth following up with?" | Whether the visitors are relevant and why. | Audience | Entity/person cards or Insight cards. | Treating individual people as rows inside a general data card. |
-| "What happened this week?" | A concise weekly synthesis. | Snapshot + Content | Comparison if there is a clear competitive change. | More than 3 cards in chat. |
+| "How is my Page performing?" | Overall assessment plus one relationship the admin may otherwise miss. | One `Summary` Metric card with current values and deltas | One Post entity when it makes the recommendation concrete | Showing every metric, previous raw values, or a dashboard-style card stack. |
+| "What should I focus on next?" | The highest-leverage next move, grounded in the main performance gap. | One focused Comparison card | One Post entity when it demonstrates the opportunity | Generic support tips without evidence. |
+| "Why did follower growth drop?" | What changed and the likely cause. | One Trend card | One Post entity when content supports the explanation | Audience avatars unless visitor quality is the cause. |
+| "How do I compare to competitors?" | Where Velora is ahead or behind. | One Comparison card | One competitor Post entity when it makes the difference concrete | A general performance snapshot unless needed for context. |
+| "Tell me about my Page visitors" | The clearest audience pattern, followed by noteworthy people who make it concrete. | One `Summary` Metric card with the three leading industry shares plus an `Other` remainder | One Person rail with up to three visitors from those industries who have meaningful Page activity | Claiming target fit, causation, buying intent, or filling the rail with weak examples. |
+
+Do not impose a three-row maximum in the Metric component. Choose the row count based on the evidence story. Three focused rows are a useful default, while a fourth `Other` row is appropriate when it completes an audience distribution without reproducing the full analytics table.
+| "What kinds of visitors am I attracting?" | Audience quality and relevant segments. | One Audience card | One Person entity if person-level review is approved and useful | Competitor or content cards. |
+| "Is my Page reaching the right audience?" | Whether visitors match target segments. | One Audience card | One Person entity only when approved and relevant | General engagement metrics without audience context. |
+| "Which content is working best?" | Which posts lead on different outcomes and what that means for the next content test. | No data card when the Post performance table already provides the aggregate context | One Post entity rail with the two posts that provide the strongest distinct evidence | A dashboard recap, more than two posts, or implying that one format will always win. |
+| "Why are post impressions down?" | Whether reach fell because of cadence, early engagement, or content mix. | No data card when the visible Track performance section already provides the baseline evidence | One Post entity when it makes the recommendation concrete | Repeating visible Page metrics or treating boost as the default fix before explaining the drop. |
+| "What should I post next?" | Recommendation based on evidence. | One Content card | One Post entity that demonstrates the recommended pattern | Putting the recommendation inside the card. |
+| "How can I get more custom button clicks?" | Whether the Page is turning attention into action, then what to adjust. | One Conversion card | One Post entity if the recommendation depends on a specific example | Repeating the same metric sentence in both the response and the card. |
+| "Why is a competitor gaining faster?" | The specific competitor pattern and implication. | One Comparison card | One competitor Post entity when it makes the pattern concrete | A broad dashboard-style summary. |
+| "Are these visitors worth following up with?" | Whether the visitors are relevant and why. | One Audience card | One Person entity when person-level data and action are approved | Treating individual people as rows inside a general data card. |
+| "What happened this week?" | One overall assessment plus the most useful relationship. | One `Summary` data card | One entity when it makes the recommendation concrete | A multi-card recap of every area. |
+
+## Visible Period And Delta Rule
+
+For the standard seven-day starter experience:
+
+- show `Last 7 days` below the data-card title,
+- show the current value and right-aligned delta for each metric,
+- do not show previous-period raw values,
+- do not display `vs previous 7 days`,
+- and keep the previous equivalent complete seven-day period as the underlying comparison basis.
+
+Use metric-appropriate delta language: a percentage for impressions, percentage points for an engagement-rate change, and a natural count such as `2 fewer` for a small publishing change.
 
 ## Card Specs
 
@@ -100,6 +115,8 @@ Delta         Delta         Delta
 ```
 
 Use a Snapshot card when the user needs orientation before deeper analysis.
+
+Do not use a Snapshot automatically for a broad starter response. When the AI has selected one prioritized relationship, prefer one focused `Summary` Metric card containing only the current values and deltas that prove it.
 
 ### Trend Card
 
@@ -156,11 +173,13 @@ Required:
 - comparison dimension,
 - 2 to 4 rows,
 - one value per row.
+- the focal `You` row first when one exists; remaining rows sorted by value.
 
 Optional:
 
 - tiny row detail, such as "22 posts",
 - visual identity per row, such as company logo.
+- one related drill-down action in the card footer.
 
 Forbidden:
 
@@ -184,6 +203,8 @@ Dimension
 Row label       Bar/value
 Row label       Bar/value
 Row label       Bar/value
+
+Optional navigation action
 ```
 
 Use Comparison when the answer depends on relative position, not just absolute performance.
@@ -342,10 +363,13 @@ Use Content when the answer is about what is resonating or what caused a perform
 ### Assistant Response Owns
 
 - the direct answer,
+- the overall assessment,
+- the relationship the admin may otherwise miss,
 - interpretation,
 - why it matters,
 - recommendation,
 - uncertainty or caveat,
+- the introduction explaining why an entity appears,
 - transitions between cards.
 
 ### Data Card Owns
@@ -357,18 +381,19 @@ Use Content when the answer is about what is resonating or what caused a perform
 - timeframe,
 - compact labels,
 - chart or comparison shape,
-- optional CTA to an existing LinkedIn surface.
+- compact visible period,
+- optional provenance disclosure.
 
 Example:
 
 ```text
-Your Page is performing unevenly. Engagement is improving, but follower growth is trailing competitors. The likely issue is posting cadence, not audience relevance.
+Overall, your content connected better with people who saw it, but reached fewer people this week. You posted less often, which likely contributed to the drop in impressions even as engagement improved. Try posting one more time this week about a topic that already worked, like the top post shown below.
 ```
 
 Cards:
 
-1. Snapshot: content engagement.
-2. Comparison: follower growth gap.
+1. `Summary` Metric card: current impressions, engagement rate, posts published, and right-aligned deltas.
+2. Optional untitled Post entity with `View post`.
 
 The response tells the user what to notice. The cards make the answer credible.
 
@@ -399,9 +424,8 @@ Assistant response:
 
 Cards:
 
-1. Snapshot for current state.
-2. Trend or Comparison for the main pattern.
-3. Optional Content if content explains the pattern.
+1. One `Summary` Metric card for the main relationship.
+2. One optional untitled Post entity when a concrete example supports the recommendation.
 
 ### Growth Drop
 
@@ -416,8 +440,7 @@ Assistant response:
 Cards:
 
 1. Trend for the timing of the drop.
-2. Content for posting cadence or content pattern.
-3. Optional Comparison if competitors reveal the gap.
+2. Optional Post entity when a specific content example supports the explanation.
 
 ### Competitor Gap
 
@@ -432,7 +455,7 @@ Assistant response:
 Cards:
 
 1. Comparison.
-2. Optional Content if competitor content explains the difference.
+2. Optional competitor Post entity if it makes the difference concrete.
 
 ### Audience Quality
 
@@ -447,7 +470,7 @@ Assistant response:
 Cards:
 
 1. Audience.
-2. Optional person/entity rail if the next action is visitor review.
+2. Optional Person entity if the next action is visitor review and person-level data is approved.
 
 ### Content Resonance
 
@@ -470,22 +493,20 @@ Cards:
 | --- | --- |
 | 0 cards | The answer is simple, conversational, or advisory. |
 | 1 card | The user asked a focused question. |
-| 2 cards | The answer needs one claim plus one supporting proof point. |
-| 3 cards | The user asked for a broad summary. |
-| 4+ cards | Move to a dashboard, side panel, or staged follow-up. |
+| 2 cards | One data card proves the relationship and one entity makes it concrete. |
+| 3+ cards | Move to a dashboard, side panel, or continued conversation. |
 
 ## CTA Rules
 
-Most data cards should not have CTAs.
+Data cards should not have CTAs by default. When a card has one directly related drill-down destination, place a single secondary navigation action inside its footer rather than as a detached response-level button.
 
-Use a CTA only when the card points to a real LinkedIn destination:
+Entity cards may retain their natural inspection actions:
 
-- View analytics,
-- Go to Who's visited my Page,
-- View post,
-- View competitor Page.
+- `View post`
+- `View profile`
+- `View company`
 
-Do not use a card CTA for "what should I do next?" Put that in the assistant response or follow-up prompts.
+Keep one primary navigation goal per response. If a card action is the destination, do not add a competing response-level CTA. Put recommendations in the assistant response, not inside either card.
 
 ## Implementation Implications
 
@@ -495,7 +516,8 @@ When we translate this into components, the system should support:
 - shared title and context treatment,
 - shared metric value and delta patterns,
 - shared row spacing,
-- shared optional footer/CTA treatment,
+- a context line such as `Last 7 days`,
+- optional compact provenance disclosure,
 - clear constraints for each card job.
 
 The implementation should not add new product logic, new data sources, new design tokens, a UI library, or state management.

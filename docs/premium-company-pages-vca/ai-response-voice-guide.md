@@ -110,6 +110,7 @@ Avoid:
 
 - Express one main idea per sentence.
 - Use short paragraphs.
+- Do not use em dashes. Split the thought into shorter sentences.
 - Remove sentences that repeat the same conclusion in different words.
 - Use bullets for multiple actions, options, or steps—not for a single insight.
 
@@ -176,11 +177,13 @@ Be careful when translating Page activity into interest or buying intent.
 
 Prefer:
 
-> These visitors are closer to the audience Velora wants to reach.
+> Retail is the largest visitor industry on your Page.
 
 > This visitor returned twice and viewed multiple posts.
 
-> This activity may show stronger interest, but a Page view alone does not confirm buying intent.
+> This activity helps show who is spending time with your Page, but it does not mean they are planning to buy.
+
+> A strong retail customer post gives you a useful topic to test again, but it does not prove the post caused the visitor mix.
 
 Avoid:
 
@@ -194,13 +197,15 @@ Use exact LinkedIn taxonomy labels in structured cards. In conversational text, 
 
 Card:
 
-> Job function: Human Resources  
-> Seniority: Director+  
-> Company size: 10,001+ employees
+> Industry: Hospitals and Health Care
+>
+> Industry: Technology, Information and Internet
+>
+> Seniority: Director+
 
 Conversation:
 
-> Most of these visitors are senior HR leaders at large companies.
+> Most of your Page visitors come from three industries.
 
 ## Cards and conversational text
 
@@ -246,7 +251,7 @@ Before:
 
 After:
 
-> More of your visitors work in HR, are director level or above, and come from large companies—the people Velora wants to reach.
+> Most of your Page visitors come from three industries. A few recent visitors from those industries also came back or viewed more than one post.
 
 ### Competitors
 
@@ -281,4 +286,3 @@ Before shipping a response, ask:
 - Is the recommended next step specific and realistic for this admin?
 - Can I remove a sentence without losing meaning?
 - Would a social media manager naturally say this in a meeting?
-

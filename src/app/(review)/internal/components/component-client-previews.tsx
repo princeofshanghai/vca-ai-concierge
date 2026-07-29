@@ -70,6 +70,8 @@ import {
   type InsightCardAction,
 } from "@/components/premium-company-pages/insight-card";
 import { ChoiceCard } from "@/components/premium-company-pages/response-blocks/ChoiceCard";
+import { ContentList as ResponseContentList } from "@/components/premium-company-pages/response-blocks/ContentList";
+import { Metric as ResponseMetric } from "@/components/premium-company-pages/response-blocks/Metric";
 import {
   TaskStatusCard,
   type TaskStatusCardState,
@@ -78,16 +80,21 @@ import {
   PremiumCompanyPagesVcaSidePanelPreview,
   type PremiumCompanyPagesVcaSidePanelPreviewKind,
 } from "@/components/premium-company-pages/premium-company-pages-member-page";
-import { AdminAssistantStartSurface } from "@/components/premium-company-pages/premium-company-pages-admin-uc5";
+import {
+  AdminAssistantStartSurface,
+  AdminRelevantVisitorsConversationPreview,
+} from "@/components/premium-company-pages/premium-company-pages-admin-uc5";
 import { FabPromptStack } from "@/components/premium-company-pages/fab-prompt-stack";
 import {
+  PremiumCompanyPagesContentEngagementPromptPreview,
   PremiumCompanyPagesContentHighlightsPromptPreview,
+  PremiumCompanyPagesDashboardPerformancePromptPreview,
   PremiumCompanyPagesInboxContextStripPreview,
 } from "@/components/premium-company-pages/premium-company-pages-page";
 import { pcpCompetitorNames } from "@/components/premium-company-pages/persona";
-import { MetricWithTrend } from "@/components/premium-company-pages/response-blocks/MetricWithTrend";
 import { TodayActionCard } from "@/components/premium-company-pages/today-action-card";
 import {
+  PcpAdminGoldAiMark,
   VcaFab,
   type VcaFabVisualState,
 } from "@/components/premium-company-pages/vca-fab";
@@ -160,10 +167,7 @@ import {
   HIRING_CONCIERGE_TITLE,
   PREMIUM_CONCIERGE_TITLE,
 } from "@/lib/concierge-copy";
-import {
-  flowReviews,
-  getMediumFlowReview,
-} from "@/lib/conversation-flows";
+import { flowReviews, getMediumFlowReview } from "@/lib/conversation-flows";
 
 import { ComponentLibraryAnnotation } from "./component-library-annotation";
 import { ComponentLibraryDemoGuidance } from "./component-library-demo-guidance";
@@ -188,7 +192,8 @@ type SalesCardDemoScenario = "ae" | "sdr";
 type SalesCardDemoSidePanel = "schedule" | null;
 type SalesCardDemoSdrState = MediumAvailableHandoffState | "delayed";
 type SalesHandoffScenarioIntent = "high" | "medium";
-type PcpPromptDemoSurface = "fab" | "assistant" | "page" | "response";
+type PcpPromptDemoSurface = "assistant" | "page";
+type PcpPromptExampleSurface = "fab" | "assistant" | "page";
 type ShellDemoVersion =
   "dismissable" | "persistent" | "hybrid" | "floating-card";
 type ContainerDemoType = "card" | "tray";
@@ -2769,10 +2774,8 @@ const voiceModeDemoTranscripts = [
 const pcpPromptDemoSurfaceOptions: ReadonlyArray<
   DemoOption<PcpPromptDemoSurface>
 > = [
-  { label: "FAB hover", value: "fab" },
-  { label: "Empty assistant", value: "assistant" },
-  { label: "Page", value: "page" },
-  { label: "After response", value: "response" },
+  { label: "Starter", value: "assistant" },
+  { label: "Contextual", value: "page" },
 ];
 
 const voiceModeDemoResponses = [
@@ -3008,84 +3011,82 @@ export function SharedVoiceModeDemo() {
 
   return (
     <div className="space-y-6">
-      <ComponentLibraryDemoGuidance
-        onReset={resetDemo}
-      >
+      <ComponentLibraryDemoGuidance onReset={resetDemo}>
         Start voice mode to preview a voice conversation.
       </ComponentLibraryDemoGuidance>
       <ContextualComponentDemoSection>
         <ChatSurfaceDemoFrame device={device} height="tall">
-        <ChatHeader
-          title={HIRING_CONCIERGE_TITLE}
-          showCloseAction={false}
-          showAiMark={false}
-        />
-        <ChatBody
-          ref={chatBodyRef}
-          onJumpToLatest={scrollToLatest}
-          onScroll={handleLatestScroll}
-          showJumpToLatest={hasLatestBelow}
-        >
-          <ChatThread showAiDisclaimer={false}>
-            <ChatMessage>
-              Hi Jamie. I can help you understand which LinkedIn hiring solution
-              fits Northstar Health and what the next step should be.
-            </ChatMessage>
-            {userMessages.map((message, index) => (
-              <ChatMessage key={`${message}-${index}`} role="user">
-                {message}
+          <ChatHeader
+            title={HIRING_CONCIERGE_TITLE}
+            showCloseAction={false}
+            showAiMark={false}
+          />
+          <ChatBody
+            ref={chatBodyRef}
+            onJumpToLatest={scrollToLatest}
+            onScroll={handleLatestScroll}
+            showJumpToLatest={hasLatestBelow}
+          >
+            <ChatThread showAiDisclaimer={false}>
+              <ChatMessage>
+                Hi Jamie. I can help you understand which LinkedIn hiring
+                solution fits Northstar Health and what the next step should be.
               </ChatMessage>
-            ))}
-            {voiceModeOn &&
-            (voiceState === "user-speaking" || voiceState === "finalizing") &&
-            voiceTranscript.trim().length > 0 ? (
-              <ChatMessage
-                aria-hidden="true"
-                className="opacity-70"
-                role="user"
-              >
-                {voiceTranscript}
-              </ChatMessage>
-            ) : null}
-            {showThinking ? <ChatThinkingMessage /> : null}
-            {assistantText ? (
-              <ChatMessage
-                aria-busy={voiceState === "speaking" || undefined}
-                streamStatus={
-                  voiceState === "speaking" ? "streaming" : "complete"
-                }
-                streamText={assistantText}
-              >
-                {assistantFullText}
-              </ChatMessage>
-            ) : null}
-            {showCard ? (
-              <RecommendationCard
-                title="Speak with a sales consultant"
-                description="15 min. We will match you with someone who can help plan your first hiring wave."
-                primaryAction="Book a time"
-              />
-            ) : null}
-          </ChatThread>
-        </ChatBody>
-        <ChatComposer
-          variant={panelVariant}
-          inputProps={{
-            "aria-label": "Message AI Concierge during voice mode",
-            onChange: (event) => setDraft(event.currentTarget.value),
-            value: draft,
-          }}
-          onSend={() => setDraft("")}
-          onVoiceCommit={finishSpeaking}
-          onVoiceInterrupt={interruptVoice}
-          onVoiceModeExit={exitVoiceMode}
-          onVoiceModeStart={() => startListening()}
-          sendDisabled={draft.trim().length === 0}
-          showAttachAction={false}
-          showVoiceMode
-          voiceModeActive={voiceModeOn}
-          voiceState={voiceState}
-        />
+              {userMessages.map((message, index) => (
+                <ChatMessage key={`${message}-${index}`} role="user">
+                  {message}
+                </ChatMessage>
+              ))}
+              {voiceModeOn &&
+              (voiceState === "user-speaking" || voiceState === "finalizing") &&
+              voiceTranscript.trim().length > 0 ? (
+                <ChatMessage
+                  aria-hidden="true"
+                  className="opacity-70"
+                  role="user"
+                >
+                  {voiceTranscript}
+                </ChatMessage>
+              ) : null}
+              {showThinking ? <ChatThinkingMessage /> : null}
+              {assistantText ? (
+                <ChatMessage
+                  aria-busy={voiceState === "speaking" || undefined}
+                  streamStatus={
+                    voiceState === "speaking" ? "streaming" : "complete"
+                  }
+                  streamText={assistantText}
+                >
+                  {assistantFullText}
+                </ChatMessage>
+              ) : null}
+              {showCard ? (
+                <RecommendationCard
+                  title="Speak with a sales consultant"
+                  description="15 min. We will match you with someone who can help plan your first hiring wave."
+                  primaryAction="Book a time"
+                />
+              ) : null}
+            </ChatThread>
+          </ChatBody>
+          <ChatComposer
+            variant={panelVariant}
+            inputProps={{
+              "aria-label": "Message AI Concierge during voice mode",
+              onChange: (event) => setDraft(event.currentTarget.value),
+              value: draft,
+            }}
+            onSend={() => setDraft("")}
+            onVoiceCommit={finishSpeaking}
+            onVoiceInterrupt={interruptVoice}
+            onVoiceModeExit={exitVoiceMode}
+            onVoiceModeStart={() => startListening()}
+            sendDisabled={draft.trim().length === 0}
+            showAttachAction={false}
+            showVoiceMode
+            voiceModeActive={voiceModeOn}
+            voiceState={voiceState}
+          />
         </ChatSurfaceDemoFrame>
       </ContextualComponentDemoSection>
     </div>
@@ -3227,26 +3228,37 @@ export function SharedPromptsUsageDemo() {
 }
 
 export function PcpPromptsDemo() {
-  const [surface, setSurface] = useState<PcpPromptDemoSurface>("fab");
+  const [surface, setSurface] = useState<PcpPromptDemoSurface>("assistant");
 
   return (
     <ComponentDemoSection
       previewClassName="w-full max-w-[58rem]"
       controls={
         <SegmentedControl
-          label="Surface"
+          label="Type"
           onChange={setSurface}
           options={pcpPromptDemoSurfaceOptions}
           value={surface}
         />
       }
     >
-      {surface === "fab" ? <PcpFabPromptPreview /> : null}
-      {surface === "assistant" ? <PcpEmptyAssistantPromptPreview /> : null}
-      {surface === "page" ? <PcpPagePromptPreview /> : null}
-      {surface === "response" ? <PcpResponsePromptPreview /> : null}
+      <PcpPromptSurfaceExample surface={surface} />
     </ComponentDemoSection>
   );
+}
+
+export function PcpPromptSurfaceExample({
+  surface,
+}: Readonly<{ surface: PcpPromptExampleSurface }>) {
+  if (surface === "fab") {
+    return <PcpFabPromptPreview />;
+  }
+
+  if (surface === "assistant") {
+    return <PcpEmptyAssistantPromptPreview />;
+  }
+
+  return <PcpPagePromptPreview />;
 }
 
 function PcpStarterPromptGroup() {
@@ -3261,63 +3273,35 @@ function PcpStarterPromptGroup() {
 
 function PcpAdminPreviewCanvas({
   children,
-}: Readonly<{ children?: ReactNode }>) {
+  quiet = false,
+}: Readonly<{ children?: ReactNode; quiet?: boolean }>) {
   return (
-    <div className="absolute inset-0 min-w-[48rem] bg-background-neutral-soft text-text">
-      <div className="flex h-12 items-center gap-lg border-b border-border-faint bg-background px-lg">
-        <span className="inline-flex size-7 items-center justify-center rounded-xs bg-action text-label-xs text-background">
-          in
-        </span>
-        <span className="h-7 w-44 rounded-xs bg-background-neutral-soft" />
-        <div className="ml-auto flex items-center gap-lg text-body-xs text-text-meta">
-          <span>Home</span>
-          <span>My Network</span>
-          <span>Jobs</span>
-          <span>Messaging</span>
+    <div className="absolute inset-0 bg-background-neutral-soft p-md text-text">
+      <div className="relative h-full overflow-hidden rounded-sm border border-border-faint bg-background">
+        <div
+          aria-hidden="true"
+          className="h-8 border-b border-border-faint bg-background-neutral-soft"
+        />
+        <div className="absolute inset-x-0 bottom-0 top-8 overflow-hidden p-xl">
+          {children}
+          {!children && quiet ? (
+            <div aria-hidden="true" className="w-[54%] space-y-md opacity-60">
+              <div className="h-20 rounded-sm border border-border-faint bg-background-neutral-soft" />
+              <div className="h-40 rounded-sm border border-border-faint bg-background-neutral-soft" />
+            </div>
+          ) : null}
         </div>
       </div>
-      <div className="grid grid-cols-[10.5rem_minmax(0,1fr)] gap-md p-md">
-        <aside className="rounded-sm border border-border-faint bg-background p-lg">
-          <div className="flex items-center gap-sm">
-            <span className="inline-flex size-9 items-center justify-center rounded-sm bg-[#d8ece5] text-control-sm text-positive">
-              V
-            </span>
-            <div>
-              <p className="text-control-sm">Velora</p>
-              <p className="text-body-xs text-text-meta">86K followers</p>
-            </div>
-          </div>
-          <div className="mt-lg space-y-md text-body-sm text-text-meta">
-            <p>Dashboard</p>
-            <p className="font-semibold text-positive">Analytics</p>
-            <p>Feed</p>
-            <p>Activity</p>
-            <p>Inbox</p>
-            <p>Edit Page</p>
-          </div>
-        </aside>
-        <main className="min-w-0">
-          <section className="overflow-hidden rounded-sm border border-border-faint bg-background">
-            <h2 className="px-lg pt-lg text-heading-lg">Analytics</h2>
-            <div className="mt-sm flex gap-xl border-b border-border-faint px-lg text-control-sm text-text-meta">
-              <span className="border-b-2 border-positive pb-sm text-positive">
-                Content
-              </span>
-              <span>Visitors</span>
-              <span>Followers</span>
-              <span>Competitors</span>
-            </div>
-          </section>
-          <div className="mt-md">
-            {children ?? (
-              <div className="space-y-md">
-                <div className="h-16 rounded-sm border border-border-faint bg-background" />
-                <div className="h-52 rounded-sm border border-border-faint bg-background" />
-              </div>
-            )}
-          </div>
-        </main>
-      </div>
+    </div>
+  );
+}
+
+function PcpPromptPreviewFrame({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <div className="w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+      <div className="relative aspect-video min-w-[48rem]">{children}</div>
     </div>
   );
 }
@@ -3333,7 +3317,13 @@ function PcpPremiumHeaderIdentity() {
 
 function PcpAdminChatPreview({
   children,
-}: Readonly<{ children: ReactNode }>) {
+  onClose,
+  onMinimizeToTray,
+}: Readonly<{
+  children: ReactNode;
+  onClose?: () => void;
+  onMinimizeToTray?: () => void;
+}>) {
   return (
     <ChatPanel
       aria-label="Velora AI preview"
@@ -3342,9 +3332,8 @@ function PcpAdminChatPreview({
     >
       <ChatHeader
         identity={{ type: "ai", title: <PcpPremiumHeaderIdentity /> }}
-        onClose={() => {}}
-        onMinimizeToTray={() => {}}
-        onVariantToggle={() => {}}
+        onClose={onClose}
+        onMinimizeToTray={onMinimizeToTray}
         showAiMark={false}
         variant="collapsed"
       />
@@ -3364,113 +3353,260 @@ function PcpAdminChatPreview({
   );
 }
 
-function PcpFabPromptPreview() {
+function PcpAdminFabEntry({
+  onOpen,
+  promptsVisible = false,
+}: Readonly<{
+  onOpen: () => void;
+  promptsVisible?: boolean;
+}>) {
   return (
-    <div className="relative h-[34rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-      <PcpAdminPreviewCanvas />
-      <div className="group absolute bottom-[4.75rem] right-xl z-10">
-        <FabPromptStack
-          items={PCP_STARTER_PROMPTS.map((prompt, index) => ({
-            id: `pcp-demo-starter-${index}`,
-            prompt,
-            value: prompt,
-          }))}
-          onPromptSelect={() => {}}
-          visible
-        />
-        <VcaFab
-          adminTone="gold"
-          label="Open Assistant"
-          onClick={() => {}}
-          position="static"
-          variant="admin"
-        />
-      </div>
-      <div className="absolute inset-x-0 bottom-0 flex h-12 items-center justify-end border-t border-border-faint bg-background px-xl text-control-sm shadow-raised-faint">
-        Messaging
-      </div>
+    <div className="group">
+      <FabPromptStack
+        items={PCP_STARTER_PROMPTS.map((prompt, index) => ({
+          id: `pcp-demo-starter-${index}`,
+          prompt,
+          value: prompt,
+        }))}
+        onPromptSelect={onOpen}
+        visible={promptsVisible}
+      />
+      <VcaFab
+        adminTone="gold"
+        label="Open Assistant"
+        onClick={onOpen}
+        position="static"
+        variant="admin"
+      />
     </div>
   );
 }
 
-function PcpEmptyAssistantPromptPreview() {
+function PcpFabPromptPreview() {
   return (
-    <div className="relative h-[36rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-      <PcpAdminPreviewCanvas />
-      <div className="absolute inset-y-md right-md w-[25rem] max-w-[calc(100%-2rem)]">
-        <PcpAdminChatPreview>
-          <ChatThread>
-            <ChatResponseBlock>
-              <ChatMessage>
-                Welcome back, Rose. I can help you understand how
-                Velora&apos;s Page is performing, compare competitors, and
-                identify relevant visitors.
-              </ChatMessage>
-              <ChatResponseAttachment>
-                <PcpStarterPromptGroup />
-              </ChatResponseAttachment>
-            </ChatResponseBlock>
-          </ChatThread>
-        </PcpAdminChatPreview>
+    <PcpPromptPreviewFrame>
+      <PcpAdminPreviewCanvas quiet />
+      <div className="absolute bottom-xl right-xl z-10">
+        <PcpAdminFabEntry onOpen={() => {}} promptsVisible />
       </div>
-    </div>
+    </PcpPromptPreviewFrame>
+  );
+}
+
+function PcpEmptyAssistantPromptPreview() {
+  const [isOpen, setIsOpen] = useState(true);
+
+  return (
+    <PcpPromptPreviewFrame>
+      <PcpAdminPreviewCanvas quiet />
+      {isOpen ? (
+        <div className="absolute inset-y-md right-xl w-[25rem]">
+          <PcpAdminChatPreview
+            onClose={() => setIsOpen(false)}
+            onMinimizeToTray={() => setIsOpen(false)}
+          >
+            <ChatThread showAiDisclaimer={false}>
+              <ChatResponseBlock>
+                <ChatMessage>
+                  Hi Rose, what can I help you with today?
+                </ChatMessage>
+                <ChatResponseAttachment>
+                  <PcpStarterPromptGroup />
+                </ChatResponseAttachment>
+              </ChatResponseBlock>
+            </ChatThread>
+          </PcpAdminChatPreview>
+        </div>
+      ) : (
+        <div className="absolute bottom-xl right-xl z-10">
+          <PcpAdminFabEntry onOpen={() => setIsOpen(true)} />
+        </div>
+      )}
+    </PcpPromptPreviewFrame>
   );
 }
 
 function PcpPagePromptPreview() {
   return (
-    <div className="relative h-[34rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
+    <PcpPromptPreviewFrame>
       <PcpAdminPreviewCanvas>
-        <PremiumCompanyPagesContentHighlightsPromptPreview />
+        <PremiumCompanyPagesContentHighlightsPromptPreview promptLabel="Why are impressions down but engagement up?" />
       </PcpAdminPreviewCanvas>
+    </PcpPromptPreviewFrame>
+  );
+}
+
+export function PcpDashboardRelevantVisitorsContextPreview() {
+  return (
+    <div className="w-full min-w-[56rem] rounded-lg bg-background-neutral-soft p-xl">
+      <PremiumCompanyPagesDashboardPerformancePromptPreview />
     </div>
   );
 }
 
-const pcpPostImpressionsValues = [82, 86, 81, 78, 74, 70, 68, 64] as const;
-
-function PcpResponsePromptPreview() {
+export function PcpDashboardRelevantVisitorsConversationPreview() {
   return (
-    <div className="relative h-[42rem] w-full overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-      <PcpAdminPreviewCanvas>
-        <PremiumCompanyPagesContentHighlightsPromptPreview />
-      </PcpAdminPreviewCanvas>
-      <div className="absolute inset-y-md right-md w-[25rem] max-w-[calc(100%-2rem)]">
+    <div className="w-full min-w-[48rem] rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
+      <div className="mx-auto h-[56rem] w-full max-w-[42rem]">
         <PcpAdminChatPreview>
-          <ChatThread>
-            <ChatMessage role="user">Why are post impressions down?</ChatMessage>
-            <ChatResponseBlock>
-              <ChatMessage>
-                <ChatMessageContent>
-                  <p>
-                    Post impressions are down <strong>18.4% this month</strong>.
-                    <strong> You posted less often</strong>, while reactions,
-                    comments, and reposts are up. Fewer people are seeing posts
-                    that are still working. Start by posting more regularly, or{" "}
-                    <strong>boost your strongest post</strong> if you need more
-                    reach.
-                  </p>
-                </ChatMessageContent>
-              </ChatMessage>
-              <ChatResponseAttachment>
-                <MetricWithTrend
-                  annotation={{ label: "", tone: "neutral" }}
-                  axisTicks={["May 10", "May 25", "Jun 8"]}
-                  delta="18.4%"
-                  deltaContext="vs last month"
-                  title="Post impressions"
-                  tone="negative"
-                  unit="impressions this month"
-                  value="64,800"
-                  values={pcpPostImpressionsValues}
-                />
-                <Prompt prompt="What post should I boost?" />
-              </ChatResponseAttachment>
-            </ChatResponseBlock>
-          </ChatThread>
+          <AdminRelevantVisitorsConversationPreview />
         </PcpAdminChatPreview>
       </div>
     </div>
+  );
+}
+
+function PcpContentPromptConversationPreview({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <div className="w-full min-w-[48rem] rounded-lg border border-border-faint bg-background-neutral-soft p-xl">
+      <div className="mx-auto h-[46rem] w-full max-w-[42rem]">
+        <PcpAdminChatPreview>{children}</PcpAdminChatPreview>
+      </div>
+    </div>
+  );
+}
+
+function PcpContentResponseProvenance({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return <p className="text-body-xs text-text-meta">{children}</p>;
+}
+
+export function PcpContentHighlightsContextPreview() {
+  return (
+    <div className="w-full min-w-[56rem] rounded-lg bg-background-neutral-soft p-xl">
+      <PremiumCompanyPagesContentHighlightsPromptPreview promptLabel="Why are impressions down but engagement up?" />
+    </div>
+  );
+}
+
+export function PcpContentHighlightsConversationPreview() {
+  return (
+    <PcpContentPromptConversationPreview>
+      <ChatThread showAiDisclaimer={false}>
+        <ChatMessage role="user">
+          Why are impressions down but engagement up?
+        </ChatMessage>
+        <ChatResponseBlock>
+          <ChatMessage>
+            <div className="space-y-md">
+              <p>
+                You published fewer posts this month, which likely explains why
+                impressions fell even though engagement increased.
+              </p>
+              <p>
+                Velora published 12 posts, down from 22 in the previous period.
+                Start by posting more regularly using topics that already
+                worked.
+              </p>
+            </div>
+          </ChatMessage>
+          <ChatResponseAttachment>
+            <ResponseMetric
+              items={[
+                {
+                  label: "May 10–Jun 8",
+                  value: "12",
+                  unit: "posts",
+                },
+                {
+                  label: "Previous period",
+                  value: "22",
+                  unit: "posts",
+                },
+              ]}
+              title="Posts published"
+            />
+          </ChatResponseAttachment>
+          <ChatResponseAttachment>
+            <PcpContentResponseProvenance>
+              May 10–Jun 8 vs. Apr 10–May 9 · Content analytics · Data through
+              Jun 8
+            </PcpContentResponseProvenance>
+          </ChatResponseAttachment>
+          <ChatResponseAttachment>
+            <Button size="small" variant="secondary">
+              View content engagement
+            </Button>
+          </ChatResponseAttachment>
+        </ChatResponseBlock>
+      </ChatThread>
+    </PcpContentPromptConversationPreview>
+  );
+}
+
+export function PcpContentEngagementContextPreview() {
+  return (
+    <div className="w-full min-w-[56rem] rounded-lg bg-background-neutral-soft p-xl">
+      <PremiumCompanyPagesContentEngagementPromptPreview promptLabel="What do top posts have in common?" />
+    </div>
+  );
+}
+
+export function PcpContentEngagementConversationPreview() {
+  return (
+    <PcpContentPromptConversationPreview>
+      <ChatThread showAiDisclaimer={false}>
+        <ChatMessage role="user">What do top posts have in common?</ChatMessage>
+        <ChatResponseBlock>
+          <ChatMessage>
+            <div className="space-y-md">
+              <p>
+                Your top posts give people practical help with specific benefits
+                tasks.
+              </p>
+              <p>
+                The open-enrollment customer story and carrier-readiness
+                checklist had the highest engagement rates and gained the most
+                followers. Keep using customer examples and checklists tied to a
+                clear task or deadline.
+              </p>
+            </div>
+          </ChatMessage>
+          <ChatResponseAttachment>
+            <ResponseContentList
+              items={[
+                {
+                  title:
+                    "How Arbor prepared 12,000 employees for open enrollment",
+                  thumbnailSrc:
+                    "/assets/premium-company-pages/member/post-image-1.png",
+                  thumbnailAlt: "Open enrollment customer story preview",
+                  metrics: [
+                    { label: "Engagement rate", value: "8.2%" },
+                    { label: "Followers gained", value: "118" },
+                  ],
+                },
+                {
+                  title:
+                    "Carrier file readiness checklist for enterprise benefits teams",
+                  thumbnailSrc:
+                    "/assets/premium-company-pages/member/post-image-2.png",
+                  thumbnailAlt: "Carrier readiness checklist preview",
+                  metrics: [
+                    { label: "Engagement rate", value: "7.1%" },
+                    { label: "Followers gained", value: "94" },
+                  ],
+                },
+              ]}
+              title="Top posts"
+            />
+          </ChatResponseAttachment>
+          <ChatResponseAttachment>
+            <PcpContentResponseProvenance>
+              May 26–Jun 8 · Content analytics · Data through Jun 8
+            </PcpContentResponseProvenance>
+          </ChatResponseAttachment>
+          <ChatResponseAttachment>
+            <Button size="small" variant="secondary">
+              View top posts
+            </Button>
+          </ChatResponseAttachment>
+        </ChatResponseBlock>
+      </ChatThread>
+    </PcpContentPromptConversationPreview>
   );
 }
 
@@ -3920,8 +4056,8 @@ function HiringSidePanelChatHistory() {
   return (
     <ChatThread showAiDisclaimer={false}>
       <ChatMessage>
-        I can connect you with a sales consultant who can help shape your
-        hiring plan.
+        I can connect you with a sales consultant who can help shape your hiring
+        plan.
       </ChatMessage>
       <ChatMessage role="user" timestamp="1:03 PM">
         I&apos;d like to schedule a call.
@@ -3998,48 +4134,98 @@ export function PremiumFabReviewPreview() {
   );
 }
 
-export function VcaFabReviewPreview() {
+type VcaFabAudience = "admin" | "visitor";
+
+function CurrentVcaFab({
+  audience,
+  disabled = false,
+  selected = false,
+  visualState = "default",
+}: Readonly<{
+  audience: VcaFabAudience;
+  disabled?: boolean;
+  selected?: boolean;
+  visualState?: VcaFabVisualState;
+}>) {
+  if (audience === "admin") {
+    return (
+      <VcaFab
+        adminTone="gold"
+        disabled={disabled}
+        label="Open admin assistant"
+        onClick={() => {}}
+        position="static"
+        selected={selected}
+        variant="admin"
+        visualState={visualState}
+      />
+    );
+  }
+
   return (
-    <VcaFabPreviewFrame>
-      <VcaFab onClick={() => {}} position="static" />
-    </VcaFabPreviewFrame>
+    <VcaFab
+      accentColor="#2AA986"
+      borderColor="#2AA986"
+      borderHoverColor="#2AA986"
+      disabled={disabled}
+      label="Open visitor assistant"
+      onClick={() => {}}
+      position="static"
+      selected={selected}
+      variant="visitor"
+      visualState={visualState}
+    >
+      <span className="inline-flex size-10 shrink-0 items-center justify-center">
+        <Image
+          alt=""
+          className="h-auto w-10 max-w-none object-contain"
+          height={35}
+          src="/assets/premium-company-pages/member/velora-vca-logo.png"
+          width={39}
+        />
+      </span>
+    </VcaFab>
   );
 }
 
-export function VcaFabPresenceBadgeExplorationPreview() {
+export function VcaFabDemo() {
+  const [audience, setAudience] = useState<VcaFabAudience>("admin");
+
   return (
-    <div className="flex flex-wrap items-start gap-xl">
-      <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Visitor FAB</p>
-        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
-          <VcaFab
-            accentColor="#2AA986"
-            borderColor="#2AA986"
-            borderHoverColor="#2AA986"
-            onClick={() => {}}
-            position="static"
-          />
-        </div>
-      </div>
-    </div>
+    <ComponentDemoSection
+      controls={
+        <SegmentedControl
+          label="Audience"
+          onChange={setAudience}
+          options={[
+            { label: "Admin", value: "admin" },
+            { label: "Visitor", value: "visitor" },
+          ]}
+          value={audience}
+        />
+      }
+    >
+      <CurrentVcaFab audience={audience} />
+    </ComponentDemoSection>
   );
 }
 
-export function VcaFabStatesPreview() {
+export function VcaFabCurrentPreview({
+  audience,
+}: Readonly<{ audience: VcaFabAudience }>) {
   return (
     <div className="flex flex-wrap items-start gap-xl">
       {vcaFabStates.map(({ label, value }) => (
         <div key={value} className="space-y-xs">
           <p className="text-body-xs text-text-meta">{label}</p>
           <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
-            <VcaFab
-              onClick={() => {}}
-              position="static"
+            <CurrentVcaFab
+              audience={audience}
+              disabled={value === "disabled"}
               selected={value === "selected"}
               visualState={
                 value === "disabled" || value === "selected" ? "default" : value
               }
-              disabled={value === "disabled"}
             />
           </div>
         </div>
@@ -4048,49 +4234,67 @@ export function VcaFabStatesPreview() {
   );
 }
 
-export function VcaFabSwappableMarkPreview() {
+export function VcaFabPreviousExplorationsPreview({
+  audience,
+}: Readonly<{ audience: VcaFabAudience }>) {
+  if (audience === "admin") {
+    return (
+      <div className="flex flex-wrap items-start gap-xl">
+        <div className="space-y-xs">
+          <p className="text-body-xs text-text-meta">Gradient gold AI mark</p>
+          <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+            <VcaFab
+              adminTone="gold"
+              label="Open assistant"
+              onClick={() => {}}
+              position="static"
+              variant="admin"
+            >
+              <PcpAdminGoldAiMark />
+            </VcaFab>
+          </div>
+        </div>
+        <div className="space-y-xs">
+          <p className="text-body-xs text-text-meta">Green AI mark</p>
+          <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+            <VcaFab
+              accentColor="#2AA986"
+              label="Open assistant"
+              onClick={() => {}}
+              position="static"
+              variant="admin"
+            />
+          </div>
+        </div>
+        <div className="space-y-xs">
+          <p className="text-body-xs text-text-meta">Selected AI mark</p>
+          <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
+            <VcaFab
+              accentColor="#2AA986"
+              label="Open assistant"
+              onClick={() => {}}
+              position="static"
+              selected
+              variant="admin"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-wrap items-start gap-xl">
       <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Visitor mark</p>
-        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
-          <VcaFab onClick={() => {}} position="static" />
-        </div>
-      </div>
-      <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Admin mark</p>
+        <p className="text-body-xs text-text-meta">Presence badge</p>
         <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
           <VcaFab
             accentColor="#2AA986"
-            label="Open assistant"
+            borderColor="#2AA986"
+            borderHoverColor="#2AA986"
+            label="Open visitor assistant"
             onClick={() => {}}
             position="static"
-            variant="admin"
-          />
-        </div>
-      </div>
-      <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Gold admin mark</p>
-        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
-          <VcaFab
-            adminTone="gold"
-            label="Open assistant"
-            onClick={() => {}}
-            position="static"
-            variant="admin"
-          />
-        </div>
-      </div>
-      <div className="space-y-xs">
-        <p className="text-body-xs text-text-meta">Selected admin mark</p>
-        <div className="flex min-h-20 min-w-20 items-center justify-center rounded-lg border border-border-faint bg-background-neutral-soft">
-          <VcaFab
-            accentColor="#2AA986"
-            label="Open assistant"
-            onClick={() => {}}
-            position="static"
-            selected
-            variant="admin"
           />
         </div>
       </div>
@@ -4330,14 +4534,6 @@ export function PcpInboxAiContextStripPreview() {
 function PremiumFabPreviewFrame({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  return (
-    <div className="relative h-56 w-full min-w-[20rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
-      <div className="absolute bottom-xl right-xl">{children}</div>
-    </div>
-  );
-}
-
-function VcaFabPreviewFrame({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="relative h-56 w-full min-w-[20rem] overflow-hidden rounded-lg border border-border-faint bg-background-neutral-soft">
       <div className="absolute bottom-xl right-xl">{children}</div>

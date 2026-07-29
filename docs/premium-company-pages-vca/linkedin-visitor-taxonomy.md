@@ -70,22 +70,30 @@ Use LinkedIn-style company industry labels.
 Examples:
 
 - Insurance
-- Hospital & Health Care
+- Hospitals and Health Care
 - Retail
 - Financial Services
-- Computer Software
-- Information Technology & Services
+- Software Development
+- IT Services and IT Consulting
+- Technology, Information and Internet
+- Transportation, Logistics, Supply Chain and Storage
 
 Good:
 
-- `Insurance · Hospital & Health Care`
+- `Insurance`
+- `Hospitals and Health Care`
 - `Retail`
+- `Technology, Information and Internet`
+- `Transportation, Logistics, Supply Chain and Storage`
 
 Avoid:
 
 - `Benefits-heavy companies`
 - `Enterprise HR teams`
 - `Carrier ecosystem`
+- Shortening or rewriting a taxonomy label inside structured UI
+
+Use the exact current LinkedIn industry label in cards and analytics tables. In a production system, store the taxonomy identifier as the stable value and treat the display label as changeable reference data.
 
 ### Company Size
 
@@ -159,7 +167,7 @@ Use taxonomy-based labels in structured cards:
 
 - `Job function` / `Human Resources`
 - `Seniority` / `Director+`
-- `Industry` / `Insurance · Hospital & Health Care`
+- `Industry` / `Hospitals and Health Care`
 - `Company size` / `10,001+ employees`
 - `Job function` / `38% Human Resources visitors`
 

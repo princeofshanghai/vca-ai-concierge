@@ -68,7 +68,7 @@ export function TextRecommendationList({
     >
       {items.map(({ action, reason }, index) => (
         <li className="pl-xs" key={`${String(action)}-${index}`}>
-          <strong className="font-semibold text-text">{action}</strong>
+          {action}
           {reason ? <span> — {reason}</span> : null}
         </li>
       ))}

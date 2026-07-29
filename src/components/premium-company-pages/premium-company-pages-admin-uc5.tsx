@@ -43,12 +43,12 @@ import { AudienceFit as ResponseAudienceFit } from "@/components/premium-company
 import { Chips as ResponseChips } from "@/components/premium-company-pages/response-blocks/Chips";
 import { Compare as ResponseCompare } from "@/components/premium-company-pages/response-blocks/Compare";
 import { ContentList as ResponseContentList } from "@/components/premium-company-pages/response-blocks/ContentList";
-import { ConversionPath as ResponseConversionPath } from "@/components/premium-company-pages/response-blocks/ConversionPath";
 import { PostCard as ResponsePostCard } from "@/components/premium-company-pages/response-blocks/ChatCards";
 import { Metric as ResponseMetric } from "@/components/premium-company-pages/response-blocks/Metric";
 import { MetricWithTrend as ResponseMetricWithTrend } from "@/components/premium-company-pages/response-blocks/MetricWithTrend";
 import { PersonCard as ResponsePersonCard } from "@/components/premium-company-pages/response-blocks/PersonCard";
 import { ResponseRail } from "@/components/premium-company-pages/response-blocks/ResponseRail";
+import { Sources as ResponseSources } from "@/components/premium-company-pages/response-blocks/Sources";
 import {
   Text as ResponseText,
   TextRecommendationList as ResponseTextRecommendationList,
@@ -63,11 +63,8 @@ import {
   pcpVisitorPersona,
 } from "./persona";
 import { ScriptedResponseTurn as BaseScriptedResponseTurn } from "./scripted-response-turn";
-import {
-  InlineStreamingText,
-  splitTextBlocks,
-  StreamingEmphasizedText,
-} from "./streaming-emphasized-text";
+import { PcpAssistantText } from "./pcp-assistant-text";
+import { InlineStreamingText, splitTextBlocks } from "./streaming-emphasized-text";
 import { TodayActionCard } from "./today-action-card";
 import { useScriptedTurnController } from "./use-scripted-turn-controller";
 import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
@@ -97,6 +94,9 @@ import {
   type AdminUc5PostPerformance,
   type AdminUc5Tone,
 } from "./premium-company-pages-admin-uc5-data";
+import { pcpAdminCompetitorAnalyticsFixture } from "./premium-company-pages-admin-competitor-fixture";
+import { pcpAdminContentPerformanceFixture } from "./premium-company-pages-admin-content-fixture";
+import { pcpAdminVisitorAnalyticsFixture } from "./premium-company-pages-admin-visitor-fixture";
 
 function ScriptedResponseTurn(
   props: ComponentProps<typeof BaseScriptedResponseTurn>,
@@ -122,8 +122,7 @@ function PremiumChatHeaderIdentity() {
 const ADMIN_BOOST_POST_IMAGE = "member/arbor-open-enrollment-post.png";
 const CHERI_SPARKS_AVATAR = pcpVisitorPersona.avatar;
 const STORY_1A_CARD_ID = "story-1a-follower-growth";
-const STORY_1A_FOLLOWER_GROWTH_PROMPT =
-  "How do I recover my follower growth?";
+const STORY_1A_FOLLOWER_GROWTH_PROMPT = "How do I recover my follower growth?";
 const AUTO_INVITE_CARD_ID = "auto-invite";
 const ADD_LOCATION_CARD_ID = "add-location";
 const ADMIN_LIVE_SUPPORT_CONNECT_DELAY_MS = 1200;
@@ -222,7 +221,6 @@ type AdminUc5AgentPanelProps = Readonly<{
   onDraftChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
   onDraftClear: () => void;
   onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
-  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
   onMinimizeToTray?: () => void;
   onSend: () => void;
   onVariantToggle: () => void;
@@ -230,75 +228,48 @@ type AdminUc5AgentPanelProps = Readonly<{
 
 export type AdminUc5SelfInitiatedView =
   | "page-performance"
+  | "competitor-growth"
+  | "competitor-content-pattern"
+  | "content-performance"
   | "next-focus"
-  | "custom-button-clicks"
+  | "visitor-activity"
   | "post-impressions"
   | "relevant-visitors"
   | "visitor-audience"
   | "page-engagement";
 
-const ADMIN_PAGE_PERFORMANCE_PROMPT = "How is my page performing?";
+const ADMIN_PAGE_PERFORMANCE_PROMPT = "How is my Page performing?";
+const ADMIN_COMPETITOR_GROWTH_PROMPT =
+  "How does my Page compare with competitors?";
 const ADMIN_NEXT_FOCUS_PROMPT = "What should I focus on next?";
-const ADMIN_VISITOR_AUDIENCE_PROMPT =
-  "Show insights about my page visitors";
-const ADMIN_PAGE_PERFORMANCE_RESPONSE_TEXT = `People are engaging with your posts, but your competitors are gaining followers faster.
+const ADMIN_VISITOR_AUDIENCE_PROMPT = "Tell me about my Page visitors";
+const ADMIN_PAGE_PERFORMANCE_RESPONSE_TEXT = `Overall, your content connected better with people who saw it, but reached fewer people this week.
 
-Impressions, reactions, comments, and reposts are all up this month. Your strongest post had an 8.2% engagement rate. Practical posts about open enrollment and carrier readiness are getting the best response.
+You posted less often, which likely contributed to the drop in impressions even as engagement improved.`;
+const ADMIN_PAGE_PERFORMANCE_RECOMMENDATION_TEXT =
+  "Try posting one more time this week using a topic that already worked. Your top post below is a good place to start.";
+const VISITOR_AUDIENCE_RESPONSE_TEXT = `Most of your Page visitors come from three industries: Retail, Hospitals and Health Care, and Technology, Information and Internet.
 
-The main challenge is reach. Page views are up, but fewer visitors are new, and custom button clicks are still low. ${pcpCompetitorNames[0]} gained 1,280 followers, compared with Velora's 420. People respond when they see your posts, but you need to reach more of them and give them a clearer reason to click.`;
-const ADMIN_PAGE_PERFORMANCE_RESPONSE_HIGHLIGHTS = [
-  "People are engaging with your posts",
-  "competitors are gaining followers faster",
-  "8.2% engagement rate",
-  "Page views are up",
-  "fewer visitors are new",
-  "custom button clicks are still low",
-  `${pcpCompetitorNames[0]} gained 1,280 followers, compared with Velora's 420`,
-] as const;
-const VISITOR_AUDIENCE_RESPONSE_TEXT = `Your Page is reaching more of the people Velora wants to reach this month.
+Together, they made up 63.3% of visitors over the last 30 days.`;
+const VISITOR_AUDIENCE_VISITOR_RAIL_INTRO_TEXT = `Retail is the largest group, and one of your stronger posts features a retail customer. This does not prove the post brought those visitors to your Page, but it gives you a useful topic to test again.
 
-64% of people who viewed your Page match Velora's target audience, up from 52% last month.
+Try one more post for benefits teams in retail, then compare it with your broader posts.
 
-Most of those visitors work in Human Resources, are director level or above, and come from companies with 10,001+ employees. That does not confirm buying intent, but it shows that more of the right people are finding your Page.`;
-const VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS = [
-  "64%",
-  "up from 52% last month",
-  "Human Resources",
-  "director level or above",
-  "10,001+ employees",
-] as const;
-const VISITOR_AUDIENCE_RELEVANT_VISITORS_PROMPT =
-  "Show relevant visitors";
-const ADMIN_RELEVANT_VISITORS_PROMPT =
-  "Which visitors look most relevant?";
-const VISITOR_AUDIENCE_REACH_MORE_PROMPT = "How do I reach more of them?";
-const VISITOR_AUDIENCE_RELEVANT_VISITORS_RESPONSE_TEXT =
-  "Here are a few visitors who match the strongest audience signals for Velora right now.";
+A few recent visitors from these industries also came back or viewed more than one post. Take a look below to learn more about them.`;
+const VISITOR_AUDIENCE_RELEVANT_VISITORS_PROMPT = "Show relevant visitors";
+const ADMIN_RELEVANT_VISITORS_PROMPT = "Which visitors look most relevant?";
 const ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT = `These visitors are closer to the audience Velora wants to reach.
 
 They are HR or benefits leaders at large companies who recently viewed content about benefits operations. Some also returned or viewed more than one post.
 
 Start with visitors who are senior, work at a large company, and came back more than once. That activity may show stronger interest, but it does not confirm buying intent.`;
-const ADMIN_RELEVANT_VISITORS_RESPONSE_HIGHLIGHTS = [
-  "closer to the audience Velora wants to reach",
-  "HR or benefits leaders at large companies",
-  "returned or viewed more than one post",
-  "does not confirm buying intent",
-] as const;
 const VISITOR_AUDIENCE_REACH_MORE_RESPONSE_TEXT =
-  "Post more content for Human Resources leaders at large employers, then reuse the open enrollment and carrier-readiness proof that is already attracting relevant visitors.";
+  "Start with one post for benefits teams in retail, since retail is the largest visitor industry and a retail customer story already performed well. Treat it as a test, then compare it with your broader posts.";
 const ADMIN_NEXT_FOCUS_RESPONSE_TEXT = `Post more often, starting with a practical checklist for HR leaders.
 
 People respond when they see your posts, but Velora published 12 posts this month. ${pcpCompetitorNames[0]} published 22. Their short open enrollment posts with clear deadlines are helping them gain followers faster.
 
 This week, publish one carrier-readiness checklist. Then follow it with a Velora customer example.`;
-const ADMIN_NEXT_FOCUS_RESPONSE_HIGHLIGHTS = [
-  "Post more often",
-  "Velora published 12 posts this month",
-  `${pcpCompetitorNames[0]} published 22`,
-  "publish one carrier-readiness checklist",
-  "follow it with a Velora customer example",
-] as const;
 const ADMIN_NEXT_FOCUS_DRAFT_PROMPT = "Draft a similar post";
 const ADMIN_NEXT_FOCUS_DRAFT_TEXT = `Here is a Velora version:
 
@@ -308,20 +279,36 @@ Before enrollment opens, HR teams should confirm carrier file readiness, eligibi
 
 Velora helps benefits teams see those moving parts in one workflow, so open enrollment feels coordinated before the deadline pressure hits.`;
 const ADMIN_POST_IMPRESSIONS_PROMPT = "Why are post impressions down?";
-const ADMIN_POST_IMPRESSIONS_BOOST_PROMPT = "What post should I boost?";
-const ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT = `Post impressions are down 18.4% this month. You posted less often, and two posts with links got less engagement early on.
+const ADMIN_POST_IMPRESSIONS_BOOST_PROMPT = "How do I boost this post?";
+const ADMIN_POST_IMPRESSIONS_BOOST_SOURCE_TITLE =
+  "Boost a post from your company's LinkedIn Page";
+const ADMIN_POST_IMPRESSIONS_BOOST_SOURCE_URL =
+  "https://www.linkedin.com/help/lms/answer/a446611";
+const ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT = `Velora published three posts in the last 7 days, two fewer than the week before. That likely contributed to the drop in impressions because people had fewer chances to see Velora's content.
 
-The posts themselves are still working. Reactions, comments, and reposts are up. The main problem is that fewer people are seeing them.
+Engagement improved over the same period, which suggests the posts still connected with people who saw them.
 
-Start by posting more regularly and reusing topics that already worked. If you need more reach before open enrollment, consider boosting your strongest post.`;
-const ADMIN_POST_IMPRESSIONS_RESPONSE_HIGHLIGHTS = [
-  "18.4% this month",
-  "You posted less often",
-  "fewer people are seeing them",
-  "consider boosting your strongest post",
-] as const;
-const ADMIN_POST_IMPRESSIONS_BOOST_RESPONSE_TEXT =
-  "I'd boost the open enrollment customer story first. It already has the strongest engagement rate in the recent set, so boosting would extend content that is working instead of trying to rescue a weak post.";
+Try publishing one more post this week. If you want to reach more people sooner, you could also consider boosting your strongest recent post. Your top post is below.`;
+const ADMIN_POST_IMPRESSIONS_BOOST_RESPONSE_TEXT = `To boost this post, you'll finish the setup from your Page admin view. I can explain the steps, but I can't launch the boost from this chat.
+
+1. Open your Page super admin or content admin view.
+2. Select Page posts, find the post, and choose Boost.
+3. Choose the goal for the post.
+4. Choose an audience:
+  - Use Suggested audience for LinkedIn's default targeting.
+  - Or create an audience using options such as location or language.
+5. Set the start date, end date, and total budget.
+6. Select the ad account that will be billed, review the setup, and choose Boost.
+
+Boosting is currently available on desktop.`;
+const ADMIN_CONTENT_PERFORMANCE_PROMPT = "Which content is working best?";
+const ADMIN_CONTENT_PERFORMANCE_RESPONSE_TEXT = `What is working best depends on what you want people to do.
+
+The Arbor customer story earned the strongest engagement rate, while the carrier-readiness post had the highest click rate. The customer story is the stronger example for getting people to interact. The carrier-readiness post is the stronger example when you want people to click through.
+
+These results come from a small group of recent posts, so use them as a starting point rather than a fixed rule.`;
+const ADMIN_CONTENT_PERFORMANCE_RECOMMENDATION_TEXT =
+  "For your next test, combine those strengths: start with a real customer challenge and give people one clear takeaway or resource.";
 const ADMIN_PAGE_ENGAGEMENT_PROMPT = "How can I boost my page engagement?";
 const ADMIN_PAGE_ENGAGEMENT_RESPONSE_TEXT = `You can boost Page engagement by posting consistently, starting conversations, and using stronger visuals. You can also read more engagement best practices in the LinkedIn Page growth guide.
 
@@ -346,28 +333,27 @@ const ADMIN_PAGE_ENGAGEMENT_SECTION_TITLES = [
   "Engage with your community",
   "Use compelling visuals",
 ] as const;
-const ADMIN_CUSTOM_BUTTON_CLICKS_PROMPT =
-  "How can I get more custom button clicks?";
-const ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_TEXT = `Only 126 visitors clicked your custom button this month, even though Page views are up.
+const ADMIN_VISITOR_ACTIVITY_PROMPT =
+  "Why are Page views up but unique visitors down?";
+const ADMIN_VISITOR_ACTIVITY_RESPONSE_TEXT = `Your Page is getting more views from fewer people.
 
-About 4% of unique visitors clicked it. The button may be easy to miss, or its next step may not match what visitors came to learn.
+Over the last 30 days, Page views increased 28%, while unique visitors decreased 20.2%. That works out to about 2.7 Page views per unique visitor. Some visitors may be returning more often, even though fewer distinct people are reaching your Page.
 
-Link it to one clear next step, such as a demo, customer story, or open enrollment resource. Then publish a short post that tells HR leaders what they will get when they click.`;
-const ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_HIGHLIGHTS = [
-  "Only 126 visitors clicked your custom button this month",
-  "Page views are up",
-  "About 4% of unique visitors clicked it",
-  "one clear next step",
-  "demo, customer story, or open enrollment resource",
-] as const;
-const ADMIN_COMPETITOR_GROWTH_RESPONSE_TEXT = `${pcpCompetitorNames[0]} gained 1,280 followers this month, compared with Velora's 420. They also posted more often: 22 posts compared with Velora's 12.
+Keep what gives current visitors a reason to return, but use it as a starting point for reaching more people. The Arbor customer story earned the strongest engagement among your recent posts. Try the same clear customer-outcome approach with a different customer or business problem, then watch whether unique visitors improve over the next 30 days.
 
-Their short open enrollment checklists give HR leaders practical advice tied to deadlines. Velora's strongest posts cover similar topics, but fewer people are seeing them because you publish less often.`;
-const ADMIN_COMPETITOR_GROWTH_RESPONSE_HIGHLIGHTS = [
-  `${pcpCompetitorNames[0]} gained 1,280 followers this month, compared with Velora's 420`,
-  "22 posts compared with Velora's 12",
-  "fewer people are seeing them because you publish less often",
-] as const;
+The post below is a good example to build from.`;
+const ADMIN_COMPETITOR_GROWTH_RESPONSE_TEXT = `Overall, ${pcpCompanyProfile.name}'s follower growth is slower than the Pages shown in this comparison.
+
+Over the last 30 days, those Pages also posted more often and generally got more response per post. That suggests the difference may be related to both posting consistency and how well the content connects, although the data does not prove what caused the follower growth.`;
+const ADMIN_COMPETITOR_GROWTH_RECOMMENDATION_TEXT =
+  "Before posting more often, review trending competitor posts on topics Velora also covers to see what earns a stronger response.";
+const ADMIN_COMPETITOR_CONTENT_PATTERN_PROMPT =
+  "What do trending competitor posts have in common?";
+const ADMIN_COMPETITOR_CONTENT_PATTERN_RESPONSE_TEXT = `The posts use different formats, but they follow a similar approach.
+
+Across the three trending posts from the last 30 days, each one starts with a specific benefits operations problem and gives people a practical takeaway. One uses a checklist, one uses a scorecard, and one uses a case study. That pattern appears across different formats, which suggests the clear problem and practical value matter more than one particular format.
+
+Velora's carrier-readiness post already follows part of this approach and earned your highest click rate. Build on it with one real customer problem and one clear takeaway. The post below is a good place to start.`;
 
 export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   Readonly<{
@@ -376,39 +362,42 @@ export const ADMIN_UC5_SELF_INITIATED_PROMPTS: ReadonlyArray<
   }>
 > = [
   {
-    id: "visitor-audience",
-    prompt: ADMIN_VISITOR_AUDIENCE_PROMPT,
-  },
-  {
     id: "page-performance",
     prompt: ADMIN_PAGE_PERFORMANCE_PROMPT,
   },
   {
-    id: "next-focus",
-    prompt: ADMIN_NEXT_FOCUS_PROMPT,
+    id: "competitor-growth",
+    prompt: ADMIN_COMPETITOR_GROWTH_PROMPT,
+  },
+  {
+    id: "visitor-audience",
+    prompt: ADMIN_VISITOR_AUDIENCE_PROMPT,
   },
 ] as const;
 
 const ADMIN_UC5_WELCOME_PROMPTS = [
   {
     id: "page-performance",
-    prompt: "How is my Page performing?",
+    prompt: ADMIN_PAGE_PERFORMANCE_PROMPT,
     type: "self-initiated",
   },
   {
     id: "competitor-growth",
-    prompt: "How do my competitors compare?",
-    type: "insight",
+    prompt: ADMIN_COMPETITOR_GROWTH_PROMPT,
+    type: "self-initiated",
   },
   {
-    id: "relevant-visitors",
-    prompt: ADMIN_RELEVANT_VISITORS_PROMPT,
+    id: "visitor-audience",
+    prompt: ADMIN_VISITOR_AUDIENCE_PROMPT,
     type: "self-initiated",
   },
 ] as const;
 
 function normalizeSelfInitiatedPrompt(prompt: string) {
-  return prompt.trim().toLocaleLowerCase().replace(/[?!.]+$/u, "");
+  return prompt
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/[?!.]+$/u, "");
 }
 
 export function isAdminUc5LiveAgentRequest(prompt: string) {
@@ -466,23 +455,11 @@ function isEngagementSupportPrompt(prompt: string) {
     "increase",
     "grow",
   ].some((keyword) => prompt.includes(keyword));
-  const hasPageEngagementSubject = [
-    "engagement",
-    "page",
-    "post",
-    "posts",
-  ].some((keyword) => prompt.includes(keyword));
+  const hasPageEngagementSubject = ["engagement", "page", "post", "posts"].some(
+    (keyword) => prompt.includes(keyword),
+  );
 
   return hasSupportIntent && hasPageEngagementSubject;
-}
-
-function isCustomButtonClicksPrompt(prompt: string) {
-  return (
-    (prompt.includes("custom button") || prompt.includes("button click")) &&
-    ["drive", "get more", "help", "improve", "increase", "grow"].some(
-      (keyword) => prompt.includes(keyword),
-    )
-  );
 }
 
 const adminUc5SelfInitiatedViewByPrompt = new Map<
@@ -498,6 +475,28 @@ const adminUc5SelfInitiatedViewByPrompt = new Map<
     "page-performance",
   ],
   [normalizeSelfInitiatedPrompt("How do I compare?"), "page-performance"],
+  [
+    normalizeSelfInitiatedPrompt(ADMIN_COMPETITOR_GROWTH_PROMPT),
+    "competitor-growth",
+  ],
+  [
+    normalizeSelfInitiatedPrompt("How do my competitors compare?"),
+    "competitor-growth",
+  ],
+  [
+    normalizeSelfInitiatedPrompt(ADMIN_COMPETITOR_CONTENT_PATTERN_PROMPT),
+    "competitor-content-pattern",
+  ],
+  [
+    normalizeSelfInitiatedPrompt(
+      "What patterns do trending competitor posts share?",
+    ),
+    "competitor-content-pattern",
+  ],
+  [
+    normalizeSelfInitiatedPrompt("What do competitor posts have in common?"),
+    "competitor-content-pattern",
+  ],
   [normalizeSelfInitiatedPrompt(ADMIN_NEXT_FOCUS_PROMPT), "next-focus"],
   [normalizeSelfInitiatedPrompt("What should I do next?"), "next-focus"],
   [normalizeSelfInitiatedPrompt("What should I post next?"), "next-focus"],
@@ -514,7 +513,19 @@ const adminUc5SelfInitiatedViewByPrompt = new Map<
     "post-impressions",
   ],
   [
+    normalizeSelfInitiatedPrompt(ADMIN_CONTENT_PERFORMANCE_PROMPT),
+    "content-performance",
+  ],
+  [
+    normalizeSelfInitiatedPrompt("What content is working best?"),
+    "content-performance",
+  ],
+  [
     normalizeSelfInitiatedPrompt(ADMIN_VISITOR_AUDIENCE_PROMPT),
+    "visitor-audience",
+  ],
+  [
+    normalizeSelfInitiatedPrompt("Show insights about my page visitors"),
     "visitor-audience",
   ],
   [
@@ -555,16 +566,20 @@ const adminUc5SelfInitiatedViewByPrompt = new Map<
     "page-engagement",
   ],
   [
-    normalizeSelfInitiatedPrompt(ADMIN_CUSTOM_BUTTON_CLICKS_PROMPT),
-    "custom-button-clicks",
+    normalizeSelfInitiatedPrompt(ADMIN_VISITOR_ACTIVITY_PROMPT),
+    "visitor-activity",
   ],
   [
-    normalizeSelfInitiatedPrompt("How do I improve custom button clicks?"),
-    "custom-button-clicks",
+    normalizeSelfInitiatedPrompt(
+      "Why did Page views increase while unique visitors decreased?",
+    ),
+    "visitor-activity",
   ],
   [
-    normalizeSelfInitiatedPrompt("How to improve my custom button clicks?"),
-    "custom-button-clicks",
+    normalizeSelfInitiatedPrompt(
+      "Why are more Page views coming from fewer visitors?",
+    ),
+    "visitor-activity",
   ],
 ]);
 
@@ -591,10 +606,6 @@ function getSelfInitiatedViewForPrompt(
     return "page-engagement";
   }
 
-  if (isCustomButtonClicksPrompt(normalizedPrompt)) {
-    return "custom-button-clicks";
-  }
-
   return null;
 }
 
@@ -603,16 +614,28 @@ function getDefaultSelfInitiatedPrompt(view: AdminUc5SelfInitiatedView) {
     return ADMIN_PAGE_PERFORMANCE_PROMPT;
   }
 
+  if (view === "competitor-growth") {
+    return ADMIN_COMPETITOR_GROWTH_PROMPT;
+  }
+
+  if (view === "competitor-content-pattern") {
+    return ADMIN_COMPETITOR_CONTENT_PATTERN_PROMPT;
+  }
+
   if (view === "next-focus") {
     return ADMIN_NEXT_FOCUS_PROMPT;
   }
 
-  if (view === "custom-button-clicks") {
-    return ADMIN_CUSTOM_BUTTON_CLICKS_PROMPT;
+  if (view === "visitor-activity") {
+    return ADMIN_VISITOR_ACTIVITY_PROMPT;
   }
 
   if (view === "post-impressions") {
     return ADMIN_POST_IMPRESSIONS_PROMPT;
+  }
+
+  if (view === "content-performance") {
+    return ADMIN_CONTENT_PERFORMANCE_PROMPT;
   }
 
   if (view === "relevant-visitors") {
@@ -704,9 +727,7 @@ export function AdminPerformanceDigestCard({
     });
   }
 
-  function handleInsightCardSelect(
-    insight: AdminUc5InsightSelection,
-  ) {
+  function handleInsightCardSelect(insight: AdminUc5InsightSelection) {
     onInsightSelect(insight);
   }
 
@@ -725,8 +746,7 @@ export function AdminPerformanceDigestCard({
       </div>
 
       <div className="mt-xxl">
-        {showFollowerGrowthInsight &&
-        !resolvedCardIds.has(STORY_1A_CARD_ID) ? (
+        {showFollowerGrowthInsight && !resolvedCardIds.has(STORY_1A_CARD_ID) ? (
           <InsightCard
             active={activeInsightId === "follower-growth"}
             action={{
@@ -789,24 +809,20 @@ export function AdminPerformanceDigestCard({
   );
 }
 
-function MiniAvatarPile({
-  compact = false,
-}: Readonly<{ compact?: boolean }>) {
+function MiniAvatarPile({ compact = false }: Readonly<{ compact?: boolean }>) {
   const size = compact ? 24 : 32;
 
   return (
     <span className="flex items-center">
-      {["avatar-2.png", "avatar-1.png", "avatar-3.png"].map(
-        (avatar, index) => (
-          <Entity
-            className={cx(index > 0 && "-ml-sm", "border border-background")}
-            key={avatar}
-            label=""
-            size={size}
-            src={assetSrc(avatar)}
-          />
-        ),
-      )}
+      {["avatar-2.png", "avatar-1.png", "avatar-3.png"].map((avatar, index) => (
+        <Entity
+          className={cx(index > 0 && "-ml-sm", "border border-background")}
+          key={avatar}
+          label=""
+          size={size}
+          src={assetSrc(avatar)}
+        />
+      ))}
     </span>
   );
 }
@@ -825,7 +841,6 @@ export function AdminUc5AgentPanel({
   onDraftChange,
   onDraftClear,
   onFollowUpSelect,
-  onInsightSelect,
   onMinimizeToTray,
   onSend,
   onVariantToggle,
@@ -874,12 +889,12 @@ export function AdminUc5AgentPanel({
   const latestUserMessageAnchorKey = latestLiveAgentMessage
     ? `live-agent:${liveAgentMessages.length}:${latestLiveAgentMessage}`
     : latestThreadTurn
-    ? `turn:${latestThreadTurn.id}`
-    : latestSelfInitiatedTurn
-      ? `self-initiated:${latestSelfInitiatedTurn.id}`
-      : activeInsight
-        ? `active-insight:${activeInsight.id}:${activeInsight.prompt}`
-        : null;
+      ? `turn:${latestThreadTurn.id}`
+      : latestSelfInitiatedTurn
+        ? `self-initiated:${latestSelfInitiatedTurn.id}`
+        : activeInsight
+          ? `active-insight:${activeInsight.id}:${activeInsight.prompt}`
+          : null;
   const {
     hasLatestBelow,
     handleScroll: handleLatestScroll,
@@ -951,18 +966,6 @@ export function AdminUc5AgentPanel({
     },
     [onConversationStart],
   );
-  const handleSelfInitiatedPromptSelect = useCallback(
-    (prompt: string) => {
-      const view = getSelfInitiatedViewForPrompt(prompt);
-
-      if (!view) {
-        return;
-      }
-
-      handleSelfInitiatedViewSelect(view, prompt);
-    },
-    [handleSelfInitiatedViewSelect],
-  );
   const handleComposerSend = useCallback(() => {
     const prompt = draft.trim();
 
@@ -973,10 +976,7 @@ export function AdminUc5AgentPanel({
     onConversationStart();
 
     if (liveAgentStage === "connected") {
-      setLiveAgentMessages((currentMessages) => [
-        ...currentMessages,
-        prompt,
-      ]);
+      setLiveAgentMessages((currentMessages) => [...currentMessages, prompt]);
       onDraftClear();
 
       return;
@@ -1014,7 +1014,6 @@ export function AdminUc5AgentPanel({
       <div className="flex flex-col gap-lg">
         {showWelcome ? (
           <AdminAssistantWelcome
-            onInsightSelect={onInsightSelect}
             onPromptSelect={handleSelfInitiatedViewSelect}
           />
         ) : null}
@@ -1037,7 +1036,32 @@ export function AdminUc5AgentPanel({
                 key={turn.id}
                 onBusyChange={handleScriptedTurnBusyChange}
                 onContentChange={handleThreadContentChange}
-                onPromptSelect={handleSelfInitiatedPromptSelect}
+                prompt={turn.prompt}
+                stopSignal={stopSignal}
+                turnId={turn.id}
+              />
+            );
+          }
+
+          if (turn.view === "competitor-growth") {
+            return (
+              <CompetitorGrowthThread
+                key={turn.id}
+                onBusyChange={handleScriptedTurnBusyChange}
+                onContentChange={handleThreadContentChange}
+                prompt={turn.prompt}
+                stopSignal={stopSignal}
+                turnId={turn.id}
+              />
+            );
+          }
+
+          if (turn.view === "competitor-content-pattern") {
+            return (
+              <SelfInitiatedCompetitorContentPatternThread
+                key={turn.id}
+                onBusyChange={handleScriptedTurnBusyChange}
+                onContentChange={handleThreadContentChange}
                 prompt={turn.prompt}
                 stopSignal={stopSignal}
                 turnId={turn.id}
@@ -1071,9 +1095,9 @@ export function AdminUc5AgentPanel({
             );
           }
 
-          if (turn.view === "custom-button-clicks") {
+          if (turn.view === "visitor-activity") {
             return (
-              <SelfInitiatedCustomButtonClicksThread
+              <SelfInitiatedVisitorActivityThread
                 key={turn.id}
                 onBusyChange={handleScriptedTurnBusyChange}
                 onContentChange={handleThreadContentChange}
@@ -1091,6 +1115,19 @@ export function AdminUc5AgentPanel({
                 onBusyChange={handleScriptedTurnBusyChange}
                 onContentChange={handleThreadContentChange}
                 onViewBoostPost={handleOpenBoostPostSidePanel}
+                prompt={turn.prompt}
+                stopSignal={stopSignal}
+                turnId={turn.id}
+              />
+            );
+          }
+
+          if (turn.view === "content-performance") {
+            return (
+              <SelfInitiatedContentPerformanceThread
+                key={turn.id}
+                onBusyChange={handleScriptedTurnBusyChange}
+                onContentChange={handleThreadContentChange}
                 prompt={turn.prompt}
                 stopSignal={stopSignal}
                 turnId={turn.id}
@@ -1166,6 +1203,7 @@ export function AdminUc5AgentPanel({
       variant={variant}
     >
       <ChatHeader
+        actionGap="small"
         actionSize={headerActionSize}
         identity={
           liveAgentStage === "connected"
@@ -1221,16 +1259,13 @@ export function AdminUc5AgentPanel({
                   : "Message Page assistant",
               onChange: onDraftChange,
               placeholder: "Send message",
-              disabled:
-                isAssistantBusy || liveAgentStage === "connecting",
+              disabled: isAssistantBusy || liveAgentStage === "connecting",
               value: draft,
             }}
             isResponding={isAssistantBusy}
             onSend={handleComposerSend}
             onStopResponse={handleStopAssistantResponse}
-            sendDisabled={
-              isAssistantBusy || liveAgentStage === "connecting"
-            }
+            sendDisabled={isAssistantBusy || liveAgentStage === "connecting"}
             showAttachAction={false}
             showTopDivider
             showVoiceMode={false}
@@ -1243,14 +1278,9 @@ export function AdminUc5AgentPanel({
 }
 
 function AdminAssistantWelcome({
-  onInsightSelect,
   onPromptSelect,
 }: Readonly<{
-  onInsightSelect: (insight: AdminUc5InsightSelection) => void;
-  onPromptSelect: (
-    view: AdminUc5SelfInitiatedView,
-    prompt?: string,
-  ) => void;
+  onPromptSelect: (view: AdminUc5SelfInitiatedView, prompt?: string) => void;
 }>) {
   return (
     <ChatResponseBlock
@@ -1258,27 +1288,14 @@ function AdminAssistantWelcome({
       timestamp={getPrototypeMessageTimestamp(0)}
     >
       <ChatMessage>
-        Welcome back, {pcpCompanyProfile.adminFirstName}. I can help you
-        understand how {pcpCompanyProfile.name}&apos;s Page is performing,
-        compare competitors, and identify relevant visitors.
+        Hi {pcpCompanyProfile.adminFirstName}, what can I help you with today?
       </ChatMessage>
       <ChatResponseAttachment>
         <PromptGroup>
           {ADMIN_UC5_WELCOME_PROMPTS.map((item) => (
             <Prompt
               key={item.id}
-              onPromptSelect={() => {
-                if (item.type === "insight") {
-                  onInsightSelect({
-                    id: "competitor-growth",
-                    prompt: item.prompt,
-                  });
-
-                  return;
-                }
-
-                onPromptSelect(item.id, item.prompt);
-              }}
+              onPromptSelect={() => onPromptSelect(item.id, item.prompt)}
               prompt={item.prompt}
             />
           ))}
@@ -1398,9 +1415,11 @@ function AdminBoostPostSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
         </div>
 
         <PostSidePanelEngagementSummary
-          comments="146 comments"
-          reactions="1,240"
-          reposts="64 reposts"
+          comments={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.comments} comments`}
+          reactions={pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reactions.toLocaleString(
+            "en-US",
+          )}
+          reposts={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reposts} reposts`}
         />
 
         <footer className="mt-xxl flex flex-wrap justify-end gap-sm border-t border-border-faint pt-lg">
@@ -1428,14 +1447,12 @@ function AdminBoostPostSidePanel({ onBack }: Readonly<{ onBack: () => void }>) {
 function SelfInitiatedPerformanceThread({
   onBusyChange,
   onContentChange,
-  onPromptSelect,
   prompt,
   stopSignal,
   turnId,
 }: Readonly<{
   onBusyChange?: (id: string, isBusy: boolean) => void;
   onContentChange?: () => void;
-  onPromptSelect: (prompt: string) => void;
   prompt: string;
   stopSignal?: number;
   turnId: string;
@@ -1446,82 +1463,81 @@ function SelfInitiatedPerformanceThread({
       <ScriptedResponseTurn
         attachments={[
           {
-            id: "content-metrics",
+            id: "page-performance-summary",
             children: (
               <ResponseMetric
-                title="Content engagement"
+                context="Last 7 days"
+                title="Summary"
                 items={[
                   {
-                    value: "64,800",
+                    value:
+                      pcpAdminContentPerformanceFixture.last7Days.impressions
+                        .valueLabel,
                     label: "Impressions",
-                    delta: "18.4%",
-                    deltaContext: "this month",
+                    delta:
+                      pcpAdminContentPerformanceFixture.last7Days.impressions
+                        .deltaLabel,
+                    tone: "negative",
+                  },
+                  {
+                    value:
+                      pcpAdminContentPerformanceFixture.last7Days
+                        .engagementRate.valueLabel,
+                    label: "Engagement rate",
+                    delta:
+                      pcpAdminContentPerformanceFixture.last7Days
+                        .engagementRate.deltaLabel,
                     tone: "positive",
                   },
                   {
-                    value: "3,420",
-                    label: "Reactions",
-                    delta: "12.7%",
-                    deltaContext: "this month",
-                    tone: "positive",
-                  },
-                  {
-                    value: "640",
-                    label: "Comments",
-                    delta: "9.3%",
-                    deltaContext: "this month",
-                    tone: "positive",
+                    value:
+                      pcpAdminContentPerformanceFixture.last7Days
+                        .postsPublished.valueLabel,
+                    label: "Posts published",
+                    delta:
+                      pcpAdminContentPerformanceFixture.last7Days
+                        .postsPublished.deltaLabel,
+                    tone: "negative",
                   },
                 ]}
               />
             ),
           },
           {
-            id: "follower-growth-comparison",
+            id: "page-performance-recommendation",
             children: (
-              <ResponseCompare
-                dimension="New followers in the last 30 days"
-                rows={[
-                  {
-                    name: pcpCompetitorNames[0],
-                    value: 1280,
-                    valueLabel: "1,280",
-                    visual: {
-                      kind: "company-logo",
-                    },
-                  },
-                  {
-                    name: pcpCompetitorNames[1],
-                    value: 940,
-                    valueLabel: "940",
-                    visual: {
-                      kind: "company-logo",
-                    },
-                  },
-                  {
-                    name: pcpCompanyProfile.name,
-                    value: 420,
-                    valueLabel: "420",
-                    isYou: true,
-                    visual: {
-                      kind: "company-logo",
-                      src: pcpCompanyProfile.logoSrc,
-                    },
-                  },
-                ]}
-                title="Follower growth gap"
-              />
+              <ResponseText>
+                {ADMIN_PAGE_PERFORMANCE_RECOMMENDATION_TEXT}
+              </ResponseText>
             ),
           },
           {
-            id: "chips",
+            id: "top-post",
             children: (
-              <ResponseChips
-                onPromptSelect={onPromptSelect}
-                prompts={[
-                  ADMIN_NEXT_FOCUS_PROMPT,
-                  ADMIN_VISITOR_AUDIENCE_PROMPT,
+              <ResponsePostCard
+                actions={[
+                  {
+                    label: "View post",
+                    variant: "secondary",
+                  },
                 ]}
+                authorLogoClassName={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                authorLogoSrc={pcpCompanyProfile.logoSrc}
+                authorLogoStyle={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                authorName={pcpCompanyProfile.name}
+                comments={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.comments} comments`}
+                followerCount={pcpCompanyProfile.followers}
+                imageAlt="Open enrollment customer story post preview"
+                imageSrc={assetSrc(ADMIN_BOOST_POST_IMAGE)}
+                linkMeta="Customer story"
+                linkTitle={pcpProofSnippets.postTitle}
+                presentation="evidence"
+                reactions={pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reactions.toLocaleString(
+                  "en-US",
+                )}
+                reposts={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reposts} reposts`}
+                snippet="How Arbor prepared 12,000 employees for open enrollment by coordinating eligibility cleanup, carrier file readiness, and employee communications in one workflow."
+                timestamp={pcpProofSnippets.postTimestamp}
               />
             ),
           },
@@ -1744,18 +1760,27 @@ function SelfInitiatedVisitorAudienceThread({
   stopSignal?: number;
   turnId: string;
 }>) {
-  const [selectedFollowUpPrompt, setSelectedFollowUpPrompt] = useState<
-    string | null
-  >(null);
+  const isReachMorePrompt = normalizeSelfInitiatedPrompt(prompt).includes(
+    "reach more",
+  );
 
-  function handleFollowUpPromptSelect(prompt: string) {
-    setSelectedFollowUpPrompt(prompt);
+  if (isReachMorePrompt) {
+    return (
+      <>
+        <ChatMessage role="user">{prompt}</ChatMessage>
+        <ScriptedResponseTurn
+          id={`${turnId}-reach-more-visitors`}
+          onBusyChange={onBusyChange}
+          onContentChange={onContentChange}
+          stopSignal={stopSignal}
+          text={VISITOR_AUDIENCE_REACH_MORE_RESPONSE_TEXT}
+        />
+      </>
+    );
   }
 
-  const showRelevantVisitors =
-    selectedFollowUpPrompt === VISITOR_AUDIENCE_RELEVANT_VISITORS_PROMPT;
-  const showReachMore =
-    selectedFollowUpPrompt === VISITOR_AUDIENCE_REACH_MORE_PROMPT;
+  const visitorDemographics =
+    pcpAdminVisitorAnalyticsFixture.summaryIndustryDemographics;
 
   return (
     <>
@@ -1763,25 +1788,38 @@ function SelfInitiatedVisitorAudienceThread({
       <ScriptedResponseTurn
         attachments={[
           {
-            id: "visitor-audience",
-            children: <VisitorAudienceFitResponse />,
+            id: "visitor-audience-summary",
+            children: (
+              <ResponseMetric
+                context={pcpAdminVisitorAnalyticsFixture.periodLabel}
+                title="Summary"
+                items={visitorDemographics.map(
+                  ({ label, percentageLabel }) => ({
+                    label,
+                    value: percentageLabel,
+                  }),
+                )}
+              />
+            ),
           },
-          ...(selectedFollowUpPrompt
-            ? []
-            : [
-                {
-                  id: "visitor-audience-follow-ups",
-                  children: (
-                    <ResponseChips
-                      onPromptSelect={handleFollowUpPromptSelect}
-                      prompts={[
-                        VISITOR_AUDIENCE_RELEVANT_VISITORS_PROMPT,
-                        VISITOR_AUDIENCE_REACH_MORE_PROMPT,
-                      ]}
-                    />
+          {
+            id: "visitor-audience-rail-intro",
+            children: (
+              <ResponseText>
+                {VISITOR_AUDIENCE_VISITOR_RAIL_INTRO_TEXT.split("\n\n").map(
+                  (paragraph) => (
+                    <p className="mb-sm last:mb-0" key={paragraph}>
+                      {paragraph}
+                    </p>
                   ),
-                },
-              ]),
+                )}
+              </ResponseText>
+            ),
+          },
+          {
+            id: "visitor-audience-rail",
+            children: <RelevantVisitorsResponse />,
+          },
         ]}
         id={`${turnId}-visitor-audience`}
         onBusyChange={onBusyChange}
@@ -1795,74 +1833,20 @@ function SelfInitiatedVisitorAudienceThread({
         stopSignal={stopSignal}
         text={VISITOR_AUDIENCE_RESPONSE_TEXT}
       />
-      {showRelevantVisitors ? (
-        <>
-          <ChatMessage role="user">
-            {VISITOR_AUDIENCE_RELEVANT_VISITORS_PROMPT}
-          </ChatMessage>
-          <ScriptedResponseTurn
-            attachments={[
-              {
-                id: "visitor-rail",
-                children: <RelevantVisitorsResponse />,
-              },
-            ]}
-            id={`${turnId}-relevant-visitors`}
-            onBusyChange={onBusyChange}
-            onContentChange={onContentChange}
-            stopSignal={stopSignal}
-            text={VISITOR_AUDIENCE_RELEVANT_VISITORS_RESPONSE_TEXT}
-          />
-        </>
-      ) : null}
-      {showReachMore ? (
-        <>
-          <ChatMessage role="user">
-            {VISITOR_AUDIENCE_REACH_MORE_PROMPT}
-          </ChatMessage>
-          <ScriptedResponseTurn
-            id={`${turnId}-reach-more-visitors`}
-            onBusyChange={onBusyChange}
-            onContentChange={onContentChange}
-            stopSignal={stopSignal}
-            text={VISITOR_AUDIENCE_REACH_MORE_RESPONSE_TEXT}
-          />
-        </>
-      ) : null}
     </>
   );
 }
 
 function FormattedInsightResponseText({
-  emphasizeOpening = true,
-  highlights,
   isStreaming,
   text,
 }: Readonly<{
-  emphasizeOpening?: boolean;
-  highlights: ReadonlyArray<string>;
   isStreaming: boolean;
   text: string;
 }>) {
-  const blocks = splitTextBlocks(text);
-
   return (
     <ResponseText>
-      {blocks.map((block, index) => (
-        <p
-          className={cx(
-            emphasizeOpening && index === 0 && "font-semibold",
-            index > 0 && "mt-md",
-          )}
-          key={index}
-        >
-          <StreamingEmphasizedText
-            highlights={highlights}
-            isStreaming={isStreaming}
-            text={block}
-          />
-        </p>
-      ))}
+      <PcpAssistantText isStreaming={isStreaming} text={text} />
     </ResponseText>
   );
 }
@@ -1875,11 +1859,7 @@ function VisitorAudienceResponseText({
   text: string;
 }>) {
   return (
-    <FormattedInsightResponseText
-      highlights={VISITOR_AUDIENCE_RESPONSE_HIGHLIGHTS}
-      isStreaming={isStreaming}
-      text={text}
-    />
+    <FormattedInsightResponseText isStreaming={isStreaming} text={text} />
   );
 }
 
@@ -1891,12 +1871,7 @@ function RelevantVisitorsResponseText({
   text: string;
 }>) {
   return (
-    <FormattedInsightResponseText
-      emphasizeOpening={false}
-      highlights={ADMIN_RELEVANT_VISITORS_RESPONSE_HIGHLIGHTS}
-      isStreaming={isStreaming}
-      text={text}
-    />
+    <FormattedInsightResponseText isStreaming={isStreaming} text={text} />
   );
 }
 
@@ -1908,11 +1883,7 @@ function PagePerformanceResponseText({
   text: string;
 }>) {
   return (
-    <FormattedInsightResponseText
-      highlights={ADMIN_PAGE_PERFORMANCE_RESPONSE_HIGHLIGHTS}
-      isStreaming={isStreaming}
-      text={text}
-    />
+    <FormattedInsightResponseText isStreaming={isStreaming} text={text} />
   );
 }
 
@@ -1924,15 +1895,11 @@ function NextFocusResponseText({
   text: string;
 }>) {
   return (
-    <FormattedInsightResponseText
-      highlights={ADMIN_NEXT_FOCUS_RESPONSE_HIGHLIGHTS}
-      isStreaming={isStreaming}
-      text={text}
-    />
+    <FormattedInsightResponseText isStreaming={isStreaming} text={text} />
   );
 }
 
-function CustomButtonClicksResponseText({
+function VisitorActivityResponseText({
   isStreaming,
   text,
 }: Readonly<{
@@ -1940,11 +1907,7 @@ function CustomButtonClicksResponseText({
   text: string;
 }>) {
   return (
-    <FormattedInsightResponseText
-      highlights={ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_HIGHLIGHTS}
-      isStreaming={isStreaming}
-      text={text}
-    />
+    <FormattedInsightResponseText isStreaming={isStreaming} text={text} />
   );
 }
 
@@ -1956,11 +1919,24 @@ function PostImpressionsResponseText({
   text: string;
 }>) {
   return (
-    <FormattedInsightResponseText
-      highlights={ADMIN_POST_IMPRESSIONS_RESPONSE_HIGHLIGHTS}
-      isStreaming={isStreaming}
-      text={text}
-    />
+    <FormattedInsightResponseText isStreaming={isStreaming} text={text} />
+  );
+}
+
+function PostBoostInstructionsResponseText({
+  isStreaming,
+  text,
+}: Readonly<{
+  isStreaming: boolean;
+  text: string;
+}>) {
+  return (
+    <ResponseText>
+      <PcpAssistantText
+        isStreaming={isStreaming}
+        text={text}
+      />
+    </ResponseText>
   );
 }
 
@@ -2049,10 +2025,7 @@ function PageEngagementResponseText({
             key={index}
           >
             {index === 0 ? (
-              <PageEngagementIntroText
-                isStreaming={isStreaming}
-                text={block}
-              />
+              <PageEngagementIntroText isStreaming={isStreaming} text={block} />
             ) : (
               <InlineStreamingText isStreaming={isStreaming} text={block} />
             )}
@@ -2102,7 +2075,7 @@ function SelfInitiatedPageEngagementThread({
   );
 }
 
-function SelfInitiatedCustomButtonClicksThread({
+function SelfInitiatedVisitorActivityThread({
   onBusyChange,
   onContentChange,
   prompt,
@@ -2121,51 +2094,47 @@ function SelfInitiatedCustomButtonClicksThread({
       <ScriptedResponseTurn
         attachments={[
           {
-            id: "custom-button-conversion",
+            id: "visitor-activity-post-example",
             children: (
-              <ResponseConversionPath
-                context="This month"
-                steps={[
+              <ResponsePostCard
+                actions={[
                   {
-                    label: "Page views",
-                    value: "8,740",
-                    delta: "28%",
-                    deltaContext: "this month",
-                    tone: "positive",
-                  },
-                  {
-                    label: "Unique visitors",
-                    value: "3,180",
-                    delta: "20.2%",
-                    deltaContext: "this month",
-                    tone: "negative",
-                  },
-                  {
-                    label: "Custom button clicks",
-                    value: "126",
-                    delta: "33%",
-                    deltaContext: "this month",
-                    tone: "negative",
+                    label: "View post",
+                    variant: "secondary",
                   },
                 ]}
-                summaryLabel="visitor-to-button click rate"
-                summaryValue="4%"
-                title="Button conversion path"
+                authorLogoClassName={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                authorLogoSrc={pcpCompanyProfile.logoSrc}
+                authorLogoStyle={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                authorName={pcpCompanyProfile.name}
+                comments={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.comments} comments`}
+                followerCount={pcpCompanyProfile.followers}
+                imageAlt="Open enrollment customer story post preview"
+                imageSrc={assetSrc(ADMIN_BOOST_POST_IMAGE)}
+                linkMeta="Customer story"
+                linkTitle={pcpProofSnippets.postTitle}
+                presentation="evidence"
+                reactions={pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reactions.toLocaleString(
+                  "en-US",
+                )}
+                reposts={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reposts} reposts`}
+                snippet="How Arbor prepared 12,000 employees for open enrollment by coordinating eligibility cleanup, carrier file readiness, and employee communications in one workflow."
+                timestamp={pcpProofSnippets.postTimestamp}
               />
             ),
           },
         ]}
-        id={`${turnId}-custom-button-clicks`}
+        id={`${turnId}-visitor-activity`}
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
         renderText={({ streamStatus, text }) => (
-          <CustomButtonClicksResponseText
+          <VisitorActivityResponseText
             isStreaming={streamStatus === "streaming"}
             text={text}
           />
         )}
         stopSignal={stopSignal}
-        text={ADMIN_CUSTOM_BUTTON_CLICKS_RESPONSE_TEXT}
+        text={ADMIN_VISITOR_ACTIVITY_RESPONSE_TEXT}
       />
     </>
   );
@@ -2186,13 +2155,7 @@ function SelfInitiatedPostImpressionsThread({
   stopSignal?: number;
   turnId: string;
 }>) {
-  const [showBoostRecommendation, setShowBoostRecommendation] = useState(false);
-
-  function handlePromptSelect(prompt: string) {
-    if (prompt === ADMIN_POST_IMPRESSIONS_BOOST_PROMPT) {
-      setShowBoostRecommendation(true);
-    }
-  }
+  const [showBoostInstructions, setShowBoostInstructions] = useState(false);
 
   return (
     <>
@@ -2200,36 +2163,44 @@ function SelfInitiatedPostImpressionsThread({
       <ScriptedResponseTurn
         attachments={[
           {
-            id: "post-impressions-trend",
+            id: "post-impressions-top-post",
             children: (
-              <ResponseMetricWithTrend
-                annotation={{
-                  label: "",
-                  tone: "neutral",
-                }}
-                axisTicks={postImpressionsAxisTicks}
-                delta="18.4%"
-                deltaContext="vs last month"
-                title="Post impressions"
-                tone="negative"
-                unit="impressions this month"
-                value="64,800"
-                values={postImpressionsValues}
+              <ResponsePostCard
+                actions={[
+                  {
+                    label: "View post",
+                    onSelect: onViewBoostPost,
+                    variant: "secondary",
+                  },
+                ]}
+                authorLogoClassName={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                authorLogoSrc={pcpCompanyProfile.logoSrc}
+                authorLogoStyle={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                authorName={pcpCompanyProfile.name}
+                comments={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.comments} comments`}
+                followerCount={pcpCompanyProfile.followers}
+                imageAlt="Open enrollment customer story post preview"
+                imageSrc={assetSrc(ADMIN_BOOST_POST_IMAGE)}
+                linkMeta="Customer story"
+                linkTitle={pcpProofSnippets.postTitle}
+                presentation="evidence"
+                reactions={pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reactions.toLocaleString(
+                  "en-US",
+                )}
+                reposts={`${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reposts} reposts`}
+                snippet="How Arbor prepared 12,000 employees for open enrollment by coordinating eligibility cleanup, carrier file readiness, and employee communications in one workflow."
+                timestamp={pcpProofSnippets.postTimestamp}
               />
             ),
           },
-          ...(!showBoostRecommendation
+          ...(!showBoostInstructions
             ? [
                 {
                   id: "post-impressions-follow-up",
                   children: (
-                    <ResponseChips
-                      onPromptSelect={handlePromptSelect}
-                      prompts={[
-                        {
-                          label: ADMIN_POST_IMPRESSIONS_BOOST_PROMPT,
-                        },
-                      ]}
+                    <Prompt
+                      onPromptSelect={() => setShowBoostInstructions(true)}
+                      prompt={ADMIN_POST_IMPRESSIONS_BOOST_PROMPT}
                     />
                   ),
                 },
@@ -2248,7 +2219,7 @@ function SelfInitiatedPostImpressionsThread({
         stopSignal={stopSignal}
         text={ADMIN_POST_IMPRESSIONS_RESPONSE_TEXT}
       />
-      {showBoostRecommendation ? (
+      {showBoostInstructions ? (
         <>
           <ChatMessage role="user">
             {ADMIN_POST_IMPRESSIONS_BOOST_PROMPT}
@@ -2256,44 +2227,140 @@ function SelfInitiatedPostImpressionsThread({
           <ScriptedResponseTurn
             attachments={[
               {
-                id: "boost-recommendation-post",
+                id: "post-impressions-boost-source",
                 children: (
-                  <ResponsePostCard
-                    actions={[
+                  <ResponseSources
+                    items={[
                       {
-                        label: "Boost post",
-                        variant: "primary",
-                      },
-                      {
-                        label: "View post",
-                        onSelect: onViewBoostPost,
-                        variant: "secondary",
+                        href: ADMIN_POST_IMPRESSIONS_BOOST_SOURCE_URL,
+                        label: ADMIN_POST_IMPRESSIONS_BOOST_SOURCE_TITLE,
                       },
                     ]}
-                    authorLogoSrc={pcpCompanyProfile.logoSrc}
-                    authorName={pcpCompanyProfile.name}
-                    comments="146 comments"
-                    followerCount="86K followers"
-                    imageAlt="Open enrollment customer story post preview"
-                    imageSrc={assetSrc(ADMIN_BOOST_POST_IMAGE)}
-                    linkMeta="Customer story - 6 min read"
-                    linkTitle={pcpProofSnippets.postTitle}
-                    reactions="1,240"
-                    reposts="64 reposts"
-                    snippet="How Arbor prepared 12,000 employees for open enrollment by coordinating eligibility cleanup, carrier file readiness, and employee communications in one workflow."
-                    timestamp="6/8"
                   />
                 ),
               },
             ]}
-            id={`${turnId}-post-impressions-boost`}
+            id={`${turnId}-post-impressions-boost-instructions`}
             onBusyChange={onBusyChange}
             onContentChange={onContentChange}
+            renderText={({ streamStatus, text }) => (
+              <PostBoostInstructionsResponseText
+                isStreaming={streamStatus === "streaming"}
+                text={text}
+              />
+            )}
             stopSignal={stopSignal}
             text={ADMIN_POST_IMPRESSIONS_BOOST_RESPONSE_TEXT}
           />
         </>
       ) : null}
+    </>
+  );
+}
+
+function SelfInitiatedContentPerformanceThread({
+  onBusyChange,
+  onContentChange,
+  prompt,
+  stopSignal,
+  turnId,
+}: Readonly<{
+  onBusyChange?: (id: string, isBusy: boolean) => void;
+  onContentChange?: () => void;
+  prompt: string;
+  stopSignal?: number;
+  turnId: string;
+}>) {
+  const arborPost =
+    pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment;
+  const carrierPost =
+    pcpAdminContentPerformanceFixture.posts.carrierReadiness;
+  const carrierClickRate = `${(
+    (carrierPost.clicks / carrierPost.impressions) *
+    100
+  ).toFixed(1)}% click rate`;
+
+  return (
+    <>
+      <ChatMessage role="user">{prompt}</ChatMessage>
+      <ScriptedResponseTurn
+        attachments={[
+          {
+            id: "content-performance-posts",
+            children: (
+              <ResponseRail aria-label="Posts with the strongest results">
+                <ResponsePostCard
+                  actions={[
+                    {
+                      label: "View post",
+                      variant: "secondary",
+                    },
+                  ]}
+                  authorLogoClassName={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                  authorLogoSrc={pcpCompanyProfile.logoSrc}
+                  authorLogoStyle={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                  authorName={pcpCompanyProfile.name}
+                  className="[--response-entity-card-rail-width:288px]"
+                  comments={`${arborPost.comments} comments`}
+                  followerCount={pcpCompanyProfile.followers}
+                  imageAlt="Open enrollment customer story post preview"
+                  imageSrc={assetSrc(ADMIN_BOOST_POST_IMAGE)}
+                  linkMeta="Customer story"
+                  linkTitle={pcpProofSnippets.postTitle}
+                  presentation="evidence"
+                  reactions={arborPost.reactions.toLocaleString("en-US")}
+                  reposts={`${arborPost.reposts} reposts`}
+                  snippet="How Arbor prepared 12,000 employees for open enrollment by coordinating eligibility cleanup, carrier file readiness, and employee communications in one workflow."
+                  tag="Strongest engagement"
+                  tagDetail={`${arborPost.engagementRateLabel} engagement rate`}
+                  timestamp={pcpProofSnippets.postTimestamp}
+                />
+                <ResponsePostCard
+                  actions={[
+                    {
+                      label: "View post",
+                      variant: "secondary",
+                    },
+                  ]}
+                  authorLogoClassName={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                  authorLogoSrc={pcpCompanyProfile.logoSrc}
+                  authorLogoStyle={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                  authorName={pcpCompanyProfile.name}
+                  className="[--response-entity-card-rail-width:288px]"
+                  comments={`${carrierPost.comments} comments`}
+                  followerCount={pcpCompanyProfile.followers}
+                  imageAlt="Carrier readiness checklist post preview"
+                  imageSrc={assetSrc(
+                    "member/open-enrollment-readiness-checklist.png",
+                  )}
+                  linkMeta="Document"
+                  linkTitle="Carrier file readiness checklist for enterprise benefits teams"
+                  presentation="evidence"
+                  reactions={carrierPost.reactions.toLocaleString("en-US")}
+                  reposts={`${carrierPost.reposts} reposts`}
+                  snippet="A practical carrier file readiness checklist for enterprise benefits teams preparing for open enrollment."
+                  tag="Highest click rate"
+                  tagDetail={carrierClickRate}
+                  timestamp="4d"
+                />
+              </ResponseRail>
+            ),
+          },
+          {
+            id: "content-performance-recommendation",
+            children: (
+              <ResponseText>
+                {ADMIN_CONTENT_PERFORMANCE_RECOMMENDATION_TEXT}
+              </ResponseText>
+            ),
+          },
+        ]}
+        id={`${turnId}-content-performance`}
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        stopSignal={stopSignal}
+        text={ADMIN_CONTENT_PERFORMANCE_RESPONSE_TEXT}
+      />
     </>
   );
 }
@@ -2327,12 +2394,11 @@ function ActiveInsightThread({
   if (insight.id === "competitor-growth") {
     return (
       <CompetitorGrowthThread
-        insight={insight}
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
-        onFollowUpSelect={onFollowUpSelect}
         prompt={prompt}
         stopSignal={stopSignal}
+        turnId="competitor-growth-insight"
       />
     );
   }
@@ -2434,26 +2500,7 @@ Before enrollment opens, HR and benefits teams should know which carrier files a
 Velora helps teams catch those gaps earlier, so open enrollment feels less reactive and more coordinated.`;
 const story1aFollowerGrowthAxisTicks = ["May 5", "May 19", "Jun 2"] as const;
 const story1aFollowerGrowthValues = [
-  94,
-  101,
-  97,
-  105,
-  100,
-  103,
-  88,
-  80,
-  74,
-] as const;
-const postImpressionsAxisTicks = ["May 10", "May 25", "Jun 8"] as const;
-const postImpressionsValues = [
-  82,
-  86,
-  81,
-  78,
-  74,
-  70,
-  68,
-  64,
+  94, 101, 97, 105, 100, 103, 88, 80, 74,
 ] as const;
 const contentResonanceItems = [
   {
@@ -2461,8 +2508,18 @@ const contentResonanceItems = [
     thumbnailSrc: assetSrc("member/post-image-1.png"),
     thumbnailAlt: "Carrier coordination post preview",
     metrics: [
-      { label: "Engagement rate", value: "8.2%" },
-      { label: "Impressions", value: "18.4K" },
+      {
+        label: "Engagement rate",
+        value:
+          pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+            .engagementRateLabel,
+      },
+      {
+        label: "Impressions",
+        value:
+          pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+            .impressionsLabel,
+      },
     ],
   },
   {
@@ -2470,8 +2527,18 @@ const contentResonanceItems = [
     thumbnailSrc: assetSrc("member/post-image-2.png"),
     thumbnailAlt: "Open enrollment checklist post preview",
     metrics: [
-      { label: "Engagement rate", value: "7.1%" },
-      { label: "Impressions", value: "14.2K" },
+      {
+        label: "Engagement rate",
+        value:
+          pcpAdminContentPerformanceFixture.posts.carrierReadiness
+            .engagementRateLabel,
+      },
+      {
+        label: "Impressions",
+        value:
+          pcpAdminContentPerformanceFixture.posts.carrierReadiness
+            .impressionsLabel,
+      },
     ],
   },
 ] as const;
@@ -2495,24 +2562,21 @@ const visitorAudienceCards = [
     name: pcpVisitorPersona.name,
     headline: `${pcpVisitorPersona.title} · ${pcpVisitorPersona.company}`,
     avatarSrc: assetSrc(CHERI_SPARKS_AVATAR),
+    detail: "Retail",
     tag: "Returned this week",
   },
   {
     name: "Priya Shah",
     headline: "Director of Benefits · Calico Health Network",
     avatarSrc: assetSrc("avatar-3.png"),
+    detail: "Hospitals and Health Care",
     tag: "Viewed multiple posts",
   },
   {
-    name: "Dana Kim",
-    headline: "VP People Operations · Arbor Retail Group",
-    avatarSrc: assetSrc("avatar-2.png"),
-    tag: "Recent visitor",
-  },
-  {
     name: "Morgan Lee",
-    headline: "Director of Human Resources · Meridian Logistics",
+    headline: "Director of Human Resources · Northstar Labs",
     avatarSrc: assetSrc("avatar-1.png"),
+    detail: "Technology, Information and Internet",
     tag: "Visited twice",
   },
 ] as const;
@@ -2527,7 +2591,7 @@ function Story1aFollowerGrowthThread({
   onContentChange?: () => void;
   prompt: string;
   stopSignal?: number;
-  }>) {
+}>) {
   const [visibleTurns, setVisibleTurns] = useState<
     ReadonlyArray<Story1aBlockTurn>
   >([]);
@@ -2581,9 +2645,9 @@ function Story1aFollowerGrowthThread({
             children: (
               <ResponseText className="chat-message-enter">
                 <p>
-                  Good news first: your audience hasn&apos;t gone anywhere — they
-                  just haven&apos;t heard from you. Here&apos;s what I&apos;d do
-                  this week:
+                  Good news first: your audience hasn&apos;t gone anywhere —
+                  they just haven&apos;t heard from you. Here&apos;s what
+                  I&apos;d do this week:
                 </p>
                 <ResponseTextRecommendationList
                   items={[
@@ -2713,22 +2777,25 @@ function Story1aFollowerGrowthThread({
   );
 }
 
-function CompetitorGrowthThread({
-  insight,
+function SelfInitiatedCompetitorContentPatternThread({
   onBusyChange,
   onContentChange,
-  onFollowUpSelect,
   prompt,
   stopSignal,
+  turnId,
 }: Readonly<{
-  insight: AdminUc5Insight;
   onBusyChange?: (id: string, isBusy: boolean) => void;
   onContentChange?: () => void;
-  onFollowUpSelect: (followUp: AdminUc5FollowUp) => void;
   prompt: string;
   stopSignal?: number;
+  turnId: string;
 }>) {
-  const followUps = insight.followUps.filter((followUp) => !followUp.primary);
+  const carrierPost =
+    pcpAdminContentPerformanceFixture.posts.carrierReadiness;
+  const carrierClickRate = `${(
+    (carrierPost.clicks / carrierPost.impressions) *
+    100
+  ).toFixed(1)}% click rate`;
 
   return (
     <>
@@ -2736,89 +2803,106 @@ function CompetitorGrowthThread({
       <ScriptedResponseTurn
         attachments={[
           {
-            id: "compare",
+            id: "competitor-content-pattern-post-example",
             children: (
-              <ResponseCompare
-                dimension="New followers this month"
-                rows={[
+              <ResponsePostCard
+                actions={[
                   {
-                    name: pcpCompetitorNames[0],
-                    value: 1280,
-                    valueLabel: "+1,280",
-                    detail: "22 posts",
-                    visual: {
-                      kind: "company-logo",
-                    },
-                  },
-                  {
-                    name: pcpCompetitorNames[1],
-                    value: 940,
-                    valueLabel: "+940",
-                    detail: "18 posts",
-                    visual: {
-                      kind: "company-logo",
-                    },
-                  },
-                  {
-                    name: pcpCompanyProfile.name,
-                    value: 420,
-                    valueLabel: "+420",
-                    detail: "12 posts",
-                    isYou: true,
-                    visual: {
-                      kind: "company-logo",
-                      src: pcpCompanyProfile.logoSrc,
-                    },
+                    label: "View post",
+                    variant: "secondary",
                   },
                 ]}
-                title="Follower growth gap"
+                authorLogoClassName={VELORA_LOGO_TILE_BACKGROUND_CLASS}
+                authorLogoSrc={pcpCompanyProfile.logoSrc}
+                authorLogoStyle={VELORA_LOGO_TILE_BACKGROUND_STYLE}
+                authorName={pcpCompanyProfile.name}
+                comments={`${carrierPost.comments} comments`}
+                followerCount={pcpCompanyProfile.followers}
+                imageAlt="Carrier readiness checklist post preview"
+                imageSrc={assetSrc(
+                  "member/open-enrollment-readiness-checklist.png",
+                )}
+                linkMeta="Document"
+                linkTitle="Carrier file readiness checklist for enterprise benefits teams"
+                presentation="evidence"
+                reactions={carrierPost.reactions.toLocaleString("en-US")}
+                reposts={`${carrierPost.reposts} reposts`}
+                snippet="A practical carrier file readiness checklist for enterprise benefits teams preparing for open enrollment."
+                tag="Highest click rate"
+                tagDetail={carrierClickRate}
+                timestamp="4d"
               />
             ),
           },
-          {
-            id: "recommendation-text",
-            children: (
-              <ResponseText className="chat-message-enter">
-                <p>Here&apos;s what I&apos;d do next:</p>
-                <ul className="mt-md list-disc space-y-sm pl-xl">
-                  <li>
-                    <strong className="font-semibold text-text">
-                      Publish one checklist this week.
-                    </strong>{" "}
-                    Focus it on an open enrollment deadline or carrier
-                    readiness.
-                  </li>
-                  <li>
-                    <strong className="font-semibold text-text">
-                      Follow it with a customer example.
-                    </strong>{" "}
-                    Use the Arbor Retail Group story to show how Velora helped.
-                  </li>
-                </ul>
-              </ResponseText>
-            ),
-          },
-          ...(followUps.length
-            ? [
-                {
-                  id: "follow-ups",
-                  children: (
-                    <FollowUpActions
-                      followUps={followUps}
-                      onFollowUpSelect={onFollowUpSelect}
-                    />
-                  ),
-                },
-              ]
-            : []),
         ]}
-        id="competitor-growth-insight"
+        id={`${turnId}-competitor-content-pattern`}
         onBusyChange={onBusyChange}
         onContentChange={onContentChange}
         renderText={({ streamStatus, text }) => (
           <FormattedInsightResponseText
-            emphasizeOpening={false}
-            highlights={ADMIN_COMPETITOR_GROWTH_RESPONSE_HIGHLIGHTS}
+            isStreaming={streamStatus === "streaming"}
+            text={text}
+          />
+        )}
+        stopSignal={stopSignal}
+        text={ADMIN_COMPETITOR_CONTENT_PATTERN_RESPONSE_TEXT}
+      />
+    </>
+  );
+}
+
+function CompetitorGrowthThread({
+  onBusyChange,
+  onContentChange,
+  prompt,
+  stopSignal,
+  turnId,
+}: Readonly<{
+  onBusyChange?: (id: string, isBusy: boolean) => void;
+  onContentChange?: () => void;
+  prompt: string;
+  stopSignal?: number;
+  turnId: string;
+}>) {
+  return (
+    <>
+      <ChatMessage role="user">{prompt}</ChatMessage>
+      <ScriptedResponseTurn
+        attachments={[
+          {
+            id: "recommendation-text",
+            children: (
+              <ResponseText>
+                {ADMIN_COMPETITOR_GROWTH_RECOMMENDATION_TEXT}
+              </ResponseText>
+            ),
+          },
+          {
+            id: "compare",
+            children: (
+              <ResponseCompare
+                actionLabel="View trending competitor posts"
+                dimension={pcpAdminCompetitorAnalyticsFixture.periodLabel}
+                rows={pcpAdminCompetitorAnalyticsFixture.rows.map((row) => ({
+                  name: row.company,
+                  value: row.newFollowers.value,
+                  valueLabel: row.newFollowers.valueLabel,
+                  isYou: row.isYou,
+                  visual: {
+                    kind: "company-logo",
+                    src: row.isYou ? pcpCompanyProfile.logoSrc : undefined,
+                  },
+                }))}
+                title="New followers"
+              />
+            ),
+          },
+        ]}
+        id={`${turnId}-competitor-growth`}
+        onBusyChange={onBusyChange}
+        onContentChange={onContentChange}
+        renderText={({ streamStatus, text }) => (
+          <FormattedInsightResponseText
             isStreaming={streamStatus === "streaming"}
             text={text}
           />
@@ -3045,8 +3129,20 @@ function BoostCandidatePostPreview() {
         </div>
       </div>
       <div className="mt-lg divide-y divide-border-faint">
-        <PostMetricRow label="Engagement rate" value="8.2%" />
-        <PostMetricRow label="Impressions" value="18.4K" />
+        <PostMetricRow
+          label="Engagement rate"
+          value={
+            pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+              .engagementRateLabel
+          }
+        />
+        <PostMetricRow
+          label="Impressions"
+          value={
+            pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+              .impressionsLabel
+          }
+        />
       </div>
     </article>
   );
@@ -3119,6 +3215,7 @@ function RelevantVisitorsResponse() {
           actionIcon={null}
           actionLabel="View profile"
           avatarSrc={visitor.avatarSrc}
+          detail={visitor.detail}
           headline={visitor.headline}
           key={visitor.name}
           name={visitor.name}
@@ -3127,6 +3224,42 @@ function RelevantVisitorsResponse() {
         />
       ))}
     </ResponseRail>
+  );
+}
+
+export function AdminRelevantVisitorsConversationPreview({
+  navigationLabel = "View visitor analytics",
+  prompt = "Who are my most relevant visitors?",
+}: Readonly<{
+  navigationLabel?: string;
+  prompt?: string;
+}> = {}) {
+  return (
+    <ChatThread showAiDisclaimer={false}>
+      <ChatMessage role="user">{prompt}</ChatMessage>
+      <ScriptedResponseTurn
+        animate={false}
+        attachments={[
+          {
+            id: "relevant-visitors",
+            children: <RelevantVisitorsResponse />,
+          },
+          {
+            id: "visitor-analytics-navigation",
+            children: (
+              <Button size="small" variant="secondary">
+                {navigationLabel}
+              </Button>
+            ),
+          },
+        ]}
+        id="relevant-visitors-component-library-preview"
+        renderText={({ text }) => (
+          <RelevantVisitorsResponseText isStreaming={false} text={text} />
+        )}
+        text={ADMIN_RELEVANT_VISITORS_RESPONSE_TEXT}
+      />
+    </ChatThread>
   );
 }
 
@@ -3146,10 +3279,7 @@ function BarGroup({ group }: Readonly<{ group: AdminUc5BarGroup }>) {
       <h4 className="text-supportive-s-strong text-text">{group.label}</h4>
       <div className="mt-sm space-y-sm">
         {group.rows.map((row) => (
-          <div
-            className="space-y-xxs text-body-xs"
-            key={row.label}
-          >
+          <div className="space-y-xxs text-body-xs" key={row.label}>
             <div className="flex items-baseline justify-between gap-sm">
               <span className="min-w-0 text-text-meta">{row.label}</span>
               <span className="shrink-0 text-supportive-s-strong text-text">
@@ -3230,7 +3360,10 @@ function PostPerformanceRow({
 
 function getPostVisual(post: AdminUc5PostPerformance) {
   const allPosts = [...adminUc5TopPosts, ...adminUc5LowPosts];
-  const index = Math.max(0, allPosts.findIndex((item) => item.title === post.title));
+  const index = Math.max(
+    0,
+    allPosts.findIndex((item) => item.title === post.title),
+  );
 
   return postVisuals[index % postVisuals.length];
 }

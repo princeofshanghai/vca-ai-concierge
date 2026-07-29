@@ -6,6 +6,7 @@ import {
   pcpProofSnippets,
   pcpVisitorPersona,
 } from "./persona";
+import { pcpAdminContentPerformanceFixture } from "./premium-company-pages-admin-content-fixture";
 
 export type AdminUc5InsightId =
   | "post-amplification"
@@ -83,13 +84,12 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
     id: "post-amplification",
     icon: "analytics",
     label: "Open enrollment content is worth amplifying",
-    value: "8.2% engagement rate - 18.4K impressions",
+    value: `${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.engagementRateLabel} engagement rate - ${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.impressionsLabel} impressions`,
     query: "Tell me more about this open enrollment post.",
     followUps: [
       {
         prompt: "Why this post?",
-        response:
-          "Because the signal is strong. People who saw the Arbor Retail Group post engaged with it at 8.2%, well above the Page average, and it reached 18.4K impressions. That makes it a good candidate to review for more reach.",
+        response: `Because the signal is strong. People who saw the Arbor Retail Group post engaged with it at ${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.engagementRateLabel}, well above the Page average, and it reached ${pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.impressionsLabel} impressions. That makes it a good candidate to review for more reach.`,
       },
       {
         prompt: "Who would this reach?",
@@ -173,19 +173,10 @@ export const adminUc5Insights: Record<AdminUc5InsightId, AdminUc5Insight> = {
   "competitor-growth": {
     id: "competitor-growth",
     icon: "company",
-    label: `${pcpCompetitorNames[0]} is gaining followers faster`,
-    value: "1,280 new followers this month vs Velora's 420",
-    query: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
-    followUps: [
-      {
-        prompt: "What should we post next?",
-        response: `Post a concise carrier-readiness checklist this week, then follow with a customer proof point. Keep the angle practical and deadline-driven so it competes with the open enrollment content already working for ${pcpCompetitorNames[0]}.`,
-      },
-      {
-        prompt: "Compare recent posts",
-        response: `${pcpCompetitorNames[0]} is winning on cadence and checklist-style packaging. Velora's strongest posts are more specific to benefits operations, so the opportunity is to publish more often without losing that sharper point of view.`,
-      },
-    ],
+    label: "Tracked competitors are gaining followers faster",
+    value: "All 3 gained more new followers than Velora",
+    query: "Why are competitors gaining followers faster?",
+    followUps: [],
   },
   "weekly-synthesis": {
     id: "weekly-synthesis",
@@ -274,19 +265,24 @@ export const adminUc5DemographicGroups: ReadonlyArray<AdminUc5BarGroup> = [
 export const adminUc5TopPosts: ReadonlyArray<AdminUc5PostPerformance> = [
   {
     title: pcpProofSnippets.postTitle,
-    impressions: "18.4K",
+    impressions:
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+        .impressionsLabel,
     desktop: 32,
     mobile: 68,
   },
   {
     title: "Carrier file readiness checklist for open enrollment",
-    impressions: "14.2K",
+    impressions:
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness
+        .impressionsLabel,
     desktop: 41,
     mobile: 59,
   },
   {
     title: "How HR teams keep employee communications aligned by population",
-    impressions: "10.8K",
+    impressions:
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.impressionsLabel,
     desktop: 27,
     mobile: 73,
   },

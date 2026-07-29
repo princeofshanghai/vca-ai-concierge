@@ -1,5 +1,5 @@
 export const PCP_STARTER_PROMPTS = [
-  "Summarize my Page performance",
-  "Show what competitors are doing differently",
-  "Show which visitors matter most",
+  "What needs my attention this week?",
+  "What are competitors doing differently?",
+  "What should I know about my Page visitors?",
 ] as const;

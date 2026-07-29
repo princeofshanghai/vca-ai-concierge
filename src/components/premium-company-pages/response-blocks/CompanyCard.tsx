@@ -34,7 +34,7 @@ export function CompanyCard({
       {...props}
       data-response-block="CompanyCard"
       className={cx(
-        "flex w-[176px] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint sm:w-[188px]",
+        "flex w-[var(--response-entity-card-width,100%)] max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint [--response-entity-card-rail-width:176px] sm:[--response-entity-card-rail-width:188px]",
         className,
       )}
     >

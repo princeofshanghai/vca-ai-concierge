@@ -79,7 +79,6 @@ import {
   VCA_PRODUCT_POST_RESPONSE,
   VCA_PRODUCT_POST_RESPONSE_LINKS,
   VCA_PRODUCT_RESPONSE,
-  VCA_PRODUCT_RESPONSE_HIGHLIGHTS,
   VCA_PRODUCT_RESPONSE_LINKS,
   affiliatedPages,
   companyMetadata,
@@ -127,12 +126,11 @@ import { PersonCard as ResponsePersonCard } from "./response-blocks/PersonCard";
 import { PostSidePanelEngagementSummary } from "./post-side-panel-engagement-summary";
 import { ResponseRail } from "./response-blocks/ResponseRail";
 import { DEFAULT_REACTION_TYPES, ReactionPile } from "./reaction-pile";
-import { ScriptedResponseTurn } from "./scripted-response-turn";
 import {
-  splitTextBlocks,
-  StreamingEmphasizedText,
-  type StreamingTextLink as VcaAssistantTextLink,
-} from "./streaming-emphasized-text";
+  PcpAssistantText,
+  type PcpAssistantTextLink as VcaAssistantTextLink,
+} from "./pcp-assistant-text";
+import { ScriptedResponseTurn } from "./scripted-response-turn";
 import { useHorizontalCarousel } from "./use-horizontal-carousel";
 import { useScriptedTurnController } from "./use-scripted-turn-controller";
 import { VcaFab } from "./vca-fab";
@@ -340,26 +338,6 @@ function VcaUserMessage({
   );
 }
 
-const vcaPageExplorerResponseHighlights: Partial<
-  Record<VcaVisitorPromptId, ReadonlyArray<string>>
-> = {
-  overview: [
-    "one shared workflow",
-    "open enrollment",
-    "carrier readiness",
-  ],
-  fit: [
-    "larger teams",
-    "multiple employee groups",
-    "carrier connections",
-  ],
-  difference: [
-    "before enrollment issues become urgent",
-    "carrier readiness",
-    "operational command center",
-  ],
-};
-
 const vcaPageExplorerResponseLinks: Partial<
   Record<VcaVisitorPromptId, ReadonlyArray<VcaAssistantTextLink>>
 > = {
@@ -381,51 +359,16 @@ const vcaPageExplorerResponseLinks: Partial<
   ],
 };
 
-function FormattedVcaAssistantText({
-  highlights = [],
-  links = [],
-  streamStatus,
-  streamText,
-  text,
-}: Readonly<{
-  highlights?: ReadonlyArray<string>;
-  links?: ReadonlyArray<VcaAssistantTextLink>;
-  streamStatus: ChatMessageStreamStatus;
-  streamText: string;
-  text: string;
-}>) {
-  const isStreaming = streamStatus === "streaming";
-  const visibleText = isStreaming ? streamText : text;
-  const blocks = splitTextBlocks(visibleText);
-
-  return (
-    <>
-      {blocks.map((block, index) => (
-        <p className={cx(index > 0 && "mt-md")} key={index}>
-          <StreamingEmphasizedText
-            highlights={highlights}
-            isStreaming={isStreaming}
-            links={links}
-            text={block}
-          />
-        </p>
-      ))}
-    </>
-  );
-}
-
 type VcaScriptedAssistantTurnProps = Omit<
   ComponentProps<typeof ScriptedResponseTurn>,
   "renderText"
 > & {
-  highlights?: ReadonlyArray<string>;
   links?: ReadonlyArray<VcaAssistantTextLink>;
   timestamp: string;
 };
 
 function VcaScriptedAssistantTurn({
   attachments = [],
-  highlights,
   id,
   links,
   timestamp,
@@ -441,12 +384,10 @@ function VcaScriptedAssistantTurn({
       id={id}
       renderText={({ streamStatus, streamText, text }) => (
         <VcaAssistantMessage animateEntrance={false}>
-          <FormattedVcaAssistantText
-            highlights={highlights}
+          <PcpAssistantText
+            isStreaming={streamStatus === "streaming"}
             links={links}
-            streamStatus={streamStatus}
-            streamText={streamText}
-            text={text}
+            text={streamStatus === "streaming" ? streamText : text}
           />
         </VcaAssistantMessage>
       )}
@@ -1416,11 +1357,6 @@ function PremiumCompanyPagesVcaPanel({
                   ]
                 : []
             }
-            highlights={
-              visitorPromptId
-                ? vcaPageExplorerResponseHighlights[visitorPromptId]
-                : undefined
-            }
             id="member-vca-page-explorer-answer"
             links={
               visitorPromptId
@@ -1448,7 +1384,6 @@ function PremiumCompanyPagesVcaPanel({
                 ),
               },
             ]}
-            highlights={VCA_PRODUCT_RESPONSE_HIGHLIGHTS}
             id="member-vca-product-proof"
             links={VCA_PRODUCT_RESPONSE_LINKS}
             onBusyChange={handleScriptedTurnBusyChange}

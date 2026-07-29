@@ -9,8 +9,6 @@ import {
   ChatMessageContent,
   ChatPanel,
   ChatThread,
-  Prompt,
-  PromptGroup,
 } from "@/components/chat/chat-ui";
 import { ChatSystemEvent } from "@/components/chat/live-agent-handoff";
 import { HiringConfirmationEmail } from "@/components/hiring-microsite/hiring-confirmation-email";
@@ -27,7 +25,11 @@ import { ButtonIcon } from "@/components/primitives/button-icon";
 import { Entity } from "@/components/primitives/entity";
 import { GhostButton } from "@/components/primitives/ghost-button";
 import { GhostIconButton } from "@/components/primitives/ghost-icon-button";
-import { Icon, iconMetadata, type IconSize } from "@/components/primitives/icon";
+import {
+  Icon,
+  iconMetadata,
+  type IconSize,
+} from "@/components/primitives/icon";
 import {
   InlineFeedback,
   type InlineFeedbackTone,
@@ -79,7 +81,6 @@ import {
   pcpCompanyProfile,
   pcpCompetitorNames,
   pcpProofSnippets,
-  pcpVcaScenario,
   pcpVisitorPersona,
 } from "@/components/premium-company-pages/persona";
 
@@ -91,7 +92,14 @@ import {
   PremiumFabDemo,
   PremiumFabReviewPreview,
   PremiumPlanCardDemo,
+  PcpContentEngagementContextPreview,
+  PcpContentEngagementConversationPreview,
+  PcpContentHighlightsContextPreview,
+  PcpContentHighlightsConversationPreview,
+  PcpDashboardRelevantVisitorsContextPreview,
+  PcpDashboardRelevantVisitorsConversationPreview,
   PcpPromptsDemo,
+  PcpPromptSurfaceExample,
   PcpAdminInputFirstStartSurfacePreview,
   PcpInboxAiContextStripPreview,
   PcpInsightCardSystemPreview,
@@ -146,14 +154,11 @@ import {
   SharedTaskStatusCardDemo,
   SharedVoiceModeDemo,
   SharedVoiceModeComposerExample,
-  VcaFabPresenceBadgeExplorationPreview,
-  VcaFabReviewPreview,
-  VcaFabStatesPreview,
-  VcaFabSwappableMarkPreview,
+  VcaFabCurrentPreview,
+  VcaFabDemo,
+  VcaFabPreviousExplorationsPreview,
 } from "./component-client-previews";
-import { ComponentLibraryAnnotation } from "./component-library-annotation";
 import type { ComponentNavItem } from "./component-nav";
-import { PCP_STARTER_PROMPTS } from "./pcp-prompt-guidance";
 
 const buttonStates = [
   "default",
@@ -181,7 +186,13 @@ const overlayButtonIconRows = [
 ] as const;
 
 const entitySizes = [160, 128, 96, 80, 64, 48, 40, 32, 24, 16] as const;
-const pillStates = ["default", "hover", "active", "focus-visible", "disabled"] as const;
+const pillStates = [
+  "default",
+  "hover",
+  "active",
+  "focus-visible",
+  "disabled",
+] as const;
 const radioStates = ["default", "hover", "active", "disabled"] as const;
 const textInputSizes = [
   { label: "Small", size: "small" },
@@ -364,9 +375,7 @@ function PageHeader({
 }>) {
   return (
     <header className="max-w-[48rem] space-y-sm border-b border-border-faint pb-xxxl">
-      <h1 className="text-[32px] font-medium leading-10 text-text">
-        {title}
-      </h1>
+      <h1 className="text-[32px] font-medium leading-10 text-text">{title}</h1>
       <p className="max-w-3xl text-[16px] leading-6 text-text-meta">
         {description}
       </p>
@@ -383,10 +392,7 @@ function ComponentLibraryBodyCopy({
 }>) {
   return (
     <p
-      className={[
-        "text-[15px] font-normal leading-[22px] text-text",
-        className,
-      ]
+      className={["text-[15px] font-normal leading-[22px] text-text", className]
         .filter(Boolean)
         .join(" ")}
     >
@@ -481,9 +487,7 @@ function PreviewSubsectionHeading({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <h4 className="text-[16px] font-medium leading-6 text-text">
-      {children}
-    </h4>
+    <h4 className="text-[16px] font-medium leading-6 text-text">{children}</h4>
   );
 }
 
@@ -538,8 +542,8 @@ function getChatContextWidthClass(context: ComponentLibraryContext) {
   return context === "mobile"
     ? "w-[var(--component-library-mobile-chat-width)]"
     : context === "expanded"
-    ? "w-[var(--design-layout-panel-expanded-width)]"
-    : "w-[var(--design-layout-panel-collapsed-width)]";
+      ? "w-[var(--design-layout-panel-expanded-width)]"
+      : "w-[var(--design-layout-panel-collapsed-width)]";
 }
 
 function getChatContextAssistantMaxClass(context: ComponentLibraryContext) {
@@ -643,7 +647,13 @@ function renderButtonIconState(
 ) {
   if (state === "disabled") {
     return (
-      <ButtonIcon disabled icon="placeholder" label="Action" size={size} variant={variant} />
+      <ButtonIcon
+        disabled
+        icon="placeholder"
+        label="Action"
+        size={size}
+        variant={variant}
+      />
     );
   }
 
@@ -811,10 +821,7 @@ function renderGhostButtonState(
   );
 }
 
-function renderPillState(
-  state: (typeof pillStates)[number],
-  checked = false,
-) {
+function renderPillState(state: (typeof pillStates)[number], checked = false) {
   if (state === "disabled") {
     return (
       <Pill checked={checked} disabled>
@@ -948,9 +955,7 @@ function MessagesPlacementConversation() {
           <ChatMessage>
             No problem, I&apos;ll connect you with a sales consultant now.
           </ChatMessage>
-          <ChatSystemEvent>
-            David S. joined the chat · 9:37 PM
-          </ChatSystemEvent>
+          <ChatSystemEvent>David S. joined the chat · 9:37 PM</ChatSystemEvent>
           <ChatMessage
             role="representative"
             authorName="David S."
@@ -1230,7 +1235,9 @@ function HiringMicrositeEmailPage({
             </dd>
           </div>
           <div className="space-y-sm border-t border-border-faint pt-lg">
-            <dt className="text-heading-md text-text">Clarify the essentials</dt>
+            <dt className="text-heading-md text-text">
+              Clarify the essentials
+            </dt>
             <dd className="text-body-sm-open text-text-meta">
               Meeting format, contact instructions, and optional notes are
               separated into predictable sections.
@@ -1254,9 +1261,7 @@ function HiringMicrositeMicrophoneVoiceBannerPage({
   );
 }
 
-function SharedInlineErrorPage({
-  item,
-}: Readonly<{ item: ComponentNavItem }>) {
+function SharedInlineErrorPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="VCA">
       <PreviewSection
@@ -1342,8 +1347,8 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         <div className="mt-16 max-w-[48rem]">
           <PreviewExampleHeading>Expandable</PreviewExampleHeading>
           <ComponentLibraryBodyCopy>
-            The chat panel can be expanded into an immersive, full screen
-            dialog view by clicking the button in the header.
+            The chat panel can be expanded into an immersive, full screen dialog
+            view by clicking the button in the header.
           </ComponentLibraryBodyCopy>
         </div>
         <div className="mt-xxxl">
@@ -1359,9 +1364,9 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
               </PreviewExampleHeading>
               <ComponentLibraryBodyCopy>
                 The LTS hiring microsite keeps the agent chat discoverable in a
-                tray docked in the bottom-right corner. Users can open it
-                from the tray or a Contact sales CTA, then minimize it back to
-                the tray.
+                tray docked in the bottom-right corner. Users can open it from
+                the tray or a Contact sales CTA, then minimize it back to the
+                tray.
               </ComponentLibraryBodyCopy>
             </div>
             <SharedShellHiringMicrositeDemo />
@@ -1370,8 +1375,8 @@ function SharedShellPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             <div className="max-w-[48rem]">
               <PreviewExampleHeading>Premium survey</PreviewExampleHeading>
               <ComponentLibraryBodyCopy>
-                The Premium survey opens a tray from Help me decide. Closing
-                the chat removes it without leaving a docked tray.
+                The Premium survey opens a tray from Help me decide. Closing the
+                chat removes it without leaving a docked tray.
               </ComponentLibraryBodyCopy>
             </div>
             <SharedShellPremiumSurveyDemo />
@@ -1410,7 +1415,9 @@ function SharedSidePanelPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
-function SharedInterimStatePage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function SharedInterimStatePage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Shared">
       <PreviewSection
@@ -1418,15 +1425,10 @@ function SharedInterimStatePage({ item }: Readonly<{ item: ComponentNavItem }>) 
         description="Shown on initial load while the AI agent is getting ready, so users know the chat is working."
       >
         <ChatShellContainerPreview>
-          <ChatPanel
-            variant="collapsed"
-            className="md:!h-full md:!w-full"
-          >
+          <ChatPanel variant="collapsed" className="md:!h-full md:!w-full">
             <ChatHeader variant="collapsed" />
             <ChatBody>
-              <InterimLoadingState
-                title="Your AI assistant is getting ready"
-              />
+              <InterimLoadingState title="Your AI assistant is getting ready" />
             </ChatBody>
             <ChatComposer
               inputProps={{
@@ -1451,10 +1453,7 @@ function SharedIdleSessionPage({ item }: Readonly<{ item: ComponentNavItem }>) {
         description="Prompts users to continue or end the chat after a period of inactivity."
       >
         <ChatShellContainerPreview>
-          <ChatPanel
-            variant="collapsed"
-            className="md:!h-full md:!w-full"
-          >
+          <ChatPanel variant="collapsed" className="md:!h-full md:!w-full">
             <ChatHeader title="Contact sales" showAiMark={false} />
             <ChatBody className="opacity-20">
               <ChatThread timestamp="23:02" showAiDisclaimer={false}>
@@ -1505,7 +1504,9 @@ function SduiConfirmationPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
-function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function PremiumSurveyEntryPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium survey">
       <PreviewSection title="Demo">
@@ -1520,7 +1521,9 @@ function PremiumSurveyEntryPage({ item }: Readonly<{ item: ComponentNavItem }>) 
   );
 }
 
-function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function PremiumProductCardPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium survey">
       <PreviewSection title="Demo">
@@ -1535,7 +1538,9 @@ function PremiumProductCardPage({ item }: Readonly<{ item: ComponentNavItem }>) 
   );
 }
 
-function PremiumUpsellBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function PremiumUpsellBadgePage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium upsell">
       <PreviewSection
@@ -1632,99 +1637,131 @@ function PremiumCompanyPageVcaFabPage({
 }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium Company Page">
-      <PreviewSection title="Floating action button">
-        <PreviewCard title="Default">
-          <VcaFabReviewPreview />
-        </PreviewCard>
+      <PreviewSection title="Demo">
+        <VcaFabDemo />
       </PreviewSection>
-      <PreviewSection title="Visitor presence badge">
-        <VcaFabPresenceBadgeExplorationPreview />
+
+      <PreviewSection title="Admin">
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Current</PreviewExampleHeading>
+            <VcaFabCurrentPreview audience="admin" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Previous explorations</PreviewExampleHeading>
+            <VcaFabPreviousExplorationsPreview audience="admin" />
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
-      <PreviewSection title="States">
-        <VcaFabStatesPreview />
-      </PreviewSection>
-      <PreviewSection title="Visitor and admin marks">
-        <VcaFabSwappableMarkPreview />
-      </PreviewSection>
-      <PreviewSection
-        title="Visitor prompt card"
-        description="Opening-state prompt card used to help a Page visitor start a VCA conversation."
-      >
-        <PreviewCard title="Opening prompts">
-          <PcpVisitorPromptCardPreview />
-        </PreviewCard>
+
+      <PreviewSection title="Visitor">
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleHeading>Current</PreviewExampleHeading>
+            <VcaFabCurrentPreview audience="visitor" />
+          </PreviewMoment>
+          <PreviewMoment>
+            <PreviewExampleHeading>Previous explorations</PreviewExampleHeading>
+            <VcaFabPreviousExplorationsPreview audience="visitor" />
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
   );
 }
 
-const pcpPromptPlacementRows = [
+const pcpPromptTypeRows = [
   {
-    pattern: "Starter",
-    surface: "FAB hover and empty assistant",
-    purpose: "Offer an entry into the three MVP use cases",
-    quantity: "3",
+    type: "Starter",
+    appearsIn: "FAB hover and empty assistant",
+    purpose: "Brief me without reading the Page first",
+    quantity: "Exactly 3",
   },
   {
-    pattern: "Contextual",
-    surface: "Within a relevant Page section",
-    purpose: "Help interpret the nearby data",
-    quantity: "1 per section; max 2 per page",
-  },
-  {
-    pattern: "Follow-up",
-    surface: "After a VCA response",
-    purpose: "Continue the analysis or choose a next step",
-    quantity: "2 by default",
+    type: "Contextual",
+    appearsIn: "Dashboard or an Analytics tab",
+    purpose: "Investigate something visible nearby",
+    quantity: "0–2 per page",
   },
 ] as const;
 
-const pcpContextualPromptExamples = [
+const pcpPagePromptRows = [
   {
-    section: "Content analytics",
-    context: "Impressions are down 18.4% vs last month",
-    prompt: "Why are post impressions down?",
+    page: "Dashboard",
+    visibleContext: "Weekly performance and Premium visitor signals",
+    prompts: "Who are my most relevant visitors?",
+    time: "Last 7 complete days",
   },
   {
-    section: "Visitor analytics",
-    context: "64% of visitors match the target audience",
-    prompt: "Which visitors look most relevant?",
+    page: "Content",
+    visibleContext: "Reach, engagement, and posts",
+    prompts:
+      "Why are impressions down but engagement up? · What do top posts have in common?",
+    time: "Visible filters and date range",
   },
   {
-    section: "Competitors",
-    context: "Follower growth comparison",
-    prompt: "Why are competitors gaining followers faster?",
+    page: "Visitors",
+    visibleContext: "Aggregate visitor composition",
+    prompts:
+      "How has my visitor mix changed? · Which visitor groups engage most with my content?",
+    time: "Visible filters and date range",
+  },
+  {
+    page: "Competitors",
+    visibleContext: "Follower growth and top posts",
+    prompts:
+      "What explains the follower-growth gap? · What do competitors’ top posts have in common?",
+    time: "Visible filters and date range",
+  },
+] as const;
+
+const pcpEvidenceJobs = [
+  {
+    job: "Change",
+    answers: "What moved over time?",
+    examples: "Metric + trend",
+  },
+  {
+    job: "Difference",
+    answers: "How do two groups or periods compare?",
+    examples: "Comparison or gap",
+  },
+  {
+    job: "Makeup",
+    answers: "What is the composition?",
+    examples: "Audience distribution",
+  },
+  {
+    job: "Examples",
+    answers: "Which objects support the pattern?",
+    examples: "Posts or competitors",
   },
 ] as const;
 
 const pcpPromptBestPractices = [
   {
-    do: "Use the same starter set in FAB hover and empty chat",
-    dont: "Show one set before opening VCA and another after",
+    do: "Use the shortest unambiguous wording",
+    dont: "Restate Page or time context that is already visible",
   },
   {
-    do: "Tie contextual prompts to nearby data",
-    dont: "Place generic prompts throughout the Page",
+    do: "Include what is known and ask what is unknown",
+    dont: "Put an unverified conclusion inside the prompt",
   },
   {
-    do: "Help the admin interpret or decide",
-    dont: "Repeat information that is already visible",
+    do: "Require relevance, value, and answerability",
+    dont: "Fill the prompt budget just because space exists",
   },
   {
-    do: "Keep prompts short and specific",
-    dont: "Use vague copy such as “Tell me more”",
+    do: "Let contextual prompts inherit visible context",
+    dont: "Make the admin restate the tab, filters, or time range",
   },
   {
-    do: "Map every prompt to an MVP use case and grounded tool",
-    dont: "Promise drafting, publishing, outreach, or other write actions",
+    do: "Use one prompt for one question",
+    dont: "Mix unrelated investigations in one prompt",
   },
   {
-    do: "Use an insight when VCA knows the conclusion",
-    dont: "Disguise a proactive insight as a prompt",
-  },
-  {
-    do: "Suppress prompts already addressed or dismissed",
-    dont: "Repeat a prompt in nearby surfaces",
+    do: "Navigate to the relevant Page for the next product action",
+    dont: "Offer drafting, publishing, boosting, or outreach",
   },
 ] as const;
 
@@ -1748,224 +1785,400 @@ function PcpPromptGuidanceList({
   );
 }
 
+function PcpPromptSubsectionHeading({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  return (
+    <h4 className="text-[16px] font-medium leading-6 text-text">{children}</h4>
+  );
+}
+
 function PremiumCompanyPagePromptsPage({
   item,
 }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="Premium Company Page">
-      <PreviewSection
-        title="Demo"
-        description="Use the surface control to see how the same Prompt component adapts across the PCP admin experience."
-      >
+      <PreviewSection title="Demo">
         <PcpPromptsDemo />
       </PreviewSection>
 
       <PreviewSection
-        title="Prompt placements"
-        description="Prompt is one component. Starter, contextual, and follow-up describe where it appears and how it is used in the MVP."
+        title="Usage"
+        description="Prompts either start a broad briefing or help admins investigate visible Page data."
       >
-        <div className="overflow-hidden rounded-md border border-border-faint bg-background">
-          <table className="min-w-[760px] w-full border-collapse text-left text-body-sm text-text">
-            <thead className="bg-background-neutral-soft text-control-sm">
-              <tr>
-                <th className="px-lg py-md" scope="col">Pattern</th>
-                <th className="px-lg py-md" scope="col">Surface</th>
-                <th className="px-lg py-md" scope="col">Purpose</th>
-                <th className="px-lg py-md" scope="col">Quantity</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-faint">
-              {pcpPromptPlacementRows.map((row) => (
-                <tr key={row.pattern}>
-                  <th className="px-lg py-lg text-control-sm" scope="row">
-                    {row.pattern}
-                  </th>
-                  <td className="px-lg py-lg text-text-meta">{row.surface}</td>
-                  <td className="px-lg py-lg text-text-meta">{row.purpose}</td>
-                  <td className="px-lg py-lg text-text-meta">{row.quantity}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid max-w-[64rem] gap-md lg:grid-cols-5">
+          {[
+            ["1", "Context"],
+            ["2", "Prompt"],
+            ["3", "AI response"],
+            ["4", "Evidence"],
+            ["5", "Navigation"],
+          ].map(([step, label]) => (
+            <div
+              className="rounded-md border border-border-faint bg-background p-lg"
+              key={step}
+            >
+              <p className="text-[12px] font-normal leading-4 text-text-meta">
+                Step {step}
+              </p>
+              <p className="mt-xs text-[15px] font-normal leading-[22px] text-text">
+                {label}
+              </p>
+            </div>
+          ))}
         </div>
-        <ComponentLibraryAnnotation className="mt-xl" label="MVP scope">
-          Prompts ask VCA to explain, compare, summarize, recommend, or show
-          grounded Page data. They do not start drafting, publishing, outreach,
-          or other write actions.
-        </ComponentLibraryAnnotation>
       </PreviewSection>
 
       <PreviewSection
-        title="Starter prompts"
-        description="Shown before a conversation begins. FAB hover previews the same starter set shown in the empty assistant."
+        title="Types"
+        description="Starter prompts begin a briefing. Contextual prompts investigate visible Page data."
       >
         <PreviewMomentStack>
-          <PcpPromptGuidanceList
-            items={[
-              "Show the same three prompts, in the same order, in FAB hover and empty chat.",
-              "Represent Page performance, competitor monitoring, and visitor analysis.",
-              "Selecting a FAB prompt opens the assistant and runs it immediately.",
-            ]}
-          />
-          <div className="grid gap-xl lg:grid-cols-2">
-            <PreviewCard
-              title="FAB hover"
-              description="Compact preview before the assistant opens."
-            >
-              <div className="flex min-h-72 items-end justify-end rounded-md border border-border-faint bg-background-neutral-soft p-lg">
-                <PromptGroup>
-                  {PCP_STARTER_PROMPTS.map((prompt) => (
-                    <Prompt key={prompt} prompt={prompt} />
-                  ))}
-                </PromptGroup>
-              </div>
-            </PreviewCard>
-            <PreviewCard
-              title="Empty assistant"
-              description="The same starter set after the assistant opens."
-            >
-              <ChatThreadReferenceFrame>
-                <ChatMessage>
-                  Welcome back, Rose. What would you like to understand about
-                  Velora&apos;s Page?
-                </ChatMessage>
-                <PromptGroup>
-                  {PCP_STARTER_PROMPTS.map((prompt) => (
-                    <Prompt key={prompt} prompt={prompt} />
-                  ))}
-                </PromptGroup>
-              </ChatThreadReferenceFrame>
-            </PreviewCard>
+          <div className="overflow-hidden rounded-md border border-border-faint bg-background">
+            <table className="min-w-[760px] w-full border-collapse text-left text-[15px] font-normal leading-[22px] text-text">
+              <thead className="bg-background-neutral-soft text-control-xs">
+                <tr>
+                  <th className="px-lg py-md" scope="col">
+                    Type
+                  </th>
+                  <th className="px-lg py-md" scope="col">
+                    Appears in
+                  </th>
+                  <th className="px-lg py-md" scope="col">
+                    Job
+                  </th>
+                  <th className="px-lg py-md" scope="col">
+                    Quantity
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-faint">
+                {pcpPromptTypeRows.map((row) => (
+                  <tr key={row.type}>
+                    <th
+                      className="px-lg py-lg font-normal text-text"
+                      scope="row"
+                    >
+                      {row.type}
+                    </th>
+                    <td className="px-lg py-lg text-text-meta">
+                      {row.appearsIn}
+                    </td>
+                    <td className="px-lg py-lg text-text-meta">
+                      {row.purpose}
+                    </td>
+                    <td className="px-lg py-lg text-text-meta">
+                      {row.quantity}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </PreviewMomentStack>
-      </PreviewSection>
 
-      <PreviewSection
-        title="Contextual prompts"
-        description="Questions tied to the Page, tab, section, metric, or entity the admin is currently viewing."
-      >
-        <PreviewMomentStack>
-          <div className="grid max-w-[64rem] gap-xl lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <PreviewMoment>
+            <PreviewExampleIntro title="Starter">
+              Helps admins get a briefing without reading the Page first.
+            </PreviewExampleIntro>
             <PcpPromptGuidanceList
               items={[
-                "Show only when the prompt is locally relevant and answerable.",
-                "Add interpretation or a decision beyond the visible data.",
-                "Suppress prompts that were already shown, answered, or dismissed.",
+                "Show the same three prompts, in the same order, in FAB hover and the empty assistant.",
+                "Use the last 7 complete days compared with the previous 7 days.",
+                "Selecting a FAB prompt opens the assistant and runs it immediately.",
               ]}
             />
-            <ComponentLibraryAnnotation label="Quantity">
-              Show one per section, no more than two per Page, and avoid more
-              than one in the same viewport.
-            </ComponentLibraryAnnotation>
-          </div>
-          <div className="grid gap-xl lg:grid-cols-3">
-            {pcpContextualPromptExamples.map((example) => (
-              <PreviewCard
-                description={example.context}
-                key={example.section}
-                title={example.section}
-              >
-                <div className="rounded-md border border-border-faint bg-background p-lg shadow-raised-faint">
-                  <Prompt prompt={example.prompt} />
+            <div className="space-y-16">
+              <div className="space-y-lg">
+                <div className="max-w-[48rem] space-y-sm">
+                  <PcpPromptSubsectionHeading>
+                    FAB hover
+                  </PcpPromptSubsectionHeading>
+                  <ComponentLibraryBodyCopy>
+                    A preview of the same starter set before VCA opens.
+                  </ComponentLibraryBodyCopy>
                 </div>
-              </PreviewCard>
-            ))}
-          </div>
-          <ComponentLibraryAnnotation label="Prompt or insight?">
-            If VCA already has a noteworthy conclusion, show an insight instead
-            of making the admin ask for it.
-          </ComponentLibraryAnnotation>
-        </PreviewMomentStack>
-      </PreviewSection>
+                <PcpPromptSurfaceExample surface="fab" />
+              </div>
+              <div className="space-y-lg">
+                <div className="max-w-[48rem] space-y-sm">
+                  <PcpPromptSubsectionHeading>
+                    Empty assistant
+                  </PcpPromptSubsectionHeading>
+                  <ComponentLibraryBodyCopy>
+                    The complete starter set before a conversation begins.
+                  </ComponentLibraryBodyCopy>
+                </div>
+                <PcpPromptSurfaceExample surface="assistant" />
+              </div>
+            </div>
+          </PreviewMoment>
 
-      <PreviewSection
-        title="Follow-up prompts"
-        description="Questions shown after an answer that help the admin continue the analysis or decide what to do next."
-      >
-        <PreviewMomentStack>
-          <PcpPromptGuidanceList
-            items={[
-              "Show two by default: one to investigate and one to decide what to do next.",
-              "Inherit the context of the current conversation.",
-              "Keep every follow-up within the MVP's grounded, read-only capabilities.",
-            ]}
-          />
           <PreviewMoment>
-            <PreviewExampleIntro title="Investigate, then decide">
-              Follow-ups should move the admin forward without repeating the
-              original question.
+            <PreviewExampleIntro title="Contextual">
+              Helps admins investigate data visible on the current Page.
             </PreviewExampleIntro>
-            <ChatThreadReferenceFrame>
-              <ChatMessage>
-                Post impressions are down 18.4% this month. You posted less
-                often, but reactions, comments, and reposts are up. Fewer
-                people are seeing posts that still perform well.
-              </ChatMessage>
-              <PromptGroup>
-                <Prompt prompt="Show the posts that performed best" />
-                <Prompt prompt="What should I focus on this week?" />
-              </PromptGroup>
-            </ChatThreadReferenceFrame>
+            <PcpPromptGuidanceList
+              items={[
+                "Show a prompt only when it is relevant, valuable, and answerable.",
+                "Include what the Page already shows and ask for the missing explanation.",
+                "Inherit the visible tab, filters, and date range.",
+              ]}
+            />
+            <div className="overflow-hidden rounded-md border border-border-faint bg-background">
+              <table className="min-w-[940px] w-full border-collapse text-left text-[15px] font-normal leading-[22px] text-text">
+                <thead className="bg-background-neutral-soft text-control-xs">
+                  <tr>
+                    <th className="px-lg py-md" scope="col">
+                      Page
+                    </th>
+                    <th className="px-lg py-md" scope="col">
+                      Visible context
+                    </th>
+                    <th className="px-lg py-md" scope="col">
+                      Prompt
+                    </th>
+                    <th className="px-lg py-md" scope="col">
+                      Time
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-faint">
+                  {pcpPagePromptRows.map((row) => (
+                    <tr key={row.page}>
+                      <th
+                        className="px-lg py-lg font-normal text-text"
+                        scope="row"
+                      >
+                        {row.page}
+                      </th>
+                      <td className="px-lg py-lg text-text-meta">
+                        {row.visibleContext}
+                      </td>
+                      <td className="max-w-[30rem] px-lg py-lg text-text-meta">
+                        {row.prompts}
+                      </td>
+                      <td className="px-lg py-lg text-text-meta">{row.time}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </PreviewMoment>
         </PreviewMomentStack>
       </PreviewSection>
 
       <PreviewSection
-        title="Best practices"
-        description="Use prompts to create a clear next step, not to fill every available surface."
+        title="Examples"
+        description="Canonical examples are reviewed here before the prototype is updated to match."
       >
-        <div className="overflow-hidden rounded-md border border-border-faint bg-background">
-          <table className="min-w-[680px] w-full border-collapse text-left text-body-sm text-text">
-            <thead className="bg-background-neutral-soft text-control-sm">
-              <tr>
-                <th className="w-1/2 px-lg py-md" scope="col">Do</th>
-                <th className="w-1/2 px-lg py-md" scope="col">Don&apos;t</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-faint">
-              {pcpPromptBestPractices.map((practice) => (
-                <tr key={practice.do}>
-                  <td className="px-lg py-lg align-top">
-                    <span className="inline-flex items-start gap-sm">
-                      <Icon
-                        aria-hidden="true"
-                        className="mt-xxs shrink-0 text-positive"
-                        name="check"
-                        size="small"
-                      />
-                      <span>{practice.do}</span>
-                    </span>
-                  </td>
-                  <td className="px-lg py-lg align-top text-text-meta">
-                    {practice.dont}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleIntro title="Dashboard · Relevant visitors">
+              The contextual prompt appears directly after the performance
+              metrics it builds on.
+            </PreviewExampleIntro>
+            <div className="space-y-xl">
+              <div className="space-y-lg">
+                <PcpPromptSubsectionHeading>
+                  On the Dashboard
+                </PcpPromptSubsectionHeading>
+                <PcpDashboardRelevantVisitorsContextPreview />
+              </div>
+              <div className="space-y-lg">
+                <PcpPromptSubsectionHeading>
+                  After selection
+                </PcpPromptSubsectionHeading>
+                <PcpDashboardRelevantVisitorsConversationPreview />
+              </div>
+            </div>
+          </PreviewMoment>
+
+          <PreviewMoment>
+            <PreviewExampleIntro title="Analytics · Content highlights">
+              The prompt explains a meaningful relationship across the visible
+              highlight metrics.
+            </PreviewExampleIntro>
+            <div className="space-y-xl">
+              <div className="space-y-lg">
+                <PcpPromptSubsectionHeading>
+                  On the Content tab
+                </PcpPromptSubsectionHeading>
+                <PcpContentHighlightsContextPreview />
+              </div>
+              <div className="space-y-lg">
+                <PcpPromptSubsectionHeading>
+                  After selection
+                </PcpPromptSubsectionHeading>
+                <PcpContentHighlightsConversationPreview />
+              </div>
+            </div>
+          </PreviewMoment>
+
+          <PreviewMoment>
+            <PreviewExampleIntro title="Analytics · Content engagement">
+              The prompt identifies the shared pattern behind the strongest
+              posts in the visible table.
+            </PreviewExampleIntro>
+            <div className="space-y-xl">
+              <div className="space-y-lg">
+                <PcpPromptSubsectionHeading>
+                  On the Content tab
+                </PcpPromptSubsectionHeading>
+                <PcpContentEngagementContextPreview />
+              </div>
+              <div className="space-y-lg">
+                <PcpPromptSubsectionHeading>
+                  After selection
+                </PcpPromptSubsectionHeading>
+                <PcpContentEngagementConversationPreview />
+              </div>
+            </div>
+          </PreviewMoment>
+        </PreviewMomentStack>
+      </PreviewSection>
+
+      <PreviewSection
+        title="Guidelines"
+        description="Keep prompts and responses focused, grounded, and within the admin MVP."
+      >
+        <PreviewMomentStack>
+          <PreviewMoment>
+            <PreviewExampleIntro title="Responses">
+              One question should lead to one primary insight, supporting
+              evidence, and one destination.
+            </PreviewExampleIntro>
+            <PcpPromptGuidanceList
+              items={[
+                "Use no more than two evidence cards in the initial response.",
+                "Give each card one evidence job and one comparison basis.",
+                "Show no more than three rows or items in a card.",
+                "Use one primary navigation action.",
+                "Do not show suggested follow-up prompts in the MVP; users can continue in the composer.",
+                "A weekly briefing may name up to three findings, but initially visualize only the highest-priority finding.",
+              ]}
+            />
+            <div className="overflow-hidden rounded-md border border-border-faint bg-background">
+              <table className="min-w-[680px] w-full border-collapse text-left text-[15px] font-normal leading-[22px] text-text">
+                <thead className="bg-background-neutral-soft text-control-xs">
+                  <tr>
+                    <th className="px-lg py-md" scope="col">
+                      Evidence job
+                    </th>
+                    <th className="px-lg py-md" scope="col">
+                      Answers
+                    </th>
+                    <th className="px-lg py-md" scope="col">
+                      Typical card
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-faint">
+                  {pcpEvidenceJobs.map((row) => (
+                    <tr key={row.job}>
+                      <th
+                        className="px-lg py-lg font-normal text-text"
+                        scope="row"
+                      >
+                        {row.job}
+                      </th>
+                      <td className="px-lg py-lg text-text-meta">
+                        {row.answers}
+                      </td>
+                      <td className="px-lg py-lg text-text-meta">
+                        {row.examples}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </PreviewMoment>
+
+          <PreviewMoment>
+            <PreviewExampleIntro title="Timing and scope">
+              Make the evidence boundary clear without over-explaining it.
+            </PreviewExampleIntro>
+            <div className="grid max-w-[64rem] gap-xl lg:grid-cols-3">
+              <div className="space-y-md">
+                <PcpPromptSubsectionHeading>Time</PcpPromptSubsectionHeading>
+                <PcpPromptGuidanceList
+                  items={[
+                    "Starter briefing: last 7 complete days vs previous 7.",
+                    "Contextual prompt: inherit the visible date range.",
+                    "A continued conversation keeps the current period unless the admin changes it.",
+                  ]}
+                />
+              </div>
+              <div className="space-y-md">
+                <PcpPromptSubsectionHeading>
+                  Freshness
+                </PcpPromptSubsectionHeading>
+                <PcpPromptGuidanceList
+                  items={[
+                    "Show the date range and comparison basis.",
+                    "Show when the data was last updated.",
+                    "Name the source when it prevents ambiguity.",
+                  ]}
+                />
+              </div>
+              <div className="space-y-md">
+                <PcpPromptSubsectionHeading>
+                  MVP scope
+                </PcpPromptSubsectionHeading>
+                <PcpPromptGuidanceList
+                  items={[
+                    "Support aggregate visitor analysis and relevant-visitor ranking.",
+                    "Use audience fit and recent Page activity as relevance signals, not buying intent.",
+                    "Recommendations may be prose; the product action is navigation.",
+                    "No drafting, publishing, boosting, messaging, or outreach.",
+                  ]}
+                />
+              </div>
+            </div>
+          </PreviewMoment>
+
+          <PreviewMoment>
+            <PreviewExampleIntro title="Best practices">
+              Use prompts to create a clear investigation path.
+            </PreviewExampleIntro>
+            <div className="overflow-hidden rounded-md border border-border-faint bg-background">
+              <table className="min-w-[680px] w-full border-collapse text-left text-[15px] font-normal leading-[22px] text-text">
+                <thead className="bg-background-neutral-soft text-control-xs">
+                  <tr>
+                    <th className="w-1/2 px-lg py-md" scope="col">
+                      Do
+                    </th>
+                    <th className="w-1/2 px-lg py-md" scope="col">
+                      Don&apos;t
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-faint">
+                  {pcpPromptBestPractices.map((practice) => (
+                    <tr key={practice.do}>
+                      <td className="px-lg py-lg align-top">
+                        <span className="inline-flex items-start gap-sm">
+                          <Icon
+                            aria-hidden="true"
+                            className="mt-xxs shrink-0 text-positive"
+                            name="check"
+                            size="small"
+                          />
+                          <span>{practice.do}</span>
+                        </span>
+                      </td>
+                      <td className="px-lg py-lg align-top text-text-meta">
+                        {practice.dont}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </PreviewMoment>
+        </PreviewMomentStack>
       </PreviewSection>
     </ComponentPageShell>
-  );
-}
-
-function PcpVisitorPromptCardPreview() {
-  return (
-    <section className="max-w-[360px] rounded-sm border border-border-faint bg-background p-lg shadow-raised-faint">
-      <h3 className="text-heading-lg text-text">{pcpVcaScenario.openingTitle}</h3>
-      <p className="mt-xs text-body-sm text-text">
-        {pcpVcaScenario.openingSubcopy}
-      </p>
-      <div className="mt-lg flex flex-col items-start gap-sm">
-        {pcpVcaScenario.visitorPrompts.map((prompt) => (
-          <Prompt
-            className="w-fit max-w-full"
-            key={prompt.id}
-            prompt={prompt.label}
-          />
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -2028,7 +2241,7 @@ function PremiumCompanyPageEntityCardsPage({
     <ComponentPageShell item={item} section="Premium Company Page">
       <PreviewSection
         title="Building blocks"
-        description="Atomic pieces for PCP entity cards. These represent nouns like products, posts, jobs, people, and companies inside AI responses."
+        description="Atomic pieces for PCP entity cards. Standalone cards fill the available response width, while cards in a horizontal rail use a compact item width."
       >
         <PreviewMomentStack>
           <PreviewMoment>
@@ -2055,7 +2268,9 @@ function PremiumCompanyPageEntityCardsPage({
           </PreviewMoment>
 
           <PreviewMoment>
-            <PreviewExampleHeading>Media + passive reactions</PreviewExampleHeading>
+            <PreviewExampleHeading>
+              Media + passive reactions
+            </PreviewExampleHeading>
             <div className="grid gap-lg lg:grid-cols-2">
               <ChatThreadReferenceFrame context="collapsed">
                 <ChatCardShell>
@@ -2125,11 +2340,13 @@ function PremiumCompanyPageEntityCardsPage({
 
       <PreviewSection
         title="Post cards"
-        description="Post cards reuse the same header, two-line body, full-bleed media, link preview, and passive engagement row. They never render Like, Comment, Repost, or Send controls."
+        description="Post cards reuse the same header, two-line body, full-bleed media, link preview, and passive engagement row. The evidence presentation also removes the management menu while preserving one navigation CTA."
       >
         <PreviewMomentStack>
           <PreviewMoment>
-            <PreviewExampleHeading>Media + CTA</PreviewExampleHeading>
+            <PreviewExampleHeading>
+              Read-only evidence + CTA
+            </PreviewExampleHeading>
             <ChatThreadReferenceFrame context="collapsed">
               <ResponsePostCard
                 actions={[{ label: "View post", variant: "secondary" }]}
@@ -2141,6 +2358,7 @@ function PremiumCompanyPageEntityCardsPage({
                 followerCount={pcpCompanyProfile.followers}
                 imageAlt={pcpProofSnippets.postImageAlt}
                 imageSrc={postPreviewImageSrc}
+                presentation="evidence"
                 reactions={pcpProofSnippets.postEngagement}
                 reposts={`${pcpProofSnippets.postRepostCount} reposts`}
                 snippet="A 12,000-employee retailer simplified carrier coordination before open enrollment by keeping eligibility cleanup, carrier files, and employee communications in one workflow."
@@ -2149,7 +2367,9 @@ function PremiumCompanyPageEntityCardsPage({
             </ChatThreadReferenceFrame>
           </PreviewMoment>
           <PreviewMoment>
-            <PreviewExampleHeading>Post with title preview + CTA</PreviewExampleHeading>
+            <PreviewExampleHeading>
+              Post with title preview + CTA
+            </PreviewExampleHeading>
             <ChatThreadReferenceFrame context="collapsed">
               <ResponsePostCard
                 actions={[{ label: "View post", variant: "secondary" }]}
@@ -2319,8 +2539,8 @@ function PremiumCompanyPageInsightCardsPage({
               <h3 className="text-control-sm text-text">Synthesized payoff</h3>
             </div>
             <p className="mt-sm text-body-sm text-text-meta">
-              Diagnosis, comparison, exploration, or plan. The card uses a
-              blue inline Ask action and opens the VCA panel pre-loaded.
+              Diagnosis, comparison, exploration, or plan. The card uses a blue
+              inline Ask action and opens the VCA panel pre-loaded.
             </p>
           </div>
           <div className="rounded-sm border border-border-faint bg-background p-lg">
@@ -2394,15 +2614,7 @@ const veloraLogoTileStyle = {
 };
 const followerGrowthAxisTicks = ["May 5", "May 19", "Jun 2"] as const;
 const followerGrowthTrendValues = [
-  94,
-  101,
-  97,
-  105,
-  100,
-  103,
-  88,
-  80,
-  74,
+  94, 101, 97, 105, 100, 103, 88, 80, 74,
 ] as const;
 const followerGrowthTrendAnnotation = {
   startIndex: 6,
@@ -2567,9 +2779,9 @@ function DataCardsCatalog() {
       <PreviewMoment>
         <PreviewExampleHeading>ConversionPath</PreviewExampleHeading>
         <p className="max-w-[var(--design-layout-panel-collapsed-width)] text-body-sm text-text-meta">
-          ConversionPath shows where Page attention turns into a concrete action.
-          Keep the recommendation in the AI response; use the card for the
-          measurable path.
+          ConversionPath shows where Page attention turns into a concrete
+          action. Keep the recommendation in the AI response; use the card for
+          the measurable path.
         </p>
         <ResponseSystemStack>
           <ResponseConversionPath
@@ -2708,7 +2920,10 @@ function SduiButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                   </PreviewExampleHeading>
                   <div className="flex flex-wrap items-center gap-md">
                     {buttonStates.map((state) => (
-                      <div key={`${size}-${variant}-${state}`} className="space-y-xs">
+                      <div
+                        key={`${size}-${variant}-${state}`}
+                        className="space-y-xs"
+                      >
                         <p className="text-body-xs text-text-meta">{state}</p>
                         {renderButtonState(state, variant, size)}
                       </div>
@@ -2765,7 +2980,10 @@ function SduiGhostButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                   </PreviewExampleHeading>
                   <div className="flex flex-wrap items-center gap-md">
                     {ghostButtonStates.map((state) => (
-                      <div key={`${size}-${rowLabel}-${state}`} className="space-y-xs">
+                      <div
+                        key={`${size}-${rowLabel}-${state}`}
+                        className="space-y-xs"
+                      >
                         <p className="text-body-xs text-text-meta">{state}</p>
                         {icon ? (
                           renderGhostButtonState(
@@ -2808,10 +3026,21 @@ function SduiGhostButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
           <GhostButton emphasis icon="arrow-right" iconAtEnd size="small">
             Emphasis
           </GhostButton>
-          <GhostButton horizontalPadding={false} icon="arrow-right" iconAtEnd size="small">
+          <GhostButton
+            horizontalPadding={false}
+            icon="arrow-right"
+            iconAtEnd
+            size="small"
+          >
             Compact
           </GhostButton>
-          <GhostButton emphasis horizontalPadding={false} icon="arrow-right" iconAtEnd size="medium">
+          <GhostButton
+            emphasis
+            horizontalPadding={false}
+            icon="arrow-right"
+            iconAtEnd
+            size="medium"
+          >
             Medium compact
           </GhostButton>
         </div>
@@ -2937,7 +3166,10 @@ function SduiTabItemHorizontalPage({
         </div>
       </PreviewSection>
       <PreviewSection title="Tab list">
-        <div className="inline-flex border-b border-border-faint" role="tablist">
+        <div
+          className="inline-flex border-b border-border-faint"
+          role="tablist"
+        >
           {["Home", "About", "Posts", "Products"].map((tab) => (
             <TabItemHorizontal
               key={tab}
@@ -2952,7 +3184,9 @@ function SduiTabItemHorizontalPage({
   );
 }
 
-function SduiGlobalNavigationPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function SduiGlobalNavigationPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
       <PreviewSection
@@ -3044,7 +3278,9 @@ function SduiRadioPage({ item }: Readonly<{ item: ComponentNavItem }>) {
 function SduiIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
-      <PreviewSection title={`Navigation icons (${navigationIconMetadata.length})`}>
+      <PreviewSection
+        title={`Navigation icons (${navigationIconMetadata.length})`}
+      >
         <IconCatalogGrid icons={navigationIconMetadata} iconSize="medium" />
       </PreviewSection>
       <PreviewSection title={`System icons (${systemIconMetadata.length})`}>
@@ -3085,9 +3321,7 @@ function SduiIllustrationAssetCard({
         />
       </div>
       <p className="mt-md text-control-sm text-text">{asset.name}</p>
-      <p className="mt-xs break-all text-body-xs text-text-meta">
-        {asset.src}
-      </p>
+      <p className="mt-xs break-all text-body-xs text-text-meta">{asset.src}</p>
     </article>
   );
 }
@@ -3145,7 +3379,10 @@ function SduiReactionIconsPage({ item }: Readonly<{ item: ComponentNavItem }>) {
             </thead>
             <tbody>
               {sduiReactionIconTypes.map((type) => (
-                <tr className="border-b border-border-faint last:border-b-0" key={type}>
+                <tr
+                  className="border-b border-border-faint last:border-b-0"
+                  key={type}
+                >
                   <th className="px-md py-md text-control-sm text-text">
                     {reactionIconTypeLabels[type]}
                   </th>
@@ -3239,15 +3476,20 @@ function SduiEntityPage({ item }: Readonly<{ item: ComponentNavItem }>) {
       </PreviewSection>
       <PreviewSection title="Entity sizes">
         <div className="space-y-8">
-          {([
-            { label: "Circle", shape: "circle" },
-            { label: "Square", shape: "square" },
-          ] as const).map(({ label, shape }) => (
+          {(
+            [
+              { label: "Circle", shape: "circle" },
+              { label: "Square", shape: "square" },
+            ] as const
+          ).map(({ label, shape }) => (
             <section key={shape} className="space-y-4">
               <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <div className="flex flex-wrap items-end gap-lg">
                 {entitySizes.map((size) => (
-                  <div key={`${shape}-${size}`} className="flex min-w-16 flex-col items-center gap-sm">
+                  <div
+                    key={`${shape}-${size}`}
+                    className="flex min-w-16 flex-col items-center gap-sm"
+                  >
                     <Entity
                       label={`${label} entity placeholder, ${size}px`}
                       shape={shape}
@@ -3283,7 +3525,10 @@ function SduiButtonIconPage({ item }: Readonly<{ item: ComponentNavItem }>) {
                   </PreviewExampleHeading>
                   <div className="flex flex-wrap items-center gap-md">
                     {buttonStates.map((state) => (
-                      <div key={`${size}-${variant}-${state}`} className="space-y-xs">
+                      <div
+                        key={`${size}-${variant}-${state}`}
+                        className="space-y-xs"
+                      >
                         <p className="text-body-xs text-text-meta">{state}</p>
                         {renderButtonIconState(state, variant, size)}
                       </div>
@@ -3327,9 +3572,7 @@ function SduiOverlayButtonIconPage({
                           key={`${size}-${color}-${state}`}
                           className="space-y-xs"
                         >
-                          <p className="text-body-xs text-text-meta">
-                            {state}
-                          </p>
+                          <p className="text-body-xs text-text-meta">{state}</p>
                           {renderOverlayButtonIconState(state, color, size)}
                         </div>
                       ))}
@@ -3345,7 +3588,9 @@ function SduiOverlayButtonIconPage({
   );
 }
 
-function SduiGhostIconButtonPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function SduiGhostIconButtonPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
       <PreviewSection title="Demo">
@@ -3411,10 +3656,45 @@ function SduiTextInputPage({ item }: Readonly<{ item: ComponentNavItem }>) {
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
               <PreviewExampleHeading>{label}</PreviewExampleHeading>
-              <TextInput className="max-w-80" counter helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
-              <TextInput className="max-w-80" counter defaultValue="Input text value" helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
-              <TextInput className="max-w-80" counter errorText="Error text" label="Label" placeholder="Hint text (Optional)" required size={size} />
-              <TextInput className="max-w-80" counter defaultValue="Input text value" disabled helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
+              <TextInput
+                className="max-w-80"
+                counter
+                helperText="Helper text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
+              <TextInput
+                className="max-w-80"
+                counter
+                defaultValue="Input text value"
+                helperText="Helper text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
+              <TextInput
+                className="max-w-80"
+                counter
+                errorText="Error text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
+              <TextInput
+                className="max-w-80"
+                counter
+                defaultValue="Input text value"
+                disabled
+                helperText="Helper text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
             </div>
           ))}
         </div>
@@ -3456,10 +3736,45 @@ function SduiTextAreaPage({ item }: Readonly<{ item: ComponentNavItem }>) {
           {textInputSizes.map(({ label, size }) => (
             <div key={size} className="space-y-lg">
               <PreviewExampleHeading>{label}</PreviewExampleHeading>
-              <TextArea className="max-w-80" counter helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
-              <TextArea className="max-w-80" counter defaultValue="Input text value" helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
-              <TextArea className="max-w-80" counter errorText="Error text" label="Label" placeholder="Hint text (Optional)" required size={size} />
-              <TextArea className="max-w-80" counter defaultValue="Input text value" disabled helperText="Helper text" label="Label" placeholder="Hint text (Optional)" required size={size} />
+              <TextArea
+                className="max-w-80"
+                counter
+                helperText="Helper text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
+              <TextArea
+                className="max-w-80"
+                counter
+                defaultValue="Input text value"
+                helperText="Helper text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
+              <TextArea
+                className="max-w-80"
+                counter
+                errorText="Error text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
+              <TextArea
+                className="max-w-80"
+                counter
+                defaultValue="Input text value"
+                disabled
+                helperText="Helper text"
+                label="Label"
+                placeholder="Hint text (Optional)"
+                required
+                size={size}
+              />
             </div>
           ))}
         </div>
@@ -3481,11 +3796,16 @@ function SduiTagPage({ item }: Readonly<{ item: ComponentNavItem }>) {
               <PreviewExampleHeading>{label}</PreviewExampleHeading>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
                 {tagTones.map(({ label: toneLabel, tone }) => (
-                  <div key={`${size}-${tone}`} className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm">
+                  <div
+                    key={`${size}-${tone}`}
+                    className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm"
+                  >
                     <p className="whitespace-nowrap text-body-xs text-text-meta">
                       {toneLabel}
                     </p>
-                    <Tag size={size} tone={tone}>Label</Tag>
+                    <Tag size={size} tone={tone}>
+                      Label
+                    </Tag>
                   </div>
                 ))}
               </div>
@@ -3506,7 +3826,10 @@ function SduiBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Badge examples">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
           {badgeExamples.map(({ label, tone, size, count }) => (
-            <div key={label} className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm">
+            <div
+              key={label}
+              className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm"
+            >
               <p className="whitespace-nowrap text-body-xs text-text-meta">
                 {label}
               </p>
@@ -3519,7 +3842,9 @@ function SduiBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
   );
 }
 
-function SduiInlineFeedbackPage({ item }: Readonly<{ item: ComponentNavItem }>) {
+function SduiInlineFeedbackPage({
+  item,
+}: Readonly<{ item: ComponentNavItem }>) {
   return (
     <ComponentPageShell item={item} section="SDUI Reference">
       <PreviewSection title="Demo">
@@ -3551,13 +3876,24 @@ function SduiPresenceBadgePage({ item }: Readonly<{ item: ComponentNavItem }>) {
       <PreviewSection title="Presence badge examples">
         <div className="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-md lg:max-w-2xl">
           {presenceBadgeExamples.map(({ label, size }) => (
-            <div key={size} className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm">
+            <div
+              key={size}
+              className="flex min-h-20 flex-col items-start justify-center gap-sm rounded-sm border border-border-faint bg-background px-md py-sm"
+            >
               <p className="whitespace-nowrap text-body-xs text-text-meta">
                 {label}
               </p>
               <div className="flex items-center gap-lg">
-                <PresenceBadge label={`${label} active`} presence="active" size={size} />
-                <PresenceBadge label={`${label} on mobile`} presence="mobile" size={size} />
+                <PresenceBadge
+                  label={`${label} active`}
+                  presence="active"
+                  size={size}
+                />
+                <PresenceBadge
+                  label={`${label} on mobile`}
+                  presence="mobile"
+                  size={size}
+                />
               </div>
             </div>
           ))}

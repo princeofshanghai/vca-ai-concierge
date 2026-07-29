@@ -8,6 +8,7 @@ import {
   SduiReactionIcon,
   type SduiReactionIconType,
 } from "@/components/primitives/reaction-icon";
+import { Tag, type TagTone } from "@/components/primitives/tag";
 
 type ChatCardButtonVariant = "primary" | "secondary" | "tertiary";
 type ChatCardButtonSize = "small" | "medium";
@@ -57,6 +58,8 @@ export type ProductCardProps = ChatCardShellProps & {
   type: ReactNode;
 };
 
+export type PostCardPresentation = "default" | "evidence";
+
 export type PostCardProps = ChatCardShellProps & {
   actions?: ReadonlyArray<ChatCardAction>;
   authorLogoClassName?: string;
@@ -72,7 +75,11 @@ export type PostCardProps = ChatCardShellProps & {
   reactions?: ReactNode;
   reactionTypes?: ReadonlyArray<SduiReactionIconType>;
   reposts?: ReactNode;
+  presentation?: PostCardPresentation;
   snippet: ReactNode;
+  tag?: ReactNode;
+  tagDetail?: ReactNode;
+  tagTone?: TagTone;
   timestamp?: ReactNode;
 };
 
@@ -106,10 +113,10 @@ export function ChatCardShell({
 }: ChatCardShellProps) {
   return (
     <article
-      {...props}
       data-response-block="ChatCardShell"
+      {...props}
       className={cx(
-        "chat-message-enter w-full max-w-[24rem] overflow-hidden rounded-sm border border-ai-border bg-background text-left text-text shadow-raised-faint",
+        "chat-message-enter w-[var(--response-entity-card-width,100%)] max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] overflow-hidden rounded-sm border border-ai-border bg-background text-left text-text shadow-raised-faint",
         className,
       )}
     >
@@ -284,12 +291,20 @@ export function PostCard({
   reactions,
   reactionTypes,
   reposts,
+  presentation = "default",
   snippet,
+  tag,
+  tagDetail,
+  tagTone = "default",
   timestamp,
   ...props
 }: PostCardProps) {
   return (
-    <ChatCardShell {...props} data-response-block="PostCard">
+    <ChatCardShell
+      {...props}
+      data-presentation={presentation}
+      data-response-block="PostCard"
+    >
       <div className="flex flex-col gap-[12px] px-md pt-md">
         <div className="flex min-h-12 items-start gap-sm">
           <div className="flex min-w-0 flex-1 items-start gap-sm">
@@ -315,16 +330,28 @@ export function PostCard({
               ) : null}
             </div>
           </div>
-          <Icon
-            aria-hidden="true"
-            className="text-text-meta"
-            name="overflow-web-ios"
-            size="medium"
-          />
+          {presentation === "default" ? (
+            <Icon
+              aria-hidden="true"
+              className="text-text-meta"
+              name="overflow-web-ios"
+              size="medium"
+            />
+          ) : null}
         </div>
         <p className="line-clamp-2 whitespace-pre-wrap text-body-sm text-text">
           {snippet} <span className="text-text-meta">...more</span>
         </p>
+        {tag ? (
+          <div className="flex min-w-0 flex-col items-start gap-xs">
+            <Tag className="max-w-full" size="small" tone={tagTone}>
+              {tag}
+            </Tag>
+            {tagDetail ? (
+              <p className="text-supportive-s text-text-meta">{tagDetail}</p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-[12px]">
@@ -379,7 +406,10 @@ export function JobCard({
   return (
     <ChatCardShell
       {...props}
-      className={cx("!w-[240px] min-w-[240px] max-w-[240px] shrink-0", className)}
+      className={cx(
+        "shrink-0 [--response-entity-card-rail-width:240px]",
+        className,
+      )}
       data-response-block="JobCard"
     >
       <div className="space-y-xl p-lg">

@@ -19,6 +19,7 @@ export type MetricItem = Readonly<{
 }>;
 
 export type MetricProps = HTMLAttributes<HTMLElement> & {
+  context?: ReactNode;
   title?: ReactNode;
   items: ReadonlyArray<MetricItem>;
 };
@@ -81,7 +82,7 @@ export function MetricDelta({
   return (
     <span
       className={cx(
-        "flex min-w-0 items-center gap-xxs text-body-xs",
+        "flex min-w-0 items-center gap-xxs",
         className,
       )}
     >
@@ -94,26 +95,39 @@ export function MetricDelta({
         />
       ) : null}
       {delta ? (
-        <span className={cx("font-semibold", toneClasses[tone])}>
+        <span className={cx("text-control-sm", toneClasses[tone])}>
           {delta}
         </span>
       ) : null}
       {deltaContext ? (
-        <span className="min-w-0 text-text-meta">{deltaContext}</span>
+        <span className="min-w-0 text-body-xs text-text-meta">
+          {deltaContext}
+        </span>
       ) : null}
     </span>
   );
 }
 
-export function Metric({ title, items, className, ...props }: MetricProps) {
+export function Metric({
+  context,
+  title,
+  items,
+  className,
+  ...props
+}: MetricProps) {
   return (
     <DataCardShell
       {...props}
       block="Metric"
       className={className}
     >
-      <DataCardHeader title={title} />
-      <div className={cx("divide-y divide-border-faint", title ? "mt-xl" : "")}>
+      <DataCardHeader context={context} title={title} />
+      <div
+        className={cx(
+          "divide-y divide-border-faint",
+          title || context ? "mt-xl" : "",
+        )}
+      >
         {items.map((item, index) => {
           const {
             value,
@@ -139,7 +153,7 @@ export function Metric({ title, items, className, ...props }: MetricProps) {
                 ) : null}
                 <p
                   className={cx(
-                    "text-body-sm text-text-meta",
+                    "text-body-xs text-text-meta",
                     showValue ? "mt-xxs" : "",
                   )}
                 >

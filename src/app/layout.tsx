@@ -37,6 +37,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          src="https://mcp.figma.com/mcp/html-to-design/capture.js"
+          async
+        />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

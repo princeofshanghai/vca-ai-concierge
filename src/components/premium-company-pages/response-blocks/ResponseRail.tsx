@@ -35,7 +35,7 @@ export function ResponseRail({
         </div>
       ) : null}
       <div className="-mx-sm overflow-x-auto overscroll-x-contain px-sm pb-xs [scrollbar-width:thin]">
-        <div className="flex w-max min-w-full snap-x snap-mandatory gap-md">
+        <div className="flex w-max min-w-full snap-x snap-mandatory gap-md [&>article]:!w-[var(--response-entity-card-rail-width,24rem)] [&>article]:shrink-0 [&>article]:snap-start">
           {children}
         </div>
       </div>

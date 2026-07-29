@@ -105,6 +105,7 @@ type ChatHeaderProps = HTMLAttributes<HTMLElement> & {
   title?: ReactNode;
   centerContent?: ReactNode;
   actionSize?: GhostIconButtonSize;
+  actionGap?: "none" | "small";
   backLabel?: string;
   backIcon?: IconName;
   backIconSize?: IconSize;
@@ -857,6 +858,7 @@ export function ChatHeader({
   title,
   centerContent,
   actionSize = "medium",
+  actionGap = "none",
   className,
   backLabel = "Back",
   backIcon = "arrow-left",
@@ -995,7 +997,12 @@ export function ChatHeader({
       ) : (
         <span aria-hidden="true" />
       )}
-      <div className="flex items-center gap-0">
+      <div
+        className={cx(
+          "flex items-center",
+          actionGap === "small" ? "gap-xs" : "gap-0",
+        )}
+      >
         {dockActionPosition === "before-variant" ? dockAction : null}
         {variantAction}
         {startNewChatAction}
@@ -2247,7 +2254,7 @@ export function ChatComposer({
                           icon="arrow-up"
                           size="small"
                           touchTarget={false}
-                          disabled={isSendDisabled}
+                          disabled={!canSend}
                           loading={sendLoading}
                           onClick={onSend}
                         />

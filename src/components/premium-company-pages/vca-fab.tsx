@@ -140,7 +140,14 @@ function AdminVcaFabMark({
   tone: VcaFabAdminTone;
 }>) {
   if (tone === "gold") {
-    return <PcpAdminGoldAiMark selected={selected} />;
+    return (
+      <Icon
+        aria-hidden="true"
+        className="text-premium-inbug"
+        name="signal-ai"
+        size="medium"
+      />
+    );
   }
 
   return (

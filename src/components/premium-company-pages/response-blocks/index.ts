@@ -68,6 +68,8 @@ export { PersonCard } from "./PersonCard";
 export type { PersonCardProps } from "./PersonCard";
 export { ResponseRail } from "./ResponseRail";
 export type { ResponseRailProps } from "./ResponseRail";
+export { Sources } from "./Sources";
+export type { ResponseSource, SourcesProps } from "./Sources";
 export { StreamingText, Text } from "./Text";
 export { TextRecommendationList } from "./Text";
 export type {

@@ -67,7 +67,7 @@ export function DataCardHeader({
     <header className={cx("min-w-0", className)}>
       {title ? <h3 className="text-control-md text-text">{title}</h3> : null}
       {context ? (
-        <p className="mt-xxs text-body-sm text-text-meta">{context}</p>
+        <p className="mt-xxs text-supportive-s text-text-meta">{context}</p>
       ) : null}
     </header>
   );

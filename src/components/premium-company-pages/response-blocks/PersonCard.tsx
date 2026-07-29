@@ -10,6 +10,7 @@ export type PersonCardProps = Omit<HTMLAttributes<HTMLElement>, "title"> & {
   actionLabel?: ReactNode;
   actionTrailingIcon?: IconName | null;
   avatarSrc?: string;
+  detail?: ReactNode;
   followers?: ReactNode;
   headline: ReactNode;
   name: ReactNode;
@@ -28,6 +29,7 @@ export function PersonCard({
   actionTrailingIcon,
   avatarSrc,
   className,
+  detail,
   followers,
   headline,
   name,
@@ -50,7 +52,7 @@ export function PersonCard({
       {...props}
       data-response-block="PersonCard"
       className={cx(
-        "flex w-[200px] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint",
+        "flex w-[var(--response-entity-card-width,100%)] max-w-[min(100%,var(--design-layout-chat-message-assistant-max))] shrink-0 snap-start flex-col items-center rounded-md border border-ai-border bg-background p-lg text-center text-text shadow-raised-faint [--response-entity-card-rail-width:200px]",
         className,
       )}
     >
@@ -62,6 +64,11 @@ export function PersonCard({
         <p className="mt-xxs line-clamp-3 text-body-xs text-text-meta">
           {headline}
         </p>
+        {detail ? (
+          <p className="mt-sm line-clamp-3 text-body-xs text-text-meta">
+            {detail}
+          </p>
+        ) : null}
         {followers ? (
           <p className="mt-sm text-body-xs text-text-meta">{followers}</p>
         ) : null}

@@ -58,6 +58,9 @@ import {
   type AssistantColorOption,
   type SettingsRowData,
 } from "./premium-company-pages-admin-data";
+import { pcpAdminContentPerformanceFixture } from "./premium-company-pages-admin-content-fixture";
+import { pcpAdminCompetitorAnalyticsFixture } from "./premium-company-pages-admin-competitor-fixture";
+import { pcpAdminVisitorAnalyticsFixture } from "./premium-company-pages-admin-visitor-fixture";
 import { GlobalInboxTray } from "./global-inbox-tray";
 import {
   InsightCard,
@@ -123,16 +126,26 @@ type AnalyticsHighlightData = Readonly<{
   delta: string;
 }>;
 
-type ContentEngagementRowData = Readonly<{
+type PostPerformanceRowData = Readonly<{
   title: string;
   postedBy: string;
   date: string;
-  boostEstimate?: string;
+  thumbnailSrc?: string;
+  thumbnailAlt?: string;
+  postType: string;
+  audience: string;
+  impressions: string;
+  views: string;
+  pageViewers: string;
+  followersGained: string;
+  linkClicks: string;
+  ctr: string;
   reactions: string;
   comments: string;
   reposts: string;
-  follows: string;
+  profileViewers: string;
   engagementRate: string;
+  isTopEngagement?: boolean;
 }>;
 
 type AnalyticsInsightCardData = Readonly<{
@@ -265,10 +278,7 @@ type RecentPostData =
   | RecentKudosPostData
   | RecentVideoPostData;
 
-type PremiumCompanyPagesAdminStory =
-  | "current-state"
-  | "current"
-  | "old";
+type PremiumCompanyPagesAdminStory = "current-state" | "current" | "old";
 
 type AnalyticsContextualPrompt =
   | Readonly<{
@@ -328,10 +338,12 @@ const performanceCards: Array<PerformanceCardData> = [
   },
   {
     title: "Post impressions",
-    value: "38.4K",
-    delta: "15%",
+    value:
+      pcpAdminContentPerformanceFixture.last7Days.impressions.valueLabel,
+    delta:
+      pcpAdminContentPerformanceFixture.last7Days.impressions.deltaLabel,
     deltaMeta: "last 7 days",
-    deltaTone: "positive",
+    deltaTone: "negative",
   },
   {
     title: "Visitors from audiences",
@@ -356,9 +368,11 @@ const currentStandardPerformanceCards: ReadonlyArray<PerformanceCardData> = [
   },
   {
     title: "Post impressions",
-    value: "38.4K",
-    delta: "15%",
-    deltaTone: "positive",
+    value:
+      pcpAdminContentPerformanceFixture.last7Days.impressions.valueLabel,
+    delta:
+      pcpAdminContentPerformanceFixture.last7Days.impressions.deltaLabel,
+    deltaTone: "negative",
   },
   {
     title: "Page visitors",
@@ -522,10 +536,12 @@ const inboxThreads: ReadonlyArray<InboxThreadData> = [
   },
 ];
 
-const analyticsTabs: ReadonlyArray<Readonly<{
-  id: AnalyticsTabId;
-  label: string;
-}>> = [
+const analyticsTabs: ReadonlyArray<
+  Readonly<{
+    id: AnalyticsTabId;
+    label: string;
+  }>
+> = [
   { id: "content", label: "Content" },
   { id: "visitors", label: "Visitors" },
   { id: "followers", label: "Followers" },
@@ -539,55 +555,48 @@ const analyticsHighlights: ReadonlyArray<AnalyticsHighlightData> = [
   {
     label: "Impressions",
     tone: "negative",
-    value: "64,800",
-    delta: "18.4%",
+    value:
+      pcpAdminContentPerformanceFixture.last30Days.impressions.valueLabel,
+    delta:
+      pcpAdminContentPerformanceFixture.last30Days.impressions.deltaLabel,
   },
   {
     label: "Reactions",
-    value: "3,420",
-    delta: "12.7%",
+    value:
+      pcpAdminContentPerformanceFixture.last30Days.reactions.valueLabel,
+    delta:
+      pcpAdminContentPerformanceFixture.last30Days.reactions.deltaLabel,
   },
   {
     label: "Comments",
-    value: "640",
-    delta: "9.3%",
+    value: pcpAdminContentPerformanceFixture.last30Days.comments.valueLabel,
+    delta: pcpAdminContentPerformanceFixture.last30Days.comments.deltaLabel,
   },
   {
     label: "Reposts",
-    value: "216",
-    delta: "15.6%",
+    value: pcpAdminContentPerformanceFixture.last30Days.reposts.valueLabel,
+    delta: pcpAdminContentPerformanceFixture.last30Days.reposts.deltaLabel,
   },
 ];
 
-const VISITOR_ANALYTICS_DATE_RANGE = "May 11, 2026 - Jun 9, 2026";
+const VISITOR_ANALYTICS_DATE_RANGE =
+  pcpAdminVisitorAnalyticsFixture.dateRange;
 
-const visitorHighlights: ReadonlyArray<VisitorHighlightData> = [
-  {
-    label: "Page views",
-    value: "8,740",
-    delta: "28%",
-    tone: "positive",
-  },
-  {
-    label: "Unique visitors",
-    value: "3,180",
-    delta: "20.2%",
-    tone: "negative",
-  },
-  {
-    label: "Custom button clicks",
-    value: "126",
-    delta: "33%",
-    tone: "negative",
-  },
-];
+const visitorHighlights: ReadonlyArray<VisitorHighlightData> = Object.values(
+  pcpAdminVisitorAnalyticsFixture.highlights,
+).map(({ deltaLabel, label, tone, valueLabel }) => ({
+  delta: deltaLabel,
+  label,
+  tone,
+  value: valueLabel,
+}));
 
 const visitorProfiles: ReadonlyArray<VisitorProfileData> = [
   {
     name: pcpVisitorPersona.name,
     headline: `${pcpVisitorPersona.title} at ${pcpVisitorPersona.company}`,
     location: "United States",
-    detail: "Works in Human Resources industry",
+    detail: "Industry: Retail",
     shown: "Shown just now",
     avatar: pcpVisitorPersona.avatar,
   },
@@ -595,128 +604,95 @@ const visitorProfiles: ReadonlyArray<VisitorProfileData> = [
     name: "Priya Shah",
     headline: "Director of Benefits at Calico Health Network",
     location: "United States",
-    detail: "Works in Healthcare industry",
+    detail: "Industry: Hospitals and Health Care",
     shown: "Shown 2 days ago",
     avatar: "avatar-3.png",
   },
   {
-    name: "Dana Kim",
-    headline: "VP of People Operations at Arbor Retail Group",
+    name: "Morgan Lee",
+    headline: "Director of Human Resources at Northstar Labs",
     location: "United States",
-    detail: "Works in Retail industry",
+    detail: "Industry: Technology, Information and Internet",
     shown: "Shown 4 days ago",
-    avatar: "avatar-2.png",
+    avatar: "avatar-1.png",
   },
 ];
 
-const visitorDemographics: ReadonlyArray<VisitorDemographicRowData> = [
-  {
-    label: "Human Resources",
-    count: "1,323",
-    percentage: "41.6",
-    barPercent: 100,
-  },
-  {
-    label: "Operations",
-    count: "684",
-    percentage: "21.5",
-    barPercent: 52,
-  },
-  {
-    label: "Information Technology",
-    count: "175",
-    percentage: "5.5",
-    barPercent: 13,
-  },
-  {
-    label: "Product Management",
-    count: "143",
-    percentage: "4.5",
-    barPercent: 11,
-  },
-  {
-    label: "Business Development",
-    count: "124",
-    percentage: "3.9",
-    barPercent: 9,
-  },
-  {
-    label: "Marketing",
-    count: "118",
-    percentage: "3.7",
-    barPercent: 9,
-  },
-];
+const visitorDemographics: ReadonlyArray<VisitorDemographicRowData> =
+  pcpAdminVisitorAnalyticsFixture.industryDemographics.map(
+    ({ barPercent, countLabel, label, percentage }) => ({
+      barPercent,
+      count: countLabel,
+      label,
+      percentage: String(percentage),
+    }),
+  );
 
-const COMPETITOR_ANALYTICS_DATE_RANGE = "May 11, 2026 - Jun 9, 2026";
+const COMPETITOR_ANALYTICS_DATE_RANGE =
+  pcpAdminCompetitorAnalyticsFixture.dateRange;
 
 const competitorHighlights: ReadonlyArray<CompetitorHighlightData> = [
   {
     label: "Comments on posts",
-    value: "640",
+    value:
+      pcpAdminCompetitorAnalyticsFixture.velora.comments.valueLabel,
     delta: "61%",
     tone: "negative",
     context: "vs competitors",
   },
   {
     label: "New followers",
-    value: "420",
+    value:
+      pcpAdminCompetitorAnalyticsFixture.velora.newFollowers.valueLabel,
     delta: "67%",
     tone: "negative",
     context: "vs competitors",
   },
 ];
 
-const competitorGrowthRows: ReadonlyArray<CompetitorGrowthRowData> = [
-  {
-    rank: 1,
-    company: pcpCompetitorNames[0],
-    followers: "128K followers",
-    newFollowers: { value: "1,280", delta: "24%", tone: "positive" },
-    posts: { value: "22", delta: "83.3%", tone: "positive" },
-    comments: { value: "4,850", delta: "18.7%", tone: "positive" },
-    commentsPerDay: { value: "162", delta: "63.6%", tone: "positive" },
-    reactions: { value: "42.8K", delta: "32.4%", tone: "positive" },
-  },
-  {
-    rank: 2,
-    company: pcpCompetitorNames[1],
-    followers: "104K followers",
-    newFollowers: { value: "940", delta: "12.5%", tone: "positive" },
-    posts: { value: "18", delta: "50%", tone: "positive" },
-    comments: { value: "3,620", delta: "6.8%", tone: "positive" },
-    commentsPerDay: { value: "121", delta: "27.3%", tone: "positive" },
-    reactions: { value: "31.6K", delta: "18.6%", tone: "positive" },
-  },
-  {
-    rank: 3,
-    company: pcpCompetitorNames[2],
-    followers: "91K followers",
-    newFollowers: { value: "610", delta: "7.3%", tone: "positive" },
-    posts: { value: "15", delta: "25%", tone: "positive" },
-    comments: { value: "1,980", delta: "28.8%", tone: "negative" },
-    commentsPerDay: { value: "66", delta: "36.4%", tone: "negative" },
-    reactions: { value: "18.4K", delta: "9.2%", tone: "positive" },
-  },
-  {
-    rank: 4,
-    company: pcpCompanyProfile.name,
-    followers: pcpCompanyProfile.followers,
-    isYou: true,
-    newFollowers: { value: "420", delta: "64.6%", tone: "negative" },
-    posts: { value: "12", delta: "45.5%", tone: "negative" },
-    comments: { value: "640", delta: "73.3%", tone: "negative" },
-    commentsPerDay: { value: "21", delta: "38.9%", tone: "negative" },
-    reactions: { value: "9.2K", delta: "73%", tone: "negative" },
-  },
-];
+const competitorGrowthRows: ReadonlyArray<CompetitorGrowthRowData> =
+  pcpAdminCompetitorAnalyticsFixture.rows.map((row, index) => {
+    const commentsPerDay =
+      pcpAdminCompetitorAnalyticsFixture.commentsPerDay[index];
+
+    return {
+      rank: row.rank,
+      company: row.company,
+      followers: row.followersLabel,
+      isYou: row.isYou,
+      newFollowers: {
+        value: row.newFollowers.valueLabel,
+        delta: row.newFollowers.deltaLabel,
+        tone: row.newFollowers.tone,
+      },
+      posts: {
+        value: row.posts.valueLabel,
+        delta: row.posts.deltaLabel,
+        tone: row.posts.tone,
+      },
+      comments: {
+        value: row.comments.valueLabel,
+        delta: row.comments.deltaLabel,
+        tone: row.comments.tone,
+      },
+      commentsPerDay: {
+        value: commentsPerDay.valueLabel,
+        delta: commentsPerDay.deltaLabel,
+        tone: commentsPerDay.tone,
+      },
+      reactions: {
+        value: row.reactions.valueLabel,
+        delta: row.reactions.deltaLabel,
+        tone: row.reactions.tone,
+      },
+    };
+  });
 
 const competitorPosts: ReadonlyArray<CompetitorPostData> = [
   {
     company: pcpCompetitorNames[0],
     timestamp: "posted this - 1w",
-    body:
-      "Open enrollment gets easier when carrier file readiness, eligibility cleanup, and employee communications are checked before October.",
+    body: "Open enrollment gets easier when carrier file readiness, eligibility cleanup, and employee communications are checked before October.",
     title: "5 things benefits teams should lock down before enrollment opens",
     meta: "Checklist - 8 min read",
     image: "member/post-image-2.png",
@@ -727,8 +703,7 @@ const competitorPosts: ReadonlyArray<CompetitorPostData> = [
   {
     company: pcpCompetitorNames[1],
     timestamp: "posted this - 2w",
-    body:
-      "Benefits teams do not need another tracker. They need one place to see which carrier files are ready, blocked, or waiting on follow-up.",
+    body: "Benefits teams do not need another tracker. They need one place to see which carrier files are ready, blocked, or waiting on follow-up.",
     title: "Carrier readiness scorecard for distributed HR teams",
     meta: "Document - 6 pages",
     image: "feed-post-content.png",
@@ -739,8 +714,7 @@ const competitorPosts: ReadonlyArray<CompetitorPostData> = [
   {
     company: pcpCompetitorNames[2],
     timestamp: "posted this - 3w",
-    body:
-      "Seasonal worker enrollment windows can break when eligibility rules live outside the benefits operations workflow.",
+    body: "Seasonal worker enrollment windows can break when eligibility rules live outside the benefits operations workflow.",
     title: "How people teams support seasonal enrollment without spreadsheets",
     meta: "Case study - 5 min read",
     image: "member/post-image-1.png",
@@ -774,48 +748,152 @@ const competitiveTips: ReadonlyArray<CompetitiveTipData> = [
   },
 ];
 
-const contentEngagementRows: ReadonlyArray<ContentEngagementRowData> = [
+function formatPostCtr(clicks: number, impressions: number) {
+  return `${((clicks / impressions) * 100).toFixed(1)}%`;
+}
+
+const postPerformanceRows: ReadonlyArray<PostPerformanceRowData> = [
   {
     title: "How Arbor prepared 12,000 employees for open enrollment",
     postedBy: pcpAdminPersona.name,
     date: "6/8/2026",
-    boostEstimate: "Get up to 120,000 more impressions by boosting this post.",
-    reactions: "1,240",
-    comments: "146",
-    reposts: "64",
-    follows: "118",
-    engagementRate: "8.2%",
+    thumbnailSrc: assetSrc("member/arbor-open-enrollment-post.png"),
+    thumbnailAlt: "Open enrollment customer story",
+    postType: "Article",
+    audience: "All followers",
+    impressions:
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+        .impressionsLabel,
+    views: "12.2K",
+    pageViewers: "8.9K",
+    followersGained: "118",
+    linkClicks: String(
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.clicks,
+    ),
+    ctr: formatPostCtr(
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.clicks,
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.impressions,
+    ),
+    reactions: pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+      .reactions.toLocaleString("en-US"),
+    comments: String(
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.comments,
+    ),
+    reposts: String(
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment.reposts,
+    ),
+    profileViewers: "84",
+    engagementRate:
+      pcpAdminContentPerformanceFixture.posts.arborOpenEnrollment
+        .engagementRateLabel,
+    isTopEngagement: true,
   },
   {
     title: "Carrier file readiness checklist for enterprise benefits teams",
     postedBy: "Velora",
     date: "6/6/2026",
-    reactions: "980",
-    comments: "112",
-    reposts: "46",
-    follows: "94",
-    engagementRate: "7.1%",
-  },
-  {
-    title: "What breaks first when benefits teams migrate mid-year?",
-    postedBy: pcpAdminPersona.name,
-    date: "6/3/2026",
-    boostEstimate: "Get up to 84,000 more impressions by boosting this post.",
-    reactions: "720",
-    comments: "84",
-    reposts: "31",
-    follows: "58",
-    engagementRate: "6.3%",
+    thumbnailSrc: assetSrc(
+      "member/open-enrollment-readiness-checklist.png",
+    ),
+    thumbnailAlt: "Open enrollment readiness checklist",
+    postType: "Document",
+    audience: "Targeted",
+    impressions:
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness.impressionsLabel,
+    views: "9.6K",
+    pageViewers: "7.1K",
+    followersGained: "94",
+    linkClicks: String(
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness.clicks,
+    ),
+    ctr: formatPostCtr(
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness.clicks,
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness.impressions,
+    ),
+    reactions: pcpAdminContentPerformanceFixture.posts.carrierReadiness
+      .reactions.toLocaleString("en-US"),
+    comments: String(
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness.comments,
+    ),
+    reposts: String(
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness.reposts,
+    ),
+    profileViewers: "61",
+    engagementRate:
+      pcpAdminContentPerformanceFixture.posts.carrierReadiness
+        .engagementRateLabel,
   },
   {
     title: "Eligibility cleanup should not require five spreadsheets",
     postedBy: "Velora",
     date: "5/30/2026",
-    reactions: "540",
-    comments: "62",
-    reposts: "24",
-    follows: "42",
-    engagementRate: "5.2%",
+    postType: "Text",
+    audience: "All followers",
+    impressions:
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .impressionsLabel,
+    views: "8.0K",
+    pageViewers: "6.2K",
+    followersGained: "42",
+    linkClicks: String(
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .clicks,
+    ),
+    ctr: formatPostCtr(
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .clicks,
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .impressions,
+    ),
+    reactions:
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup.reactions.toLocaleString(
+        "en-US",
+      ),
+    comments: String(
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .comments,
+    ),
+    reposts: String(
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .reposts,
+    ),
+    profileViewers: "32",
+    engagementRate:
+      pcpAdminContentPerformanceFixture.historicalPosts.eligibilityCleanup
+        .engagementRateLabel,
+  },
+  {
+    title: "What breaks first when benefits teams migrate mid-year?",
+    postedBy: pcpAdminPersona.name,
+    date: "6/3/2026",
+    thumbnailSrc: assetSrc("recent-post-checklist.png"),
+    thumbnailAlt: "Benefits migration readiness checklist",
+    postType: "Text",
+    audience: "All followers",
+    impressions:
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.impressionsLabel,
+    views: "6.9K",
+    pageViewers: "5.2K",
+    followersGained: "58",
+    linkClicks: String(
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.clicks,
+    ),
+    ctr: formatPostCtr(
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.clicks,
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.impressions,
+    ),
+    reactions: pcpAdminContentPerformanceFixture.posts.midYearMigration
+      .reactions.toLocaleString("en-US"),
+    comments: String(
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.comments,
+    ),
+    reposts: String(
+      pcpAdminContentPerformanceFixture.posts.midYearMigration.reposts,
+    ),
+    profileViewers: "47",
+    engagementRate:
+      pcpAdminContentPerformanceFixture.posts.midYearMigration
+        .engagementRateLabel,
   },
 ];
 
@@ -859,30 +937,40 @@ const contentAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
   },
 ];
 
-const competitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> = [
-  {
-    dismissLabel: "Dismiss competitor growth insight",
-    evidence: "1,280 new followers this month vs. Velora's 420.",
-    headline: `${pcpCompetitorNames[0]} is pulling ahead in follower growth`,
-    insightId: "competitor-growth",
-    question: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
-    type: "competitive",
-    visual: {
-      kind: "company-logo",
-      label: pcpCompetitorNames[0],
+const competitorAnalyticsInsightCards: ReadonlyArray<AnalyticsInsightCardData> =
+  [
+    {
+      dismissLabel: "Dismiss competitor growth insight",
+      evidence: "1,280 new followers this month vs. Velora's 420.",
+      headline: `${pcpCompetitorNames[0]} is pulling ahead in follower growth`,
+      insightId: "competitor-growth",
+      question: `Why is ${pcpCompetitorNames[0]} gaining followers faster than us?`,
+      type: "competitive",
+      visual: {
+        kind: "company-logo",
+        label: pcpCompetitorNames[0],
+      },
     },
-  },
-];
+  ];
 
 const wipContentPromptRows: ReadonlyArray<AnalyticsContextualPrompt> = [
   {
-    label: "What should I post next?",
+    label: "Which content is working best?",
     type: "self-initiated",
-    view: "next-focus",
+    view: "content-performance",
   },
 ];
 
-const wipContentHighlightsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
+const wipVisitorHighlightsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
+  [
+    {
+      label: "Why are Page views up but unique visitors down?",
+      type: "self-initiated",
+      view: "visitor-activity",
+    },
+  ];
+
+const dashboardPerformancePromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
   [
     {
       label: "Why are post impressions down?",
@@ -891,51 +979,11 @@ const wipContentHighlightsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
     },
   ];
 
-const wipVisitorHighlightsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
-  [
-    {
-      label: "How can I get more custom button clicks?",
-      type: "self-initiated",
-      view: "custom-button-clicks",
-    },
-  ];
-
-const wipVisitorDemographicsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
-  [
-    {
-      label: "How can I reach more visitors like this?",
-      type: "self-initiated",
-      view: "visitor-audience",
-    },
-  ];
-
-const dashboardVisitorPromptRows: ReadonlyArray<AnalyticsContextualPrompt> = [
-  {
-    label: "Which visitors look most relevant?",
-    type: "self-initiated",
-    view: "relevant-visitors",
-  },
-  {
-    label: "What kinds of visitors am I attracting?",
-    type: "self-initiated",
-    view: "visitor-audience",
-  },
-];
-
-const wipCompetitorGrowthPromptRows: ReadonlyArray<AnalyticsContextualPrompt> =
-  [
-    {
-      insightId: "competitor-growth",
-      label: "Why are competitors gaining followers faster?",
-      type: "insight",
-    },
-  ];
-
 const wipCompetitorPostsPromptRows: ReadonlyArray<AnalyticsContextualPrompt> = [
   {
-    label: "What should I post next?",
+    label: "What do trending competitor posts have in common?",
     type: "self-initiated",
-    view: "next-focus",
+    view: "competitor-content-pattern",
   },
 ];
 
@@ -1028,9 +1076,8 @@ function ContextualAiPromptRow({
         {prompts.map((prompt) => (
           <Prompt
             className={cx(
-              "md:max-w-none",
-              presentation === "dashboard" &&
-                "min-h-[56px] !rounded-sm !p-lg",
+              "!rounded-sm md:max-w-none",
+              presentation === "dashboard" && "min-h-[56px] !p-lg",
             )}
             key={prompt.label}
             onPromptSelect={handlePromptSelect}
@@ -1043,14 +1090,7 @@ function ContextualAiPromptRow({
                 name="signal-ai"
                 size="small"
               />
-              <span
-                className={cx(
-                  "min-w-0",
-                  presentation === "dashboard"
-                    ? "font-normal"
-                    : "font-semibold",
-                )}
-              >
+              <span className="min-w-0 font-normal">
                 {prompt.label}
               </span>
             </span>
@@ -1118,10 +1158,7 @@ function CompanyPremiumBug() {
 
 function NewFeatureTag() {
   return (
-    <Tag
-      className="!bg-ai-background-soft !text-action"
-      size="small"
-    >
+    <Tag className="!bg-ai-background-soft !text-action" size="small">
       New
     </Tag>
   );
@@ -1129,10 +1166,7 @@ function NewFeatureTag() {
 
 function InlineAction({ children }: Readonly<{ children: string }>) {
   return (
-    <button
-      className="font-semibold text-action hover:underline"
-      type="button"
-    >
+    <button className="font-semibold text-action hover:underline" type="button">
       {children}
     </button>
   );
@@ -1311,7 +1345,7 @@ function PageRail({
 
 function AvatarPile() {
   return (
-    <div className="flex items-center">
+    <div className="flex h-[var(--design-typography-heading-xl-line-height)] items-center">
       {["avatar-2.png", "avatar-1.png", "avatar-3.png"].map((avatar, index) => (
         <Entity
           key={avatar}
@@ -1322,10 +1356,10 @@ function AvatarPile() {
           label=""
           size={32}
           src={`${ASSET_ROOT}/${avatar}`}
-          style={{ zIndex: index + 1 }}
+          style={{ height: 28, width: 28, zIndex: index + 1 }}
         />
       ))}
-      <span className="relative z-10 -ml-sm inline-flex size-8 items-center justify-center rounded-round border border-border-faint bg-background text-supportive-s text-text-meta">
+      <span className="relative z-10 -ml-sm inline-flex size-7 items-center justify-center rounded-round border border-border-faint bg-background text-supportive-s text-text-meta">
         +99
       </span>
     </div>
@@ -1348,7 +1382,10 @@ function PerformanceCard({
         <p className="text-heading-xl tracking-normal text-text">{value}</p>
       ) : null}
       <h3
-        className={cx("text-control-sm text-action", value ? "mt-xxs" : "mt-xs")}
+        className={cx(
+          "text-control-sm text-action",
+          value ? "mt-xxs" : "mt-xs",
+        )}
       >
         {title}
       </h3>
@@ -1389,22 +1426,24 @@ function GroupedPerformanceMetric({
   delta,
   deltaTone,
 }: PerformanceCardData) {
+  const isVisitorMetric = title === "Who visited your Page";
+
   return (
     <article className="min-w-0">
-      {title === "Who visited your Page" ? <AvatarPile /> : null}
+      {isVisitorMetric ? <AvatarPile /> : null}
       {value ? (
-        <div className="flex min-w-0 flex-wrap items-end gap-sm">
+        <div className="flex min-w-0 flex-wrap items-end gap-xs">
           <p className="text-heading-xl tracking-normal text-text">{value}</p>
           {delta ? (
             <span
               className={cx(
-                "inline-flex items-center gap-[1px] text-control-sm",
+                "inline-flex items-center gap-[1px] pb-xxs text-supportive-s-strong",
                 deltaTone === "positive" ? "text-positive" : "text-negative",
               )}
             >
               <Icon
                 aria-hidden="true"
-                className="shrink-0"
+                className="shrink-0 scale-125"
                 name={deltaTone === "positive" ? "caret-up" : "caret-down"}
                 size="small"
               />
@@ -1416,7 +1455,7 @@ function GroupedPerformanceMetric({
       <h3
         className={cx(
           "text-control-sm text-action",
-          value ? "mt-xs" : "mt-md",
+          value || isVisitorMetric ? "mt-xs" : "mt-md",
         )}
       >
         {title}
@@ -1433,9 +1472,9 @@ function GroupedPerformanceMetrics({
   premium?: boolean;
 }>) {
   return (
-    <section className="rounded-sm border border-border-faint bg-background px-xl py-xxl">
+    <section className="rounded-sm border border-border-faint bg-background px-xl py-xl">
       {premium ? (
-        <div className="flex items-center gap-sm text-body-md text-text-meta">
+        <div className="flex items-center gap-xs text-body-md text-text-meta">
           <PremiumChipSmall />
           <span>Exclusive Premium insights</span>
         </div>
@@ -1443,7 +1482,7 @@ function GroupedPerformanceMetrics({
       <div
         className={cx(
           "grid gap-x-xl gap-y-xxl sm:grid-cols-2 xl:grid-cols-4",
-          premium && "mt-xxl",
+          premium && "mt-xl",
         )}
       >
         {items.map((item) => (
@@ -1461,6 +1500,7 @@ function CarouselControls({
   onNext,
   onPrevious,
   previousLabel,
+  spacing = "default",
 }: Readonly<{
   canGoNext?: boolean;
   canGoPrevious?: boolean;
@@ -1468,9 +1508,10 @@ function CarouselControls({
   onNext?: () => void;
   onPrevious?: () => void;
   previousLabel: string;
+  spacing?: "default" | "wide";
 }>) {
   return (
-    <div className="flex gap-xs">
+    <div className={cx("flex", spacing === "wide" ? "gap-md" : "gap-xs")}>
       <ButtonIcon
         disabled={!canGoPrevious}
         icon="chevron-left"
@@ -1546,16 +1587,16 @@ function ReactionSummary({
 function RecentPostBoostHeader({ metric }: Readonly<{ metric: string }>) {
   return (
     <div
-      className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-md border-b border-border-faint px-md py-sm"
+      className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-md border-b border-border-faint px-lg py-sm"
       style={{
         backgroundColor:
           "var(--figma-color-container-color-background-container-tint, #F9FAFB)",
       }}
     >
-      <span className="inline-flex min-w-0 items-start gap-xs text-supportive-s-strong text-text">
-        <span className="line-clamp-2 min-w-0">{metric}</span>
+      <span className="line-clamp-2 min-w-0 text-supportive-s-strong text-text">
+        {metric}
         <Icon
-          className="mt-xxs shrink-0 text-text-meta"
+          className="ml-xs align-middle text-text-meta"
           name="question"
           size="small"
         />
@@ -1608,14 +1649,16 @@ function RecentPostBody({ body }: Readonly<{ body: string }>) {
   );
 }
 
-function RecentImagePostContent({ post }: Readonly<{ post: RecentImagePostData }>) {
+function RecentImagePostContent({
+  post,
+}: Readonly<{ post: RecentImagePostData }>) {
   const hasLinkPreview = Boolean(post.linkTitle);
 
   return (
     <>
       <div
         className={cx(
-          "-mx-md mt-sm w-[calc(100%_+_(var(--spacing-md)_*_2))] shrink-0 overflow-hidden",
+          "-mx-lg mt-sm w-[calc(100%_+_(var(--spacing-lg)_*_2))] shrink-0 overflow-hidden",
           hasLinkPreview ? "h-[220px]" : "h-[270px]",
         )}
       >
@@ -1628,7 +1671,7 @@ function RecentImagePostContent({ post }: Readonly<{ post: RecentImagePostData }
         />
       </div>
       {post.linkTitle ? (
-        <div className="-mx-md min-h-[52px] w-[calc(100%_+_(var(--spacing-md)_*_2))] bg-background-neutral-soft px-md py-sm">
+        <div className="-mx-lg min-h-[52px] w-[calc(100%_+_(var(--spacing-lg)_*_2))] bg-background-neutral-soft px-lg py-sm">
           <p className="text-control-sm text-text">{post.linkTitle}</p>
           {post.linkMeta ? (
             <p className="text-body-xs text-text-meta">{post.linkMeta}</p>
@@ -1644,7 +1687,7 @@ function RecentKudosPostContent({
 }: Readonly<{ post: RecentKudosPostData }>) {
   return (
     <>
-      <div className="-mx-md mt-sm flex h-[270px] w-[calc(100%_+_(var(--spacing-md)_*_2))] shrink-0 flex-col items-center overflow-hidden bg-background pb-md text-center">
+      <div className="-mx-lg mt-sm flex h-[270px] w-[calc(100%_+_(var(--spacing-lg)_*_2))] shrink-0 flex-col items-center overflow-hidden bg-background pb-md text-center">
         <Image
           alt={post.illustrationAlt}
           className="h-[186px] w-full object-cover"
@@ -1705,10 +1748,12 @@ function RecentVideoPostContent({
   );
 }
 
-function RecentEmptyPostCard({ post }: Readonly<{ post: RecentEmptyPostData }>) {
+function RecentEmptyPostCard({
+  post,
+}: Readonly<{ post: RecentEmptyPostData }>) {
   return (
     <article
-      className="flex h-[492px] w-[365px] shrink-0 snap-start flex-col justify-between rounded-sm border border-border-faint bg-background p-md"
+      className="flex h-[492px] w-[365px] shrink-0 snap-start flex-col justify-between rounded-sm border border-border-faint bg-background p-lg"
       data-recent-post-card
     >
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-md text-center">
@@ -1747,7 +1792,7 @@ function PostCard({ post }: Readonly<{ post: RecentPostData }>) {
       data-recent-post-card
     >
       <RecentPostBoostHeader metric={post.metric} />
-      <div className="flex min-h-0 flex-1 flex-col px-md py-md">
+      <div className="flex min-h-0 flex-1 flex-col px-lg py-md">
         <RecentPostAuthor timestamp={post.timestamp} />
         <RecentPostBody body={post.body} />
         {post.kind === "image" ? <RecentImagePostContent post={post} /> : null}
@@ -1866,9 +1911,7 @@ function InboxProfileHeader() {
       />
       <div>
         <h2 className="text-heading-lg text-text">{vcaLeadBrief.buyer}</h2>
-        <p className="text-body-md text-text">
-          {vcaLeadBrief.role}
-        </p>
+        <p className="text-body-md text-text">{vcaLeadBrief.role}</p>
         <p className="mt-xs text-body-md text-text-meta">
           Velora Page post follow-up
         </p>
@@ -1882,9 +1925,7 @@ function TodayDivider() {
   return (
     <div className="flex items-center gap-lg py-md">
       <span className="h-px flex-1 bg-border-faint" />
-      <span className="text-label-xs uppercase text-text-meta">
-        Today
-      </span>
+      <span className="text-label-xs uppercase text-text-meta">Today</span>
       <span className="h-px flex-1 bg-border-faint" />
     </div>
   );
@@ -1896,10 +1937,13 @@ function VcaInboxContextStrip() {
       <div className="flex items-start justify-between gap-md">
         <div className="min-w-0">
           <div className="flex items-center gap-sm">
-            <Icon className="shrink-0 text-ai-icon" name="signal-ai" size="medium" />
+            <Icon
+              className="shrink-0 text-ai-icon"
+              name="signal-ai"
+              size="medium"
+            />
             <h3 className="min-w-0 text-[16px] font-semibold leading-6 text-text">
-              Cheri is a{" "}
-              <span className="text-action">high-intent lead</span>
+              Cheri is a <span className="text-action">high-intent lead</span>
             </h3>
           </div>
           <p className="mt-md text-[14px] font-normal leading-5 text-text">
@@ -2541,8 +2585,9 @@ function AiAssistantSettingsPlaceholderContent() {
   const [connectedCalendars, setConnectedCalendars] = useState<
     ReadonlySet<AssistantCalendarProvider>
   >(new Set());
-  const [visitorSelectedColor, setVisitorSelectedColor] =
-    useState(assistantDefaultColor);
+  const [visitorSelectedColor, setVisitorSelectedColor] = useState(
+    assistantDefaultColor,
+  );
 
   function handleAssistantInstructionsChange(
     event: ChangeEvent<HTMLTextAreaElement>,
@@ -2681,10 +2726,7 @@ function DashboardContent({
   const performanceCardPageCount = Math.ceil(
     performanceCards.length / PERFORMANCE_CARDS_VISIBLE_COUNT,
   );
-  const maxPerformanceCardPageIndex = Math.max(
-    performanceCardPageCount - 1,
-    0,
-  );
+  const maxPerformanceCardPageIndex = Math.max(performanceCardPageCount - 1, 0);
   const performanceCardStartIndex =
     performanceCardPageIndex * PERFORMANCE_CARDS_VISIBLE_COUNT;
   const visiblePerformanceCards = performanceCards.slice(
@@ -2693,7 +2735,9 @@ function DashboardContent({
   );
 
   function handlePreviousPerformanceCards() {
-    setPerformanceCardPageIndex((currentIndex) => Math.max(currentIndex - 1, 0));
+    setPerformanceCardPageIndex((currentIndex) =>
+      Math.max(currentIndex - 1, 0),
+    );
   }
 
   function handleNextPerformanceCards() {
@@ -2715,7 +2759,7 @@ function DashboardContent({
           <h1 className="text-display-md text-text">
             Welcome back, {pcpCompanyProfile.name}
           </h1>
-          <div className="mt-[40px]">
+          <div className="mt-[40px] space-y-md">
             <AdminPerformanceDigestCard
               activeInsightId={activeInsightId}
               onInsightSelect={onDigestInsightSelect}
@@ -2750,7 +2794,7 @@ function DashboardContent({
             </div>
 
             {story === "current" ? (
-              <div className="mt-xxl space-y-lg">
+              <div className="mt-lg space-y-lg">
                 <GroupedPerformanceMetrics
                   items={currentStandardPerformanceCards}
                 />
@@ -2792,7 +2836,7 @@ function DashboardContent({
             {story === "current" ? (
               <div className="mt-lg">
                 <ContextualAiPromptSlot
-                  contextualPrompts={dashboardVisitorPromptRows}
+                  contextualPrompts={dashboardPerformancePromptRows}
                   flush
                   onInsightSelect={onDigestInsightSelect}
                   onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
@@ -2811,8 +2855,7 @@ function DashboardContent({
                 </h2>
                 <p className="mt-xs text-body-md text-text-meta">
                   Manage your page&apos;s content and amplify your reach with
-                  boosting.{" "}
-                  <InlineAction>Learn more</InlineAction>
+                  boosting. <InlineAction>Learn more</InlineAction>
                 </p>
               </div>
               <CarouselControls
@@ -2822,6 +2865,7 @@ function DashboardContent({
                 onNext={scrollToNextRecentPost}
                 onPrevious={scrollToPreviousRecentPost}
                 previousLabel="Previous posts"
+                spacing="wide"
               />
             </div>
 
@@ -2835,7 +2879,10 @@ function DashboardContent({
               ))}
             </div>
 
-            <div className="mt-lg flex justify-center gap-md" aria-hidden="true">
+            <div
+              className="mt-lg flex justify-center gap-md"
+              aria-hidden="true"
+            >
               {recentPosts.map((post, index) => (
                 <span
                   className={cx(
@@ -2858,6 +2905,47 @@ function DashboardContent({
         </div>
       </section>
     </div>
+  );
+}
+
+export function PremiumCompanyPagesDashboardPerformancePromptPreview({
+  promptLabel = "Who are my most relevant visitors?",
+}: Readonly<{ promptLabel?: string }> = {}) {
+  const contextualPrompts = [
+    {
+      label: promptLabel,
+      type: "self-initiated",
+      view: "relevant-visitors",
+    },
+  ] satisfies ReadonlyArray<AnalyticsContextualPrompt>;
+
+  return (
+    <section className="min-w-0 rounded-sm border border-border-faint bg-background px-lg py-[40px] sm:px-xxl">
+      <div>
+        <h2 className="text-heading-lg text-text">Track performance</h2>
+        <p className="mt-xs text-body-md text-text-meta">
+          Grow your Page 3x faster with insights and analytics from the past 7
+          days.
+        </p>
+      </div>
+      <div className="mt-lg space-y-lg">
+        <GroupedPerformanceMetrics items={currentStandardPerformanceCards} />
+        <GroupedPerformanceMetrics
+          items={currentPremiumPerformanceCards}
+          premium
+        />
+      </div>
+      <div className="mt-lg">
+        <ContextualAiPromptSlot
+          contextualPrompts={contextualPrompts}
+          flush
+          onInsightSelect={() => {}}
+          onSelfInitiatedViewSelect={() => {}}
+          presentation="dashboard"
+          showDivider={false}
+        />
+      </div>
+    </section>
   );
 }
 
@@ -2959,12 +3047,7 @@ function HighlightsCard(props: AnalyticsContextualPromptSlotProps = {}) {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
-        <div>
-          <h2 className="text-heading-lg text-text">Highlights</h2>
-          <p className="mt-xs text-body-sm text-text-meta">
-            Data for 5/10/2026 - 6/8/2026
-          </p>
-        </div>
+        <h2 className="text-heading-lg text-text">Highlights</h2>
         <div className="mt-xxl grid gap-lg sm:grid-cols-2 lg:grid-cols-4">
           {analyticsHighlights.map((highlight) => (
             <article key={highlight.label}>
@@ -2972,10 +3055,7 @@ function HighlightsCard(props: AnalyticsContextualPromptSlotProps = {}) {
               <h3 className="mt-xxs text-body-sm text-text-meta">
                 {highlight.label}
               </h3>
-              <AnalyticsTrend
-                tone={highlight.tone}
-                value={highlight.delta}
-              />
+              <AnalyticsTrend tone={highlight.tone} value={highlight.delta} />
             </article>
           ))}
         </div>
@@ -2985,10 +3065,22 @@ function HighlightsCard(props: AnalyticsContextualPromptSlotProps = {}) {
   );
 }
 
-export function PremiumCompanyPagesContentHighlightsPromptPreview() {
+export function PremiumCompanyPagesContentHighlightsPromptPreview({
+  promptLabel,
+}: Readonly<{ promptLabel?: string }> = {}) {
+  const contextualPrompts = promptLabel
+    ? ([
+        {
+          label: promptLabel,
+          type: "self-initiated",
+          view: "post-impressions",
+        },
+      ] satisfies ReadonlyArray<AnalyticsContextualPrompt>)
+    : [];
+
   return (
     <HighlightsCard
-      contextualPrompts={wipContentHighlightsPromptRows}
+      contextualPrompts={contextualPrompts}
       onInsightSelect={() => {}}
       onSelfInitiatedViewSelect={() => {}}
     />
@@ -3030,10 +3122,7 @@ function AnalyticsKeyInsightsCard({
 
   return (
     <AnalyticsCard>
-      <section
-        aria-labelledby={headingId}
-        className="px-lg py-lg"
-      >
+      <section aria-labelledby={headingId} className="px-lg py-lg">
         <div className="flex items-center gap-xs">
           <Icon
             aria-hidden="true"
@@ -3041,10 +3130,7 @@ function AnalyticsKeyInsightsCard({
             name="signal-ai"
             size="small"
           />
-          <h2
-            className="text-heading-lg text-text"
-            id={headingId}
-          >
+          <h2 className="text-heading-lg text-text" id={headingId}>
             Key insights
           </h2>
         </div>
@@ -3138,7 +3224,7 @@ function ImpressionsChart() {
               x="58"
               y={y + 4}
             >
-              {[80000, 60000, 40000, 20000, 0][index]}
+              {[200000, 150000, 100000, 50000, 0][index]}
             </text>
           </g>
         ))}
@@ -3189,23 +3275,37 @@ function MetricsCard() {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
-        <div className="flex flex-wrap items-start justify-between gap-md">
-          <div>
+        <div>
+          <div className="flex items-center gap-xs">
             <h2 className="text-heading-lg text-text">Metrics</h2>
+            <Icon
+              aria-hidden="true"
+              className="text-text-meta"
+              name="question"
+              size="small"
+            />
           </div>
-          <button
-            className="inline-flex min-h-8 items-center gap-xs rounded-round bg-positive px-md text-control-sm text-on-checked outline-none transition-colors hover:bg-positive-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
-            type="button"
+          <Pill
+            checked
+            className="mt-xs"
+            trailingIcon={
+              <Icon aria-hidden="true" name="chevron-down" size="small" />
+            }
           >
-            <span>Impressions</span>
-            <Icon aria-hidden="true" name="chevron-down" size="small" />
-          </button>
+            Impressions
+          </Pill>
         </div>
 
         <ImpressionsChart />
 
         <div className="mt-lg">
-          <ChartLegendRow label="Organic" value="64,800" />
+          <ChartLegendRow
+            label="Organic"
+            value={
+              pcpAdminContentPerformanceFixture.last30Days.impressions
+                .valueLabel
+            }
+          />
           <ChartLegendRow dashed label="Sponsored" value="0" />
         </div>
       </div>
@@ -3213,9 +3313,7 @@ function MetricsCard() {
   );
 }
 
-function VisitorHighlightsCard(
-  props: AnalyticsContextualPromptSlotProps = {},
-) {
+function VisitorHighlightsCard(props: AnalyticsContextualPromptSlotProps = {}) {
   return (
     <AnalyticsCard>
       <div className="px-lg py-lg">
@@ -3418,11 +3516,7 @@ function VisitorProfileRow({
 }: Readonly<{ visitor: VisitorProfileData }>) {
   return (
     <article className="grid grid-cols-[48px_minmax(0,1fr)] gap-md border-t border-border-faint px-lg py-xxl first:border-t-0">
-      <Entity
-        label={visitor.name}
-        size={48}
-        src={assetSrc(visitor.avatar)}
-      />
+      <Entity label={visitor.name} size={48} src={assetSrc(visitor.avatar)} />
       <div className="min-w-0">
         <h3 className="truncate text-control-sm text-text">{visitor.name}</h3>
         <p className="mt-xxs line-clamp-2 text-body-sm text-text">
@@ -3491,7 +3585,7 @@ function VisitorDemographicsCard(
           className="mt-xxl inline-flex min-h-8 items-center gap-xs rounded-round border border-border-subtle bg-background px-md text-control-sm text-label outline-none transition-colors hover:border-border-subtle-hover hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
           type="button"
         >
-          <span>Job function</span>
+          <span>{pcpAdminVisitorAnalyticsFixture.demographicDimension}</span>
           <Icon aria-hidden="true" name="chevron-down" size="small" />
         </button>
 
@@ -3537,7 +3631,9 @@ function CompetitorDateButton() {
         name="calendar"
         size="small"
       />
-      <span className="min-w-0 truncate">{COMPETITOR_ANALYTICS_DATE_RANGE}</span>
+      <span className="min-w-0 truncate">
+        {COMPETITOR_ANALYTICS_DATE_RANGE}
+      </span>
       <Icon
         aria-hidden="true"
         className="shrink-0 text-text-meta"
@@ -3697,9 +3793,7 @@ function CompetitorGrowthTable(props: AnalyticsContextualPromptSlotProps = {}) {
                 New followers
               </th>
               <th className="px-md py-sm text-right font-semibold">Posts</th>
-              <th className="px-md py-sm text-right font-semibold">
-                Comments
-              </th>
+              <th className="px-md py-sm text-right font-semibold">Comments</th>
               <th className="px-md py-sm text-right font-semibold">
                 Comments per day
               </th>
@@ -3861,112 +3955,260 @@ function CompetitiveTipsCard() {
   );
 }
 
-function ContentBoostUpsellBanner({
-  estimate,
-}: Readonly<{ estimate: string }>) {
+function PostPerformanceBoostBanner() {
   return (
-    <div className="mt-md flex flex-wrap items-center justify-between gap-md rounded-sm bg-surface-tint px-md py-sm text-text-meta">
-      <p className="min-w-[220px] flex-1 text-body-sm">
-        {estimate}{" "}
-        <Icon
-          aria-hidden="true"
-          className="inline-block align-[-2px] text-icon"
-          name="question"
-          size="small"
-        />
+    <div className="flex min-h-[50px] items-center gap-sm bg-surface-tint px-lg py-md text-text">
+      <p className="text-body-sm">
+        Get up to 84,000 more impressions by boosting your posts.
       </p>
-      <Button size="small" variant="secondary">
-        Boost
-      </Button>
+      <Icon
+        aria-hidden="true"
+        className="shrink-0 text-icon"
+        name="question"
+        size="small"
+      />
     </div>
   );
 }
 
-function ContentEngagementTable(props: AnalyticsContextualPromptSlotProps = {}) {
+function PostPerformancePostCell({
+  row,
+}: Readonly<{ row: PostPerformanceRowData }>) {
   return (
-    <AnalyticsCard>
-      <div className="flex flex-wrap items-center justify-between gap-md px-lg pb-xxl pt-[16px]">
-        <div>
-          <h2 className="text-heading-lg text-text">Content engagement</h2>
-          <p className="mt-xs text-body-sm text-text-meta">
-            Time range: May 26, 2026 - Jun 8, 2026
+    <td className="sticky left-0 z-10 h-20 w-[300px] min-w-[300px] border-b border-border-faint bg-background px-lg py-md align-middle">
+      <div className="flex min-w-0 items-center gap-md">
+        {row.thumbnailSrc ? (
+          <Entity
+            label={row.thumbnailAlt ?? row.title}
+            shape="square"
+            size={40}
+            src={row.thumbnailSrc}
+          />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="size-10 shrink-0 rounded-xs bg-background-disabled"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-supportive-s-strong text-text">{row.date}</p>
+          <p className="mt-xxs line-clamp-2 text-body-xs text-text-meta">
+            {row.title}
           </p>
         </div>
-        <button
-          className="inline-flex h-8 items-center gap-xs rounded-xs border border-border-subtle px-sm text-body-sm text-label outline-none transition-colors hover:bg-background-transparent-hover focus-visible:ring-4 focus-visible:ring-neutral-focus-ring"
-          type="button"
-        >
-          <span>Show: 4</span>
-          <Icon aria-hidden="true" name="chevron-down" size="small" />
-        </button>
+        <Button size="small" variant="tertiary">
+          Boost
+        </Button>
       </div>
+    </td>
+  );
+}
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[840px] border-collapse text-left">
-          <thead>
-            <tr className="border-y border-border-faint bg-background-neutral-soft text-label-xs text-text-meta">
-              <th className="w-[420px] px-lg py-[16px] font-semibold">
-                Post title
-              </th>
-              <th className="px-md py-[16px] text-right font-semibold">
-                Reactions
-              </th>
-              <th className="px-md py-[16px] text-right font-semibold">
-                Comments
-              </th>
-              <th className="px-md py-[16px] text-right font-semibold">
-                Reposts
-              </th>
-              <th className="px-md py-[16px] text-right font-semibold">
-                Follows
-              </th>
-              <th className="px-lg py-[16px] text-right font-semibold">
-                Engagement rate
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {contentEngagementRows.map((row) => (
-              <tr
-                className="border-b border-border-faint align-top text-body-sm text-text"
-                key={row.title}
-              >
-                <td className="max-w-[440px] px-lg py-[32px]">
-                  <button
-                    className="line-clamp-2 text-left text-control-sm text-action hover:underline"
-                    type="button"
-                  >
-                    {row.title}
-                  </button>
-                  <p className="mt-xs text-body-xs text-text-meta">
-                    Posted by {row.postedBy} &middot; {row.date}
-                  </p>
-                  {row.boostEstimate ? (
-                    <ContentBoostUpsellBanner estimate={row.boostEstimate} />
-                  ) : null}
-                </td>
-                <td className="px-md py-[32px] text-right align-middle">
-                  {row.reactions}
-                </td>
-                <td className="px-md py-[32px] text-right align-middle">
-                  {row.comments}
-                </td>
-                <td className="px-md py-[32px] text-right align-middle">
-                  {row.reposts}
-                </td>
-                <td className="px-md py-[32px] text-right align-middle">
-                  {row.follows}
-                </td>
-                <td className="px-lg py-[32px] text-right align-middle">
-                  {row.engagementRate}
-                </td>
+function PostPerformanceMetricCell({
+  children,
+  className,
+}: Readonly<{ children: ReactNode; className?: string }>) {
+  return (
+    <td
+      className={cx(
+        "h-20 border-b border-border-faint px-md py-md text-right align-middle text-body-xs text-text-meta",
+        className,
+      )}
+    >
+      {children}
+    </td>
+  );
+}
+
+function PostPerformanceTable(
+  promptSlotProps: AnalyticsContextualPromptSlotProps = {},
+) {
+  return (
+    <div className="space-y-md">
+      <AnalyticsCard>
+        <div className="px-lg pb-xs pt-md">
+          <div className="flex items-center gap-xs">
+            <h2 className="text-heading-lg text-text">Post performance</h2>
+            <Icon
+              aria-hidden="true"
+              className="text-text-meta"
+              name="question"
+              size="small"
+            />
+          </div>
+          <Pill
+            checked
+            className="mt-xs"
+            trailingIcon={
+              <Icon aria-hidden="true" name="chevron-down" size="small" />
+            }
+          >
+            All posts
+          </Pill>
+        </div>
+
+        <PostPerformanceBoostBanner />
+
+        <div className="overflow-x-auto overscroll-x-contain [scrollbar-width:thin]">
+          <table className="min-w-[2020px] table-fixed border-separate border-spacing-0 text-left">
+            <thead>
+              <tr className="h-12 text-label-xs text-label">
+                <th className="sticky left-0 z-30 w-[300px] min-w-[300px] border-b border-border-faint bg-background px-lg font-semibold">
+                  Post
+                </th>
+                <th className="w-[106px] border-b border-border-faint px-md font-semibold">
+                  Post type
+                </th>
+                <th className="w-[143px] border-b border-border-faint px-md font-semibold">
+                  Posted by
+                </th>
+                <th className="w-[90px] border-b border-border-faint px-md font-semibold">
+                  Audience
+                </th>
+                <th className="relative w-[143px] border-b border-border-faint px-md text-right font-semibold">
+                  <span className="inline-flex items-center justify-end gap-xs">
+                    <Icon
+                      aria-hidden="true"
+                      name="arrow-up"
+                      size="small"
+                    />
+                    Impressions
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-0 bottom-0 h-[2px] bg-checked"
+                  />
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  Views
+                </th>
+                <th className="w-[143px] border-b border-border-faint px-md text-right font-semibold">
+                  Page viewers
+                </th>
+                <th className="w-[143px] border-b border-border-faint px-md text-right font-semibold">
+                  Followers gained
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  Link clicks
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  CTR
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  Reactions
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  Comments
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  Reposts
+                </th>
+                <th className="w-[116px] border-b border-border-faint px-md text-right font-semibold">
+                  Profile viewers
+                </th>
+                <th className="w-[140px] border-b border-border-faint px-md text-right font-semibold">
+                  Engagement rate
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <ContextualAiPromptSlot {...props} />
-    </AnalyticsCard>
+            </thead>
+            <tbody>
+              {postPerformanceRows.map((row) => (
+                <tr key={row.title}>
+                  <PostPerformancePostCell row={row} />
+                  <PostPerformanceMetricCell className="text-left">
+                    {row.postType}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell className="text-left font-semibold text-text">
+                    {row.postedBy}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell
+                    className={cx(
+                      "text-left",
+                      row.audience === "Targeted" &&
+                        "font-semibold text-text",
+                    )}
+                  >
+                    {row.audience}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.impressions}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.views}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.pageViewers}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.followersGained}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.linkClicks}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>{row.ctr}</PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.reactions}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.comments}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.reposts}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.profileViewers}
+                  </PostPerformanceMetricCell>
+                  <PostPerformanceMetricCell>
+                    {row.isTopEngagement ? (
+                      <span className="inline-flex rounded-xs bg-checked px-xs py-xxs text-supportive-s-strong text-on-checked">
+                        {row.engagementRate}
+                      </span>
+                    ) : (
+                      row.engagementRate
+                    )}
+                  </PostPerformanceMetricCell>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <ContextualAiPromptSlot {...promptSlotProps} showDivider={false} />
+
+        <div className="border-t border-border-faint">
+          <GhostButton
+            className="w-full"
+            icon="arrow-right"
+            iconAtEnd
+            size="medium"
+          >
+            Show more
+          </GhostButton>
+        </div>
+      </AnalyticsCard>
+    </div>
+  );
+}
+
+export function PremiumCompanyPagesContentEngagementPromptPreview({
+  promptLabel,
+}: Readonly<{ promptLabel?: string }> = {}) {
+  const contextualPrompts = promptLabel
+    ? ([
+        {
+          label: promptLabel,
+          type: "self-initiated",
+          view: "next-focus",
+        },
+      ] satisfies ReadonlyArray<AnalyticsContextualPrompt>)
+    : wipContentPromptRows;
+
+  return (
+    <PostPerformanceTable
+      contextualPrompts={contextualPrompts}
+      onInsightSelect={() => {}}
+      onSelfInitiatedViewSelect={() => {}}
+    />
   );
 }
 
@@ -4003,14 +4245,11 @@ function ContentAnalyticsPanel({
       ) : null}
       <AnalyticsControlsCard />
       <HighlightsCard
-        contextualPrompts={
-          showWipPrompts ? wipContentHighlightsPromptRows : undefined
-        }
         onInsightSelect={onInsightSelect}
         onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
       />
       <MetricsCard />
-      <ContentEngagementTable
+      <PostPerformanceTable
         contextualPrompts={showWipPrompts ? wipContentPromptRows : undefined}
         onInsightSelect={onInsightSelect}
         onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
@@ -4060,13 +4299,7 @@ function VisitorAnalyticsPanel({
       />
       <VisitorMetricsCard />
       <WhoVisitedYourPageCard />
-      <VisitorDemographicsCard
-        contextualPrompts={
-          showWipPrompts ? wipVisitorDemographicsPromptRows : undefined
-        }
-        onInsightSelect={onInsightSelect}
-        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
-      />
+      <VisitorDemographicsCard />
     </div>
   );
 }
@@ -4105,13 +4338,7 @@ function CompetitorAnalyticsPanel({
       <CompetitorIntroCard />
       <CompetitorTrackingNoticeCard />
       <CompetitorHighlightsCard />
-      <CompetitorGrowthTable
-        contextualPrompts={
-          showWipPrompts ? wipCompetitorGrowthPromptRows : undefined
-        }
-        onInsightSelect={onInsightSelect}
-        onSelfInitiatedViewSelect={onSelfInitiatedViewSelect}
-      />
+      <CompetitorGrowthTable />
       <TrendingCompetitorPostsCard
         contextualPrompts={
           showWipPrompts ? wipCompetitorPostsPromptRows : undefined
@@ -4316,8 +4543,9 @@ function PremiumCompanyPagesAdminVcaShell({
     useState<AdminUc5InsightSelection | null>(null);
   const [initialSelfInitiatedView, setInitialSelfInitiatedView] =
     useState<AdminUc5SelfInitiatedView | null>(null);
-  const [initialSelfInitiatedPrompt, setInitialSelfInitiatedPrompt] =
-    useState<string | undefined>(undefined);
+  const [initialSelfInitiatedPrompt, setInitialSelfInitiatedPrompt] = useState<
+    string | undefined
+  >(undefined);
   const [agentDraft, setAgentDraft] = useState("");
   const [agentThreadTurns, setAgentThreadTurns] = useState<
     ReadonlyArray<AdminUc5ThreadTurn>
@@ -4333,12 +4561,9 @@ function PremiumCompanyPagesAdminVcaShell({
 
   function runAdminMessagingSurfaceTransition(updateSurfaceState: () => void) {
     if (
-      !startClassedViewTransition(
-        () => {
-          flushSync(updateSurfaceState);
-        },
-        "pcp-messaging-surface-transition",
-      )
+      !startClassedViewTransition(() => {
+        flushSync(updateSurfaceState);
+      }, "pcp-messaging-surface-transition")
     ) {
       updateSurfaceState();
     }
@@ -4513,7 +4738,7 @@ function PremiumCompanyPagesAdminVcaShell({
         story={story}
       >
         {children({
-          activeInsightId: isAgentOpen ? activeInsight?.id ?? null : null,
+          activeInsightId: isAgentOpen ? (activeInsight?.id ?? null) : null,
           onInsightSelect: handleInsightSelect,
           onSelfInitiatedViewSelect: handleOpenSelfInitiatedView,
         })}
@@ -4588,7 +4813,6 @@ function PremiumCompanyPagesAdminVcaShell({
             onDraftChange={handleAgentDraftChange}
             onDraftClear={handleAgentDraftClear}
             onFollowUpSelect={handleAgentFollowUpSelect}
-            onInsightSelect={handleInsightSelect}
             onMinimizeToTray={
               showVcaFabEntry ? handleMinimizeAgentToFab : undefined
             }
@@ -4613,7 +4837,11 @@ function getPremiumCompanyPagesDashboardStory(
     return "current-state";
   }
 
-  if (story === "dashboard-entry" || story === "cold-start" || story === "old") {
+  if (
+    story === "dashboard-entry" ||
+    story === "cold-start" ||
+    story === "old"
+  ) {
     return "old";
   }
 

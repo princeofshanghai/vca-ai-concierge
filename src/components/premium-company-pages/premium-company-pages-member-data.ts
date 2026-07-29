@@ -384,13 +384,6 @@ export const vcaJobSeekerPrompts = [
 export const VCA_POST_RESPONSE = pcpVcaScenario.pageExplorerResponses.posts;
 export const VCA_PRODUCT_RESPONSE =
   "Yes. Velora Dashboard is designed for employee self-service during benefits enrollment.\n\nEmployees can compare plans, enroll in coverage, update dependents, and track deadline-related next steps from one guided workspace. That means they can answer common enrollment questions without waiting for an HR admin to point them to the right place.\n\nYou can review the product details on the Velora Dashboard product page or learn more on Velora's website.\n\nThis product looks like the best match for what you're asking about.";
-export const VCA_PRODUCT_RESPONSE_HIGHLIGHTS = [
-  "Velora Dashboard",
-  "employee self-service",
-  "compare plans, enroll in coverage, update dependents",
-  "track deadline-related next steps",
-  "one guided workspace",
-] as const;
 export const VCA_PRODUCT_RESPONSE_LINKS = [
   {
     label: "Velora Dashboard product page",

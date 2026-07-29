@@ -12,6 +12,7 @@ Detailed source docs:
 - [Visitor loop](./premium-company-pages-vca/visitor-loop.md)
 - [Design decisions](./premium-company-pages-vca/design-decisions.md)
 - [Admin AI response voice guide](./premium-company-pages-vca/ai-response-voice-guide.md)
+- [Shared AI response formatting rules](./premium-company-pages-vca/ai-response-formatting.md)
 
 ## What This Is
 

@@ -98,13 +98,18 @@ export function ComponentSidebar() {
                             href={item.href}
                             aria-current={isActive ? "page" : undefined}
                             className={cx(
-                              "block rounded-sm py-[8px] pl-[32px] pr-md text-[13px] leading-4 text-text outline-none transition-colors duration-150 ease-out focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
+                              "flex items-center justify-between gap-xs rounded-sm py-[8px] pl-[32px] pr-md text-[13px] leading-4 text-text outline-none transition-colors duration-150 ease-out focus-visible:ring-4 focus-visible:ring-neutral-focus-ring",
                               isActive
                                 ? "bg-background-neutral-soft font-medium hover:bg-border-faint"
                                 : "font-normal hover:bg-background-transparent-hover",
                             )}
                           >
-                            {item.title}
+                            <span className="min-w-0">{item.title}</span>
+                            {item.statusLabel ? (
+                              <span className="shrink-0 rounded-round border border-border-faint bg-background px-[5px] py-[2px] text-[9px] font-medium leading-3 text-text-meta">
+                                {item.statusLabel}
+                              </span>
+                            ) : null}
                           </IntentPrefetchLink>
                         );
                       })}

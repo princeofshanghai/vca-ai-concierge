@@ -3,6 +3,7 @@ export type ComponentNavItem = Readonly<{
   title: string;
   description: string;
   href: string;
+  statusLabel?: string;
 }>;
 
 export type ComponentNavGroup = Readonly<{
@@ -26,8 +27,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "shared-shell",
             title: "Container",
-            description:
-              "The overall UI container for the VCA agent chat.",
+            description: "The overall UI container for the VCA agent chat.",
             href: "/internal/components/shared/shell",
           },
           {
@@ -40,7 +40,8 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "shared-header",
             title: "Header",
-            description: "Shows name of the AI chat and contains global actions",
+            description:
+              "Shows name of the AI chat and contains global actions",
             href: "/internal/components/shared/header",
           },
           {
@@ -79,8 +80,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "shared-task-status-card",
             title: "Task status card",
-            description:
-              "Shows completion status for AI agent run tasks",
+            description: "Shows completion status for AI agent run tasks",
             href: "/internal/components/shared/task-status-card",
           },
           {
@@ -112,8 +112,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "shared-inline-error",
             title: "Inline error",
-            description:
-              "Shows a failed AI response with a retry action.",
+            description: "Shows a failed AI response with a retry action.",
             href: "/internal/components/shared/inline-error",
           },
           {
@@ -227,7 +226,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             id: "premium-company-page-prompts",
             title: "Prompts",
             description:
-              "Documents the shared Prompt component across starter, contextual, and follow-up placements for enterprise Page admins.",
+              "Defines starter and contextual prompts, plus the AI responses and evidence they open.",
             href: "/internal/components/premium-company-page/prompts",
           },
           {
@@ -250,6 +249,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
             description:
               "Showcases the reusable dashboard insight card system, routing rule, and six card types.",
             href: "/internal/components/premium-company-page/insight-cards",
+            statusLabel: "Deprecated",
           },
           {
             id: "premium-company-page-side-panel",
@@ -292,8 +292,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "sdui-button-icon",
             title: "Button icon",
-            description:
-              "Supports compact actions using only an icon.",
+            description: "Supports compact actions using only an icon.",
             href: "/internal/components/sdui/button-icon",
           },
           {
@@ -331,7 +330,8 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "sdui-radio",
             title: "Radio",
-            description: "Shows single-select control states for one-choice inputs.",
+            description:
+              "Shows single-select control states for one-choice inputs.",
             href: "/internal/components/sdui/radio",
           },
           {
@@ -392,8 +392,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "sdui-badge",
             title: "Badge",
-            description:
-              "Signals new activity, alerts, or updates.",
+            description: "Signals new activity, alerts, or updates.",
             href: "/internal/components/sdui/badge",
           },
           {
@@ -431,8 +430,7 @@ export const componentNavGroups: ReadonlyArray<ComponentNavSection> = [
           {
             id: "sdui-entity",
             title: "Entity",
-            description:
-              "Represents a user, company, or live agent.",
+            description: "Represents a user, company, or live agent.",
             href: "/internal/components/sdui/entity",
           },
           {
@@ -498,7 +496,8 @@ const componentRouteAliases: Record<string, string> = {
     "/internal/components/shared/inline-error",
   "/internal/components/premium/product-recommendation-card":
     "/internal/components/premium/sku-card",
-  "/internal/components/shared/action-card": "/internal/components/shared/sales-card",
+  "/internal/components/shared/action-card":
+    "/internal/components/shared/sales-card",
 };
 
 export function getComponentNavItem(slug: ReadonlyArray<string>) {
