@@ -344,7 +344,7 @@ Keep what gives current visitors a reason to return, but use it as a starting po
 The post below is a good example to build from.`;
 const ADMIN_COMPETITOR_GROWTH_RESPONSE_TEXT = `Overall, ${pcpCompanyProfile.name}'s follower growth is slower than the Pages shown in this comparison.
 
-Over the last 30 days, those Pages also posted more often and generally got more response per post. That suggests the difference may be related to both posting consistency and how well the content connects, although the data does not prove what caused the follower growth.`;
+Over the last 7 days, those Pages also posted more often and generally got more response per post. That suggests the difference may be related to both posting consistency and how well the content connects, although the data does not prove what caused the follower growth.`;
 const ADMIN_COMPETITOR_GROWTH_RECOMMENDATION_TEXT =
   "Before posting more often, review trending competitor posts on topics Velora also covers to see what earns a stronger response.";
 const ADMIN_COMPETITOR_CONTENT_PATTERN_PROMPT =
@@ -2882,7 +2882,9 @@ function CompetitorGrowthThread({
             children: (
               <ResponseCompare
                 actionLabel="View trending competitor posts"
-                dimension={pcpAdminCompetitorAnalyticsFixture.periodLabel}
+                dimension={
+                  pcpAdminCompetitorAnalyticsFixture.starterComparisonPeriodLabel
+                }
                 rows={pcpAdminCompetitorAnalyticsFixture.rows.map((row) => ({
                   name: row.company,
                   value: row.newFollowers.value,

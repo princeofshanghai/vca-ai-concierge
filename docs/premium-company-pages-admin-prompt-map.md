@@ -117,7 +117,7 @@ Treat this as personalized starter behavior rather than Page-contextual behavior
 
 ## 4. Time And Freshness Policy
 
-- Each global starter uses a predefined period that matches its source and makes the comparison reliable. Page performance uses the last seven complete days; competitor comparison uses the last 30 days.
+- Each global starter uses a predefined period that matches its source and makes the comparison reliable. Page performance and competitor comparison use the last seven complete days.
 - Analytics prompts inherit the visible Page, tab, filters, timezone, and selected date range.
 - Analytics comparisons use the previous equivalent complete period unless the admin requests another baseline.
 - A continued conversation keeps the current Page, filters, and time range unless the admin changes them.
@@ -270,7 +270,7 @@ For MVP, treat every configured competitor as part of the admin's intended compa
 
 Illustrative response shape; final numbers must match the approved prototype fixture:
 
-> Overall, Velora's follower growth is slower than the Pages shown in this comparison. Over the last 30 days, those Pages also posted more often and generally got more response per post.
+> Overall, Velora's follower growth is slower than the Pages shown in this comparison. Over the last 7 days, those Pages also posted more often and generally got more response per post.
 
 Before the evidence card:
 
@@ -281,7 +281,7 @@ Do not claim that posting frequency or reactions caused follower growth. The evi
 **Required evidence**
 
 - The complete configured competitor set
-- New followers, posts published, and reactions for Velora and every configured competitor over the same 30-day period
+- New followers, posts published, and reactions for Velora and every configured competitor over the same 7-day period
 - Precomputed average reactions per post for each Page
 - Trending public competitor posts from the current source window
 - Per-source freshness
@@ -290,7 +290,7 @@ Do not claim that posting frequency or reactions caused follower growth. The evi
 
 - A concise group-level assessment and one relationship in prose
 - One `Compare` card titled `New followers`
-- `Last 30 days` as the visible card context
+- `Last 7 days` as the visible card context
 - One Page per row: every tracked competitor plus Velora
 - One scalar new-follower value per row; no follower total, post count, delta, or second metric in the row
 - Velora appears first using the component's existing `You` highlight; tracked competitors follow in descending new-follower value

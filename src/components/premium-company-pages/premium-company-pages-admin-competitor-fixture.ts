@@ -115,6 +115,7 @@ export const pcpAdminCompetitorAnalyticsFixture = {
   dateRange: "May 11, 2026 - Jun 9, 2026",
   periodDays: 30,
   periodLabel: "Last 30 days",
+  starterComparisonPeriodLabel: "Last 7 days",
   rows,
   trackedCompetitorCount: trackedCompetitors.length,
   trackedCompetitors,
